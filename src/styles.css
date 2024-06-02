@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@font-face {
+  font-family: lexenddeca;
+  src: url(./LexendDeca-Regular.ttf);
+}
+
+.lexenddeca {
+  font-family: lexenddeca;
+}
+
+.arial {
+  font-family: arial;
+}
+
+body {
+  background-color: black;
+  background-image: url('./bg-gradient.png');
+  background-position: 0px -200px;
+  background-repeat: no-repeat;
+  background-size: cover;
+  font-family: lexenddeca;
+}
+
+.center-tabs {
+  position: fixed;
+  top: 50%;
+  left: 50px;
+  transform: translateY(-50%);
+}
+.configure-loc {
+  position: fixed;
+  bottom: 50px;
+  left: 50px;
+}
+.container {
+  position: relative;
+  display: flex;
+  height: 100vh;
+}
+.searchbox {
+  position: fixed;
+}
+
+.scrollable-box {
+  flex: 1;
+  overflow-y: auto;
+}
