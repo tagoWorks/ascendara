@@ -4,3 +4,7 @@
 binaries/AscendaraDownloader/make-exe.bat
 binaries/AscendaraGameHandler/make-exe.bat
 /.vscode
+/src/dist
+/dist
+build/main-build.js
+package.json
