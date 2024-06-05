@@ -3,3 +3,4 @@
 .env
 binaries/AscendaraDownloader/make-exe.bat
 binaries/AscendaraGameHandler/make-exe.bat
+/.vscode
