@@ -12,19 +12,17 @@
     "dist": "electron-builder -c.extraMetadata.main=build/main.js"
   },
   "dependencies": {
-    "@million/lint": "^1.0.0-rc.13",
     "@nextui-org/react": "latest",
     "axios": "^1.6.8",
     "child_process": "^1.0.2",
     "cors": "^2.8.5",
     "electron-dl": "^4.0.0",
     "framer-motion": "^11.2.6",
-    "million": "^3.1.6",
+    "dotenv": "^16.4.5",
     "path": "^0.12.7",
     "react": "latest",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.23.1",
-    "todesktop": "^0.0.0"
+    "react-router-dom": "^6.23.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "3.1.0",
@@ -57,10 +55,6 @@
       "target": [
         "nsis"
       ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
     }
   }
 }

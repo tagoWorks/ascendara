@@ -6,6 +6,6 @@ plugins.unshift(MillionLint.vite())
 export default defineConfig({
   plugins: plugins,
   server: {
-    port: 5173
+    port: 5173 // Ensure this matches the port in main.js
   }
 });

@@ -11,5 +11,6 @@ module.exports = {
   theme: {
     extend: {},
   },
-  plugins: [nextui()],
+  plugins: [nextui()
+  ]
 };

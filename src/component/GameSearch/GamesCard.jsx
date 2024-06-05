@@ -35,8 +35,12 @@ const isValidURL = (url, game, provider) => {
   const containsGameName = filenameRegex.test(filename);
   const pathRegex = new RegExp(game, 'i');
   const containsGameNameInPath = pathRegex.test(path);
+
+  // Check if the link contains the provider name
   const providerRegex = new RegExp(provider, 'i');
   const containsProviderName = providerRegex.test(domain);
+
+  // Return true if the filename or path contains the game name, and the link contains the provider name, false otherwise
   return (containsGameName || containsGameNameInPath) && containsProviderName;
 };
 

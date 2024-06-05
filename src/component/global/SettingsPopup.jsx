@@ -38,7 +38,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
       splitTunnelDownloads,
     }
     window.electron.saveSettings(options, downloadDirectory);
-    onOpenChange(false);
+    onOpenChange(false); // Close the modal after saving
   };
     
   const handleSelectDirectory = async () => {

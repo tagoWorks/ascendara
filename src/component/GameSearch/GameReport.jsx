@@ -9,6 +9,20 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
   const [value, setValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [authToken, setAuthToken] = useState("");
+  
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const token = await getToken();
+        setAuthToken(token);
+      } catch (error) {
+        console.error("Error fetching token:", error);
+      }
+    };
+
+    fetchToken();
+  }, []);
 
   const handleReasonChange = (event) => {
     setReportReason(event.target.value);
@@ -18,13 +32,34 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
     setValue(event.target.value);
   };
 
+  const getToken = async () => {  
+    const AUTHORIZATION = await window.electron.getAPIKey();
+    const response = await fetch("https://api.ascendara.app/auth/token", {
+      headers: {
+        Authorization: `Bearer ${AUTHORIZATION}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.token;
+    } else {
+      throw new Error("Failed to obtain token");
+    }
+  };
+
   const handleSubmitReport = async () => {
     setIsLoading(true);
+    if (value.trim() === '' || authToken === '') {
+      onReportClose();
+      return;
+    }
     try {
       const response = await fetch('https://api.ascendara.app/app/report', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           reportType: "GameBrowsing",

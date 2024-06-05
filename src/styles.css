@@ -18,8 +18,6 @@ body {
   background-color: black;
   background-image: url('./bg-gradient.png');
   background-position: 0px -200px;
-  background-repeat: no-repeat;
-  background-size: cover;
   font-family: lexenddeca;
 }
 

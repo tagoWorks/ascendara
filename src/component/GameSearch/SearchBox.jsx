@@ -12,6 +12,7 @@ export default function SearchBox({ onSearch }) {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
+      // Handle search functionality here
     }
   };
 

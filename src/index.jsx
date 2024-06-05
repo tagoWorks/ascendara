@@ -14,7 +14,6 @@ const App = () => {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [games, setGames] = useState([]);
   const [downloadingGames, setDownloadingGames] = useState([]);
-
   const getGames = async () => {
     try {
       const gamesData = await window.electron.getGames();

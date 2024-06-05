@@ -1,4 +1,5 @@
 
 /node_modules
-installedgames.json
-settings.json
+.env
+binaries/AscendaraDownloader/make-exe.bat
+binaries/AscendaraGameHandler/make-exe.bat

@@ -6,9 +6,11 @@ import SearchBox from "./GameSearch/SearchBox";
 import CardComponent from "./GameSearch/GamesCard";
 import ErrorCard from "./GameSearch/ErrorCard";
 
+
 const CACHE_KEY = "cachedGames";
 const CACHE_EXPIRY_KEY = "cacheExpiry";
 const METADATA_KEY = "cachedMetadata";
+
 
 const GameBrowse = () => {
   const [games, setGames] = useState([]);
@@ -20,6 +22,21 @@ const GameBrowse = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [cardsPerPage, setCardsPerPage] = useState(10);
 
+  const getToken = async () => {  
+    const AUTHORIZATION = await window.electron.getAPIKey();
+    const response = await fetch("https://api.ascendara.app/auth/token", {
+      headers: {
+        Authorization: `Bearer ${AUTHORIZATION}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.token;
+    } else {
+      throw new Error("Failed to obtain token");
+    }
+  };
 
   const updateCardsPerPage = () => {
     const width = window.innerWidth;
@@ -43,6 +60,7 @@ const GameBrowse = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Check if cached games exist and are not expired
         const cachedGames = JSON.parse(localStorage.getItem(CACHE_KEY));
         const cacheExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
         const cachedMetadata = JSON.parse(localStorage.getItem(METADATA_KEY));
@@ -57,9 +75,14 @@ const GameBrowse = () => {
           setMetadata(cachedMetadata);
           setLoading(false);
           setError(false);
-          return;
+          return; // Exit early if cached data is available
         }
+
+        const token = await getToken();
         const response = await fetch("https://api.ascendara.app/json/games", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
         const data = await response.json();
         setMetadata(data.metadata);
@@ -68,9 +91,12 @@ const GameBrowse = () => {
         setLoading(false);
         setError(false);
         setRetryCount(0);
+
+        // Cache the fetched games and metadata
         localStorage.setItem(CACHE_KEY, JSON.stringify(data.games));
         localStorage.setItem(METADATA_KEY, JSON.stringify(data.metadata));
-        const expiryTime = Date.now() + 3600000;
+        // Set cache expiry time (e.g., 1 hour)
+        const expiryTime = Date.now() + 3600000; // 1 hour in milliseconds
         localStorage.setItem(CACHE_EXPIRY_KEY, expiryTime.toString());
       } catch (error) {
         console.error("Error fetching games:", error);
