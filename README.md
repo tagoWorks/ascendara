@@ -17,6 +17,15 @@
 
 > Ascendara simplifies the process that people typically go through on Steamrip and Steamunlocked.  Ascendara is a hybrid application utilizing Electron for the desktop app framework, Python for backend functionality, and React/Next.js for the frontend
 
+# Development Roadmap
+- [ ] Auto Create Shortcuts
+- [ ] Add news section to home
+- [ ] Make game searches less harsh
+- [ ] Show recent games
+- [ ] Add different sources
+- [ ] Create Retry Download & Extract
+- [ ] Add mulitple checks to alert if antivirus ruined a operation
+
 # License & Contact 📃
 This project is published under the [MIT license](./LICENSE)
 
