@@ -1,6 +1,7 @@
 import React, { useState, useEffect, } from "react";
 import { ReportIcon } from "./ReportIcon";
 import ReportModal from "./GameReport";
+import NoDownloadPath from './NoDownloadPath';
 import {
   Card,
   CardHeader,
@@ -53,6 +54,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
   const [isReportOpen, setReportOpen] = useState(false);
   const [isGameInstalled, setIsGameInstalled] = useState(false);
   const [isGameDownloading, setIsGameDownloading] = useState(false);
+  const [showNoDownloadPath, setShowNoDownloadPath] = useState(false);
 
   const handleOpenReport = () => {
     setReportOpen(true);
@@ -82,14 +84,32 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
   }, [isOpen]);
 
   const handleDownload = () => {
+    if (showNoDownloadPath) {
+      return;
+    }  
     if (!isValidURL(inputLink)) {
       alert("Please enter a valid download URL from your selected provider");
       return;
     }
     onOpen();
   };
-
+  const checkDownloadPath = async () => {
+    try {
+      const settings = await window.electron.getSettings();
+      if (!settings.downloadDirectory) {
+        setShowNoDownloadPath(true);
+      }
+    } catch (error) {
+      console.error('Error getting settings:', error);
+    }
+  };
+  useEffect(() => {
+    checkDownloadPath();
+  }, []);
   const downloadFile = () => {
+    if (showNoDownloadPath) {
+      return;
+    }
     if (inputLink.trim() === '') {
       alert("Please enter a download link");
       return;
@@ -156,17 +176,17 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
       <Modal isOpen={isOpen} onClose={onClose} size="lg" className="fixed arial">
         <ModalContent>
           <ModalHeader>
-            <div>
-            Download {game}
-            <Button isIconOnly variant="blank" size="sm" onClick={handleOpenReport}><ReportIcon size="15px" /></Button>
-            {isReportOpen &&       <ReportModal
-        gameName={game}
-        isReportOpen={isReportOpen}
-        onReportClose={handleCloseReport}
-        setReportReason={setReportReason}
-      />}
-            </div>
-          </ModalHeader>
+              <div>
+                Download {game}
+                <Button isIconOnly variant="blank" size="sm" onClick={handleOpenReport}><ReportIcon size="15px" /></Button>
+                {isReportOpen && <ReportModal
+                  gameName={game}
+                  isReportOpen={isReportOpen}
+                  onReportClose={handleCloseReport}
+                  setReportReason={setReportReason}
+                />}
+              </div>
+            </ModalHeader>
           <ModalBody>
             <Select
               value={selectedProvider}
@@ -214,6 +234,12 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
                 </Button>
             ) : <></>}
           </ModalFooter>
+          {showNoDownloadPath && (
+            <NoDownloadPath
+              isOpen={showNoDownloadPath}
+              onClose={() => setShowNoDownloadPath(false)}
+            />
+          )}
         </ModalContent>
       </Modal>
     </>

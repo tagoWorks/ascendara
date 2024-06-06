@@ -9,7 +9,7 @@
     "build-react": "npm run build && electron-builder",
     "electron": "electron ./build/main.js",
     "start": "concurrently \"npm run dev\" \"npm run electron\"",
-    "dist": "electron-builder -c.extraMetadata.main=build/main.js"
+    "dist": "electron-builder -c.extraMetadata.main=build/main-build.js"
   },
   "dependencies": {
     "@nextui-org/react": "latest",
@@ -38,9 +38,19 @@
   },
   "keywords": [],
   "author": "tagoWorks",
-  "icon": "ascendara.ico",
+  "icon": "build/icon.ico",
   "build": {
     "appId": "com.tagoworks.ascendara",
+    "extraResources": [
+      {
+        "from": "binaries/AscendaraDownloader/dist/AscendaraDownloader.exe",
+        "to": "."
+      },
+      {
+        "from": "binaries/AscendaraGameHandler/dist/AscendaraGameHandler.exe",
+        "to": "."
+      }
+    ],
     "files": [
       "build/*",
       "node_modules/**/*",

@@ -11,7 +11,8 @@ let electronDl;
 })();
 const downloadProcesses = new Map();
 const runGameProcesses = new Map();
-
+const appDirectory = path.join(path.dirname(app.getPath('exe')));
+console.log(appDirectory)
 ipcMain.handle('get-api-key', () => {
   return process.env.AUTHORIZATION;
 });
@@ -38,7 +39,7 @@ ipcMain.handle('stop-download', async (event, game) => {
 });
 
 const deleteGameDirectory = async (game) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  const filePath = path.join(appDirectory, 'ascendarasettings.json');
   const data = fs.readFileSync(filePath, 'utf8');
   const settings = JSON.parse(data);
   if (!settings.downloadDirectory) {
@@ -58,7 +59,7 @@ const deleteGameDirectory = async (game) => {
 // Download the file
 ipcMain.handle('download-file', async (event, link, game, online, dlc, version) => {
   console.log(`Downloading file: ${link}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`);
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  const filePath = path.join(appDirectory, 'ascendarasettings.json');
   const data = fs.readFileSync(filePath, 'utf8');
   const settings = JSON.parse(data);
   if (!settings.downloadDirectory) {
@@ -66,7 +67,7 @@ ipcMain.handle('download-file', async (event, link, game, online, dlc, version) 
     return;
   }
   const gamesDirectory = settings.downloadDirectory;
-  const executablePath = path.join(app.getPath('userData'), 'AscendaraDownloader.exe');
+  const executablePath = path.join(appDirectory, '/resources/AscendaraDownloader.exe');
   const downloadProcess = spawn(executablePath, ["download", link, game, online, dlc, version, gamesDirectory]);
   downloadProcesses.set(game, downloadProcess);
   downloadProcess.stdout.on('data', (data) => {
@@ -94,7 +95,7 @@ ipcMain.handle('retry-extract', async (event, game, online, dlc, version) => {
     return null;
   } else {
     console.log(`Selected paths: ${result.filePaths}`);
-    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+    const filePath = path.join(appDirectory, 'ascendarasettings.json');
     try {
       const data = fs.readFileSync(filePath, 'utf8');
       const settings = JSON.parse(data);
@@ -108,7 +109,7 @@ ipcMain.handle('retry-extract', async (event, game, online, dlc, version) => {
       
       selectedPaths.forEach((selectedPath) => {
         const itemName = path.basename(selectedPath);
-        const executablePath = path.join(app.getPath('userData'), 'AscendaraDownloader.exe');
+        const executablePath = path.join(appDirectory, '/resources/AscendaraDownloader.exe');
         console.log(`Calling ${executablePath} with arguments: ${selectedPath}, ${game}, ${online}, ${dlc}, ${version}, ${gameDirectory}, ${itemName}`);
         const downloadProcess = spawn(executablePath, [
           "retryfolder", 
@@ -155,7 +156,7 @@ ipcMain.handle('retry-download', async (event, link, game, online, dlc, version)
 
 // Read the settings JSON file and send it to the renderer process
 ipcMain.handle('get-settings', () => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  const filePath = path.join(appDirectory, 'ascendarasettings.json');
   try {
     const data = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(data);
@@ -175,7 +176,7 @@ ipcMain.handle('get-settings', () => {
 
 // Save the settings JSON file
 ipcMain.handle('save-settings', (event, options, directory) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  const filePath = path.join(appDirectory, 'ascendarasettings.json');
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(filePath, '{}');
   }
@@ -185,7 +186,7 @@ ipcMain.handle('save-settings', (event, options, directory) => {
 
 
 ipcMain.handle('get-games', async () => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  const filePath = path.join(appDirectory, 'ascendarasettings.json');
   try {
     const data = fs.readFileSync(filePath, 'utf8');
     const settings = JSON.parse(data);
@@ -247,7 +248,7 @@ ipcMain.handle('open-file-dialog', async (event) => {
 
 
 ipcMain.handle('get-download-directory', () => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  const filePath = path.join(appDirectory, 'ascendarasettings.json');
   try {
     const data = fs.readFileSync(filePath, 'utf8');
     const settings = JSON.parse(data);
@@ -259,7 +260,7 @@ ipcMain.handle('get-download-directory', () => {
 });
 
 ipcMain.handle('open-game-directory', (event, game) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  const filePath = path.join(appDirectory, 'ascendarasettings.json');
   try {
     const data = fs.readFileSync(filePath, 'utf8');
     const settings = JSON.parse(data);
@@ -276,7 +277,7 @@ ipcMain.handle('open-game-directory', (event, game) => {
 });
 
 ipcMain.handle('modify-game-executable', (event, game, executable) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  const filePath = path.join(appDirectory, 'ascendarasettings.json');
   try {
     const data = fs.readFileSync(filePath, 'utf8');
     const settings = JSON.parse(data);
@@ -297,7 +298,7 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
 
 
 ipcMain.handle('play-game', (event, game) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  const filePath = path.join(appDirectory, 'ascendarasettings.json');
   try {
     const data = fs.readFileSync(filePath, 'utf8');
     const settings = JSON.parse(data);
@@ -311,8 +312,9 @@ ipcMain.handle('play-game', (event, game) => {
     const gameInfoData = fs.readFileSync(gameInfoPath, 'utf8');
     const gameInfo = JSON.parse(gameInfoData);
     const executable = gameInfo.executable;
-    const executablePath = path.join(app.getPath('userData'), 'AscendaraGameHandler.exe');
+    const executablePath = path.join(appDirectory, '/resources/AscendaraGameHandler.exe');
     const runGame = spawn(executablePath, [executable]);
+    
 
     // Store the game process
     runGameProcesses.set(game, runGame);
@@ -346,7 +348,7 @@ ipcMain.handle('is-game-running', async (event, game) => {
 });
 
 ipcMain.handle('required-libraries', async (event, game) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  const filePath = path.join(appDirectory, 'ascendarasettings.json');
   try {
     const data = fs.readFileSync(filePath, 'utf8');
     const settings = JSON.parse(data);
@@ -365,7 +367,7 @@ ipcMain.handle('required-libraries', async (event, game) => {
 });
 
 ipcMain.handle('delete-game', async (event, game) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  const filePath = path.join(appDirectory, 'ascendarasettings.json');
   try {
     const data = fs.readFileSync(filePath, 'utf8');
     const settings = JSON.parse(data);
@@ -404,8 +406,8 @@ function createWindow() {
     },
   });
 
-  mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));
-  //mainWindow.loadURL('http://localhost:5173/')
+ //mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));
+  mainWindow.loadURL('http://localhost:5173/')
   mainWindow.setMinimumSize(1600, 800);
 }
 

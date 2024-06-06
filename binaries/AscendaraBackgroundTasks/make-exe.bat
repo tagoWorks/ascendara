@@ -1,0 +1,1 @@
+pyinstaller --onefile --icon=.\src\ascendara.ico .\src\AscendaraBackgroundTasks.py

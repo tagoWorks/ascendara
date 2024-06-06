@@ -1,5 +1,5 @@
 import React from 'react';
-import CardComponent from '../Library/DownloadManager/DownloadingCard'; // Import the CardComponent
+import CardComponent from '../Library/DownloadManager/DownloadingCard';
 
 const DownloadingNotification = ({ games }) => {
   return (

@@ -31,13 +31,11 @@ const DownloadManager = () => {
     );
   });
 
-  // Check if a download has started
   if (shouldRenderCard && !previouslyDownloading) {
     console.log('Download has started');
     setPreviouslyDownloading(true);
   }
 
-  // Check if the download is done
   if (!shouldRenderCard && previouslyDownloading) {
     console.log('Download is done');
     setPreviouslyDownloading(false);
@@ -53,7 +51,7 @@ const DownloadManager = () => {
             online={game.online}
             version={game.version}
             dirlink={game.dirlink}
-            downloadingdata={game.downloadingdata || {}} // Provide a default empty object if downloadingdata is not present
+            downloadingdata={game.downloadingdata || {}}
           />
         ))}
     </div>

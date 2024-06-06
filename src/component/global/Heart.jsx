@@ -3,7 +3,7 @@ export const HeartIcon = ({
   size,
   height,
   width,
-  verticalAlign, // Add verticalAlign prop
+  verticalAlign,
   ...props
 }) => {
   return (
@@ -13,7 +13,7 @@ export const HeartIcon = ({
       viewBox="0 0 512 512"
       fill={fill === 'none' ? 'none' : fill}
       xmlns="http://www.w3.org/2000/svg"
-      style={{ verticalAlign }} // Apply vertical alignment style
+      style={{ verticalAlign }}
       {...props}
     >
       <path 
