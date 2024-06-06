@@ -9,7 +9,7 @@
     "build-react": "npm run build && electron-builder",
     "electron": "electron ./build/main.js",
     "start": "concurrently \"npm run dev\" \"npm run electron\"",
-    "dist": "electron-builder -c.extraMetadata.main=build/main.js"
+    "dist": "electron-builder -c.extraMetadata.main=build/main-build.js"
   },
   "dependencies": {
     "@nextui-org/react": "latest",

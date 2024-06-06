@@ -89,7 +89,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
                 Save
               </Button>
               <h2 className="text-small text-default-400 fixed bottom-0 py-4 arial text-center">
-                Ascendara v1.0 | NextJS | Electron
+                Ascendara Development Build 1 | NextJS | Electron
               </h2>
             </ModalFooter>
           </>
