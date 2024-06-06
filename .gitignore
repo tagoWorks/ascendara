@@ -7,3 +7,4 @@ binaries/AscendaraGameHandler/make-exe.bat
 /src/dist
 /dist
 build/main-build.js
+binaries/AscendaraBackgroundTasks/make-exe.bat
