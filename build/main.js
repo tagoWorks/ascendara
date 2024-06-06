@@ -314,17 +314,11 @@ ipcMain.handle('play-game', (event, game) => {
     const executable = gameInfo.executable;
     const executablePath = path.join(appDirectory, '/resources/AscendaraGameHandler.exe');
     const runGame = spawn(executablePath, [executable]);
-    
-
-    // Store the game process
     runGameProcesses.set(game, runGame);
 
-    // Listen for the close event to update the map
   runGame.on('close', (code) => {
     console.log(`Game process for ${game} exited with code ${code}`);
     runGameProcesses.delete(game);
-
-    // Read the game JSON file again
     const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
     try {
       const gameInfoData = fs.readFileSync(gameInfoPath, 'utf8');
