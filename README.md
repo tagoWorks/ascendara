@@ -46,6 +46,10 @@
 - [ ] Add news section to home
 - [ ] Make game searches less harsh
 - [ ] Show recent games
+- [ ] Add different filtering options
+- [ ] Populate pages
+- [ ] Add notifactions for games status
+- [ ] Small-undisturbing advertisments
 - [ ] Add different sources
 - [ ] Create Public API Keys for accounts
 - [ ] Create Retry Download & Extract
