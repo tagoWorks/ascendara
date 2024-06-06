@@ -40,6 +40,8 @@
 
 
 # Development Roadmap
+
+### Ascendara App
 - [ ] Auto Create Shortcuts
 - [ ] Add news section to home
 - [ ] Make game searches less harsh
@@ -48,6 +50,13 @@
 - [ ] Create Public API Keys for accounts
 - [ ] Create Retry Download & Extract
 - [ ] Add mulitple checks to alert if antivirus ruined a operation
+
+### Ascendara Docs
+- [ ] Create Installation Guide for Ascendara
+- [ ] Source and how it works
+- [ ] API Documentation
+- [ ] Common Game Libraries & How to install
+- [ ] All game sources currently used
 
 # License & Contact 📃
 This project is published under the [Apache License Version 2.0 License](./LICENSE)
