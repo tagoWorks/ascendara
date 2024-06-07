@@ -6,7 +6,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
   const [autoUpdate, setAutoUpdate] = useState(false);
   const [splitTunnelDownloads, setSplitTunnelDownloads] = useState(false);
   const [downloadDirectory, setDownloadDirectory] = useState('');
-
+  const [version, setVersion]  = useState(''); 
   useEffect(() => {
     window.electron.getSettings().then((settings) => {
       console.log(settings);
@@ -14,6 +14,11 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
       setAutoUpdate(settings.autoUpdate);
       setSplitTunnelDownloads(settings.splitTunnelDownloads);
       setDownloadDirectory(settings.downloadDirectory);
+    });
+  }, []);
+  useEffect(() => {
+    window.electron.getVersion().then((version) => {
+      setVersion(version);
     });
   }, []);
 
@@ -89,7 +94,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
                 Save
               </Button>
               <h2 className="text-small text-default-400 fixed bottom-0 py-4 arial text-center">
-                Ascendara Development Build 1 | NextJS | Electron
+                Ascendara Development Build {version} | NextJS | Electron
               </h2>
             </ModalFooter>
           </>

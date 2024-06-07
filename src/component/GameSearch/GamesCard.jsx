@@ -21,28 +21,35 @@ import {
   SelectItem,
 } from "@nextui-org/react";
 
-const isValidURL = (url, game, provider) => {
+const isValidURL = (url, provider) => {
+  console.log(url, provider);
   const trimmedUrl = url.trim();
   if (trimmedUrl === '') {
     return true;
   }
-  const pattern = /^(https?:\/\/)([^\/?#]+)(?::(\d+))?(\/[^?#]*\/[^?#]*\/)([^?#]+)\.(?:zip|rar|7z)$/i;
+
+  let pattern;
+  
+  switch (provider.toLowerCase()) {
+    case 'megadb':
+      pattern = /^(https?:\/\/)([^\/?#]+)(?::(\d+))?(\/[^?#]*\/[^?#]*\/)([^?#]+)\.(?:zip|rar|7z)$/i;
+      break;
+    case 'buzzheavier':
+      pattern = /^https:\/\/dl\.buzzheavier\.com\/\d+$/;
+      break;
+    default:
+      return false; // If provider is unknown, return false
+  }
+
   const match = pattern.test(trimmedUrl);
   if (!match) {
     return false;
   }
-  const [domain, , path, filename] = trimmedUrl.match(pattern);
-  const filenameRegex = new RegExp(game, 'i');
-  const containsGameName = filenameRegex.test(filename);
-  const pathRegex = new RegExp(game, 'i');
-  const containsGameNameInPath = pathRegex.test(path);
 
-  // Check if the link contains the provider name
-  const providerRegex = new RegExp(provider, 'i');
-  const containsProviderName = providerRegex.test(domain);
+  const domainRegex = new RegExp(provider, 'i');
+  const containsProviderName = domainRegex.test(trimmedUrl);
 
-  // Return true if the filename or path contains the game name, and the link contains the provider name, false otherwise
-  return (containsGameName || containsGameNameInPath) && containsProviderName;
+  return containsProviderName;
 };
 
 const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) => {
@@ -114,7 +121,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
       alert("Please enter a download link");
       return;
     }
-    if (!isValidURL(inputLink)) {
+    if (!isValidURL(inputLink, selectedProvider)) {
       alert("Please enter a valid download URL from your selected provider");
       return;
     }
@@ -219,7 +226,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
                   label="Enter the download link here"
                   value={inputLink}
                   onChange={(e) => setInputLink(e.target.value)}
-                  isInvalid={!isValidURL(inputLink)}
+                  isInvalid={!isValidURL(inputLink, selectedProvider, game)}
                   errorMessage="Please enter a valid download URL from your selected provider"
                 />
               </>
