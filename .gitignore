@@ -10,3 +10,4 @@ build/main-build.js
 binaries/AscendaraBackgroundTasks/make-exe.bat
 /binaries/AscendaraGameHandler/dist
 /binaries/AscendaraDownloader/dist
+/build
