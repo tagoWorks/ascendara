@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react";
 
-export default function NoDownloadPathNotification({ isOpen, onClose }) {
+export default function NoDownloadPath({ isOpen, onClose }) {
   return (
     <Modal open={isOpen} onClose={onClose}>
       <ModalContent>

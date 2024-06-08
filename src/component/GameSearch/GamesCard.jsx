@@ -1,7 +1,6 @@
 import React, { useState, useEffect, } from "react";
 import { ReportIcon } from "./ReportIcon";
 import ReportModal from "./GameReport";
-import NoDownloadPath from './NoDownloadPath';
 import {
   Card,
   CardHeader,
@@ -37,8 +36,11 @@ const isValidURL = (url, provider) => {
     case 'buzzheavier':
       pattern = /^https:\/\/dl\.buzzheavier\.com\/\d+$/;
       break;
+    case 'gofile':
+      pattern = /^https:\/\/store\d*\.gofile\.io\/download\/web\/[a-f0-9-]+\/[\w\s\.-]+\.(?:zip|rar|7z)$/i;
+      break;
     default:
-      return false; // If provider is unknown, return false
+      return false;
   }
 
   const match = pattern.test(trimmedUrl);
@@ -62,6 +64,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
   const [isGameInstalled, setIsGameInstalled] = useState(false);
   const [isGameDownloading, setIsGameDownloading] = useState(false);
   const [showNoDownloadPath, setShowNoDownloadPath] = useState(false);
+  const [showDirectoryModal, setShowDirectoryModal] = useState(false);
 
   const handleOpenReport = () => {
     setReportOpen(true);
@@ -92,14 +95,16 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
 
   const handleDownload = () => {
     if (showNoDownloadPath) {
+      setShowDirectoryModal(true);
       return;
-    }  
+    }
     if (!isValidURL(inputLink)) {
       alert("Please enter a valid download URL from your selected provider");
       return;
     }
     onOpen();
   };
+  
   const checkDownloadPath = async () => {
     try {
       const settings = await window.electron.getSettings();
@@ -180,7 +185,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
           </Button>
         </CardHeader>
       </Card>
-      <Modal isOpen={isOpen} onClose={onClose} size="lg" className="fixed arial">
+      <Modal isOpen={isOpen} onClose={onClose} size="4xl" className="fixed arial">
         <ModalContent>
           <ModalHeader>
               <div>
@@ -208,6 +213,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
             </Select>
             {selectedProvider ? (
               <>
+
                 <h3>Download Link:</h3>
                 <Snippet size="md" className="justify-center" hideSymbol variant="none">
                   <a>
@@ -241,12 +247,31 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
                 </Button>
             ) : <></>}
           </ModalFooter>
-          {showNoDownloadPath && (
-            <NoDownloadPath
-              isOpen={showNoDownloadPath}
-              onClose={() => setShowNoDownloadPath(false)}
-            />
-          )}
+        </ModalContent>
+      </Modal>
+      <Modal
+        isOpen={showDirectoryModal}
+        onClose={() => setShowDirectoryModal(false)}
+        size="md"
+        className="fixed arial"
+      >
+        <ModalContent>
+          <ModalHeader>Hang on there!</ModalHeader>
+          <ModalBody>
+            <p>
+              You cannot download games yet. Please set a games directory by clicking the
+              settings button on the bottom left, then click on the Download Directory input.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="ghost"
+              color="success"
+              onClick={() => setShowDirectoryModal(false)}
+            >
+              Okay
+            </Button>
+          </ModalFooter>
         </ModalContent>
       </Modal>
     </>

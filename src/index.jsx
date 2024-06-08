@@ -3,12 +3,13 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { NextUIProvider, Tabs, Tab, Button } from "@nextui-org/react";
 import "./styles.css";
-import HomePage from "./component/Home";
 import LibraryPage from "./component/Library";
 import BrowsePage from "./component/Browsing";
 import { SettingsIcon } from "./component/global/SettingsIcon";
 import SettingsModal from './component/global/SettingsPopup';
 import {HeartIcon} from "./component/global/Heart";
+import { LibraryIcon } from './component/global/LibraryIcon';
+import { BrowseIcon } from './component/global/BrowseIcon';
 
 const App = () => {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -47,17 +48,17 @@ const App = () => {
 
   return (
     <NextUIProvider>
-      <div className="w-screen h-screen p-8 flex items-start justify-center">
-        <div className="h-full">
+      <div className="w-screen h-screen justify-center">
           <SettingsModal isOpen={isSettingsModalOpen} onOpenChange={toggleSettingsModal} />
-          <Tabs isVertical aria-label="Options" className="center-tabs">
-            <Tab key="home" title="Home">
-              <HomePage />
-            </Tab>
-            <Tab key="browse" title="Browse">
+          <Tabs isVertical isIconOnly aria-label="Options" color="primary" variant="bordered" className="tabs">
+            <Tab key="browse" title={
+                <BrowseIcon />
+            }>
               <BrowsePage />
             </Tab>
-            <Tab key="games" title="Library">
+            <Tab key="games" title={
+                <LibraryIcon />
+            }>
               <div className='flex'>
               <LibraryPage />
               </div>
@@ -66,7 +67,6 @@ const App = () => {
           <Button isIconOnly color="default" size="sm" variant="light" className="configure-loc" onPress={toggleSettingsModal}>
             <SettingsIcon />
           </Button>
-        </div>
       </div>
     </NextUIProvider>
   );
