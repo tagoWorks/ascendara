@@ -7,7 +7,7 @@ require("dotenv").config()
 
 const CURRENT_VERSION = "2.0";
 
-axios.get('https://storage.ascendara.app/files/version.json')
+axios.get('https://api.ascendara.app/public/json/current')
   .then(response => {
     const latest_version = response.data.version;
     if (latest_version !== CURRENT_VERSION) {
