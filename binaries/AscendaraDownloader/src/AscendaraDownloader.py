@@ -180,13 +180,17 @@ def download_file(link, game, online, dlc, version, download_dir):
         except Exception as e:
             handleerror(game_info, game_info_path, e)
             raise e
+
     class SSLContextAdapter(HTTPAdapter):
         def init_poolmanager(self, *args, **kwargs):
-            context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-            context.options &= ~ssl.OP_NO_TLSv1_2  # Enable TLS 1.2
-            context.options &= ~ssl.OP_NO_TLSv1_3  # Enable TLS 1.3
+            context = ssl.create_default_context()
+            context.set_ciphers('DEFAULT@SECLEVEL=1')  # Lower security level to increase compatibility
+            context.options |= ssl.OP_NO_SSLv2
+            context.options |= ssl.OP_NO_SSLv3
+            context.options |= ssl.OP_NO_TLSv1
             kwargs['ssl_context'] = context
             return super(SSLContextAdapter, self).init_poolmanager(*args, **kwargs)
+
     def download_with_requests(link, download_path, game_info_path, game_info):
         session = requests.Session()
         session.mount('https://', SSLContextAdapter())
