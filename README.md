@@ -44,12 +44,12 @@
 ### Ascendara App
 - [ ] Auto Create Shortcuts
 - [x] Add news section
-- [ ] Make game searches less harsh
+- [x] Make game searches less harsh
 - [ ] Show recent games
 - [ ] Add different filtering options
 - [ ] Add additional game sources
 - [x] Populate pages
-- [ ] Add notifactions for games status
+- [ ] Add notifications for games status
 - [ ] Small-undisturbing advertisments
 - [ ] Add different sources
 - [x] Move tabs to the top left
