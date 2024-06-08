@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { NextUIProvider, Tabs, Tab, Button } from "@nextui-org/react";
+import { NextUIProvider, Tabs, Tab, Button, Spacer } from "@nextui-org/react";
 import "./styles.css";
 import LibraryPage from "./component/Library";
 import BrowsePage from "./component/Browsing";
@@ -10,6 +10,7 @@ import SettingsModal from './component/global/SettingsPopup';
 import {HeartIcon} from "./component/global/Heart";
 import { LibraryIcon } from './component/global/LibraryIcon';
 import { BrowseIcon } from './component/global/BrowseIcon';
+
 
 const App = () => {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -39,7 +40,20 @@ const App = () => {
   };
 
   useEffect(() => {
-    getGames();
+    const fetchData = async () => {
+      try {
+        await getGames();
+        setTimeout(() => {
+          setIsInitialLoading(false);
+        }, 500);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setIsInitialLoading(false); 
+      }
+    };
+  
+    fetchData();
+  
   }, []);
 
   const toggleSettingsModal = () => {

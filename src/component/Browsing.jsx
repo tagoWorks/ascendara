@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Button, Pagination, Spacer, Spinner } from "@nextui-org/react";
+import { Button, Pagination, Spacer, Spinner, Modal, ModalBody, ModalFooter, ModalContent, ModalHeader } from "@nextui-org/react";
 import { HelpIcon } from "./GameSearch/HelpIcon";
 import "./GameSearch/browsing.css";
 import SearchBox from "./GameSearch/SearchBox";
-import NoDownloadPathNotification from "./GameSearch/NoDownloadPath";
 import CardComponent from "./GameSearch/GamesCard";
 import ErrorCard from "./GameSearch/ErrorCard";
 import Fuse from "fuse.js";
@@ -26,7 +25,16 @@ const GameBrowse = () => {
   const [news, setNews] = useState([]);
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState(false);
-  const [downloadDirectory, setDownloadDirectory] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const handleHelpClick = () => {
+    console.log(metadata.getDate)
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
 
   const getToken = async () => {
     const AUTHORIZATION = await window.electron.getAPIKey();
@@ -183,19 +191,18 @@ const GameBrowse = () => {
 
   return (
     <div style={{ padding: "5rem", display: "flex", height: "100vh" }}>
-      <div style={{ flex: 3, overflowY: "hidden", marginRight: "1rem", }}>
+      <div style={{ flex: 3, overflowY: "hidden", marginRight: "1rem" }}>
         <div className="flex items-center justify-between">
-        
-        <h1 className="py-4 text-small font-medium">
+          <h1 className="py-4 text-small font-medium">
             Indexed Games: {metadata.games} | Current Source: {metadata.source}
           </h1>
-          <Button isIconOnly color="none">
+          <Button isIconOnly color="none" onClick={handleHelpClick}>
             <HelpIcon size={18} />
           </Button>
-        <SearchBox onSearch={handleSearch} />
-        
+          <SearchBox onSearch={handleSearch} />
+        </div>
         <div className="flex flex-col items-center gap-8">
-        <Spacer y="3"/>
+          <Spacer y="3" />
           {loading ? (
             <Spinner />
           ) : error ? (
@@ -229,11 +236,10 @@ const GameBrowse = () => {
               )}
             </>
           )}
-          </div>
         </div>
       </div>
       <div className="news-container" style={{ flex: 1, overflowY: "auto" }}>
-      {newsLoading ? (
+        {newsLoading ? (
           <Spinner />
         ) : newsError ? (
           <ErrorCard message="Failed to load news. Please try again later." />
@@ -243,12 +249,31 @@ const GameBrowse = () => {
           news.map((article, index) => (
             <div key={index} className="news-section">
               <h2>{article.title}</h2>
-              <p className="text-small text-default-400" >{article.date}</p>
+              <p className="text-small text-default-400">{article.date}</p>
               <p>{article.body}</p>
             </div>
           ))
         )}
       </div>
+      <Modal isOpen={showModal} onClose={handleCloseModal}>
+        <ModalContent>
+        <ModalHeader>Indexed Source</ModalHeader>
+        <ModalBody>
+          <h1 className="text-small">Ascendara Sources are the websites that hold all of the games along with their download links. These are indexed every few weeks in order to keep up with the latest games</h1>
+          <p>Source: {metadata.source}</p>
+          <p>Indexed Games: {metadata.games}</p>
+          <p>Last updated: {metadata.getDate}</p>
+        </ModalBody>
+        <ModalFooter>
+          <Button auto onClick={handleCloseModal}>
+            Close
+          </Button>
+          <Button>
+            <a href="https://docs.ascendara.app/" target="_blank">Read More</a>
+          </Button>
+        </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

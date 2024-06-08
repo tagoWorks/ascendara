@@ -5,7 +5,7 @@ const fs = require('fs');
 const { spawn } = require('child_process');
 require("dotenv").config()
 
-const CURRENT_VERSION = "2.0";
+const CURRENT_VERSION = "2.1.0";
 
 axios.get('https://api.ascendara.app/public/json/current')
   .then(response => {
@@ -445,9 +445,8 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true,
       contextIsolation: true,
-    },
+    }
   });
-
   mainWindow.loadURL('http://localhost:5173/')
   //mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));
   mainWindow.setMinimumSize(1600, 800);
