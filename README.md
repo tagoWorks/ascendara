@@ -15,7 +15,7 @@
 ![Development](https://img.shields.io/badge/UNDER%20DEVELOPMENT-FF3100)
 
 
-> Ascendara simplifies the process that people typically go through on Steamrip and Steamunlocked.  Ascendara is a hybrid application utilizing Electron for the desktop app framework, Python for backend functionality, and React/Next.js for the frontend
+> With Ascendara, you can easily download, manage, and play pre-installed games without needs to go through the hassle of extracting, installing, and moving files. Ascendara's game list comes from a custom webscraper which for now only has games from [STEAMRIP](https://steamrip.com/), but plans for more sources later on
 
 # Building the app
 ### Note: The Ascendara API requires a key which is private as of now. Game browsing will not function properly.
@@ -43,16 +43,17 @@
 
 ### Ascendara App
 - [ ] Auto Create Shortcuts
-- [ ] Add news section to home
+- [x] Add news section
 - [ ] Make game searches less harsh
 - [ ] Show recent games
 - [ ] Add different filtering options
-- [ ] Populate pages
+- [ ] Add additional game sources
+- [x] Populate pages
 - [ ] Add notifactions for games status
 - [ ] Small-undisturbing advertisments
 - [ ] Add different sources
-- [ ] Move tabs to the top left
-- [ ] Make seperate library, downloads, and browse
+- [x] Move tabs to the top left
+- [ ] ~Make seperate library, downloads, and browse~
 - [ ] Add your own games
 - [ ] Create Public API Keys for accounts
 - [ ] Create Retry Download & Extract
