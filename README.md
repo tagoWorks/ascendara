@@ -46,6 +46,8 @@
 - [x] Add news section
 - [x] Make game searches less harsh
 - [ ] Show recent games
+- [ ] Storage information ontop of games library
+- [ ] Theme settings
 - [ ] Add different filtering options
 - [ ] Add additional game sources
 - [x] Populate pages
