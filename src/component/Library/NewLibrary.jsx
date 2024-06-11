@@ -9,7 +9,7 @@ const CardComponent = () => {
         <CardBody className="justify-between items-center">
           <h1 className="text-2-3">Welcome to your <span className="font-bold gradient-text">Ascendara Library</span></h1>
           <Spacer y={2} />
-          <h2 className="font-bold">Browse games and download one!</h2>
+          <h2 className="font-bold">Download any game to watch their progress here, or add a game you already have installed!</h2>
         </CardBody>
       </Card>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Divider, Spacer } from "@nextui-org/react";
+import { Button, Divider, Spacer } from "@nextui-org/react";
 import Games from "./Library/Games/GamesGet";
+import { AddGamesIcon } from "./Library/Games/svg/AddGame"
 import Downloads from "./Library/DownloadManager/DownloadManager";
 import NewLibrary from "./Library/NewLibrary";
 
@@ -38,13 +39,17 @@ const Library = () => {
   }, []);
 
   return (
-    <div className="px-20 py-4">
+    <div>
+      <Spacer y={20} />
       {games.length === 0 && downloadingGames.length === 0 && <NewLibrary />}
         <>
         {games.length > 0 && (
           <>
           <h1 className="text-large font-medium quicksand">
             Your Library
+          <Button className="translate-y-1" isIconOnly variant="none">
+            <AddGamesIcon width={20} height={20} />
+          </Button>
           </h1>
           <Spacer y={5} />
           <Games games={games} />

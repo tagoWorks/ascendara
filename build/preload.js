@@ -20,7 +20,9 @@ contextBridge.exposeInMainWorld('electron', {
   getDownloadDirectory: () => ipcRenderer.invoke('get-download-directory'),
   getAPIKey: () => ipcRenderer.invoke('get-api-key'),
   getVersion: () => ipcRenderer.invoke('get-version'),
-  getGames: () => ipcRenderer.invoke('get-games'),
+  getBackgrounds: () => ipcRenderer.invoke('get-backgrounds'),
+  setBackground: (color, gradient) => ipcRenderer.invoke('set-background', color, gradient),
+  getGames: () => ipcRenderer.invoke('get-games')
 });
 
 window.addEventListener('DOMContentLoaded', () => {

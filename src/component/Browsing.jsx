@@ -26,9 +26,9 @@ const GameBrowse = () => {
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [installedGames, setInstalledGames] = useState([]);
 
   const handleHelpClick = () => {
-    console.log(metadata.getDate)
     setShowModal(true);
   };
 
@@ -101,59 +101,69 @@ const GameBrowse = () => {
     setCardsPerPage(cards);
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = await getToken();
+  const fetchGames = async () => {
+    try {
+      const token = await getToken();
 
-        const cachedGames = JSON.parse(localStorage.getItem(CACHE_KEY));
-        const cacheExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
-        const cachedMetadata = JSON.parse(localStorage.getItem(METADATA_KEY));
-        if (
-          cachedGames &&
-          cacheExpiry &&
-          cachedMetadata &&
-          Date.now() < parseInt(cacheExpiry)
-        ) {
-          setGames(cachedGames);
-          setFilteredGames(cachedGames);
-          setMetadata(cachedMetadata);
-          setLoading(false);
-          setError(false);
-        } else {
-          const response = await fetch("https://api.ascendara.app/json/games", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          const data = await response.json();
-          setMetadata(data.metadata);
-          setGames(data.games);
-          setFilteredGames(data.games);
-          setLoading(false);
-          setError(false);
-          setRetryCount(0);
+      const cachedGames = JSON.parse(localStorage.getItem(CACHE_KEY));
+      const cacheExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
+      const cachedMetadata = JSON.parse(localStorage.getItem(METADATA_KEY));
+      if (
+        cachedGames &&
+        cacheExpiry &&
+        cachedMetadata &&
+        Date.now() < parseInt(cacheExpiry)
+      ) {
+        setGames(cachedGames);
+        setFilteredGames(cachedGames);
+        setMetadata(cachedMetadata);
+        setLoading(false);
+        setError(false);
+      } else {
+        const response = await fetch("https://api.ascendara.app/json/games", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        setMetadata(data.metadata);
+        setGames(data.games);
+        setFilteredGames(data.games);
+        setLoading(false);
+        setError(false);
+        setRetryCount(0);
 
-          localStorage.setItem(CACHE_KEY, JSON.stringify(data.games));
-          localStorage.setItem(METADATA_KEY, JSON.stringify(data.metadata));
-          const expiryTime = Date.now() + 3600000;
-          localStorage.setItem(CACHE_EXPIRY_KEY, expiryTime.toString());
-        }
-
-        fetchNews(token);
-      } catch (error) {
-        console.error("Error fetching games:", error);
-        if (retryCount < 3) {
-          setRetryCount(retryCount + 1);
-          setTimeout(fetchData, 5000);
-        } else {
-          setError(true);
-          setLoading(false);
-        }
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data.games));
+        localStorage.setItem(METADATA_KEY, JSON.stringify(data.metadata));
+        const expiryTime = Date.now() + 3600000;
+        localStorage.setItem(CACHE_EXPIRY_KEY, expiryTime.toString());
       }
-    };
 
-    fetchData();
+      fetchNews(token);
+    } catch (error) {
+      console.error("Error fetching games:", error);
+      if (retryCount < 3) {
+        setRetryCount(retryCount + 1);
+        setTimeout(fetchGames, 5000);
+      } else {
+        setError(true);
+        setLoading(false);
+      }
+    }
+  };
+
+  const loadInstalledGames = async () => {
+    try {
+      const installedGames = await window.electron.getGames();
+      setInstalledGames(installedGames);
+    } catch (error) {
+      console.error("Error loading installed games:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchGames();
+    loadInstalledGames();
     updateCardsPerPage();
     window.addEventListener("resize", updateCardsPerPage);
 
@@ -161,6 +171,13 @@ const GameBrowse = () => {
       window.removeEventListener("resize", updateCardsPerPage);
     };
   }, [retryCount]);
+  useEffect(() => {
+    if (games.length > 0 && installedGames.length > 0) {
+      const installedGameNames = installedGames.map((game) => game.game);
+      const filtered = games.filter((game) => !installedGameNames.includes(game.game));
+      setFilteredGames(filtered);
+    }
+  }, [games, installedGames]);
 
   const handleSearch = (query, showOnlineOnly) => {
     if (query.trim() === "") {

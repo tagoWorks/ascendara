@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { NextUIProvider, Tabs, Tab, Button, Spacer } from "@nextui-org/react";
+import { NextUIProvider, Tabs, Tab, Button, Tooltip } from "@nextui-org/react";
 import "./styles.css";
 import LibraryPage from "./component/Library";
 import BrowsePage from "./component/Browsing";
 import { SettingsIcon } from "./component/global/SettingsIcon";
 import SettingsModal from './component/global/SettingsPopup';
+import ThemesModal from './component/global/ThemesPopup'
 import {HeartIcon} from "./component/global/Heart";
 import { LibraryIcon } from './component/global/LibraryIcon';
 import { BrowseIcon } from './component/global/BrowseIcon';
+import { ThemesIcon } from './component/global/ThemesIcon'
 
 
 const App = () => {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isThemesModalOpen, setIsThemesModalOpen] = useState(false);
   const [games, setGames] = useState([]);
   const [downloadingGames, setDownloadingGames] = useState([]);
   const getGames = async () => {
@@ -43,9 +46,6 @@ const App = () => {
     const fetchData = async () => {
       try {
         await getGames();
-        setTimeout(() => {
-          setIsInitialLoading(false);
-        }, 500);
       } catch (error) {
         console.error("Error fetching data:", error);
         setIsInitialLoading(false); 
@@ -60,10 +60,15 @@ const App = () => {
     setIsSettingsModalOpen(!isSettingsModalOpen);
   };
 
+  const toggleThemesModal = () => {
+    setIsThemesModalOpen(!isThemesModalOpen);
+  };
+
   return (
     <NextUIProvider>
       <div className="w-screen h-screen justify-center">
           <SettingsModal isOpen={isSettingsModalOpen} onOpenChange={toggleSettingsModal} />
+          <ThemesModal isOpen={isThemesModalOpen} onOpenChange={toggleThemesModal} />
           <Tabs isVertical isIconOnly aria-label="Options" color="primary" variant="bordered" className="tabs">
             <Tab key="browse" title={
                 <BrowseIcon />
@@ -81,6 +86,11 @@ const App = () => {
           <Button isIconOnly color="default" size="sm" variant="light" className="configure-loc" onPress={toggleSettingsModal}>
             <SettingsIcon />
           </Button>
+          <Tooltip content="Coming soon...">
+          <Button isIconOnly color="default" size="sm" variant="light" className="theme-loc" onPress={toggleThemesModal}>
+            <ThemesIcon width={22} height={22} />
+          </Button>
+          </Tooltip>
       </div>
     </NextUIProvider>
   );

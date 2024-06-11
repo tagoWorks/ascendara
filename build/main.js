@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const axios = require('axios');
-const fs = require('fs');
+const fs = require('fs-extra');
 const { spawn } = require('child_process');
 require("dotenv").config()
 
@@ -45,7 +45,54 @@ ipcMain.handle('get-api-key', () => {
   return process.env.AUTHORIZATION;
 });
 
+// Get all backgrounds from backgrounds folder
+ipcMain.handle('get-backgrounds', async () => {
+  const backgroundsDirectory = path.join(app.getPath('userData'), '/backgrounds');
+  const files = await fs.readdir(backgroundsDirectory);
 
+  const backgrounds = await Promise.all(files.map(async (file) => {
+    const filePath = path.join(backgroundsDirectory, file);
+    const fileBuffer = await fs.readFile(filePath);
+    const fileBase64 = fileBuffer.toString('base64');
+
+    return {
+      name: file,
+      preview: `data:image/png;base64,${fileBase64}`,
+    };
+  }));
+
+  return backgrounds;
+});
+
+
+ipcMain.handle('set-background', async (event, color, gradient) => {
+  console.log(color, gradient);
+  const backgroundsDirectory = path.join(app.getPath('userData'), '/backgrounds');
+  const files = await fs.readdir(backgroundsDirectory);
+
+  const backgroundFile = files.find(file => {
+    const name = file.replace(/\.(png|jpg|jpeg)$/i, '');
+    const isGradient = name.includes('(Gradient)');
+    const isSolid = name.includes('(Solid)');
+    const isMatch = isGradient ? gradient : isSolid ? !gradient : false;
+    const colorMatch = name.replace(/\s*\([^)]*\)\s*/g, '').toLowerCase() === color.toLowerCase();
+    return isMatch && colorMatch;
+  });
+
+  if (backgroundFile) {
+    const backgroundPath = path.join(backgroundsDirectory, backgroundFile);
+    const backgroundBuffer = await fs.readFile(backgroundPath);
+    const backgroundBase64 = backgroundBuffer.toString('base64');
+    console.log(backgroundPath)
+
+    const mainWindow = BrowserWindow.getFocusedWindow();
+    if (mainWindow) {
+      mainWindow.webContents.executeJavaScript(`
+        document.body.style.background-image = 'url(data:image/png;base64,${backgroundBase64})';
+      `);
+    }
+  }
+});
 // Add stop all button to UI later
 ipcMain.handle('stop-all-downloads', async () => {
   console.log('Stopping all downloads');
@@ -452,7 +499,7 @@ function createWindow() {
   mainWindow.setMinimumSize(1600, 800);
 }
 
-// app.on('ready', createWindow); # Waits for update check now
+//app.on('ready', createWindow); # Waits for update check now
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

@@ -57,6 +57,13 @@ body {
   bottom: 50px;
   left: 50px;
 }
+
+.theme-loc {
+  position: fixed;
+  bottom: 85px;
+  left: 50px;
+}
+
 .container {
   position: relative;
   display: flex;

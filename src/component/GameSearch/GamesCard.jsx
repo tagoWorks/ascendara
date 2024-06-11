@@ -199,77 +199,70 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
                 />}
               </div>
             </ModalHeader>
-          <ModalBody>
-            <Select
+
+            <ModalBody>
+              <Select
               value={selectedProvider}
               onChange={(e) => handleSelectProvider(e.target.value)}
               placeholder="To get started, select a download provider"
             >
               {Object.keys(downloadLinks).map((provider) => (
                 <SelectItem className="arial" key={provider} value={provider}>
-                  {provider === "megadb" ? "Default (MegaDB)" : provider}
+                  {provider === "gofile"
+                    ? "Easiest (GoFile)"
+                    : provider === "megadb"
+                    ? "Default (MegaDB)"
+                    : provider}
                 </SelectItem>
               ))}
             </Select>
             {selectedProvider ? (
-              <>
-
-                <h3>Download Link:</h3>
-                <Snippet size="md" className="justify-center" hideSymbol variant="none">
-                  <a>
-                  https:{selectedLink}
-                  </a>
-                </Snippet>
-                <h2 className="text-large">Step 1.</h2>
-                <h3>Copy and paste the link into your browser and find the Download button</h3>
-                <h2 className="text-large">Step 2.</h2>
-                <h3>Stop the download once it starts in your browser, and copy the link that the browser started downloading</h3>
-                <h2 className="text-large">Step 3.</h2>
-                <h3>Paste the link in the input below and click "Next"</h3>
-                <Spacer y={2} />
-                <h3 className="text-small text-default-400">Some providers may limit download speeds</h3>
-                <Input
-                  label="Enter the download link here"
-                  value={inputLink}
-                  onChange={(e) => setInputLink(e.target.value)}
-                  isInvalid={!isValidURL(inputLink, selectedProvider, game)}
-                  errorMessage="Please enter a valid download URL from your selected provider"
-                />
-              </>
+              selectedProvider === "gofile" ? (
+                <>
+                  <h3>Direct Link:</h3>
+                  <Snippet isDisabled size="md" className="justify-center" hideSymbol variant="none">
+                    <a>https:{selectedLink}</a>
+                  </Snippet>
+                  <h2 className="text-large">Thanks to ltsdw on GitHub</h2>
+                  <h3>Unlike other providers that require a CAPTCHA verification, 
+                    GoFile allows direct downloads through their API without such interruptions.</h3>
+                  <h3 className="text-large">Simply click on Download to start downloading this game.</h3>
+                </>
+              ) : (
+                <>
+                  <h3>Download Link:</h3>
+                  <Snippet size="md" className="justify-center" hideSymbol variant="none">
+                    <a>https:{selectedLink}</a>
+                  </Snippet>
+                  <h2 className="text-large">Step 1.</h2>
+                  <h3>Copy and paste the link into your browser and find the Download button</h3>
+                  <h2 className="text-large">Step 2.</h2>
+                  <h3>Stop the download once it starts in your browser, and copy the link that the browser started downloading</h3>
+                  <h2 className="text-large">Step 3.</h2>
+                  <h3>Paste the link in the input below and click "Next"</h3>
+                  <Spacer y={2} />
+                  <h3 className="text-small text-default-400">Some providers may limit download speeds</h3>
+                  <Input
+                    label="Enter the download link here"
+                    value={inputLink}
+                    onChange={(e) => setInputLink(e.target.value)}
+                    isInvalid={!isValidURL(inputLink, selectedProvider, game)}
+                    errorMessage="Please enter a valid download URL from your selected provider"
+                  />
+                </>
+              )
             ) : (
               <></>
             )}
           </ModalBody>
-          <ModalFooter>
-            {selectedProvider ? (
-                <Button variant="solid" color="default" onClick={downloadFile}>
-                  Next
-                </Button>
-            ) : <></>}
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      <Modal
-        isOpen={showDirectoryModal}
-        onClose={() => setShowDirectoryModal(false)}
-        size="md"
-        className="fixed arial"
-      >
-        <ModalContent>
-          <ModalHeader>Hang on there!</ModalHeader>
-          <ModalBody>
-            <p>
-              You cannot download games yet. Please set a games directory by clicking the
-              settings button on the bottom left, then click on the Download Directory input.
-            </p>
-          </ModalBody>
+
           <ModalFooter>
             <Button
               variant="ghost"
               color="success"
               onClick={() => setShowDirectoryModal(false)}
             >
-              Okay
+              Download
             </Button>
           </ModalFooter>
         </ModalContent>

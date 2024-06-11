@@ -20,6 +20,7 @@
     "dotenv": "^16.4.5",
     "electron-dl": "^4.0.0",
     "framer-motion": "^11.2.6",
+    "fs-extra": "^11.2.0",
     "fuse.js": "^7.0.0",
     "path": "^0.12.7",
     "react": "latest",
@@ -40,7 +41,7 @@
   },
   "keywords": [],
   "author": "tagoWorks",
-  "icon": "build/icon.ico",  
+  "icon": "build/icon.ico",
   "build": {
     "asar": true,
     "appId": "com.tagoworks.ascendara",
