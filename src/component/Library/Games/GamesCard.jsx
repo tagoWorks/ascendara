@@ -51,7 +51,7 @@ const CardComponent = ({
   };
 
   const handleOpenExplorer = () => {
-    window.electron.openGameDirectory(game);
+    window.electron.openGameDirectory(game, false);
   };
 
   const handleReqLibraries = () => {
@@ -59,7 +59,7 @@ const CardComponent = ({
   };
 
   const handlePlayGame = () => {
-    window.electron.playGame(game);
+    window.electron.playGame(game, false);
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);

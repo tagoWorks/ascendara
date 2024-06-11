@@ -7,9 +7,9 @@ require("dotenv").config()
 
 const CURRENT_VERSION = "2.1.0";
 
-axios.get('https://api.ascendara.app/public/json/current')
+axios.get('https://api.ascendara.app/')
   .then(response => {
-    const latest_version = response.data.version;
+    const latest_version = response.data.appVer;
     if (latest_version !== CURRENT_VERSION) {
       dialog.showMessageBox({
         message: `There is a major update available that cannot be automatically installed. Please download from the Ascendara website.`,
@@ -30,6 +30,15 @@ axios.get('https://api.ascendara.app/public/json/current')
   })
   .catch(error => {
     console.error(error);
+    dialog.showMessageBox({
+      message: `Ascendara couldn't automatically check for an update.`,
+      buttons: ['View Status Page']
+    }).then((result) => {
+      if (result.response === 0) {
+        shell.openExternal('https://status.ascendara.app/');
+        app.quit();
+      }
+    });
   });
 
 let electronDl;
@@ -315,6 +324,61 @@ ipcMain.handle('get-games', async () => {
   }
 });
 
+ipcMain.handle('save-custom-game', async (event, game, online, dlc, version, executable) => {
+  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    const settings = JSON.parse(data);
+    if (!settings.downloadDirectory) {
+      console.error('Download directory not set');
+      return;
+    }
+    const downloadDirectory = settings.downloadDirectory;
+    const gamesFilePath = path.join(downloadDirectory, 'games.json');
+    try {
+      await fs.promises.access(gamesFilePath, fs.constants.F_OK);
+    } catch (error) {
+      await fs.promises.mkdir(downloadDirectory, { recursive: true });
+      await fs.promises.writeFile(gamesFilePath, JSON.stringify({ games: [] }, null, 2));
+    }
+    const gamesData = JSON.parse(await fs.promises.readFile(gamesFilePath, 'utf8'));
+    const newGame = {
+      game: game,
+      online: online,
+      dlc: dlc,
+      version: version,
+      executable: executable,
+      isRunning: false
+    };
+    gamesData.games.push(newGame);
+    await fs.promises.writeFile(gamesFilePath, JSON.stringify(gamesData, null, 2));
+  } catch (error) {
+    console.error('Error reading the settings file:', error);
+  }
+});
+
+ipcMain.handle('get-custom-games', () => {
+  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    const settings = JSON.parse(data);
+    if (!settings.downloadDirectory) {
+      console.error('Download directory not set');
+      return [];
+    }
+    const downloadDirectory = settings.downloadDirectory;
+    const gamesFilePath = path.join(downloadDirectory, 'games.json');
+    const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, 'utf8'));
+    return gamesData.games;
+  }
+  catch (error) {
+    console.error('Error reading the settings file:', error);
+    return [];
+  }
+});
+
+
+
 ipcMain.handle('open-directory-dialog', async (event) => {
   const result = await dialog.showOpenDialog({
     properties: ['openDirectory']
@@ -355,20 +419,45 @@ ipcMain.handle('get-download-directory', () => {
   }
 });
 
-ipcMain.handle('open-game-directory', (event, game) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-  try {
-    const data = fs.readFileSync(filePath, 'utf8');
-    const settings = JSON.parse(data);
-    if (!settings.downloadDirectory) {
-      console.error('Download directory not set');
-      return;
-    } 
-    const downloadDirectory = settings.downloadDirectory;
-    const gameDirectory = path.join(downloadDirectory, game);
-    shell.openPath(gameDirectory);
-  } catch (error) {  
-    console.error('Error reading the settings file:', error);
+ipcMain.handle('open-game-directory', (event, game, isCustom) => {
+  if (!isCustom) {
+    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+    try {
+      const data = fs.readFileSync(filePath, 'utf8');
+      const settings = JSON.parse(data);
+      if (!settings.downloadDirectory) {
+        console.error('Download directory not set');
+        return;
+      }
+      const downloadDirectory = settings.downloadDirectory;
+      const gameDirectory = path.join(downloadDirectory, game);
+      shell.openPath(gameDirectory);
+    } catch (error) {
+      console.error('Error reading the settings file:', error);
+    }
+  } else {
+    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+    try {
+      const data = fs.readFileSync(filePath, 'utf8');
+      const settings = JSON.parse(data);
+      if (!settings.downloadDirectory) {
+        console.error('Download directory not set');
+        return;
+      }
+      const downloadDirectory = settings.downloadDirectory;
+      const gamesFilePath = path.join(downloadDirectory, 'games.json');
+      const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, 'utf8'));
+      const gameInfo = gamesData.games.find((g) => g.game === game);
+      if (gameInfo) {
+        const executablePath = gameInfo.executable;
+        const executableDir = path.dirname(executablePath);
+        shell.openPath(executableDir);
+      } else {
+        console.error(`Game not found in games.json: ${game}`);
+      }
+    } catch (error) {
+      console.error('Error reading the settings file:', error);
+    }
   }
 });
 
@@ -392,45 +481,62 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
     console.error('Error reading the settings file:', error);
   }});
 
-
-ipcMain.handle('play-game', (event, game) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-  try {
-    const data = fs.readFileSync(filePath, 'utf8');
-    const settings = JSON.parse(data);
-    if (!settings.downloadDirectory) {  
-      console.error('Download directory not set');
-      return;
-    }
-    const downloadDirectory = settings.downloadDirectory;
-    const gameDirectory = path.join(downloadDirectory, game);
-    const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
-    const gameInfoData = fs.readFileSync(gameInfoPath, 'utf8');
-    const gameInfo = JSON.parse(gameInfoData);
-    const executable = gameInfo.executable;
-    const executablePath = path.join(appDirectory, '/resources/AscendaraGameHandler.exe');
-    const runGame = spawn(executablePath, [executable]);
-    runGameProcesses.set(game, runGame);
-
-  runGame.on('close', (code) => {
-    console.log(`Game process for ${game} exited with code ${code}`);
-    runGameProcesses.delete(game);
-    const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
+  ipcMain.handle('play-game', (event, game, isCustom) => {
+    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
     try {
-      const gameInfoData = fs.readFileSync(gameInfoPath, 'utf8');
-      const gameInfo = JSON.parse(gameInfoData);
-      if (gameInfo.runError) {
-        setError(gameInfo.runError);
+      const data = fs.readFileSync(filePath, 'utf8');
+      const settings = JSON.parse(data);
+      if (!settings.downloadDirectory) {
+        console.error('Download directory not set');
+        return;
       }
+      const downloadDirectory = settings.downloadDirectory;
+      let executable;
+      let gameDirectory;
+      if (!isCustom) {
+        gameDirectory = path.join(downloadDirectory, game);
+        const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
+        const gameInfoData = fs.readFileSync(gameInfoPath, 'utf8');
+        const gameInfo = JSON.parse(gameInfoData);
+        executable = gameInfo.executable;
+      } else {
+        const gamesFilePath = path.join(downloadDirectory, 'games.json');
+        const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, 'utf8'));
+        const gameInfo = gamesData.games.find((g) => g.game === game);
+        if (gameInfo) {
+          executable = gameInfo.executable;
+          gameDirectory = path.dirname(executable);
+        } else {
+          console.error(`Game not found in games.json: ${game}`);
+          return;
+        }
+      }
+      const executablePath = path.join(appDirectory, '/resources/AscendaraGameHandler.exe');
+      const runGame = spawn(executablePath, [executable]);
+      runGameProcesses.set(game, runGame);
+  
+      runGame.on('close', (code) => {
+        console.log(`Game process for ${game} exited with code ${code}`);
+        runGameProcesses.delete(game);
+        if (!isCustom) {
+          const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
+          try {
+            const gameInfoData = fs.readFileSync(gameInfoPath, 'utf8');
+            const gameInfo = JSON.parse(gameInfoData);
+            if (gameInfo.runError) {
+              setError(gameInfo.runError);
+            }
+          } catch (error) {
+            console.error('Error reading the game info file:', error);
+          }
+        }
+      });
     } catch (error) {
-      console.error('Error reading the game info file:', error);
+      console.error('Error reading the settings file:', error);
     }
   });
 
-  } catch (error) {
-    console.error('Error reading the settings file:', error);
-  }
-});
+
 
 ipcMain.handle('is-game-running', async (event, game) => {
   const runGame = runGameProcesses.get(game);
@@ -471,6 +577,28 @@ ipcMain.handle('delete-game', async (event, game) => {
   } catch (error) {
     console.error('Error reading the settings file:', error);
   } 
+});
+
+ipcMain.handle('remove-game', async (event, game) => {
+  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    const settings = JSON.parse(data);
+    if (!settings.downloadDirectory) {
+      console.error('Download directory not set');
+      return;
+    }
+    const downloadDirectory = settings.downloadDirectory;
+    const gamesFilePath = path.join(downloadDirectory, 'games.json');
+    const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, 'utf8'));
+    const gameIndex = gamesData.games.findIndex((g) => g.game === game);
+    if (gameIndex !== -1) {
+      gamesData.games.splice(gameIndex, 1);
+      fs.writeFileSync(gamesFilePath, JSON.stringify(gamesData, null, 2));
+    }
+  } catch (error) {
+    console.error('Error reading the settings file:', error);
+  }
 });
 
 ipcMain.handle('download-finished', async (event, game) => {

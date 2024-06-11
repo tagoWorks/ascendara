@@ -148,7 +148,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
 
   return (
     <>
-      <Card className="wrap px-5 card-gradient ">
+      <Card className="wrap px-5 cardhover">
         <CardHeader className="justify-between items-center">
           <div className="flex gap-5">
             <div className="flex flex-col gap-1 items-start justify-center">
@@ -258,8 +258,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
                     value={inputLink}
                     onChange={(e) => setInputLink(e.target.value)}
                     isInvalid={!isValidURL(inputLink, selectedProvider, game)}
-                    errorMessage="Please enter a valid download URL from your selected provider"
-                  />
+                    errorMessage="Please enter a valid download URL from your selected provider"/>
                 </>
               )
             ) : (
@@ -271,9 +270,8 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
             {selectedProvider ? 
               <Button
               variant="ghost"
-              color="success"
-              onClick={() => setShowDirectoryModal(false)}
-              >
+              color="primary"
+              onClick={() => setShowDirectoryModal(false)}>
               Download
               </Button>
             : (

@@ -7,11 +7,11 @@ import CardComponent from "./GameSearch/GamesCard";
 import ErrorCard from "./GameSearch/ErrorCard";
 import Fuse from "fuse.js";
 
-const CACHE_KEY = "cachedGames";
-const CACHE_EXPIRY_KEY = "cacheExpiry";
-const METADATA_KEY = "cachedMetadata";
-const NEWS_CACHE_KEY = "cachedNews";
-const NEWS_CACHE_EXPIRY_KEY = "newsCacheExpiry";
+const CACHE_KEY = "cachedGamesKey";
+const CACHE_EXPIRY_KEY = "cacheExpiryKey";
+const METADATA_KEY = "cachedMetadataKey";
+const NEWS_CACHE_KEY = "cachedNewsKey";
+const NEWS_CACHE_EXPIRY_KEY = "newsCacheExpiryKey";
 
 const GameBrowse = () => {
   const [games, setGames] = useState([]);

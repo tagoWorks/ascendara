@@ -85,6 +85,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
               <Spacer y={3} />
               <Input
                 onClick={handleSelectDirectory}
+                isReadOnly
                 label="Download Directory"
                 value={downloadDirectory}
               />

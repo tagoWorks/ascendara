@@ -1,7 +1,35 @@
-import React from 'react';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
+import React, { useState } from 'react';
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Switch, Button } from "@nextui-org/react";
 
 const GamesAddModal = ({ isOpen, onOpenChange }) => {
+  const [executable, setExecutable] = useState(null);
+  const [gameName, setGameName] = useState('');
+  const [hasVersion, setHasVersion] = useState(false);
+  const [version, setVersion] = useState('');
+  const [isOnline, setIsOnline] = useState(false);
+  const [hasDLC, setHasDLC] = useState(false);
+
+  const handleChooseExecutable = async () => {
+    const file = await window.electron.openFileDialog();
+    if (file) {
+      setExecutable(file);
+      const fileName = file.replace(/^.*[\\\/]/, '').replace('.exe', '');
+      setGameName(fileName);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (gameName && executable) {
+      window.electron.addGame(gameName, isOnline, hasDLC, version, executable);
+      onOpenChange(false);
+      setExecutable(null);
+      setGameName('');
+      setHasVersion(false);
+      setVersion('');
+      setIsOnline(false);
+      setHasDLC(false);
+    }
+  };
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="center" classNames={{
@@ -13,14 +41,45 @@ const GamesAddModal = ({ isOpen, onOpenChange }) => {
         {() => (
           <>
             <ModalHeader>
-              <h3>Add your game</h3>
+              <h3>Add Your Own Game</h3>
             </ModalHeader>
             <ModalBody>
-
+              <h1>Choose your Game</h1>
+              <Input
+                type="text"
+                value={executable || ''}
+                onClick={handleChooseExecutable}
+                readOnly
+                placeholder="Choose Executable"
+              />
+              <Input
+                type="text"
+                value={gameName}
+                onChange={(e) => setGameName(e.target.value)}
+                placeholder="Game Name"
+              />
+              <h1>Game Details</h1>
+                <Switch checked={hasVersion} onChange={(e) => setHasVersion(e.target.checked)}>
+                Specify a Game Version
+                </Switch>
+              {hasVersion && (
+                <Input
+                  type="text"
+                  value={version}
+                  onChange={(e) => setVersion(e.target.value)}
+                  placeholder="Version Number"
+                />
+              )}
+                <Switch checked={isOnline} onChange={(e) => setIsOnline(e.target.checked)}>
+                Has Online Fix
+                </Switch>
+                <Switch checked={hasDLC} onChange={(e) => setHasDLC(e.target.checked)}>
+                Includes All DLC's
+                </Switch>
+              <ModalFooter>
+                <Button variant='ghost' onClick={handleSubmit}>Add Game</Button>
+              </ModalFooter>
             </ModalBody>
-            <ModalFooter>
-
-            </ModalFooter>
           </>
         )}
       </ModalContent>
