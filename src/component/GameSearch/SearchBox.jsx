@@ -1,13 +1,17 @@
 import React, { useState } from "react";
-import { Input, Select, SelectItem } from "@nextui-org/react";
+import { Input } from "@nextui-org/react";
 
 export default function SearchBox({ onSearch }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [showOnlineOnly] = useState(false);
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    onSearch(e.target.value, showOnlineOnly);
+    onSearch(e.target.value, false);
+  };
+
+  const handleClear = () => {
+    setSearchQuery("");
+    onSearch("", false)
   };
 
   const handleKeyDown = (e) => {
@@ -17,12 +21,15 @@ export default function SearchBox({ onSearch }) {
   };
 
   return (
-        <Input
-          type="text"
-          label="Search..."
-          value={searchQuery}
-          onChange={handleSearch}
-          onKeyDown={handleKeyDown}
-        />
+    <Input
+      size="lg"
+      type="text"
+      placeholder="Search..."
+      variant="underlined"
+      value={searchQuery}
+      onChange={handleSearch}
+      onKeyDown={handleKeyDown}
+      onClear={handleClear}
+    />
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardHeader, CardFooter, Chip, Tooltip, Button, Spacer, CircularProgress, Dropdown, DropdownTrigger, DropdownMenu, DropdownSection, DropdownItem } from "@nextui-org/react";
+import { Card, CardHeader, CardFooter, Chip, Button, Spacer, CircularProgress, Dropdown, DropdownTrigger, DropdownMenu, DropdownSection, DropdownItem } from "@nextui-org/react";
 import { GamesSetting } from "./svg/ThreeDotsVerticle";
 import { DirectoryIcon } from "./svg/DirectoryIcon";
 import { UpdateIcon } from "./svg/UpdateIcon";

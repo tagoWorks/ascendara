@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Image, Spacer, Divider, Button, Chip } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Image, Spacer, Chip } from "@nextui-org/react";
 
 const ThemesModal = ({ isOpen, onOpenChange }) => {
   const [backgrounds, setBackgrounds] = useState([]);

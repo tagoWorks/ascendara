@@ -246,6 +246,8 @@ const GameBrowse = () => {
                 <Pagination
                   total={Math.ceil(filteredGames.length / cardsPerPage)}
                   isCompact
+                  variant="none"
+                  color="secondary"
                   initialPage={1}
                   className="pagination"
                   onChange={handlePageChange}

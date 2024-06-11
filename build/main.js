@@ -93,6 +93,7 @@ ipcMain.handle('set-background', async (event, color, gradient) => {
     }
   }
 });
+
 // Add stop all button to UI later
 ipcMain.handle('stop-all-downloads', async () => {
   console.log('Stopping all downloads');

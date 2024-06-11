@@ -148,7 +148,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
 
   return (
     <>
-      <Card className="wrap px-5">
+      <Card className="wrap px-5 card-gradient ">
         <CardHeader className="justify-between items-center">
           <div className="flex gap-5">
             <div className="flex flex-col gap-1 items-start justify-center">
@@ -185,7 +185,12 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
           </Button>
         </CardHeader>
       </Card>
-      <Modal isOpen={isOpen} onClose={onClose} size="4xl" className="fixed arial">
+      <Modal isOpen={isOpen} onClose={onClose} size="3xl" 
+                  classNames={{
+                    body: "py-6",
+                    backdrop: "bg-[#292f46]/50",
+                    base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",
+                  }}>
         <ModalContent>
           <ModalHeader>
               <div>
@@ -203,6 +208,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
             <ModalBody>
               <Select
               value={selectedProvider}
+              variant="underlined"
               onChange={(e) => handleSelectProvider(e.target.value)}
               placeholder="To get started, select a download provider"
             >
@@ -216,13 +222,16 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
                 </SelectItem>
               ))}
             </Select>
+            <Spacer y={5} />
             {selectedProvider ? (
               selectedProvider === "gofile" ? (
                 <>
                   <h3>Direct Link:</h3>
-                  <Snippet isDisabled size="md" className="justify-center" hideSymbol variant="none">
+                  <div>
+                  <Snippet isDisabled size="md" hideSymbol variant="none">
                     <a>https:{selectedLink}</a>
                   </Snippet>
+                  </div>
                   <h2 className="text-large">Thanks to ltsdw on GitHub</h2>
                   <h3>Unlike other providers that require a CAPTCHA verification, 
                     GoFile allows direct downloads through their API without such interruptions.</h3>
@@ -231,9 +240,11 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
               ) : (
                 <>
                   <h3>Download Link:</h3>
-                  <Snippet size="md" className="justify-center" hideSymbol variant="none">
+                  <div>
+                  <Snippet size="md" hideSymbol variant="none">
                     <a>https:{selectedLink}</a>
                   </Snippet>
+                  </div>
                   <h2 className="text-large">Step 1.</h2>
                   <h3>Copy and paste the link into your browser and find the Download button</h3>
                   <h2 className="text-large">Step 2.</h2>
@@ -257,13 +268,17 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
           </ModalBody>
 
           <ModalFooter>
-            <Button
+            {selectedProvider ? 
+              <Button
               variant="ghost"
               color="success"
               onClick={() => setShowDirectoryModal(false)}
-            >
+              >
               Download
-            </Button>
+              </Button>
+            : (
+              <></>
+            )}
           </ModalFooter>
         </ModalContent>
       </Modal>

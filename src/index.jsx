@@ -69,7 +69,7 @@ const App = () => {
       <div className="w-screen h-screen justify-center">
           <SettingsModal isOpen={isSettingsModalOpen} onOpenChange={toggleSettingsModal} />
           <ThemesModal isOpen={isThemesModalOpen} onOpenChange={toggleThemesModal} />
-          <Tabs isVertical isIconOnly aria-label="Options" color="primary" variant="bordered" className="tabs">
+          <Tabs isVertical isIconOnly aria-label="Options" color="secondary" variant="bordered" className="tabs">
             <Tab key="browse" title={
                 <BrowseIcon />
             }>
