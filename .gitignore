@@ -16,5 +16,4 @@ binaries/AscendaraBackgroundTasks/make-exe.bat
 /binaries/AscendaraGameHandler/build
 
 binaries/AscendaraDownloader/AscendaraDownloader.spec
-
 binaries/AscendaraGameHandler/AscendaraGameHandler.spec
