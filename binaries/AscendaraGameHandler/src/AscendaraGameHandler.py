@@ -4,8 +4,7 @@ import subprocess
 import sys
 import time
 import psutil
-
-running = False
+import logging
 
 def is_process_running(exe_path):
     for proc in psutil.process_iter(['name']):
@@ -16,79 +15,70 @@ def is_process_running(exe_path):
             pass
     return False
 
-def execute(game_path):
-    game_dir, exe_name = os.path.split(game_path)
-    print(f"game_dir: {game_dir}, exe_name: {exe_name}")
-    exe_path = os.path.join(game_dir, exe_name)
+def execute(game_path, is_custom_game):
+    if not is_custom_game:
+        game_dir, exe_name = os.path.split(game_path)
+        exe_path = os.path.join(game_dir, exe_name)
+        json_file_path = os.path.join(game_dir, f"{os.path.basename(game_dir)}.ascendara.json")
+    else:
+        exe_path = game_path
+        user_data_dir = os.path.join(os.environ['APPDATA'], 'ascendara')
+        settings_file = os.path.join(user_data_dir, 'ascendarasettings.json')
+        with open(settings_file, 'r') as f:
+            settings = json.load(f)
+        download_dir = settings.get('downloadDirectory')
+        if not download_dir:
+            logging.error('Download directory not found in ascendarasettings.json')
+            return
+        games_file = os.path.join(download_dir, 'games.json')
+        with open(games_file, 'r') as f:
+            games_data = json.load(f)
+        game_entry = next((game for game in games_data['games'] if game['executable'] == exe_path), None)
+        if game_entry is None:
+            logging.error(f"Game not found in games.json for executable path: {exe_path}")
+            return
 
-    # Get the download directory from the ascendara settings
-    user_app_data_dir = os.getenv('APPDATA')
-    ascendara_settings_file = os.path.join(user_app_data_dir, 'Ascendara', 'ascendarasettings.json')
-    with open(ascendara_settings_file, 'r') as f:
-        ascendara_settings = json.load(f)
-    download_directory = ascendara_settings['downloadDirectory']
-
-    # Load the games.json file
-    games_file = os.path.join(download_directory, 'games.json')
-    with open(games_file, 'r') as f:
-        games_data = json.load(f)
-
-    # Find the game in the games.json file
-    for game in games_data['games']:
-        if game['executable'] == exe_path:
-            game_index = games_data['games'].index(game)
-            break
+    logging.info(f"game_dir: {os.path.dirname(exe_path)}, exe_path: {exe_path}")
 
     if not os.path.isfile(exe_path):
         error = "The exe file does not exist"
-        games_data['games'][game_index]['runError'] = error
-        with open(games_file, 'w') as f:
-            json.dump(games_data, f, indent=4)
+        if not is_custom_game:
+            with open(json_file_path, "r") as f:
+                data = json.load(f)
+            data["runError"] = error
+            with open(json_file_path, "w") as f:
+                json.dump(data, f, indent=4)
+        else:
+            logging.error(error)
         return
 
     process = subprocess.Popen(exe_path)
     running = True
     while running:
-        games_data['games'][game_index]['isRunning'] = is_process_running(exe_path)
-        with open(games_file, 'w') as f:
-            json.dump(games_data, f, indent=4)
+        if os.path.isfile(exe_path):
+            if not is_custom_game:
+                with open(json_file_path, "r") as f:
+                    data = json.load(f)
+                data["isRunning"] = is_process_running(exe_path)
+                with open(json_file_path, "w") as f:
+                    json.dump(data, f, indent=4)
+            else:
+                pass  # No need to update the game info file for custom games
 
         if process.poll() is not None:
             running = False
-            games_data['games'][game_index]['isRunning'] = False
-            with open(games_file, 'w') as f:
-                json.dump(games_data, f, indent=4)
+            if not is_custom_game:
+                data["isRunning"] = False
+                with open(json_file_path, "w") as f:
+                    json.dump(data, f, indent=4)
         time.sleep(5)
 
-def customExecute():
-    # Get the user app data directory
-    user_app_data_dir = os.getenv('APPDATA')
-
-    # Construct the path to the ascendara settings file
-    ascendara_settings_file = os.path.join(user_app_data_dir, 'Ascendara', 'ascendarasettings.json')
-
-    # Load the ascendara settings
-    with open(ascendara_settings_file, 'r') as f:
-        ascendara_settings = json.load(f)
-
-    # Get the download directory from the settings
-    download_directory = ascendara_settings['downloadDirectory']
-
-    # Construct the path to the games.json file
-    games_file = os.path.join(download_directory, 'games.json')
-
-    # Load the games.json file
-    with open(games_file, 'r') as f:
-        games_data = json.load(f)
-
-    # Iterate over the games and execute them
-    for game in games_data['games']:
-        game_path = game['executable']
-        execute(game_path)
-
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        customExecute()
-    else:
-        game_path = sys.argv[0]
-        execute(game_path)
+    _, game_path, is_custom_game_str = sys.argv
+
+    # Configure logging
+    log_file = os.path.join(os.path.dirname(__file__), 'gamehandler.log')
+    logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+    is_custom_game = is_custom_game_str.lower() == 'true'
+    execute(game_path, is_custom_game)

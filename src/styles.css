@@ -104,3 +104,9 @@ body {
   justify-content: center;
   align-items: center;
 }
+
+.library {
+  width: 75%;
+  height: 100%;
+  align-items: center;
+}

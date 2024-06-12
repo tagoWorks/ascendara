@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Button, Dropdown, Spacer } from "@nextui-org/react";
+import { Button, Dropdown, Spacer, Pagination } from "@nextui-org/react";
 import Games from "./Library/Games/GamesGet";
-import { AddGamesIcon } from "./Library/Games/svg/AddGame"
-import { HaltIcon } from "./Library/DownloadManager/HaltIcon"
+import { AddGamesIcon } from "./Library/Games/svg/AddGame";
+import { HaltIcon } from "./Library/DownloadManager/HaltIcon";
 import Downloads from "./Library/DownloadManager/DownloadManager";
 import NewLibrary from "./Library/NewLibrary";
 import GamesAddModal from "./Library/Games/GamesAdd";
@@ -12,6 +12,9 @@ const Library = () => {
   const [downloadingGames, setDownloadingGames] = useState([]);
   const [customGames, setCustomGames] = useState([]);
   const [isGamesModalOpen, setIsGamesModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const gamesPerPage = 6;
+
   const toggleGamesModal = () => {
     setIsGamesModalOpen(!isGamesModalOpen);
   };
@@ -64,8 +67,14 @@ const Library = () => {
     return () => clearInterval(intervalId);
   }, []);
 
+  const displayedGames = games.length > 0 
+    ? games.slice((currentPage - 1) * gamesPerPage, currentPage * gamesPerPage) 
+    : customGames.slice((currentPage - 1) * gamesPerPage, currentPage * gamesPerPage);
+
+  const totalPages = Math.ceil((games.length > 0 ? games.length : customGames.length) / gamesPerPage);
+
   return (
-    <div>
+    <div className="library">
       <GamesAddModal isOpen={isGamesModalOpen} onOpenChange={toggleGamesModal} />
       <Spacer y={20} />
       {games.length === 0 && customGames.length === 0 && downloadingGames.length === 0 && (
@@ -86,7 +95,14 @@ const Library = () => {
             </Button>
           </h1>
           <Spacer y={5} />
-          <Games games={games.length > 0 ? games : customGames} />
+          <Games games={displayedGames} />
+          {(games.length > gamesPerPage || customGames.length > gamesPerPage) && (
+            <Pagination 
+              total={totalPages} 
+              initialPage={currentPage} 
+              onChange={(page) => setCurrentPage(page)} 
+            />
+          )}
         </>
       )}
       {downloadingGames.length > 0 && (
@@ -116,3 +132,4 @@ const Library = () => {
 };
 
 export default Library;
+  

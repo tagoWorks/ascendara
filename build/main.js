@@ -512,7 +512,7 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
         }
       }
       const executablePath = path.join(appDirectory, '/resources/AscendaraGameHandler.exe');
-      const runGame = spawn(executablePath, [executable]);
+      const runGame = spawn(executablePath, [executable, isCustom]);
       runGameProcesses.set(game, runGame);
   
       runGame.on('close', (code) => {

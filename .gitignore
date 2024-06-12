@@ -8,7 +8,13 @@ binaries/AscendaraGameHandler/make-exe.bat
 /dist
 build/main-build.js
 binaries/AscendaraBackgroundTasks/make-exe.bat
+
 /binaries/AscendaraGameHandler/dist
 /binaries/AscendaraDownloader/dist
-binaries/AscendaraDownloader/AscendaraDownloader.spec
+
 /binaries/AscendaraDownloader/build
+/binaries/AscendaraGameHandler/build
+
+binaries/AscendaraDownloader/AscendaraDownloader.spec
+
+binaries/AscendaraGameHandler/AscendaraGameHandler.spec
