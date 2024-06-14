@@ -30,7 +30,7 @@ const isValidURL = (url, provider) => {
   let pattern;
   
   switch (provider.toLowerCase()) {
-    case 'egadb':
+    case 'megadb':
       pattern = /^(https?:\/\/)([^\/?#]+)(?::(\d+))?(\/[^?#]*\/[^?#]*\/)([^?#]+)\.(?:zip|rar|7z)$/i;
       break;
     case 'buzzheavier':

@@ -17,3 +17,4 @@ binaries/AscendaraBackgroundTasks/make-exe.bat
 
 binaries/AscendaraDownloader/AscendaraDownloader.spec
 binaries/AscendaraGameHandler/AscendaraGameHandler.spec
+package-lock.json

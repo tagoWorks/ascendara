@@ -5,7 +5,7 @@ const fs = require('fs-extra');
 const { spawn } = require('child_process');
 require("dotenv").config()
 
-const CURRENT_VERSION = "4.0.0";
+const CURRENT_VERSION = "4.0.1";
 
 axios.get('https://api.ascendara.app/')
   .then(response => {
