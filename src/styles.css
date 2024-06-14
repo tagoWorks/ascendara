@@ -82,6 +82,10 @@
   left: 50px;
 }
 
+.news-container{
+  overflow-y: hidden;
+  flex: 1;
+}
 .container {
   position: relative;
   display: flex;

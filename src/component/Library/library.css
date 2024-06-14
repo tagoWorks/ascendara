@@ -48,6 +48,15 @@
   padding: 2rem;
 }
 
+.library-games-header{
+  position: relative;
+}
+
+.library-games-header h1{
+  font-size: 2rem;
+  font-weight: bold;
+}
+
 .queue-container{
     width: 50rem;
 }

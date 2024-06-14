@@ -118,7 +118,7 @@ const Games = () => {
     <>
       <Input className="librarysearchbar" value={searchQuery} onChange={handleSearch} placeholder="Search for games" />
       <Spacer y={7} />
-      <div className="flex flex-wrap">
+      <div className="flex flex-wrap library-game-cards">
         <Spacer x={4} />
         {renderCards(paginatedGames.filter(game => !customGames.includes(game)), false)}
         <Spacer x={4} />

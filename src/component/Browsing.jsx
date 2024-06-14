@@ -8,11 +8,11 @@ import ErrorCard from "./GameSearch/ErrorCard";
 import Fuse from "fuse.js";
 
 
-const CACHE_KEY = "cachedGamesLocal";
-const CACHE_EXPIRY_KEY = "cacheExpiryLocal";
-const METADATA_KEY = "cachedMetadataLocal";
-const NEWS_CACHE_KEY = "cachedNewsLocal";
-const NEWS_CACHE_EXPIRY_KEY = "newsCacheExpiryLocal";
+const CACHE_KEY = "cachedGamesLocal2";
+const CACHE_EXPIRY_KEY = "cacheExpiryLocal2";
+const METADATA_KEY = "cachedMetadataLocal2";
+const NEWS_CACHE_KEY = "cachedNewsLocal2";
+const NEWS_CACHE_EXPIRY_KEY = "newsCacheExpiryLocal2";
 
 const GameBrowse = () => {
   const [games, setGames] = useState([]);
@@ -27,9 +27,6 @@ const GameBrowse = () => {
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [downloadingGames, setDownloadingGames] = useState({});
-  const [installedGames, setInstalledGames] = useState({});
-  const [downloadDirectory, setDownloadDirectory] = useState(null);
 
   const handleHelpClick = () => {
     setShowModal(true);
@@ -83,6 +80,8 @@ const GameBrowse = () => {
       setNewsLoading(false);
     }
   };
+
+  
 
   const updateCardsPerPage = () => {
     const width = window.innerWidth;
@@ -164,15 +163,6 @@ const GameBrowse = () => {
     };
   }, [retryCount]);
 
-  const handleDownloadStart = (gameName) => {
-    setDownloadingGames((prevState) => ({ ...prevState, [gameName]: true }));
-  };
-  
-  const handleDownloadComplete = (gameName) => {
-    setDownloadingGames((prevState) => ({ ...prevState, [gameName]: false }));
-    setInstalledGames((prevState) => ({ ...prevState, [gameName]: true }));
-  };
-
   const handleSearch = (query, showOnlineOnly) => {
     if (query.trim() === "") {
       setFilteredGames(games.filter((game) => (showOnlineOnly ? game.online : true)));
@@ -233,10 +223,6 @@ const GameBrowse = () => {
                   dirlink={game.dirlink}
                   dlc={game.dlc}
                   downloadLinks={game.download_links}
-                  isGameDownloading={downloadingGames[game.game] || false}
-                  isGameInstalled={installedGames[game.game] || false}
-                  onDownloadStart={handleDownloadStart}
-                  onDownloadComplete={handleDownloadComplete}
                 />
                 ))}
               </div>
@@ -257,7 +243,7 @@ const GameBrowse = () => {
           </div>
         </div>
       </div>
-      <div className="news-container" style={{ flex: 1, overflowY: "auto" }}>
+      <div className="news-container">
       {newsLoading ? (
           <Spinner />
         ) : newsError ? (

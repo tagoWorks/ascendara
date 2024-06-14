@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { ReportIcon } from "./ReportIcon";
-import { Autocomplete, AutocompleteItem, Button, Modal, Spinner, ModalContent, ModalHeader, Spacer, ModalBody, ModalFooter, Textarea } from "@nextui-org/react";
+import { WarningIcon } from "../global/WarningIcon";
+
+import { Autocomplete, AutocompleteItem, Button, Modal, Spinner, ModalContent, ModalHeader, Spacer, ModalBody, ModalFooter, Textarea, Card, CardBody } from "@nextui-org/react";
 import "./browsing.css";
 
 const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
@@ -59,7 +61,7 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({
           reportType: "GameBrowsing",
@@ -68,7 +70,7 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
           gameName: gameName,
         }),
       });
-  
+
       if (response.ok) {
         console.log('Report submitted successfully');
         setReportSubmitted(true);
@@ -83,7 +85,10 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
   };
 
   return (
-    <Modal isOpen={isReportOpen} onClose={onReportClose} className="justify-center">
+    <Modal isOpen={isReportOpen} onClose={onReportClose} className="justify-center arial" classNames={{
+      backdrop: "bg-[#fff]/0",
+      base: "border-[#292f46] bg-[#19172c] fixedarial",
+    }}>
       <ModalContent>
         <ModalHeader>Reporting a game | {gameName}</ModalHeader>
         <ModalBody>
@@ -91,6 +96,21 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
             <p>Thank you for your help</p>
           ) : (
             <div>
+
+              <Card classNames={{
+                base: "border-[#292f46] bg-[#19172c] fixedarial",
+              }}>
+                <CardBody style={{ display: 'flex', alignItems: 'center' }}>
+                  <WarningIcon fill="#FF4433"/>
+                    <p className="text-small">
+                      When reporting a bug with a game or feature, your IP address
+                      is temporally saved on Ascendara servers only, in order to prevent spam.
+                    </p>
+                </CardBody>
+              </Card>
+
+              <Spacer y={5} />
+
               <Autocomplete
                 isRequired
                 disableSelectorIconRotation
@@ -125,11 +145,11 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
           ) : (
             <>
               {reportSubmitted ? (
-                <Button variant="solid" color="success" onClick={onReportClose}>
+                <Button variant="ghost" color="primary" onClick={onReportClose}>
                   Close
                 </Button>
               ) : (
-                <Button variant="solid" color="error" onClick={handleSubmitReport}>
+                <Button variant="ghost" color="success" onClick={handleSubmitReport}>
                   Submit Report
                 </Button>
               )}

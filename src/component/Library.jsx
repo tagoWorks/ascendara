@@ -124,21 +124,16 @@ const Library = () => {
       )}
       {(games.length > 0 || customGames.length > 0) && (
         <div className="library-container">
-          <h1 className="text-large">
+          <div className="library-games-header">
+          <h1>
             Your Library
             <Button className="translate-y-1" isIconOnly variant="none" onClick={toggleGamesModal}>
               <AddGamesIcon width={20} height={20} />
             </Button>
           </h1>
+          </div>
           <Spacer y={5} />
           <Games games={displayedGames} />
-          {(games.length > gamesPerPage || customGames.length > gamesPerPage) && (
-            <Pagination 
-              total={totalPages} 
-              initialPage={currentPage} 
-              onChange={(page) => setCurrentPage(page)} 
-            />
-          )}
         </div>
       )}
       {downloadingGames.length > 0 && (
