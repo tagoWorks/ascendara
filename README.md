@@ -42,7 +42,7 @@
 # Development Roadmap
 
 ### Ascendara App
-- [ ] Auto Create Shortcuts
+- [ ] Auto create shortcuts
 - [x] Add news section
 - [x] Make game searches less harsh
 - [ ] Show recent games
@@ -54,6 +54,7 @@
 - [ ] Add notifications for games status
 - [ ] -Small-undisturbing advertisments-
 - [ ] Add different sources
+- [ ] Welcome to app screens/info
 - [x] Move tabs to the top left
 - [ ] ~Make seperate library, downloads, and browse~
 - [x] Add your own games

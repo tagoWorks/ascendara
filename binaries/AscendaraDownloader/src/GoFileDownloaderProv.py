@@ -1,6 +1,3 @@
-#! /usr/bin/env python3
-
-
 from os import path, mkdir, getcwd, chdir, getenv
 from sys import exit, stdout, stderr
 from typing import Dict, List
@@ -43,15 +40,21 @@ def _print(_str: str) -> None:
 
 # increase max_workers for parallel downloads
 # defaults to 5 download at time
-class Main:
-    def __init__(self, url: str, password: str | None = None, max_workers: int = 5) -> None:
+class Download:
+    def __init__(self, link: str, game: str, online: str, dlc: str, version: str, download_dir: str, password: str | None = None, max_workers: int = 5) -> None:
+        self.link: str = link
+        self.game: str = game
+        self.online: str = online
+        self.dlc: str = dlc
+        self.version: str = version
+        self.download_dir: str = download_dir
         try:
-            if not url.split("/")[-2] == "d":
-                die(f"The url probably doesn't have an id in it: {url}")
+            if not self.link.split("/")[-2] == "d":
+                die(f"The url probably doesn't have an id in it: {self.link}")
 
-            self._id: str = url.split("/")[-1]
+            self._id: str = self.link.split("/")[-1]
         except IndexError:
-            die(f"Something is wrong with the url: {url}.")
+            die(f"Something is wrong with the url: {self.link}.")
 
         self._downloaddir: str | None = getenv("GF_DOWNLOADDIR")
 
@@ -320,6 +323,6 @@ if __name__ == '__main__':
             password: str | None = argv[7] if argc == 8 else None
 
             _print('Starting, please wait...' + NEW_LINE)
-            Main(url=url, gamename=gamename, online=online, dlc=dlc, version=version, downloaddir=downloaddir, password=password, max_workers=3)
+            Download(url=url, gamename=gamename, online=online, dlc=dlc, version=version, downloaddir=downloaddir, password=password, max_workers=3)
     except KeyboardInterrupt:
         exit(1)
