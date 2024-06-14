@@ -52,11 +52,11 @@
 - [ ] Add additional game sources
 - [x] Populate pages
 - [ ] Add notifications for games status
-- [ ] Small-undisturbing advertisments
+- [ ] -Small-undisturbing advertisments-
 - [ ] Add different sources
 - [x] Move tabs to the top left
 - [ ] ~Make seperate library, downloads, and browse~
-- [ ] Add your own games
+- [x] Add your own games
 - [ ] Create Public API Keys for accounts
 - [ ] Create Retry Download & Extract
 - [ ] Add mulitple checks to alert if antivirus ruined a operation
