@@ -21,13 +21,13 @@ const DownloadManager = () => {
   }, []);
 
   const shouldRenderCard = downloadingGames.some((game) => {
-    const { downloadingdata } = game;
+    const { downloadingData } = game;
     return (
-      downloadingdata &&
-      (downloadingdata.downloading ||
-        downloadingdata.extracting ||
-        downloadingdata.updating ||
-        downloadingdata.error)
+      downloadingData &&
+      (downloadingData.downloading ||
+        downloadingData.extracting ||
+        downloadingData.updating ||
+        downloadingData.error)
     );
   });
 
@@ -51,7 +51,7 @@ const DownloadManager = () => {
             online={game.online}
             version={game.version}
             dirlink={game.dirlink}
-            downloadingdata={game.downloadingdata || {}}
+            downloadingData={game.downloadingData || {}}
           />
         ))}
     </div>

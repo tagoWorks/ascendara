@@ -19,6 +19,8 @@ const App = () => {
   const [isThemesModalOpen, setIsThemesModalOpen] = useState(false);
   const [games, setGames] = useState([]);
   const [downloadingGames, setDownloadingGames] = useState([]);
+  const [backgroundMotion, setBackgroundMotion] = useState(true); // add this state
+
   const getGames = async () => {
     try {
       const gamesData = await window.electron.getGames();
@@ -26,7 +28,7 @@ const App = () => {
         const installedGames = [];
         const downloadingGames = [];
         gamesData.forEach(game => {
-          if (game.downloadingdata && game.downloadingdata.downloading) { 
+          if (game.downloadingData && game.downloadingData.downloading) { 
             downloadingGames.push(game);
           } else {
             installedGames.push(game);
@@ -42,10 +44,22 @@ const App = () => {
     }
   };
 
+  const getSettings = async () => {
+    try {
+      const settings = await window.electron.getSettings();
+      if (settings && settings.backgroundMotion !== undefined) {
+        setBackgroundMotion(settings.backgroundMotion);
+      }
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         await getGames();
+        await getSettings(); // call getSettings here
       } catch (error) {
         console.error("Error fetching data:", error);
         setIsInitialLoading(false); 
@@ -66,7 +80,7 @@ const App = () => {
 
   return (
     <NextUIProvider>
-      <div className="w-screen h-screen justify-center">
+      <div className={`w-screen h-screen justify-center main-window ${backgroundMotion ? 'animate' : ''}`}>
           <SettingsModal isOpen={isSettingsModalOpen} onOpenChange={toggleSettingsModal} />
           <ThemesModal isOpen={isThemesModalOpen} onOpenChange={toggleThemesModal} />
           <Tabs isVertical isIconOnly aria-label="Options" color="secondary" variant="bordered" className="tabs">

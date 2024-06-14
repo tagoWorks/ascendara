@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Dropdown, Spacer, Pagination } from "@nextui-org/react";
+import { Button, Dropdown, DropdownItem, DropdownTrigger, DropdownSection, DropdownMenu, Spacer, Pagination, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
 import Games from "./Library/Games/GamesGet";
 import { AddGamesIcon } from "./Library/Games/svg/AddGame";
 import { HaltIcon } from "./Library/DownloadManager/HaltIcon";
@@ -13,10 +13,15 @@ const Library = () => {
   const [customGames, setCustomGames] = useState([]);
   const [isGamesModalOpen, setIsGamesModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDirectoryModal, setShowDirectoryModal] = useState(false);
   const gamesPerPage = 6;
 
   const toggleGamesModal = () => {
-    setIsGamesModalOpen(!isGamesModalOpen);
+    if (!window.electron.getDownloadDirectory()) {
+      setShowDirectoryModal(true);
+    } else {
+      setIsGamesModalOpen(!isGamesModalOpen);
+    }
   };
 
   const getGames = async () => {
@@ -26,7 +31,7 @@ const Library = () => {
         const installedGames = [];
         const downloadingGames = [];
         gamesData.forEach((game) => {
-          if (game.downloadingdata) {
+          if (game.downloadingData) {
             downloadingGames.push(game); 
           } else {
             installedGames.push(game);
@@ -68,14 +73,45 @@ const Library = () => {
   }, []);
 
   const displayedGames = games.length > 0 
-    ? games.slice((currentPage - 1) * gamesPerPage, currentPage * gamesPerPage) 
+   ? games.slice((currentPage - 1) * gamesPerPage, currentPage * gamesPerPage) 
     : customGames.slice((currentPage - 1) * gamesPerPage, currentPage * gamesPerPage);
 
-  const totalPages = Math.ceil((games.length > 0 ? games.length : customGames.length) / gamesPerPage);
+  const totalPages = Math.ceil((games.length > 0? games.length : customGames.length) / gamesPerPage);
 
   return (
     <div className="library">
       <GamesAddModal isOpen={isGamesModalOpen} onOpenChange={toggleGamesModal} />
+      <Modal
+        hideCloseButton
+        isOpen={showDirectoryModal}
+        onClose={() => setShowDirectoryModal(false)}
+        size="md"
+        className="fixed arial"
+        classNames={{
+          body: "py-6",
+          backdrop: "bg-[#292f46]/50",
+          base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixedarial",
+        }}
+      >
+        <ModalContent>
+          <ModalHeader>You can't do that yet...</ModalHeader>
+          <ModalBody>
+            <p>
+              You need to set a directory for Ascendara to work with! Please set a games directory by clicking the
+              settings button on the bottom left, then click on the Download Directory input.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="ghost"
+              color="success"
+              onClick={() => setShowDirectoryModal(false)}
+            >
+              Okay
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
       <Spacer y={20} />
       {games.length === 0 && customGames.length === 0 && downloadingGames.length === 0 && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center">
@@ -87,7 +123,7 @@ const Library = () => {
         </div>
       )}
       {(games.length > 0 || customGames.length > 0) && (
-        <>
+        <div className="library-container">
           <h1 className="text-large">
             Your Library
             <Button className="translate-y-1" isIconOnly variant="none" onClick={toggleGamesModal}>
@@ -103,33 +139,35 @@ const Library = () => {
               onChange={(page) => setCurrentPage(page)} 
             />
           )}
-        </>
+        </div>
       )}
       {downloadingGames.length > 0 && (
-        <>
+        <div className="queue-container">
           <Spacer y={20} />
           <h1 className="text-large">
             Queue
             <Dropdown className=''>
-              <Dropdown.Trigger>
+              <DropdownTrigger>
+                <Button className="translate-y-1" isIconOnly variant="none">
                 <HaltIcon width={20} height={20} />
-              </Dropdown.Trigger>
-              <Dropdown.Menu className='justify-center'>
-                <Dropdown.Section>
-                  <Dropdown.Item variant='flat' color='danger' aria-label='Confirm' description='Are you sure you want to stop kill all downloads?' onClick="">
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu className='justify-center'>
+                <DropdownSection>
+                  <DropdownItem variant='flat' color='danger' aria-label='Confirm' description='Are you sure you want to kill all downloads?' onClick="">
                     Stop all Downloads
-                  </Dropdown.Item>
-                </Dropdown.Section>
-              </Dropdown.Menu>
+                  </DropdownItem>
+                </DropdownSection>
+              </DropdownMenu>
             </Dropdown>
           </h1>
           <Spacer y={5} />
           <Downloads games={downloadingGames} />
-        </>
+          <Spacer y={20} />
+        </div>
       )}
     </div>
   );
 };
 
 export default Library;
-  

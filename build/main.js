@@ -5,7 +5,7 @@ const fs = require('fs-extra');
 const { spawn } = require('child_process');
 require("dotenv").config()
 
-const CURRENT_VERSION = "3.0.0";
+const CURRENT_VERSION = "4.0.0";
 
 axios.get('https://api.ascendara.app/')
   .then(response => {
@@ -25,7 +25,7 @@ axios.get('https://api.ascendara.app/')
       console.log(`Update available! Current version: ${CURRENT_VERSION}, Latest version: ${latest_version}`);
     } else {
       console.log(`No update available. Current version: ${CURRENT_VERSION}`);
-      createWindow(); // Create window if version matches
+      createWindow();
     }
   })
   .catch(error => {
@@ -103,7 +103,7 @@ ipcMain.handle('set-background', async (event, color, gradient) => {
   }
 });
 
-// Add stop all button to UI later
+// Stop all active downloads
 ipcMain.handle('stop-all-downloads', async () => {
   console.log('Stopping all downloads');
   for (const [game, downloadProcess] of downloadProcesses) {
@@ -268,11 +268,22 @@ ipcMain.handle('get-settings', () => {
   } catch (error) {
     console.error('Error reading the settings file:', error);
     console.log('Creating settings...')
-    fs.writeFileSync(filePath, '{}');
+    fs.writeFileSync(filePath,
+      JSON.stringify({
+        enableNotifications: false,
+        splitTunneling: false,
+        seamlessGoFileDownloads: true,
+        backgroundMotion: true,
+        autoUpdate: false,
+        downloadDirectory: '',
+      })
+    );
     const data = fs.readFileSync(filePath, 'utf8');
     return {
       enableNotifications: false,
       splitTunneling: false,
+      seamlessGoFileDownloads: true,
+      backgroundMotion: true,
       autoUpdate: false,
       downloadDirectory: '',
     };
@@ -627,8 +638,6 @@ function createWindow() {
   //mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));
   mainWindow.setMinimumSize(1600, 800);
 }
-
-//app.on('ready', createWindow); # Waits for update check now
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

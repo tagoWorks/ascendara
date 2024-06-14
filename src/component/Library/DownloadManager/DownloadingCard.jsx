@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, Spinner, CardFooter, CardBody, Chip, Spacer, Button, Progress, Divider, Dropdown, DropdownTrigger, DropdownMenu, DropdownSection, DropdownItem, Modal, Input } from '@nextui-org/react';
+import { Card, CardHeader, Spinner, CardFooter, CardBody, Chip, Spacer, Button, Progress, Divider, Dropdown, DropdownTrigger, DropdownMenu, DropdownSection, DropdownItem, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Input } from '@nextui-org/react';
 import { StopIcon } from './StopIcon';
 import '../library.css'
 
-const CardComponent = ({ game, online, dlc, version, dirlink, downloadingdata }) => {
-  const isDownloading = downloadingdata && downloadingdata.downloading;
-  const isExtracting = downloadingdata && downloadingdata.extracting;
-  const isUpdating = downloadingdata && downloadingdata.updating;
-  const hasError = downloadingdata && downloadingdata.error;
+const CardComponent = ({ game, online, dlc, version, dirlink, downloadingData }) => {
+  const isDownloading = downloadingData && downloadingData.downloading;
+  const isExtracting = downloadingData && downloadingData.extracting;
+  const isUpdating = downloadingData && downloadingData.updating;
+  const hasError = downloadingData && downloadingData.error;
   const [isStopping, setIsStopping] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [retryLink, setRetryLink] = useState('');
@@ -83,10 +83,10 @@ const CardComponent = ({ game, online, dlc, version, dirlink, downloadingdata })
           {isDownloading ? (
             <div className="py-3 flex gap-2">
               <Chip color="default" variant="flat" size="sm">
-                {downloadingdata.progressDownloadSpeeds}
+                {downloadingData.progressDownloadSpeeds}
               </Chip>
               <Chip color="default" variant="flat" size="sm">
-                ETA: {downloadingdata.timeUntilComplete}
+                ETA: {downloadingData.timeUntilComplete}
               </Chip>
               <Divider className="my-4" />
             </div>
@@ -95,12 +95,12 @@ const CardComponent = ({ game, online, dlc, version, dirlink, downloadingdata })
         {isDownloading ? (
           <CardFooter className="wrap justify-between items-center">
             <Progress
-              value={downloadingdata.progressUntilComplete}
+              value={downloadingData.progressCompleted}
               color="secondary"
             />
             <div className="flex py-2">
               <Chip color="default" variant="bordered" size="sm">
-                {downloadingdata.progressUntilComplete}%
+                {downloadingData.progressCompleted}%
               </Chip>
             </div>
           </CardFooter>
@@ -140,25 +140,25 @@ const CardComponent = ({ game, online, dlc, version, dirlink, downloadingdata })
       </Card>
       
       <Modal open={showModal} onClose={() => setShowModal(false)}>
-        <Modal.Header>
+        <ModalHeader>
           <h4>Retry Download</h4>
-        </Modal.Header>
-        <Modal.Body>
+        </ModalHeader>
+        <ModalBody>
           <Input
             fullWidth
             placeholder="Enter download link"
             value={retryLink}
             onChange={(e) => setRetryLink(e.target.value)}
           />
-        </Modal.Body>
-        <Modal.Footer>
+        </ModalBody>
+        <ModalFooter>
           <Button auto flat color="error" onClick={() => setShowModal(false)}>
             Cancel
           </Button>
           <Button auto onClick={handleRetryConfirm}>
             Confirm
           </Button>
-        </Modal.Footer>
+        </ModalFooter>
       </Modal>
     </>
   );

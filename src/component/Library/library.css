@@ -38,6 +38,37 @@
   overflow: hidden;
 }
 
+.library-container{
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  flex: 1;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 2rem;
+}
+
+.queue-container{
+    width: 50rem;
+}
+
+.librarysearchbar{
+  display: flex;
+  position: fixed;
+  top: 0;
+  right: 10px;
+  padding: 20px;
+  z-index: 9999;
+  width: 30%;
+}
+
+.librarypagination {
+  display: flex;
+  position: fixed;
+  top: 70px;
+  right: 13rem;
+  z-index: 9999;
+}
 
 .downloading-notification {
   position: fixed;

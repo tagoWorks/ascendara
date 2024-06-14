@@ -1,50 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@font-face {
-  font-family: lexenddeca;
-  src: url(./LexendDeca-Regular.ttf);
-}
-
-
-.loading-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background-color: #131313;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.loading-screen h2 {
-  color: white;
-  font-size: 24px;
-  font-family: lexenddeca;
-}
-
-.lexenddeca {
-  font-family: lexenddeca;
-}
-
-.arial {
-  font-family: arial;
-}
-
-body {
-  background-color: #131313;
-  background-image: url("./bg.png");
-  background-size: cover;
-  background-position: 0px 0px;
-  overflow-y: hidden;
-  background-repeat: no-repeat;
-  background-position: 0px -200px;
-  font-family: lexenddeca;
-}
-
 @keyframes gradientAnimation {
   0% {
     background-position: 0% 50%;
@@ -55,6 +11,49 @@ body {
   100% {
     background-position: 0% 50%;
   }
+}
+@font-face {
+  font-family: lexenddeca;
+  src: url(./LexendDeca-Regular.ttf);
+}
+
+
+.lexenddeca {
+  font-family: lexenddeca;
+}
+
+.arial {
+  font-family: arial;
+}
+
+.animate {
+  animation: gradientAnimation 10s ease infinite;
+}
+
+.main-window {
+  background-color: #131313;
+  background-image: url("./bg.png");
+  background-size: 300% 300%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: 0px -200px;
+  font-family: lexenddeca;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  background-color: #131313;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #131313;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #000;
+  border-radius: 10px;
 }
 
 
@@ -109,4 +108,9 @@ body {
   width: 75%;
   height: 100%;
   align-items: center;
+  justify-content: center;
+}
+
+.ontop{
+  z-index: 9999;
 }

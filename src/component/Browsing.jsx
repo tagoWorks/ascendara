@@ -7,11 +7,12 @@ import CardComponent from "./GameSearch/GamesCard";
 import ErrorCard from "./GameSearch/ErrorCard";
 import Fuse from "fuse.js";
 
-const CACHE_KEY = "cachedGamesKey";
-const CACHE_EXPIRY_KEY = "cacheExpiryKey";
-const METADATA_KEY = "cachedMetadataKey";
-const NEWS_CACHE_KEY = "cachedNewsKey";
-const NEWS_CACHE_EXPIRY_KEY = "newsCacheExpiryKey";
+
+const CACHE_KEY = "cachedGamesLocal";
+const CACHE_EXPIRY_KEY = "cacheExpiryLocal";
+const METADATA_KEY = "cachedMetadataLocal";
+const NEWS_CACHE_KEY = "cachedNewsLocal";
+const NEWS_CACHE_EXPIRY_KEY = "newsCacheExpiryLocal";
 
 const GameBrowse = () => {
   const [games, setGames] = useState([]);
@@ -26,7 +27,9 @@ const GameBrowse = () => {
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [installedGames, setInstalledGames] = useState([]);
+  const [downloadingGames, setDownloadingGames] = useState({});
+  const [installedGames, setInstalledGames] = useState({});
+  const [downloadDirectory, setDownloadDirectory] = useState(null);
 
   const handleHelpClick = () => {
     setShowModal(true);
@@ -35,7 +38,6 @@ const GameBrowse = () => {
   const handleCloseModal = () => {
     setShowModal(false);
   };
-
   const getToken = async () => {
     const AUTHORIZATION = await window.electron.getAPIKey();
     const response = await fetch("https://api.ascendara.app/auth/token", {
@@ -101,69 +103,59 @@ const GameBrowse = () => {
     setCardsPerPage(cards);
   };
 
-  const fetchGames = async () => {
-    try {
-      const token = await getToken();
-
-      const cachedGames = JSON.parse(localStorage.getItem(CACHE_KEY));
-      const cacheExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
-      const cachedMetadata = JSON.parse(localStorage.getItem(METADATA_KEY));
-      if (
-        cachedGames &&
-        cacheExpiry &&
-        cachedMetadata &&
-        Date.now() < parseInt(cacheExpiry)
-      ) {
-        setGames(cachedGames);
-        setFilteredGames(cachedGames);
-        setMetadata(cachedMetadata);
-        setLoading(false);
-        setError(false);
-      } else {
-        const response = await fetch("https://api.ascendara.app/json/games", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await response.json();
-        setMetadata(data.metadata);
-        setGames(data.games);
-        setFilteredGames(data.games);
-        setLoading(false);
-        setError(false);
-        setRetryCount(0);
-
-        localStorage.setItem(CACHE_KEY, JSON.stringify(data.games));
-        localStorage.setItem(METADATA_KEY, JSON.stringify(data.metadata));
-        const expiryTime = Date.now() + 3600000;
-        localStorage.setItem(CACHE_EXPIRY_KEY, expiryTime.toString());
-      }
-
-      fetchNews(token);
-    } catch (error) {
-      console.error("Error fetching games:", error);
-      if (retryCount < 3) {
-        setRetryCount(retryCount + 1);
-        setTimeout(fetchGames, 5000);
-      } else {
-        setError(true);
-        setLoading(false);
-      }
-    }
-  };
-
-  const loadInstalledGames = async () => {
-    try {
-      const installedGames = await window.electron.getGames();
-      setInstalledGames(installedGames);
-    } catch (error) {
-      console.error("Error loading installed games:", error);
-    }
-  };
-
   useEffect(() => {
-    fetchGames();
-    loadInstalledGames();
+    const fetchData = async () => {
+      try {
+        const token = await getToken();
+
+        const cachedGames = JSON.parse(localStorage.getItem(CACHE_KEY));
+        const cacheExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
+        const cachedMetadata = JSON.parse(localStorage.getItem(METADATA_KEY));
+        if (
+          cachedGames &&
+          cacheExpiry &&
+          cachedMetadata &&
+          Date.now() < parseInt(cacheExpiry)
+        ) {
+          setGames(cachedGames);
+          setFilteredGames(cachedGames);
+          setMetadata(cachedMetadata);
+          setLoading(false);
+          setError(false);
+        } else {
+          const response = await fetch("https://api.ascendara.app/json/games", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data = await response.json();
+          setMetadata(data.metadata);
+          setGames(data.games);
+          setFilteredGames(data.games);
+          setLoading(false);
+          setError(false);
+          setRetryCount(0);
+
+          localStorage.setItem(CACHE_KEY, JSON.stringify(data.games));
+          localStorage.setItem(METADATA_KEY, JSON.stringify(data.metadata));
+          const expiryTime = Date.now() + 3600000;
+          localStorage.setItem(CACHE_EXPIRY_KEY, expiryTime.toString());
+        }
+
+        fetchNews(token);
+      } catch (error) {
+        console.error("Error fetching games:", error);
+        if (retryCount < 3) {
+          setRetryCount(retryCount + 1);
+          setTimeout(fetchData, 5000);
+        } else {
+          setError(true);
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
     updateCardsPerPage();
     window.addEventListener("resize", updateCardsPerPage);
 
@@ -171,13 +163,15 @@ const GameBrowse = () => {
       window.removeEventListener("resize", updateCardsPerPage);
     };
   }, [retryCount]);
-  useEffect(() => {
-    if (games.length > 0 && installedGames.length > 0) {
-      const installedGameNames = installedGames.map((game) => game.game);
-      const filtered = games.filter((game) => !installedGameNames.includes(game.game));
-      setFilteredGames(filtered);
-    }
-  }, [games, installedGames]);
+
+  const handleDownloadStart = (gameName) => {
+    setDownloadingGames((prevState) => ({ ...prevState, [gameName]: true }));
+  };
+  
+  const handleDownloadComplete = (gameName) => {
+    setDownloadingGames((prevState) => ({ ...prevState, [gameName]: false }));
+    setInstalledGames((prevState) => ({ ...prevState, [gameName]: true }));
+  };
 
   const handleSearch = (query, showOnlineOnly) => {
     if (query.trim() === "") {
@@ -208,18 +202,19 @@ const GameBrowse = () => {
 
   return (
     <div style={{ padding: "5rem", display: "flex", height: "100vh" }}>
-      <div style={{ flex: 3, overflowY: "hidden", marginRight: "1rem" }}>
+      <div style={{ flex: 3, overflowY: "hidden", marginRight: "1rem", }}>
         <div className="flex items-center justify-between">
-          <h1 className="py-4 text-small font-medium">
+        
+        <h1 className="py-4 text-small font-medium">
             Indexed Games: {metadata.games} | Current Source: {metadata.source}
           </h1>
           <Button isIconOnly color="none" onClick={handleHelpClick}>
             <HelpIcon size={18} />
           </Button>
-          <SearchBox onSearch={handleSearch} />
-        </div>
+        <SearchBox onSearch={handleSearch} />
+        
         <div className="flex flex-col items-center gap-8">
-          <Spacer y="3" />
+        <Spacer y="3"/>
           {loading ? (
             <Spinner />
           ) : error ? (
@@ -231,23 +226,27 @@ const GameBrowse = () => {
               <div className="flex justify-center gap-4">
                 {currentGames.map((game, index) => (
                   <CardComponent
-                    key={index}
-                    game={game.game}
-                    online={game.online}
-                    version={game.version}
-                    dirlink={game.dirlink}
-                    dlc={game.dlc}
-                    downloadLinks={game.download_links}
-                  />
+                  key={index}
+                  game={game.game}
+                  online={game.online}
+                  version={game.version}
+                  dirlink={game.dirlink}
+                  dlc={game.dlc}
+                  downloadLinks={game.download_links}
+                  isGameDownloading={downloadingGames[game.game] || false}
+                  isGameInstalled={installedGames[game.game] || false}
+                  onDownloadStart={handleDownloadStart}
+                  onDownloadComplete={handleDownloadComplete}
+                />
                 ))}
               </div>
               <Spacer y={1} />
               {filteredGames.length > cardsPerPage && (
                 <Pagination
-                  total={Math.ceil(filteredGames.length / cardsPerPage)}
-                  isCompact
                   variant="none"
                   color="secondary"
+                  total={Math.ceil(filteredGames.length / cardsPerPage)}
+                  isCompact
                   initialPage={1}
                   className="pagination"
                   onChange={handlePageChange}
@@ -255,10 +254,11 @@ const GameBrowse = () => {
               )}
             </>
           )}
+          </div>
         </div>
       </div>
       <div className="news-container" style={{ flex: 1, overflowY: "auto" }}>
-        {newsLoading ? (
+      {newsLoading ? (
           <Spinner />
         ) : newsError ? (
           <ErrorCard message="Failed to load news. Please try again later." />
@@ -268,13 +268,13 @@ const GameBrowse = () => {
           news.map((article, index) => (
             <div key={index} className="news-section">
               <h2>{article.title}</h2>
-              <p className="text-small text-default-400">{article.date}</p>
+              <p className="text-small text-default-400" >{article.date}</p>
               <p>{article.body}</p>
             </div>
           ))
         )}
       </div>
-      <Modal isOpen={showModal} onClose={handleCloseModal}>
+      <Modal classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}} isOpen={showModal} onClose={handleCloseModal}>
         <ModalContent>
         <ModalHeader>Indexed Source</ModalHeader>
         <ModalBody>
@@ -284,10 +284,7 @@ const GameBrowse = () => {
           <p>Last updated: {metadata.getDate}</p>
         </ModalBody>
         <ModalFooter>
-          <Button auto onClick={handleCloseModal}>
-            Close
-          </Button>
-          <Button>
+          <Button variant="ghost">
             <a href="https://docs.ascendara.app/" target="_blank">Read More</a>
           </Button>
         </ModalFooter>

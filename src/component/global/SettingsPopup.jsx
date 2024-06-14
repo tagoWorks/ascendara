@@ -4,17 +4,22 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Switc
 const SettingsModal = ({ isOpen, onOpenChange }) => {
   const [enableNotifications, setEnableNotifications] = useState(false);
   const [autoUpdate, setAutoUpdate] = useState(false);
+  const [backgroundMotion, setBackgroundMotion] = useState(false);
   const [splitTunnelDownloads, setSplitTunnelDownloads] = useState(false);
+  const [seamlessGoFileDownloads, setSeamlessGoFileDownloads] = useState(false);
   const [downloadDirectory, setDownloadDirectory] = useState('');
   const [version, setVersion]  = useState(''); 
+
   useEffect(() => {
     window.electron.getSettings().then((settings) => {
-      console.log(settings);
       setEnableNotifications(settings.enableNotifications);
       setAutoUpdate(settings.autoUpdate);
       setSplitTunnelDownloads(settings.splitTunnelDownloads);
+      setSeamlessGoFileDownloads(settings.seamlessGoFileDownloads);
       setDownloadDirectory(settings.downloadDirectory);
+      setBackgroundMotion(settings.backgroundMotion);
     });
+
   }, []);
   useEffect(() => {
     window.electron.getVersion().then((version) => {
@@ -22,9 +27,15 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
     });
   }, []);
 
+  
   const handleNotificationsToggle = (checked) => {
     console.log('Enable Notifications:', checked);
     setEnableNotifications((prevState) => !prevState);
+  };
+
+  const handleBackgroundMotionToggle = (checked) => {
+    console.log('Background Motion:', checked);
+    setBackgroundMotion((prevState) => !prevState);
   };
   
   const handleAutoUpdateToggle = (checked) => {
@@ -34,13 +45,19 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
   const handleSplitTunnelDownloadsToggle = (checked) => {
     console.log('Split Tunnel Downloads:', checked);
     setSplitTunnelDownloads((prevState) => !prevState);
-  }
+  };
+  const handleSeamlessGoFileDownloadsToggle = (checked) => {
+    console.log('Seamless GoFile Downloads:', checked);
+    setSeamlessGoFileDownloads((prevState) => !prevState);
+  };
 
   const handleSave = () => {
     const options = {
       enableNotifications,
       autoUpdate,
       splitTunnelDownloads,
+      seamlessGoFileDownloads,
+      backgroundMotion
     }
     window.electron.saveSettings(options, downloadDirectory);
     onOpenChange(false);
@@ -56,7 +73,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="center" classNames={{ backdrop: "backdrop-opacity-50 backdrop-blur", }}>
+    <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="center" classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}}>
       <ModalContent>
         {() => (
           <>
@@ -64,13 +81,29 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
               <h3>Settings</h3>
             </ModalHeader>
             <ModalBody>
+            <Switch
+                isSelected={seamlessGoFileDownloads}
+                value={seamlessGoFileDownloads}
+                onChange={handleSeamlessGoFileDownloadsToggle}
+              >
+                Seamless GoFile Downloads
+                <p className="text-small text-default-500">Automatically start downloading files that are hosted on GoFile</p>
+              </Switch>
+              <Switch
+              isSelected={backgroundMotion}
+              value={backgroundMotion}
+              onChange={handleBackgroundMotionToggle}
+            >
+              Background Motion
+              <p className="text-small text-default-500">Toggle the background gradient motion</p>
+            </Switch>
               <Switch
                 isDisabled
                 isSelected={splitTunnelDownloads}
                 value={splitTunnelDownloads}
                 onChange={handleSplitTunnelDownloadsToggle}
               >
-                Split Tunnel Downloads
+                Multi-Thread Downloads
                 <p className="text-small text-default-500">Coming Soon</p>
               </Switch>
               <Switch
@@ -79,7 +112,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
                 value={enableNotifications}
                 onChange={handleAutoUpdateToggle}
               >
-                Auto-Update
+                Background Updates
                 <p className="text-small text-default-500">Coming Soon</p>
               </Switch>
               <Spacer y={3} />
@@ -91,7 +124,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
               />
             </ModalBody>
             <ModalFooter>
-              <Button color="primary" onPress={handleSave}>
+              <Button variant='ghost' color="primary" onPress={handleSave}>
                 Save
               </Button>
               <h2 className="text-small text-default-400 fixed bottom-0 py-4 arial text-center">
