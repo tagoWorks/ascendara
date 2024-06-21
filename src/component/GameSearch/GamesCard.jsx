@@ -14,7 +14,6 @@ import {
   ModalBody,
   ModalFooter,
   Input,
-  Link,
   Snippet,
   useDisclosure,
   Select,
@@ -35,7 +34,7 @@ const isValidURL = (url, provider) => {
       pattern = /^(https?:\/\/)([^\/?#]+)(?::(\d+))?(\/[^?#]*\/[^?#]*\/)([^?#]+)\.(?:zip|rar|7z)$/i;
       break;
     case 'buzzheavier':
-      pattern = /^https:\/\/dl\.buzzheavier\.com\/\d+$/;
+      pattern = /^https:\/\/dl\.buzzheavier\.com\/\d+(?:\?.*?)?$/i;
       break;
     case 'gofile':
       pattern = /^https:\/\/store\d*\.gofile\.io\/download\/web\/[a-f0-9-]+\/[\w\s\.-]+\.(?:zip|rar|7z)$/i;
@@ -313,7 +312,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
                   <h2 className="text-large">Step 2.</h2>
                   <h3>Stop the download once it starts in your browser, and copy the link that the browser started downloading</h3>
                   <h2 className="text-large">Step 3.</h2>
-                  <h3>Paste the link in the input below and click "Next"</h3>
+                  <h3>Paste the link in the inupt below and click "Send to Queue"</h3>
                   <Spacer y={2} />
                   <h3 className="text-small text-default-400">Some providers may limit download speeds</h3>
                   <Input

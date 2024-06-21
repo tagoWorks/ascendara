@@ -11,7 +11,6 @@ const CardComponent = ({ game, online, dlc, version, dirlink, downloadingData })
   const [isStopping, setIsStopping] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [retryLink, setRetryLink] = useState('');
-
   const handleStopDownload = async () => {
     setIsStopping(true);
     await window.electron.killDownload(game);
@@ -128,9 +127,11 @@ const CardComponent = ({ game, online, dlc, version, dirlink, downloadingData })
                     <DropdownItem variant='flat' color='default' aria-label='Confirm' description='Attempt to redownload the game and extract again.' onClick={handleRetryDownload}>
                       Re-download & Extract
                     </DropdownItem>
-                    <DropdownItem variant='flat' color='default' aria-label='Confirm' description={'Selected the extracted game folder.'} onClick={handleRetryFolderExtract}>
-                      Select Game Folder
-                    </DropdownItem>
+                    {!window.electron.checkRetryExtract(game) && (
+                      <DropdownItem variant='flat' color='default' aria-label='Confirm' description={'Selected the extracted game folder.'} onClick={handleRetryFolderExtract}>
+                        Select Game Folder
+                      </DropdownItem>
+                    )}
                   </DropdownSection>
                 </DropdownMenu>
               </Dropdown>

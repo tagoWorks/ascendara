@@ -35,8 +35,8 @@ def handleerror(game_info, game_info_path, e):
     game_info['isRunning'] = False
     game_info['version'] = ""
     game_info['executable'] = ""
-    del game_info['downloadingdata']
-    game_info['downloadingdata'] = {
+    del game_info['downloadingData']
+    game_info['downloadingData'] = {
         "error": True,
         "message": str(e)
     }

@@ -70,7 +70,7 @@ def download_with_urllib(link, download_path, game_info_path, game_info):
             total_size = int(response.headers.get('content-length', 0) or 0)
             block_size = 1024 * 1024
             downloaded_size = 0
-            game_info["downloadingdata"]["downloading"] = True
+            game_info["downloadingData"]["downloading"] = True
             start_time = time.time()
 
             safe_write_json(game_info_path, game_info)
@@ -83,17 +83,17 @@ def download_with_urllib(link, download_path, game_info_path, game_info):
                     file.write(data)
                     downloaded_size += len(data)
                     progress = downloaded_size / total_size if total_size > 0 else 0
-                    game_info["downloadingdata"]["progressUntilComplete"] = f"{progress * 100:.2f}"
+                    game_info["downloadingData"]["progressUntilComplete"] = f"{progress * 100:.2f}"
 
                     elapsed_time = time.time() - start_time
                     download_speed = downloaded_size / elapsed_time if elapsed_time > 0 else 0
 
                     if download_speed < 1024:
-                        game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed:.2f} B/s"
+                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed:.2f} B/s"
                     elif download_speed < 1024 * 1024:
-                        game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed / 1024:.2f} KB/s"
+                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed / 1024:.2f} KB/s"
                     else:
-                        game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed / (1024 * 1024):.2f} MB/s"
+                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed / (1024 * 1024):.2f} MB/s"
 
                     remaining_size = total_size - downloaded_size
                     if download_speed > 0:
@@ -101,15 +101,15 @@ def download_with_urllib(link, download_path, game_info_path, game_info):
                         minutes, seconds = divmod(time_until_complete, 60)
                         hours, minutes = divmod(minutes, 60)
                         if hours > 0:
-                            game_info["downloadingdata"]["timeUntilComplete"] = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
+                            game_info["downloadingData"]["timeUntilComplete"] = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
                         else:
-                            game_info["downloadingdata"]["timeUntilComplete"] = f"{int(minutes)}m {int(seconds)}s"
+                            game_info["downloadingData"]["timeUntilComplete"] = f"{int(minutes)}m {int(seconds)}s"
                     else:
-                        game_info["downloadingdata"]["timeUntilComplete"] = "Calculating..."
+                        game_info["downloadingData"]["timeUntilComplete"] = "Calculating..."
 
                     safe_write_json(game_info_path,game_info)
 
-            game_info["downloadingdata"]["downloading"] = False
+            game_info["downloadingData"]["downloading"] = False
             safe_write_json(game_info_path, game_info)
             return archive_file_path, archive_ext
     except Exception as e:
@@ -130,7 +130,7 @@ def download_with_requests(link, download_path, game_info_path, game_info):
             total_size = int(response.headers.get('content-length', 0) or 0)
             block_size = 1024 * 1024
             downloaded_size = 0
-            game_info["downloadingdata"]["downloading"] = True
+            game_info["downloadingData"]["downloading"] = True
             start_time = time.time()
 
             safe_write_json(game_info_path, game_info)
@@ -140,17 +140,17 @@ def download_with_requests(link, download_path, game_info_path, game_info):
                     file.write(data)
                     downloaded_size += len(data)
                     progress = downloaded_size / total_size if total_size > 0 else 0
-                    game_info["downloadingdata"]["progressUntilComplete"] = f"{progress * 100:.2f}"
+                    game_info["downloadingData"]["progressUntilComplete"] = f"{progress * 100:.2f}"
 
                     elapsed_time = time.time() - start_time
                     download_speed = downloaded_size / elapsed_time if elapsed_time > 0 else 0
 
                     if download_speed < 1024:
-                        game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed:.2f} B/s"
+                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed:.2f} B/s"
                     elif download_speed < 1024 * 1024:
-                        game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed / 1024:.2f} KB/s"
+                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed / 1024:.2f} KB/s"
                     else:
-                        game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed / (1024 * 1024):.2f} MB/s"
+                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed / (1024 * 1024):.2f} MB/s"
 
                     remaining_size = total_size - downloaded_size
                     if download_speed > 0:
@@ -158,15 +158,15 @@ def download_with_requests(link, download_path, game_info_path, game_info):
                         minutes, seconds = divmod(time_until_complete, 60)
                         hours, minutes = divmod(minutes, 60)
                         if hours > 0:
-                            game_info["downloadingdata"]["timeUntilComplete"] = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
+                            game_info["downloadingData"]["timeUntilComplete"] = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
                         else:
-                            game_info["downloadingdata"]["timeUntilComplete"] = f"{int(minutes)}m {int(seconds)}s"
+                            game_info["downloadingData"]["timeUntilComplete"] = f"{int(minutes)}m {int(seconds)}s"
                     else:
-                        game_info["downloadingdata"]["timeUntilComplete"] = "Calculating..."
+                        game_info["downloadingData"]["timeUntilComplete"] = "Calculating..."
 
                     safe_write_json(game_info_path, game_info)
 
-            game_info["downloadingdata"]["downloading"] = False
+            game_info["downloadingData"]["downloading"] = False
             safe_write_json(game_info_path, game_info)
             return archive_file_path, archive_ext
     except Exception as e:
@@ -187,7 +187,7 @@ def download_file(link, game, online, dlc, version, download_dir):
         "version": version if version else "",
         "executable": os.path.join(download_path, f"{game}.exe"),
         "isRunning": False,
-        "downloadingdata": {
+        "downloadingData": {
             "downloading": False,
             "extracting": False,
             "updating": False,

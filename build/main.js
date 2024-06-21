@@ -5,7 +5,7 @@ const fs = require('fs-extra');
 const { spawn } = require('child_process');
 require("dotenv").config()
 
-const CURRENT_VERSION = "4.1.1";
+const CURRENT_VERSION = "4.2.3";
 
 axios.get('https://api.ascendara.app/')
   .then(response => {
@@ -188,6 +188,30 @@ ipcMain.handle('download-file', async (event, link, game, online, dlc, version) 
   });
 });
 
+
+ipcMain.handle('check-retry-extract', async (event, game) => {
+  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    const settings = JSON.parse(data);
+    if (!settings.downloadDirectory) {
+      console.error('Download directory not set');
+      return;
+    }
+    const downloadDirectory = settings.downloadDirectory;
+    const gameDirectory = path.join(downloadDirectory, game);
+    const files = await fs.promises.readdir(gameDirectory);
+    const jsonFile = `${game}.ascendara.json`;
+    if (files.length === 1 && files[0] === jsonFile) {
+      return false;
+    }
+    return files.length > 1;
+  } catch (error) {
+    console.error('Error reading the settings file:', error);
+    return;
+  }
+});
+  
 
 
 ipcMain.handle('retry-extract', async (event, game, online, dlc, version) => { 

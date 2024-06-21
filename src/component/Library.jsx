@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Button, Dropdown, DropdownItem, DropdownTrigger, DropdownSection, DropdownMenu, Spacer, Pagination, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
+import { Button, Spacer, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
 import Games from "./Library/Games/GamesGet";
 import { AddGamesIcon } from "./Library/Games/svg/AddGame";
-import { HaltIcon } from "./Library/DownloadManager/HaltIcon";
 import Downloads from "./Library/DownloadManager/DownloadManager";
 import NewLibrary from "./Library/NewLibrary";
 import GamesAddModal from "./Library/Games/GamesAdd";
@@ -141,20 +140,6 @@ const Library = () => {
           <Spacer y={20} />
           <h1 className="text-large">
             Queue
-            <Dropdown className=''>
-              <DropdownTrigger>
-                <Button className="translate-y-1" isIconOnly variant="none">
-                <HaltIcon width={20} height={20} />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu className='justify-center'>
-                <DropdownSection>
-                  <DropdownItem variant='flat' color='danger' aria-label='Confirm' description='Are you sure you want to kill all downloads?' onClick="">
-                    Stop all Downloads
-                  </DropdownItem>
-                </DropdownSection>
-              </DropdownMenu>
-            </Dropdown>
           </h1>
           <Spacer y={5} />
           <Downloads games={downloadingGames} />

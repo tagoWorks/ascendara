@@ -14,7 +14,7 @@ def retryfolder(game, online, dlc, version, download_dir, newfolder):
         "version": version if version else "",
         "executable": os.path.join(download_dir, f"{game}.exe"),
         "isRunning": False,
-        "downloadingdata": {
+        "downloadingData": {
             "downloading": False,
             "extracting": False,
             "updating": False,
@@ -23,7 +23,7 @@ def retryfolder(game, online, dlc, version, download_dir, newfolder):
             "timeUntilComplete": "0s"
         }
     }
-    game_info["downloadingdata"]["extracting"] = True
+    game_info["downloadingData"]["extracting"] = True
     with open(game_info_path, 'w') as f:
         json.dump(game_info, f, indent=4)
 
@@ -35,8 +35,8 @@ def retryfolder(game, online, dlc, version, download_dir, newfolder):
     for file in os.listdir(os.path.join(download_dir)):
         if file.endswith(".url"):
             os.remove(os.path.join(download_dir, file))
-    game_info["downloadingdata"]["extracting"] = False
-    del game_info["downloadingdata"]
+    game_info["downloadingData"]["extracting"] = False
+    del game_info["downloadingData"]
     shutil.rmtree(tempdownloading, ignore_errors=True)
     with open(game_info_path, 'w') as f:
         json.dump(game_info, f, indent=4)

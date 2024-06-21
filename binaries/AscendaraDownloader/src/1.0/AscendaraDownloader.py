@@ -1,10 +1,7 @@
 import os
 import json
 import urllib.error
-import urllib.request
 import ssl
-from requests.adapters import HTTPAdapter
-from urllib3.poolmanager import PoolManager
 import shutil
 import string
 import sys
@@ -12,12 +9,15 @@ from unrar import rarfile
 import time
 from tempfile import NamedTemporaryFile
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.poolmanager import PoolManager
 
 def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 def sanitize_folder_name(name):
     valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
@@ -35,7 +35,7 @@ def retryfolder(game, online, dlc, version, download_dir, newfolder):
         "version": version if version else "",
         "executable": os.path.join(download_dir, f"{game}.exe"),
         "isRunning": False,
-        "downloadingdata": {
+        "downloadingData": {
             "downloading": False,
             "extracting": False,
             "updating": False,
@@ -44,7 +44,7 @@ def retryfolder(game, online, dlc, version, download_dir, newfolder):
             "timeUntilComplete": "0s"
         }
     }
-    game_info["downloadingdata"]["extracting"] = True
+    game_info["downloadingData"]["extracting"] = True
     with open(game_info_path, 'w') as f:
         json.dump(game_info, f, indent=4)
 
@@ -56,8 +56,8 @@ def retryfolder(game, online, dlc, version, download_dir, newfolder):
     for file in os.listdir(os.path.join(download_dir)):
         if file.endswith(".url"):
             os.remove(os.path.join(download_dir, file))
-    game_info["downloadingdata"]["extracting"] = False
-    del game_info["downloadingdata"]
+    game_info["downloadingData"]["extracting"] = False
+    del game_info["downloadingData"]
     shutil.rmtree(tempdownloading, ignore_errors=True)
     with open(game_info_path, 'w') as f:
         json.dump(game_info, f, indent=4)
@@ -88,13 +88,19 @@ def handleerror(game_info, game_info_path, e):
     game_info['isRunning'] = False
     game_info['version'] = ""
     game_info['executable'] = ""
-    del game_info['downloadingdata']
-    game_info['downloadingdata'] = {
+    game_info['downloadingData'] = {
         "error": True,
         "message": str(e)
     }
     with open(game_info_path, 'w') as f:
         json.dump(game_info, f, indent=4)
+
+class SSLContextAdapter(HTTPAdapter):
+    def init_poolmanager(self, *args, **kwargs):
+        context = ssl.create_default_context()
+        context.set_ciphers('DEFAULT@SECLEVEL=1')
+        kwargs['ssl_context'] = context
+        return super().init_poolmanager(*args, **kwargs)
 
 def download_file(link, game, online, dlc, version, download_dir):
     game = sanitize_folder_name(game)
@@ -110,7 +116,7 @@ def download_file(link, game, online, dlc, version, download_dir):
         "version": version if version else "",
         "executable": os.path.join(download_path, f"{game}.exe"),
         "isRunning": False,
-        "downloadingdata": {
+        "downloadingData": {
             "downloading": False,
             "extracting": False,
             "updating": False,
@@ -120,85 +126,12 @@ def download_file(link, game, online, dlc, version, download_dir):
         }
     }
 
-    def download_with_urllib():
-        try:
-            with urllib.request.urlopen(link) as response:
-                if response.status != 200:
-                    raise Exception(f"Response code was not 200. Instead got {response.status}")
-                content_type = response.headers.get('Content-Type')
-                if content_type and 'text/html' in content_type:
-                    raise Exception("Content-Type was text/html. Link most likely expired.")
-
-                archive_ext = link.split('.')[-1]
-                archive_file_path = os.path.join(download_path, f"{game}.{archive_ext}")
-                total_size = int(response.headers.get('content-length', 0) or 0)
-                block_size = 1024 * 1024
-                downloaded_size = 0
-                game_info["downloadingdata"]["downloading"] = True
-                start_time = time.time()
-
-                safe_write_json(game_info_path, game_info)
-
-                with open(archive_file_path, "wb") as file:
-                    while True:
-                        data = response.read(block_size)
-                        if not data:
-                            break
-                        file.write(data)
-                        downloaded_size += len(data)
-                        progress = downloaded_size / total_size if total_size > 0 else 0
-                        game_info["downloadingdata"]["progressUntilComplete"] = f"{progress * 100:.2f}"
-
-                        elapsed_time = time.time() - start_time
-                        download_speed = downloaded_size / elapsed_time if elapsed_time > 0 else 0
-
-                        if download_speed < 1024:
-                            game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed:.2f} B/s"
-                        elif download_speed < 1024 * 1024:
-                            game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed / 1024:.2f} KB/s"
-                        else:
-                            game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed / (1024 * 1024):.2f} MB/s"
-
-                        remaining_size = total_size - downloaded_size
-                        if download_speed > 0:
-                            time_until_complete = remaining_size / download_speed
-                            minutes, seconds = divmod(time_until_complete, 60)
-                            hours, minutes = divmod(minutes, 60)
-                            if hours > 0:
-                                game_info["downloadingdata"]["timeUntilComplete"] = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
-                            else:
-                                game_info["downloadingdata"]["timeUntilComplete"] = f"{int(minutes)}m {int(seconds)}s"
-                        else:
-                            game_info["downloadingdata"]["timeUntilComplete"] = "Calculating..."
-
-                        safe_write_json(game_info_path, game_info)
-
-                game_info["downloadingdata"]["downloading"] = False
-                game_info["downloadingdata"]["extracting"] = True
-                safe_write_json(game_info_path, game_info)
-                return archive_file_path, archive_ext
-        except Exception as e:
-            handleerror(game_info, game_info_path, e)
-            raise e
-
-    class SSLContextAdapter(HTTPAdapter):
-        def init_poolmanager(self, *args, **kwargs):
-            context = ssl.create_default_context()
-            context.set_ciphers('DEFAULT@SECLEVEL=1')  # Lower security level to increase compatibility
-            context.options |= ssl.OP_NO_SSLv2
-            context.options |= ssl.OP_NO_SSLv3
-            context.options |= ssl.OP_NO_TLSv1
-            kwargs['ssl_context'] = context
-            return super(SSLContextAdapter, self).init_poolmanager(*args, **kwargs)
-
-    def download_with_requests(link, download_path, game_info_path, game_info):
+    def download_with_requests():
         session = requests.Session()
         session.mount('https://', SSLContextAdapter())
-
         try:
-            response = session.get(link, stream=True)
-            if response.status_code != 200:
-                raise Exception(f"Response code was not 200. Instead got {response.status_code}")
+            response = session.get(link, stream=True, timeout=(10, 30))
+            response.raise_for_status()
             content_type = response.headers.get('Content-Type')
             if content_type and 'text/html' in content_type:
                 raise Exception("Content-Type was text/html. Link most likely expired.")
@@ -208,7 +141,7 @@ def download_file(link, game, online, dlc, version, download_dir):
             total_size = int(response.headers.get('content-length', 0) or 0)
             block_size = 1024 * 1024
             downloaded_size = 0
-            game_info["downloadingdata"]["downloading"] = True
+            game_info["downloadingData"]["downloading"] = True
             start_time = time.time()
 
             safe_write_json(game_info_path, game_info)
@@ -220,17 +153,17 @@ def download_file(link, game, online, dlc, version, download_dir):
                     file.write(data)
                     downloaded_size += len(data)
                     progress = downloaded_size / total_size if total_size > 0 else 0
-                    game_info["downloadingdata"]["progressUntilComplete"] = f"{progress * 100:.2f}"
+                    game_info["downloadingData"]["progressUntilComplete"] = f"{progress * 100:.2f}"
 
                     elapsed_time = time.time() - start_time
                     download_speed = downloaded_size / elapsed_time if elapsed_time > 0 else 0
 
                     if download_speed < 1024:
-                        game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed:.2f} B/s"
+                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed:.2f} B/s"
                     elif download_speed < 1024 * 1024:
-                        game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed / 1024:.2f} KB/s"
+                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed / 1024:.2f} KB/s"
                     else:
-                        game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed / (1024 * 1024):.2f} MB/s"
+                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed / (1024 * 1024):.2f} MB/s"
 
                     remaining_size = total_size - downloaded_size
                     if download_speed > 0:
@@ -238,40 +171,36 @@ def download_file(link, game, online, dlc, version, download_dir):
                         minutes, seconds = divmod(time_until_complete, 60)
                         hours, minutes = divmod(minutes, 60)
                         if hours > 0:
-                            game_info["downloadingdata"]["timeUntilComplete"] = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
+                            game_info["downloadingData"]["timeUntilComplete"] = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
                         else:
-                            game_info["downloadingdata"]["timeUntilComplete"] = f"{int(minutes)}m {int(seconds)}s"
+                            game_info["downloadingData"]["timeUntilComplete"] = f"{int(minutes)}m {int(seconds)}s"
                     else:
-                        game_info["downloadingdata"]["timeUntilComplete"] = "Calculating..."
+                        game_info["downloadingData"]["timeUntilComplete"] = "Calculating..."
 
                     safe_write_json(game_info_path, game_info)
 
-            game_info["downloadingdata"]["downloading"] = False
-            game_info["downloadingdata"]["extracting"] = True
+            game_info["downloadingData"]["downloading"] = False
+            game_info["downloadingData"]["extracting"] = True
             safe_write_json(game_info_path, game_info)
             return archive_file_path, archive_ext
         except Exception as e:
             handleerror(game_info, game_info_path, e)
             raise e
-        
+
     safe_write_json(game_info_path, game_info)
 
     try:
-        try:
-            archive_file_path, archive_ext = download_with_urllib()
-        except Exception:
-            archive_file_path, archive_ext =  download_with_requests(link, download_path, game_info_path, game_info)
+        archive_file_path, archive_ext = download_with_requests()
 
         try:
             if archive_ext == "rar":
-                rarfile.unrarlib.lib_path
                 with rarfile.RarFile(archive_file_path, 'r') as fs:
                     files = fs.namelist()
                     fs.extractall(download_path, files)
             elif archive_ext == "zip":
                 shutil.unpack_archive(archive_file_path, download_path, format="zip")
             os.remove(archive_file_path)
-            game_info["downloadingdata"]["extracting"] = False
+            game_info["downloadingData"]["extracting"] = False
             for file in os.listdir(download_path):
                 if file.endswith(".url") or file.endswith(".txt"):
                     os.remove(os.path.join(download_path, file))
@@ -283,8 +212,8 @@ def download_file(link, game, online, dlc, version, download_dir):
             for file in os.listdir(os.path.join(download_dir, game)):
                 if file.endswith(".url"):
                     os.remove(os.path.join(download_path, file))
-            game_info["downloadingdata"]["extracting"] = False
-            del game_info["downloadingdata"]
+            game_info["downloadingData"]["extracting"] = False
+            del game_info["downloadingData"]
             shutil.rmtree(tempdownloading, ignore_errors=True)
             safe_write_json(game_info_path, game_info)
         except Exception as e:
