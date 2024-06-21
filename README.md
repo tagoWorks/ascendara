@@ -50,6 +50,7 @@
 - [ ] Theme settings
 - [ ] Add different filtering options
 - [ ] Add additional game sources
+- [x] Add tooltips
 - [x] Populate pages
 - [ ] Add notifications for games status
 - [ ] -Small-undisturbing advertisments-
