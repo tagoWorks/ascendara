@@ -19,7 +19,7 @@ const App = () => {
   const [isThemesModalOpen, setIsThemesModalOpen] = useState(false);
   const [games, setGames] = useState([]);
   const [downloadingGames, setDownloadingGames] = useState([]);
-  const [backgroundMotion, setBackgroundMotion] = useState(true); // add this state
+  const [backgroundMotion, setBackgroundMotion] = useState(true);
 
   const getGames = async () => {
     try {
@@ -59,7 +59,7 @@ const App = () => {
     const fetchData = async () => {
       try {
         await getGames();
-        await getSettings(); // call getSettings here
+        await getSettings();
       } catch (error) {
         console.error("Error fetching data:", error);
         setIsInitialLoading(false); 
@@ -84,7 +84,7 @@ const App = () => {
           <SettingsModal isOpen={isSettingsModalOpen} onOpenChange={toggleSettingsModal} />
           <ThemesModal isOpen={isThemesModalOpen} onOpenChange={toggleThemesModal} />
           <Tabs isVertical isIconOnly aria-label="Options" color="secondary" variant="bordered" className="tabs">
-            <Tab key="browse" title={
+            <Tab key="browse" title={   
                 <BrowseIcon />
             }>
               <BrowsePage />
@@ -100,11 +100,6 @@ const App = () => {
           <Button isIconOnly color="default" size="sm" variant="light" className="configure-loc" onPress={toggleSettingsModal}>
             <SettingsIcon />
           </Button>
-          <Tooltip content="Coming soon...">
-          <Button isIconOnly color="default" size="sm" variant="light" className="theme-loc" onPress={toggleThemesModal}>
-            <ThemesIcon width={22} height={22} />
-          </Button>
-          </Tooltip>
       </div>
     </NextUIProvider>
   );

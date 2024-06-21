@@ -1,7 +1,10 @@
 
 /node_modules
 .env
-binaries/AscendaraDownloader/make-exe.bat
+binaries/AscendaraDownloader/make-exe-1.0.bat
+binaries/AscendaraDownloader/make-exe-2.0.bat
+
+
 binaries/AscendaraGameHandler/make-exe.bat
 /.vscode
 /src/dist
@@ -18,3 +21,4 @@ binaries/AscendaraBackgroundTasks/make-exe.bat
 binaries/AscendaraDownloader/AscendaraDownloader.spec
 binaries/AscendaraGameHandler/AscendaraGameHandler.spec
 package-lock.json
+/binaries/AscendaraDownloader/src/2.0/__pycache__

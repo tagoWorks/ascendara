@@ -54,7 +54,7 @@ ipcMain.handle('get-api-key', () => {
   return process.env.AUTHORIZATION;
 });
 
-// Get all backgrounds from backgrounds folder
+// Get all backgrounds from backgrounds folder (for themes/bg later on)
 ipcMain.handle('get-backgrounds', async () => {
   const backgroundsDirectory = path.join(app.getPath('userData'), '/backgrounds');
   const files = await fs.readdir(backgroundsDirectory);

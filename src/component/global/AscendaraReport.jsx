@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { WarningIcon } from "../global/WarningIcon";
 
 import {
-  Autocomplete,
-  AutocompleteItem,
+  Input,
   Button,
   Modal,
   Spinner,
@@ -16,10 +15,8 @@ import {
   Card,
   CardBody,
 } from "@nextui-org/react";
-import "./browsing.css";
 
-const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
-  const [showDetails, setShowDetails] = useState(false);
+const ReportModal = ({ isReportOpen, onReportClose }) => {
   const [reportReason, setReportReason] = useState("");
   const [value, setValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -83,17 +80,16 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
       return;
     }
     try {
-      const response = await fetch("https://api.ascendara.app/app/report", {
+      const response = await fetch("https://api.ascendara.app/app/report/feature", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({
-          reportType: "GameBrowsing",
+          reportType: "AscendaraApp",
           reason: reportReason,
           details: value,
-          gameName: gameName,
         }),
       });
 
@@ -124,7 +120,7 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
       }}
     >
       <ModalContent>
-        <ModalHeader>Reporting a game | {gameName}</ModalHeader>
+        <ModalHeader>Report a Bug</ModalHeader>
         <ModalBody>
           {reportSubmitted ? (
             <p>Thank you for your help</p>
@@ -147,35 +143,18 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
 
               <Spacer y={5} />
 
-              <Autocomplete
+              <Input
                   isRequired
-                  disableSelectorIconRotation
-                  selectorIcon={null}
-                  allowsCustomValue
-                  label="Why are you reporting this game?"
-                  placeholder="Select or type a reason"
+                  label="What is it that you're reporting?"
                   value={reportReason}
-                  onSelectionChange={(value) => handleReasonChange(value)}
-                  className="autocomplete-with-spacing"
+                  onChange={(value) => handleReasonChange(value)}
                 >
-                <AutocompleteItem value="gamedetails">
-                  Game Details Misleading
-                </AutocompleteItem>
-                <AutocompleteItem value="filesnotdownloading">
-                  Files Not Downloading
-                </AutocompleteItem>
-                <AutocompleteItem value="notagame">
-                  This isn't a game
-                </AutocompleteItem>
-                <AutocompleteItem value="linksnotworking">
-                  A Link Is Not Working
-                </AutocompleteItem>
-              </Autocomplete>
+
+              </Input>
               <Spacer y={5} />
               <Textarea
                 isRequired
-                label="Description"
-                placeholder="Enter your description"
+                label="Detailed Description"
                 className="mt-4"
                 value={value}
                 onChange={handleTextareaChange}

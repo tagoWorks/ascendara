@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Switch, Input, Spacer } from "@nextui-org/react";
+import ReportModal from './AscendaraReport';
 
 const SettingsModal = ({ isOpen, onOpenChange }) => {
   const [enableNotifications, setEnableNotifications] = useState(false);
@@ -9,6 +10,13 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
   const [seamlessGoFileDownloads, setSeamlessGoFileDownloads] = useState(false);
   const [downloadDirectory, setDownloadDirectory] = useState('');
   const [version, setVersion]  = useState(''); 
+  const [isReportOpen, setReportOpen] = useState(false);
+  const handleOpenReport = () => {
+    setReportOpen(true);
+  };
+  const handleCloseReport = () => {
+    setReportOpen(false);
+  };
 
   useEffect(() => {
     window.electron.getSettings().then((settings) => {
@@ -87,7 +95,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
                 onChange={handleSeamlessGoFileDownloadsToggle}
               >
                 Seamless GoFile Downloads
-                <p className="text-small text-default-500">Automatically start downloading files that are hosted on GoFile</p>
+                <p className="text-small text-default-500">When downloading a game, if GoFile is a provider the download will seamlessly start</p>
               </Switch>
               <Switch
               isSelected={backgroundMotion}
@@ -116,6 +124,11 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
                 <p className="text-small text-default-500">Coming Soon</p>
               </Switch>
               <Spacer y={3} />
+              <Button color="danger" size="sm" onClick={handleOpenReport}>Report a Bug</Button>
+                {isReportOpen && <ReportModal
+                  isReportOpen={isReportOpen}
+                  onReportClose={handleCloseReport}
+                />}
               <Input
                 onClick={handleSelectDirectory}
                 isReadOnly

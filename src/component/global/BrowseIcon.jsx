@@ -1,4 +1,5 @@
 import React from "react";
+import { Tooltip } from "@nextui-org/react";
 
 export const BrowseIcon = ({
   fill = 'none',
@@ -8,6 +9,7 @@ export const BrowseIcon = ({
   ...props
 }) => {
   return (
+    <Tooltip delay={1000} content="Browse Games">
     <svg
       width={size || width || 24}
       height={size || height || 24}
@@ -20,5 +22,6 @@ export const BrowseIcon = ({
       <path d="M232 160a72 72 0 1072 72 72 72 0 00-72-72z" fill="none" stroke="currentColor" strokeMiterlimit="10" strokeWidth="32"/>
       <path fill="none" stroke="currentColor" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="32" d="M283.64 283.64L336 336"/>
     </svg>
+    </Tooltip>
   );
 };

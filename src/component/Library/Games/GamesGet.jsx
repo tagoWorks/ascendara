@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CardComponent from "./GamesCard";
 import CustomCardComponent from "./CustomGamesCard";
-import { Spacer, Input, Pagination } from "@nextui-org/react";
+import { Spacer, Input, Pagination, Card, CardBody } from "@nextui-org/react";
 import "../library.css";
 
 const Games = () => {
@@ -120,9 +120,19 @@ const Games = () => {
       <Spacer y={7} />
       <div className="flex flex-wrap library-game-cards">
         <Spacer x={4} />
-        {renderCards(paginatedGames.filter(game => !customGames.includes(game)), false)}
-        <Spacer x={4} />
-        {renderCards(paginatedGames.filter(game => customGames.includes(game)), true)}
+        {paginatedGames.length > 0 ? (
+          <>
+            {renderCards(paginatedGames.filter(game => !customGames.includes(game)), false)}
+            <Spacer x={4} />
+            {renderCards(paginatedGames.filter(game => customGames.includes(game)), true)}
+          </>
+        ) : (
+          <Card className="flex" style={{ padding: '5rem' }}>
+            <CardBody>
+              <h1 style={{ display: 'inline' }}>No results found</h1>
+            </CardBody>
+          </Card>
+        )}
       </div>
       {totalFilteredGames > cardsPerPage && (
         <Pagination

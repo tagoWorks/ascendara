@@ -264,7 +264,7 @@ const GameBrowse = () => {
         <ModalContent>
         <ModalHeader>Indexed Source</ModalHeader>
         <ModalBody>
-          <h1 className="text-small">Ascendara Sources are the websites that hold all of the games along with their download links. These are indexed every few weeks in order to keep up with the latest games</h1>
+          <h1 className="text-small">Ascendara Sources are the websites that hold all of the games along with their download links. These are indexed every few weeks in order to keep up with the latest games.</h1>
           <p>Source: {metadata.source}</p>
           <p>Indexed Games: {metadata.games}</p>
           <p>Last updated: {metadata.getDate}</p>

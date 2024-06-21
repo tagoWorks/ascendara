@@ -83,7 +83,7 @@
 }
 
 .news-container{
-  overflow-y: hidden;
+  padding: 10px;
   flex: 1;
 }
 .container {
