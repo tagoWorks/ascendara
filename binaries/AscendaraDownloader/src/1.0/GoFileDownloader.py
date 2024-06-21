@@ -120,7 +120,7 @@ class GoFile(metaclass=GoFileMeta):
                             if game_info_path:
                                 with open(game_info_path, 'r') as f:
                                     game_info = json.load(f)
-                                game_info["downloadingdata"]["progressUntilComplete"] = "Downloading..."
+                                game_info["downloadingdata"]["progressCompleted"] = "Downloading..."
                                 safe_write_json(game_info_path, game_info)
                             if data["data"]["children"][children_id]["type"] == "folder":
                                 self.execute(dir=dir, content_id=children_id, password=password, game_info_path=game_info_path)
@@ -168,7 +168,7 @@ class GoFile(metaclass=GoFileMeta):
                             if game_info_path:
                                 with open(game_info_path, 'r') as f:
                                     game_info = json.load(f)
-                                game_info["downloadingdata"]["progressUntilComplete"] = f"{progress * 100:.2f}"
+                                game_info["downloadingdata"]["progressCompleted"] = f"{progress * 100:.2f}"
 
                                 elapsed_time = time.time() - start_time
                                 download_speed = downloaded_size / elapsed_time if elapsed_time > 0 else 0

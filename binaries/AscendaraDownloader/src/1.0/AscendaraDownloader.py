@@ -39,7 +39,7 @@ def retryfolder(game, online, dlc, version, download_dir, newfolder):
             "downloading": False,
             "extracting": False,
             "updating": False,
-            "progressUntilComplete": "0.00",
+            "progressCompleted": "0.00",
             "progressDownloadSpeeds": "0.00 KB/s",
             "timeUntilComplete": "0s"
         }
@@ -120,7 +120,7 @@ def download_file(link, game, online, dlc, version, download_dir):
             "downloading": False,
             "extracting": False,
             "updating": False,
-            "progressUntilComplete": "0.00",
+            "progressCompleted": "0.00",
             "progressDownloadSpeeds": "0.00 KB/s",
             "timeUntilComplete": "0s"
         }
@@ -153,7 +153,7 @@ def download_file(link, game, online, dlc, version, download_dir):
                     file.write(data)
                     downloaded_size += len(data)
                     progress = downloaded_size / total_size if total_size > 0 else 0
-                    game_info["downloadingData"]["progressUntilComplete"] = f"{progress * 100:.2f}"
+                    game_info["downloadingData"]["progressCompleted"] = f"{progress * 100:.2f}"
 
                     elapsed_time = time.time() - start_time
                     download_speed = downloaded_size / elapsed_time if elapsed_time > 0 else 0

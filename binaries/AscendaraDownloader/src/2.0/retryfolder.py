@@ -18,7 +18,7 @@ def retryfolder(game, online, dlc, version, download_dir, newfolder):
             "downloading": False,
             "extracting": False,
             "updating": False,
-            "progressUntilComplete": "0.00",
+            "progressCompleted": "0.00",
             "progressDownloadSpeeds": "0.00 KB/s",
             "timeUntilComplete": "0s"
         }
