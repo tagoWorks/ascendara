@@ -17,6 +17,8 @@
 
 > With Ascendara, you can easily download, manage, and play pre-installed games without needs to go through the hassle of extracting, installing, and moving files. Ascendara's game list comes from a custom webscraper which for now only has games from [STEAMRIP](https://steamrip.com/), but plans for more sources later on
 
+## Download Ascendara right now! https://ascendara.app/
+
 # Building the app
 ### Note: The Ascendara API requires a key which is private as of now. Game browsing will not function properly.
 
