@@ -1,11 +1,31 @@
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { Client } = require('discord-rpc');
 const path = require('path');
 const axios = require('axios');
 const fs = require('fs-extra');
 const { spawn } = require('child_process');
 require("dotenv").config()
+let rpc;
+const CURRENT_VERSION = "4.3.4";
 
-const CURRENT_VERSION = "4.2.4";
+
+// Initialize Discord RPC
+const clientId = '1253859509462630502';
+rpc = new Client({ transport: 'ipc' });
+
+rpc.on('ready', () => {
+  rpc.setActivity({
+    details: 'Browsing Games...',
+    largeImageKey: 'ascendara',
+    largeImageText: 'Ascendara',
+    instance: false,
+  });
+
+  console.log('Discord RPC is ready');
+});
+
+rpc.login({ clientId }).catch(console.error);
+
 
 axios.get('https://api.ascendara.app/')
   .then(response => {
@@ -550,9 +570,25 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
       const runGame = spawn(executablePath, [executable, isCustom]);
       runGameProcesses.set(game, runGame);
   
+      rpc.setActivity({
+        details: `Playing ${game}`,
+        state: 'With Ascendara',
+        startTimestamp: new Date(),
+        largeImageKey: 'ascendara',
+        largeImageText: 'Ascendara',
+        smallImageKey: 'playing'
+      });
+  
       runGame.on('close', (code) => {
         console.log(`Game process for ${game} exited with code ${code}`);
         runGameProcesses.delete(game);
+  
+        rpc.setActivity({
+          details: 'Browsing Games...',
+          largeImageKey: 'ascendara',
+          largeImageText: 'Ascendara'
+        });
+  
         if (!isCustom) {
           const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
           try {
@@ -570,10 +606,21 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
       console.error('Error reading the settings file:', error);
     }
   });
+  
+  ipcMain.handle('stop-game', (event, game) => {
+    const runGame = runGameProcesses.get(game);
+    if (runGame) {
+      runGame.kill();
+  
+      rpc.setActivity({
+        details: 'Browsing Games...',
+        largeImageKey: 'ascendara',
+        largeImageText: 'Ascendara'
+      });
+    }
+  });
 
-
-
-ipcMain.handle('is-game-running', async (event, game) => {
+  ipcMain.handle('is-game-running', async (event, game) => {
   const runGame = runGameProcesses.get(game);
   return runGame ? true : false;
 });
