@@ -15,7 +15,7 @@ rpc = new Client({ transport: 'ipc' });
 
 rpc.on('ready', () => {
   rpc.setActivity({
-    details: 'Browsing Games...',
+    details: 'Browsing Menus...',
     largeImageKey: 'ascendara',
     largeImageText: 'Ascendara',
     instance: false,
@@ -584,7 +584,7 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
         runGameProcesses.delete(game);
   
         rpc.setActivity({
-          details: 'Browsing Games...',
+          details: 'Browsing Menus...',
           largeImageKey: 'ascendara',
           largeImageText: 'Ascendara'
         });
@@ -613,7 +613,7 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
       runGame.kill();
   
       rpc.setActivity({
-        details: 'Browsing Games...',
+        details: 'Browsing Menus...',
         largeImageKey: 'ascendara',
         largeImageText: 'Ascendara'
       });
