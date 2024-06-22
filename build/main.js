@@ -571,8 +571,8 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
       runGameProcesses.set(game, runGame);
   
       rpc.setActivity({
-        details: `Playing ${game}`,
-        state: 'With Ascendara',
+        details: 'Playing a Game',
+        state: `${game}`,
         startTimestamp: new Date(),
         largeImageKey: 'ascendara',
         largeImageText: 'Ascendara',
