@@ -55,7 +55,7 @@
 - [x] Add tooltips
 - [x] Populate pages
 - [ ] Add notifications for games status
-- [ ] -Small-undisturbing advertisments-
+- [ ] ~Small undisturbing advertisments~
 - [ ] Add different sources
 - [ ] Welcome to app screens/info
 - [x] Move tabs to the top left
