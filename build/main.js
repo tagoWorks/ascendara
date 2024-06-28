@@ -302,6 +302,16 @@ ipcMain.handle('retry-download', async (event, link, game, online, dlc, version)
 })
 
 
+ipcMain.handle('is-new', (event) => {
+  const filePath = path.join(app.getPath('home'), 'timestamp.ascendara.json');
+  try {
+    fs.accessSync(filePath);
+    return false;
+  } catch (error) {
+    fs.writeFileSync(filePath, JSON.stringify({ timestamp: Date.now() }));
+    return true;
+  }
+});
 
 // Read the settings JSON file and send it to the renderer process
 ipcMain.handle('get-settings', () => {
@@ -322,7 +332,6 @@ ipcMain.handle('get-settings', () => {
         downloadDirectory: '',
       })
     );
-    const data = fs.readFileSync(filePath, 'utf8');
     return {
       enableNotifications: false,
       splitTunneling: false,

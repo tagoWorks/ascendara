@@ -63,7 +63,7 @@ def execute(game_path, is_custom_game):
                 with open(json_file_path, "w") as f:
                     json.dump(data, f, indent=4)
             else:
-                pass  # No need to update the game info file for custom games
+                pass
 
         if process.poll() is not None:
             running = False
@@ -76,7 +76,6 @@ def execute(game_path, is_custom_game):
 if __name__ == "__main__":
     _, game_path, is_custom_game_str = sys.argv
 
-    # Configure logging
     log_file = os.path.join(os.path.dirname(__file__), 'gamehandler.log')
     logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 

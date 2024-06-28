@@ -139,8 +139,8 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
                   <WarningIcon fill="#FF4433" />
                   <p className="text-small">
                     When reporting a bug with a game or feature, your IP address
-                    is temporarily saved on Ascendara servers only, in order to
-                    prevent spam.
+                    will be obfuscated with a unique ID, and then temporarily stored
+                    in order to prevent spam.
                   </p>
                 </CardBody>
               </Card>

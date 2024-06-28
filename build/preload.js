@@ -3,6 +3,7 @@ const { link } = require('original-fs');
 
 contextBridge.exposeInMainWorld('electron', {
   getSettings: () => ipcRenderer.invoke('get-settings'),
+  isNew: () => ipcRenderer.invoke('is-new'),
   killDownload: (game) => ipcRenderer.invoke('stop-download', game),
   killAllDownloads: () => ipcRenderer.invoke('stop-all-downloads'),
   openGameDirectory: (game, isCustom) => ipcRenderer.invoke('open-game-directory', game, isCustom),

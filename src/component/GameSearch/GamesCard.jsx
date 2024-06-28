@@ -21,7 +21,6 @@ import {
 } from "@nextui-org/react";
 
 const isValidURL = (url, provider) => {
-  console.log(url, provider);
   const trimmedUrl = url.trim();
   if (trimmedUrl === '') {
     return true;
@@ -226,21 +225,23 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
             </div>
           </div>
           {!isInstalled ? (
-          <Button 
-            color="primary"
-            variant="ghost"
-            radius="full"
-            size="sm"
-            onClick={handleDownload}
-          >
-            Download
-            {downloadLinks["gofile"] && (
-              <SeemlessDownloadIcon size="15px" />
-            )}
+            <Button
+              aria-label="Download"
+              color="primary"
+              variant="ghost"
+              radius="full"
+              size="sm"
+              onClick={handleDownload}
+            >
+              Download
+              {downloadLinks["gofile"] && (
+                <SeemlessDownloadIcon size="15px" />
+              )}
           </Button>
         ) : (
           <Button 
             isDisabled
+            aria-label="Installed"
             color="primary"
             variant="faded"
             radius="full"
@@ -260,7 +261,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
           <ModalHeader>
               <div>
                 Download {game}
-                <Button isIconOnly variant="blank" size="sm" onClick={handleOpenReport}><ReportIcon size="15px" /></Button>
+                <Button aria-label="ReportGame" isIconOnly variant="blank" size="sm" onClick={handleOpenReport}><ReportIcon size="15px" /></Button>
                 {isReportOpen && <ReportModal
                   gameName={game}
                   isReportOpen={isReportOpen}
@@ -271,6 +272,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
             </ModalHeader>
           <ModalBody>
             <Select
+              aria-label="ProviderSelector"
               value={selectedProvider}
               onChange={(e) => handleSelectProvider(e.target.value)}
               placeholder="To get started, select a download provider"
@@ -329,7 +331,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
           </ModalBody>
           <ModalFooter>
             {selectedProvider ? (
-                <Button variant="ghost" color="success" onClick={downloadFile}>
+                <Button aria-label="SendToQueue" variant="ghost" color="success" onClick={downloadFile}>
                   Send to Queue
                 </Button>
             ) : <></>}
