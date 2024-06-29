@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { NextUIProvider, Tabs, Tab, Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
+import { NextUIProvider, Tabs, Tab, Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Progress } from "@nextui-org/react";
 import "./styles.css";
 import LibraryPage from "./component/Library";
 import BrowsePage from "./component/Browsing";
@@ -16,8 +16,10 @@ const App = () => {
   const [isThemesModalOpen, setIsThemesModalOpen] = useState(false);
   const [games, setGames] = useState([]);
   const [downloadingGames, setDownloadingGames] = useState([]);
-  const [backgroundMotion, setBackgroundMotion] = useState(true);
+  const [backgroundMotion, setBackgroundMotion] = useState();
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showNextModal, setShowNextModal] = useState(false);
+  const [isInstallingLibraries, setIsInstallingLibraries] = useState(false);
 
   const getGames = async () => {
     try {
@@ -50,6 +52,23 @@ const App = () => {
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
+    }
+  };
+  
+  const handleInstallLibraries = async () => {
+    setShowNextModal(false);
+    setIsInstallingLibraries(true);
+    try {
+      const result = await window.electron.installDependencies();
+      if (result.success) {
+        console.log("All installations complete");
+      } else {
+        console.error("Installation failed:", result.message);
+      }
+    } catch (error) {
+      console.error("Error installing libraries:", error);
+    } finally {
+      setIsInstallingLibraries(false);
     }
   };
 
@@ -87,25 +106,53 @@ const App = () => {
   const toggleThemesModal = () => {
     setIsThemesModalOpen(!isThemesModalOpen);
   };
-
   const closeWelcomeModal = () => {
     setShowWelcomeModal(false);
+    setShowNextModal(true);
   };
-
   return (
     <NextUIProvider>
       <div className={`w-screen h-screen justify-center main-window ${backgroundMotion ? 'animate' : ''}`}>
-        <Modal hideCloseButton isOpen={showWelcomeModal} onClose={closeWelcomeModal}>
+        <Modal isDismissable={false} hideCloseButton isOpen={showWelcomeModal} onClose={closeWelcomeModal}>
           <ModalContent>
-          <ModalHeader>
-            <h2>Welcome to Ascendara!</h2>
-          </ModalHeader>
-          <ModalBody>
-            <p>Ascendara is still in development and issues are expected. Please report any issues in the Discord server or "Report a Bug" in settings. Remember to set your download directory before installing or adding any games.</p>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant='bordered' color='success' onClick={closeWelcomeModal}>Start Browsing</Button>
-          </ModalFooter>
+            <ModalHeader>
+              <h2>Welcome to Ascendara!</h2>
+            </ModalHeader>
+            <ModalBody>
+              <p>Ascendara is still in development and issues are expected. Please report any issues in the Discord server or "Report a Bug" in settings. Remember to set your download directory before installing or adding any games.</p>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant='bordered' onClick={closeWelcomeModal}>Next</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+        <Modal isDismissable={false} hideCloseButton isOpen={showNextModal} onClose={() => setShowNextModal(false)}>
+          <ModalContent>
+            <ModalHeader>
+              <h2>Getting Started</h2>
+            </ModalHeader>
+            <ModalBody>
+              <p>Most games require you to install the following dependencies if you haven't before:<br/> • .NET Framework <br/> • DirectX <br/> • OpenAL <br/> • Visual C++ Redistributable <br/> • XNA Framework Redistributable</p>
+              <p>Ascendara can automatically install these dependencies onto your PC.</p>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant='bordered' onClick={() => setShowNextModal(false)}>Start Exploring</Button>
+              <Button variant='bordered' color='success' onClick={handleInstallLibraries}>Install Dependencies</Button>
+         </ModalFooter>
+          </ModalContent>
+        </Modal>
+        <Modal isOpen={isInstallingLibraries} onClose={() => setIsInstallingLibraries(false)} hideCloseButton isDismissable={false}>
+          <ModalContent>
+            <ModalHeader>
+              <h2>Installing Dependencies...</h2>
+            </ModalHeader>
+            <ModalBody>
+              <p>The installer executables are going to be downloaded and ran. Please click "Yes" on for each elevated permissions prompt.</p>
+              <p>After all dependencies are installed, this popup will close.</p>
+            </ModalBody>
+            <ModalFooter>
+              <Progress isIndeterminate color="secondary" />
+            </ModalFooter>
           </ModalContent>
         </Modal>
         <SettingsModal isOpen={isSettingsModalOpen} onOpenChange={toggleSettingsModal} />

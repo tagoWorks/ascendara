@@ -22,3 +22,4 @@ binaries/AscendaraDownloader/AscendaraDownloader.spec
 binaries/AscendaraGameHandler/AscendaraGameHandler.spec
 package-lock.json
 /binaries/AscendaraDownloader/src/2.0/__pycache__
+exports.txt

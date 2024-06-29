@@ -2,11 +2,13 @@ const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { Client } = require('discord-rpc');
 const path = require('path');
 const axios = require('axios');
+const unzipper = require('unzipper');
 const fs = require('fs-extra');
+const os = require('os')
 const { spawn } = require('child_process');
 require("dotenv").config()
 let rpc;
-const CURRENT_VERSION = "4.3.4";
+const CURRENT_VERSION = "5.4.4";
 
 
 // Initialize Discord RPC
@@ -353,6 +355,79 @@ ipcMain.handle('save-settings', (event, options, directory) => {
   fs.writeFileSync(filePath, data);
 });
 
+let isInstalling = false;
+
+ipcMain.handle('install-dependencies', async (event) => {
+  if (isInstalling) {
+    return { success: false, message: 'Installation already in progress' };
+  }
+
+  isInstalling = true;
+
+  try {
+    const tempDir = path.join(os.tmpdir(), 'ascendaradependencies');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
+
+    const zipUrl = 'https://storage.ascendara.app/files/deps.zip';
+    const zipPath = path.join(tempDir, 'deps.zip');
+    const res = await fetch(zipUrl);
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    fs.writeFileSync(zipPath, buffer);
+
+    await fs.createReadStream(zipPath)
+      .pipe(unzipper.Extract({ path: tempDir }))
+      .promise();
+
+    const files = fs.readdirSync(tempDir);
+    const executables = files.filter(file => path.extname(file) === '.exe');
+
+    for (const executable of executables) {
+      const exePath = path.join(tempDir, executable);
+      
+      // Check if the file is executable
+      fs.chmodSync(exePath, '755');
+
+      // Run the executable with elevated privileges
+      await new Promise((resolve, reject) => {
+        console.log(`Starting installation of: ${executable}`);
+        const process = spawn('powershell.exe', ['-Command', `Start-Process -FilePath "${exePath}" -Verb RunAs -Wait`], { shell: true });
+        process.on('error', (error) => {
+          reject(error);
+        });
+        process.on('exit', (code) => {
+          if (code === 0) {
+            console.log(`Finished installing: ${executable}`);
+            resolve();
+          } else {
+            reject(new Error(`Process exited with code ${code}`));
+          }
+        });
+      });
+    }
+
+    // Clean up
+    fs.rm(tempDir, { recursive: true, force: true }, (err) => {
+      if (err) {
+        console.error('Error removing temp directory:', err);
+      } else {
+        console.log('Temp directory removed successfully');
+      }
+    });
+
+    console.log('All installations complete');
+    return { success: true, message: 'All dependencies installed successfully' };
+  } catch (error) {
+    console.error('An error occurred:', error);
+    return { success: false, message: error.message };
+  } finally {
+    isInstalling = false;
+  }
+});
+
+
 
 ipcMain.handle('get-games', async () => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
@@ -594,10 +669,17 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
   
         rpc.setActivity({
           details: 'Browsing Menus...',
+          state: 'Ascendara',
           largeImageKey: 'ascendara',
-          largeImageText: 'Ascendara'
+          largeImageText: 'Ascendara',
+          buttons: [
+            {
+              label: 'Get Ascendara',
+              url: 'https://ascendara.app/'
+            }
+          ]
         });
-  
+
         if (!isCustom) {
           const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
           try {
