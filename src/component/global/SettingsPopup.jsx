@@ -81,7 +81,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="center" classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}}>
+    <Modal size='5xl' isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange} placement="center" classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}}>
       <ModalContent>
         {() => (
           <>

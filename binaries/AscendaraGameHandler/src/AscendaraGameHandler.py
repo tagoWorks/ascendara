@@ -1,19 +1,9 @@
 import json
 import os
-import subprocess
 import sys
 import time
-import psutil
 import logging
-
-def is_process_running(exe_name):
-    for proc in psutil.process_iter(['name']):
-        try:
-            if proc.info['name'] == exe_name:
-                return True
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            pass
-    return False
+import platform
 
 def execute(game_path, is_custom_game):
     if not is_custom_game:
@@ -51,27 +41,16 @@ def execute(game_path, is_custom_game):
             logging.error(error)
         return
 
-    # Start the process detached from the script
-    process = subprocess.Popen(game_path, creationflags=subprocess.CREATE_NEW_CONSOLE, close_fds=True)
-    running = True
-    while running:
-        if os.path.isfile(game_path):
-            if not is_custom_game:
-                with open(json_file_path, "r") as f:
-                    data = json.load(f)
-                data["isRunning"] = is_process_running(exe_name)
-                with open(json_file_path, "w") as f:
-                    json.dump(data, f, indent=4)
-            else:
-                pass
+    # Open a new terminal or command prompt and run the game
+    if platform.system() == 'Windows':
+        os.system(f"start cmd /k \"{game_path}\"")
+    elif platform.system() == 'Darwin':  # macOS
+        os.system(f"open -a Terminal \"{game_path}\"")
+    else:  # Linux and others
+        os.system(f"gnome-terminal -- \"{game_path}\"")
 
-        if process.poll() is not None:
-            running = False
-            if not is_custom_game:
-                data["isRunning"] = False
-                with open(json_file_path, "w") as f:
-                    json.dump(data, f, indent=4)
-        time.sleep(5)
+    # Wait for the game to finish (not really needed, but just in case)
+    time.sleep(5)
 
 if __name__ == "__main__":
     _, game_path, is_custom_game_str = sys.argv

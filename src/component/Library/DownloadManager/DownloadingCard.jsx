@@ -113,7 +113,7 @@ const CardComponent = ({ game, online, dlc, version, dirlink, downloadingData })
           <CardFooter className="wrap justify-between items-center">
             <div className="flex">
               <Button color="danger" variant="ghost" size="l" onClick={handleStopDownload}>
-                Stop & Delete
+                Cancel & Delete
               </Button>
               <Spacer x={5} />
               <Dropdown>
@@ -141,6 +141,7 @@ const CardComponent = ({ game, online, dlc, version, dirlink, downloadingData })
       </Card>
       
       <Modal open={showModal} onClose={() => setShowModal(false)}>
+        <ModalContent>
         <ModalHeader>
           <h4>Retry Download</h4>
         </ModalHeader>
@@ -160,6 +161,7 @@ const CardComponent = ({ game, online, dlc, version, dirlink, downloadingData })
             Confirm
           </Button>
         </ModalFooter>
+        </ModalContent>
       </Modal>
     </>
   );

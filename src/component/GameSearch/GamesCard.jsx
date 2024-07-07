@@ -252,7 +252,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
         )}
         </CardHeader>
       </Card>
-      <Modal isOpen={isOpen} onClose={onClose} size="4xl" className="fixed arial" classNames={{
+      <Modal isDismissable={false} isOpen={isOpen} onClose={onClose} size="4xl" className="fixed arial" classNames={{
                     body: "py-6",
                     backdrop: "bg-[#292f46]/50",
                     base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",
@@ -314,7 +314,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
                   <h2 className="text-large">Step 2.</h2>
                   <h3>Stop the download once it starts in your browser, and copy the link that the browser started downloading</h3>
                   <h2 className="text-large">Step 3.</h2>
-                  <h3>Paste the link in the inupt below and click "Send to Queue"</h3>
+                  <h3>Paste the link in the inupt below and click "Start Downloading"</h3>
                   <Spacer y={2} />
                   <h3 className="text-small text-default-400">Some providers may limit download speeds</h3>
                   <Input
@@ -331,8 +331,8 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
           </ModalBody>
           <ModalFooter>
             {selectedProvider ? (
-                <Button aria-label="SendToQueue" variant="ghost" color="success" onClick={downloadFile}>
-                  Send to Queue
+                <Button aria-label="StartDownloading" variant="ghost" color="success" onClick={downloadFile}>
+                  Start Downloading
                 </Button>
             ) : <></>}
           </ModalFooter>

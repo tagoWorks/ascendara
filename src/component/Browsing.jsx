@@ -7,12 +7,13 @@ import CardComponent from "./GameSearch/GamesCard";
 import ErrorCard from "./GameSearch/ErrorCard";
 import Fuse from "fuse.js";
 
-
-const CACHE_KEY = "cachedGamesLocal2";
-const CACHE_EXPIRY_KEY = "cacheExpiryLocal2";
-const METADATA_KEY = "cachedMetadataLocal2";
-const NEWS_CACHE_KEY = "cachedNewsLocal2";
-const NEWS_CACHE_EXPIRY_KEY = "newsCacheExpiryLocal2";
+const CACHE_KEY = "cachedGamesLocalKey";
+const CACHE_EXPIRY_KEY = "cacheExpiryLocalKey";
+const METADATA_KEY = "cachedMetadataLocalKey";
+const NEWS_CACHE_KEY = "cachedNewsLocalKey";
+const NEWS_CACHE_EXPIRY_KEY = "newsCacheExpiryLocalKey";
+const FORCE_REFRESH_INTERVAL = 30 * 60 * 1000;
+const FORCE_REFRESH_KEY = "forceRefreshTime";
 
 const GameBrowse = () => {
   const [games, setGames] = useState([]);
@@ -27,6 +28,38 @@ const GameBrowse = () => {
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [forceRefreshTime, setForceRefreshTime] = useState(localStorage.getItem(FORCE_REFRESH_KEY));
+
+  const handleForceRefresh = async () => {
+    const currentTime = Date.now();
+    if (forceRefreshTime && currentTime - forceRefreshTime < FORCE_REFRESH_INTERVAL) {
+      alert("You can only force refresh every 30 minutes.");
+      return;
+    }
+
+    setForceRefreshTime(currentTime);
+    localStorage.setItem(FORCE_REFRESH_KEY, currentTime.toString());
+
+    const token = await getToken();
+    const response = await fetch("https://api.ascendara.app/json/games", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await response.json();
+    setMetadata(data.metadata);
+    setGames(data.games);
+    setFilteredGames(data.games);
+    setLoading(false);
+    setError(false);
+
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data.games));
+    localStorage.setItem(METADATA_KEY, JSON.stringify(data.metadata));
+    const expiryTime = Date.now() + 3600000;
+    localStorage.setItem(CACHE_EXPIRY_KEY, expiryTime.toString());
+    setShowModal(false)
+  };
+
 
   const handleHelpClick = () => {
     setShowModal(true);
@@ -270,8 +303,11 @@ const GameBrowse = () => {
           <p>Last updated: {metadata.getDate}</p>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost">
-            <a href="https://docs.ascendara.app/" target="_blank">Read More</a>
+          <Button variant="ghost" onClick={() => window.electron.openURL('https://docs.ascendara.app/')}>
+            Read More
+          </Button>
+          <Button variant="faded" onClick={handleForceRefresh}>
+            Force Refresh
           </Button>
         </ModalFooter>
         </ModalContent>

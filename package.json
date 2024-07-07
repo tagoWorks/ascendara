@@ -1,6 +1,6 @@
 {
   "name": "ascendara",
-  "version": "5.4.4",
+  "version": "5.4.5",
   "main": "main.js",
   "description": "Effortlessly install games directly onto your PC without the hassle of extractions or file locations.",
   "scripts": {
@@ -23,6 +23,7 @@
     "framer-motion": "^11.2.6",
     "fs-extra": "^11.2.0",
     "fuse.js": "^7.0.0",
+    "lockfile": "^1.0.4",
     "path": "^0.12.7",
     "react": "latest",
     "react-dom": "^18.2.0",

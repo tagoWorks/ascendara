@@ -3,7 +3,6 @@ import { Card, CardHeader, CardFooter, Chip, Button, Spacer, CircularProgress, D
 import { GamesSetting } from "./svg/ThreeDotsVerticle";
 import { DirectoryIcon } from "./svg/DirectoryIcon";
 import { UpdateIcon } from "./svg/UpdateIcon";
-import { LibIcon } from "./svg/LibIcon";
 import { DeleteIcon } from "./svg/DeleteIcon";
 import { EditIcon } from "./svg/EditIcon";
 
@@ -137,15 +136,8 @@ const CardComponent = ({
               }>
                 Change Executing File
               </DropdownItem>
-              <DropdownItem onClick={handleReqLibraries} startContent={
-                <div className="flex items-center justify-start">
-                  <LibIcon className="text-xl text-default-500 pointer-events-none flex-shrink-0" />
-                </div>
-              }>
-                Install Required Libraries
-              </DropdownItem>
             </DropdownSection>
-            <DropdownSection title="Danger zone">
+            <DropdownSection title="Danger Zone">
               <DropdownItem onClick={handleDeleteGame} startContent={
                 <div className="flex items-center justify-start">
                   <DeleteIcon className="text-xl text-default-500 pointer-events-none flex-shrink-0" />

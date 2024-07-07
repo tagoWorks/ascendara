@@ -8,7 +8,7 @@ const os = require('os')
 const { spawn } = require('child_process');
 require("dotenv").config()
 let rpc;
-const CURRENT_VERSION = "5.4.4";
+const CURRENT_VERSION = "5.4.5";
 
 
 // Initialize Discord RPC
@@ -17,10 +17,9 @@ rpc = new Client({ transport: 'ipc' });
 
 rpc.on('ready', () => {
   rpc.setActivity({
-    details: 'Browsing Menus...',
+    state: 'Browsing Menus...',
     largeImageKey: 'ascendara',
-    largeImageText: 'Ascendara',
-    instance: false,
+    largeImageText: 'Ascendara'
   });
 
   console.log('Discord RPC is ready');
@@ -123,6 +122,12 @@ ipcMain.handle('set-background', async (event, color, gradient) => {
       `);
     }
   }
+});
+
+
+// Handle external urls
+ipcMain.handle('open-url', async (event, url) => {
+  shell.openExternal(url);
 });
 
 // Stop all active downloads
@@ -660,7 +665,13 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
         startTimestamp: new Date(),
         largeImageKey: 'ascendara',
         largeImageText: 'Ascendara',
-        smallImageKey: 'playing'
+        smallImageKey: 'playing',
+        buttons:[
+          {
+            label: 'Play on Ascendara',
+            url: 'https://ascendara.app/'
+          }
+        ]
       });
   
       runGame.on('close', (code) => {
@@ -668,16 +679,9 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
         runGameProcesses.delete(game);
   
         rpc.setActivity({
-          details: 'Browsing Menus...',
-          state: 'Ascendara',
+          state: 'Browsing Menus...',
           largeImageKey: 'ascendara',
           largeImageText: 'Ascendara',
-          buttons: [
-            {
-              label: 'Get Ascendara',
-              url: 'https://ascendara.app/'
-            }
-          ]
         });
 
         if (!isCustom) {
@@ -702,12 +706,13 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
     const runGame = runGameProcesses.get(game);
     if (runGame) {
       runGame.kill();
-  
+   
       rpc.setActivity({
-        details: 'Browsing Menus...',
+        state: 'Browsing Menus...',
         largeImageKey: 'ascendara',
         largeImageText: 'Ascendara'
       });
+
     }
   });
 

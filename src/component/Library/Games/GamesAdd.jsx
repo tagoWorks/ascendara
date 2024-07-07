@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Switch, Button } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Switch, Button, Tooltip } from "@nextui-org/react";
+import { HelpIcon } from '../../GameSearch/HelpIcon';
 
 const GamesAddModal = ({ isOpen, onOpenChange }) => {
   const [executable, setExecutable] = useState(null);
@@ -41,7 +42,7 @@ const GamesAddModal = ({ isOpen, onOpenChange }) => {
         {() => (
           <>
             <ModalHeader>
-              <h3>Add Your Own Game</h3>
+              <h3>Add a Game</h3>
             </ModalHeader>
             <ModalBody>
               <h1>Choose your Game</h1>
@@ -50,7 +51,7 @@ const GamesAddModal = ({ isOpen, onOpenChange }) => {
                 value={executable || ''}
                 onClick={handleChooseExecutable}
                 readOnly
-                placeholder="Choose Executable"
+                placeholder="Executable Path"
               />
               <Input
                 type="text"
@@ -58,7 +59,11 @@ const GamesAddModal = ({ isOpen, onOpenChange }) => {
                 onChange={(e) => setGameName(e.target.value)}
                 placeholder="Game Name"
               />
-              <h1>Game Details</h1>
+              <div>
+              <Tooltip content="Specify displayed information. This will not add or modify anything in the game files.">
+                Game Details
+              </Tooltip>
+              </div>
                 <Switch checked={hasVersion} onChange={(e) => setHasVersion(e.target.checked)}>
                 Specify a Game Version
                 </Switch>

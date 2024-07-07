@@ -40,6 +40,7 @@ contextBridge.exposeInMainWorld('electron', {
 
   // Miscellaneous
   isNew: () => ipcRenderer.invoke('is-new'),
+  openURL: (url) => ipcRenderer.invoke('open-url', url),
   openReqPath: (game) => ipcRenderer.invoke('required-libraries', game),
   modifyGameExecutable: (game, executable) => ipcRenderer.invoke('modify-game-executable', game, executable)
 });

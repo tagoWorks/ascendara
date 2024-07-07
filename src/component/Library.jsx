@@ -139,7 +139,7 @@ const Library = () => {
         <div className="queue-container">
           <Spacer y={20} />
           <h1 className="text-large">
-            Queue
+            Downloads
           </h1>
           <Spacer y={5} />
           <Downloads games={downloadingGames} />

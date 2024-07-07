@@ -138,7 +138,7 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
                 <CardBody style={{ display: "flex", alignItems: "center" }}>
                   <WarningIcon fill="#FF4433" />
                   <p className="text-small">
-                    When reporting a bug with a game or feature, your IP address
+                    When reporting a bug or issues with game info, your IP address
                     will be obfuscated with a unique ID, and then temporarily stored
                     in order to prevent spam.
                   </p>
