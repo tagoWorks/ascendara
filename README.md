@@ -51,6 +51,7 @@
 - [ ] Storage information ontop of games library
 - [ ] Theme settings
 - [ ] Add different filtering options
+- [ ] Add total time played
 - [ ] Add additional game sources
 - [x] Add tooltips
 - [x] Populate pages
