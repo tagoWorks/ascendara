@@ -8,7 +8,7 @@ const os = require('os')
 const { spawn } = require('child_process');
 require("dotenv").config()
 let rpc;
-const CURRENT_VERSION = "5.4.5";
+const CURRENT_VERSION = "5.4.6";
 
 
 // Initialize Discord RPC
