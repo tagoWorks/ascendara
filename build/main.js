@@ -336,6 +336,7 @@ ipcMain.handle('get-settings', () => {
         seamlessGoFileDownloads: true,
         backgroundMotion: true,
         autoUpdate: false,
+        allowOldLinks: false,
         downloadDirectory: '',
       })
     );
@@ -345,6 +346,7 @@ ipcMain.handle('get-settings', () => {
       seamlessGoFileDownloads: true,
       backgroundMotion: true,
       autoUpdate: false,
+      allowOldLinks: false,
       downloadDirectory: '',
     };
   }

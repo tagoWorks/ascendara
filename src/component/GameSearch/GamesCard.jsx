@@ -1,5 +1,6 @@
 import React, { useState, useEffect, } from "react";
 import { ReportIcon } from "./ReportIcon";
+import { OpenLink } from "./OpenLinkIcon";
 import { SeemlessDownloadIcon } from "./SeemlessDownloadIcon"
 import ReportModal from "./GameReport";
 import {
@@ -305,7 +306,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
                 <>
                   <h3>Download Link:</h3>
                   <div>
-                  <Snippet size="md" hideSymbol variant="none">
+                  <Snippet  copyIcon={<OpenLink/>} size="md" hideSymbol variant="none">
                     <a>https:{selectedLink}</a>
                   </Snippet>
                   </div>

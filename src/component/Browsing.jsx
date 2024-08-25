@@ -293,7 +293,7 @@ const GameBrowse = () => {
           ))
         )}
       </div>
-      <Modal classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}} isOpen={showModal} onClose={handleCloseModal}>
+      <Modal hideCloseButton classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}} isOpen={showModal} onClose={handleCloseModal}>
         <ModalContent>
         <ModalHeader>Indexed Source</ModalHeader>
         <ModalBody>

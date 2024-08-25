@@ -9,7 +9,6 @@
     "build-react": "npm run build && electron-builder",
     "electron": "electron ./build/main.js",
     "start": "concurrently \"npm run dev\" \"npm run electron\"",
-    "distenv": "electron-builder -c.extraMetadata.main=build/main-build.js",
     "dist": "electron-builder -c.extraMetadata.main=build/main.js"
   },
   "dependencies": {

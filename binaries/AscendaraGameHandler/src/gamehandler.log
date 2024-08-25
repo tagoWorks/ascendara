@@ -1,0 +1,23 @@
+2024-07-07 08:47:49,281 - DEBUG - Arguments received - game_path: F:\SteamLibrary\Forza.Horizon.5.v1.594.508.0.Incl.ALL.DLC\ForzaHorizon5.exe, is_custom_game_str: True
+2024-07-07 08:47:49,281 - DEBUG - is_custom_game: True
+2024-07-07 08:47:49,281 - DEBUG - exe_path: F:\SteamLibrary\Forza.Horizon.5.v1.594.508.0.Incl.ALL.DLC\ForzaHorizon5.exe, exe_name: ForzaHorizon5.exe, json_file_path: F:\SteamLibrary\Forza.Horizon.5.v1.594.508.0.Incl.ALL.DLC\Forza.Horizon.5.v1.594.508.0.Incl.ALL.DLC.ascendara.json
+2024-07-07 08:47:49,281 - DEBUG - user_data_dir: C:\Users\itslo\AppData\Roaming\ascendara, settings_file: C:\Users\itslo\AppData\Roaming\ascendara\ascendarasettings.json
+2024-07-07 08:47:49,281 - DEBUG - download_dir: D:\Games\Ascendara
+2024-07-07 08:47:49,282 - DEBUG - games_file: D:\Games\Ascendara\games.json
+2024-07-07 08:47:49,282 - DEBUG - games_data: {'games': [{'game': 'Bodycam', 'online': True, 'dlc': False, 'version': '', 'executable': 'D:\\Games\\Bodycam\\Bodycam.exe', 'isRunning': False}, {'game': 'Forza Horizon 5', 'online': False, 'dlc': True, 'version': '1.594.508.0', 'executable': 'F:\\SteamLibrary\\Forza.Horizon.5.v1.594.508.0.Incl.ALL.DLC\\ForzaHorizon5.exe', 'isRunning': False}, {'game': 'Sons of The Forest', 'online': True, 'dlc': False, 'version': '', 'executable': 'F:\\SteamLibrary\\Sons Of The Forest\\SonsOfTheForest.exe', 'isRunning': False}, {'game': 'Elden Ring', 'online': True, 'dlc': True, 'version': '1.10.1', 'executable': 'D:\\Games\\ELDEN RING\\eldenring.exe', 'isRunning': False}]}
+2024-07-07 08:47:49,282 - INFO - Attempting to start game at F:\SteamLibrary\Forza.Horizon.5.v1.594.508.0.Incl.ALL.DLC\ForzaHorizon5.exe
+2024-07-07 08:47:49,288 - INFO - Started process ForzaHorizon5.exe with PID 11508
+2024-07-07 08:47:59,011 - INFO - Process ForzaHorizon5.exe terminated
+2024-07-07 20:39:33,872 - DEBUG - Arguments received - game_path: F:\SteamLibrary\Forza.Horizon.5.v1.594.508.0.Incl.ALL.DLC\ForzaHorizon5.exe, is_custom_game_str: True
+2024-07-07 20:39:33,873 - DEBUG - is_custom_game: True
+2024-07-07 20:39:33,873 - DEBUG - exe_path: F:\SteamLibrary\Forza.Horizon.5.v1.594.508.0.Incl.ALL.DLC\ForzaHorizon5.exe, exe_name: ForzaHorizon5.exe, json_file_path: F:\SteamLibrary\Forza.Horizon.5.v1.594.508.0.Incl.ALL.DLC\Forza.Horizon.5.v1.594.508.0.Incl.ALL.DLC.ascendara.json
+2024-07-07 20:39:33,873 - DEBUG - user_data_dir: C:\Users\itslo\AppData\Roaming\ascendara, settings_file: C:\Users\itslo\AppData\Roaming\ascendara\ascendarasettings.json
+2024-07-07 20:39:33,873 - DEBUG - download_dir: D:\Games\Ascendara
+2024-07-07 20:39:33,873 - DEBUG - games_file: D:\Games\Ascendara\games.json
+2024-07-07 20:39:33,874 - DEBUG - games_data: {'games': [{'game': 'Bodycam', 'online': True, 'dlc': False, 'version': '', 'executable': 'D:\\Games\\Bodycam\\Bodycam.exe', 'isRunning': False}, {'game': 'Forza Horizon 5', 'online': False, 'dlc': True, 'version': '1.594.508.0', 'executable': 'F:\\SteamLibrary\\Forza.Horizon.5.v1.594.508.0.Incl.ALL.DLC\\ForzaHorizon5.exe', 'isRunning': False}, {'game': 'Sons of The Forest', 'online': True, 'dlc': False, 'version': '', 'executable': 'F:\\SteamLibrary\\Sons Of The Forest\\SonsOfTheForest.exe', 'isRunning': False}, {'game': 'Elden Ring', 'online': True, 'dlc': True, 'version': '1.10.1', 'executable': 'D:\\Games\\ELDEN RING\\eldenring.exe', 'isRunning': False}]}
+2024-07-07 20:39:33,874 - INFO - Attempting to start game at F:\SteamLibrary\Forza.Horizon.5.v1.594.508.0.Incl.ALL.DLC\ForzaHorizon5.exe
+2024-07-07 20:39:33,874 - DEBUG - PowerShell command: Start-Process -FilePath 'F:\SteamLibrary\Forza.Horizon.5.v1.594.508.0.Incl.ALL.DLC\ForzaHorizon5.exe' -WorkingDirectory 'F:\SteamLibrary\Forza.Horizon.5.v1.594.508.0.Incl.ALL.DLC'
+2024-07-07 20:39:33,882 - INFO - Started process ForzaHorizon5.exe using PowerShell
+2024-07-07 20:39:33,882 - DEBUG - Checking if process ForzaHorizon5.exe is running
+2024-07-07 20:39:34,825 - DEBUG - Process ForzaHorizon5.exe is not running
+2024-07-07 20:39:34,825 - INFO - Process ForzaHorizon5.exe terminated
