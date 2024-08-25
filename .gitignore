@@ -24,3 +24,4 @@ package-lock.json
 /binaries/AscendaraDownloader/src/2.0/__pycache__
 exports.txt
 build/icon.ico
+build/header.txt

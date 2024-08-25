@@ -20,6 +20,7 @@ const App = () => {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showNextModal, setShowNextModal] = useState(false);
   const [isInstallingLibraries, setIsInstallingLibraries] = useState(false);
+  const [showDevelopmentWarning, setShowDevelopmentWarning] = useState(true);
 
   const getGames = async () => {
     try {
@@ -106,13 +107,34 @@ const App = () => {
   const toggleThemesModal = () => {
     setIsThemesModalOpen(!isThemesModalOpen);
   };
+  
   const closeWelcomeModal = () => {
     setShowWelcomeModal(false);
     setShowNextModal(true);
   };
+  
+  const closeDevelopmentWarning = () => {
+    setShowDevelopmentWarning(false);
+  };
+
   return (
     <NextUIProvider>
       <div className={`w-screen h-screen justify-center main-window ${backgroundMotion ? 'animate' : ''}`}>
+        {/* Development Warning Modal */}
+        <Modal isDismissable={false} hideCloseButton isOpen={showDevelopmentWarning} onClose={closeDevelopmentWarning}>
+          <ModalContent>
+            <ModalHeader>
+              <h2>Warning</h2>
+            </ModalHeader>
+            <ModalBody>
+              <p>This application is currently in heavy development. Expect many features to be incomplete or non-functional. Please report any issues you encounter.</p>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant='bordered' onClick={closeDevelopmentWarning}>Understood</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
         <Modal isDismissable={false} hideCloseButton isOpen={showWelcomeModal} onClose={closeWelcomeModal}>
           <ModalContent>
             <ModalHeader>
@@ -126,6 +148,7 @@ const App = () => {
             </ModalFooter>
           </ModalContent>
         </Modal>
+
         <Modal isDismissable={false} hideCloseButton isOpen={showNextModal} onClose={() => setShowNextModal(false)}>
           <ModalContent>
             <ModalHeader>
@@ -141,6 +164,7 @@ const App = () => {
          </ModalFooter>
           </ModalContent>
         </Modal>
+        
         <Modal isOpen={isInstallingLibraries} onClose={() => setIsInstallingLibraries(false)} hideCloseButton isDismissable={false}>
           <ModalContent>
             <ModalHeader>
@@ -155,6 +179,7 @@ const App = () => {
             </ModalFooter>
           </ModalContent>
         </Modal>
+
         <SettingsModal isOpen={isSettingsModalOpen} onOpenChange={toggleSettingsModal} />
         <ThemesModal isOpen={isThemesModalOpen} onOpenChange={toggleThemesModal} />
         <Tabs isVertical isIconOnly aria-label="Options" color="secondary" variant="bordered" className="tabs">

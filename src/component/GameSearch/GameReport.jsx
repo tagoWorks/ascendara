@@ -118,10 +118,7 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
       isOpen={isReportOpen}
       onClose={onReportClose}
       className="justify-center arial"
-      classNames={{
-        backdrop: "bg-[#fff]/0",
-        base: "border-[#292f46] bg-[#19172c] fixedarial",
-      }}
+      classNames={{body: "py-6",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}}
     >
       <ModalContent>
         <ModalHeader>Reporting a game | {gameName}</ModalHeader>

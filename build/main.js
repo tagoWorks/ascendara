@@ -12,7 +12,7 @@ const CURRENT_VERSION = "5.4.5";
 
 
 // Initialize Discord RPC
-const clientId = '1253859509462630502';
+const clientId = process.env.DISCKEY;;
 rpc = new Client({ transport: 'ipc' });
 
 rpc.on('ready', () => {
@@ -33,7 +33,7 @@ axios.get('https://api.ascendara.app/')
     const latest_version = response.data.appVer;
     if (latest_version !== CURRENT_VERSION) {
       dialog.showMessageBox({
-        message: `There is a major update available that cannot be automatically installed. Please download from the Ascendara website.`,
+        message: `Ascendara can not be automatically updated just yet. A newer version of Ascendara was found and in order to use Ascendara, you must download it. The installer will replace your current Ascendara version with the new one.`,
         buttons: ['Update', 'Cancel'],
       }).then((result) => {
         if (result.response === 0) {
@@ -332,7 +332,6 @@ ipcMain.handle('get-settings', () => {
     fs.writeFileSync(filePath,
       JSON.stringify({
         enableNotifications: false,
-        splitTunneling: false,
         seamlessGoFileDownloads: true,
         backgroundMotion: true,
         autoUpdate: false,
@@ -342,7 +341,6 @@ ipcMain.handle('get-settings', () => {
     );
     return {
       enableNotifications: false,
-      splitTunneling: false,
       seamlessGoFileDownloads: true,
       backgroundMotion: true,
       autoUpdate: false,

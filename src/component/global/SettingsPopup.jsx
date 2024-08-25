@@ -135,15 +135,6 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
                 <p className="text-small text-default-500">Toggle the background gradient motion</p>
               </Switch>
               <Switch
-                isDisabled
-                isSelected={splitTunnelDownloads}
-                value={splitTunnelDownloads}
-                onChange={handleSplitTunnelDownloadsToggle}
-              >
-                Multi-Thread Downloads
-                <p className="text-small text-default-500">Coming Soon</p>
-              </Switch>
-              <Switch
                 isSelected={allowOldLinks || pendingOldLinksToggle}
                 value={allowOldLinks}
                 onChange={handleAllowOldLinksToggle}
@@ -157,8 +148,8 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
                 value={enableNotifications}
                 onChange={handleAutoUpdateToggle}
               >
-                Background Updates
-                <p className="text-small text-default-500">Coming Soon</p>
+                Automatically check for updates
+                <p className="text-small text-default-500">Working on it...</p>
               </Switch>
               <Spacer y={3} />
               <Button color="danger" size="sm" onClick={handleOpenReport}>Report a Bug</Button>
