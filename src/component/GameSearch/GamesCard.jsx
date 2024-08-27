@@ -18,6 +18,8 @@ import {
   useDisclosure,
   Select,
   SelectItem,
+  Spinner,
+  Link
 } from "@nextui-org/react";
 
 const isValidURL = (url, provider) => {
@@ -58,11 +60,14 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedProvider, setSelectedProvider] = useState("");
   const [selectedLink, setSelectedLink] = useState("");
+  const [withExtension, setWithExtension] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [isReportOpen, setReportOpen] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [showNoDownloadPath, setShowNoDownloadPath] = useState(false);
   const [showDirectoryModal, setShowDirectoryModal] = useState(false);
+  const [isStartingDownload, setIsStartingDownload] = useState(false);
+  const [tabKey, setTabKey] = useState("without-extension");
 
   const handleOpenReport = () => {
     setReportOpen(true);
@@ -165,27 +170,36 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
     if (showNoDownloadPath) {
       return;
     }
-    if (selectedProvider === 'gofile') {
-      window.electron.downloadFile(selectedLink, game, online, dlc, version);
-      console.log(
-        `SENDING LOAD: ${selectedLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`
-      )
-      onClose();
-    } else {
-      if (inputLink.trim() === '') {
-        alert("Please enter a download link");
-        return;
+    setIsStartingDownload(true);
+    
+    setTimeout(() => {
+      if (selectedProvider === 'gofile') {
+        window.electron.downloadFile(selectedLink, game, online, dlc, version);
+        console.log(
+          `SENDING LOAD: ${selectedLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`
+        );
+      } else {
+        if (inputLink.trim() === '') {
+          alert("Please enter a download link");
+          setIsStartingDownload(false);
+          return;
+        }
+        if (!isValidURL(inputLink, selectedProvider)) {
+          alert("Please enter a valid download URL from your selected provider");
+          setIsStartingDownload(false);
+          return;
+        }
+        window.electron.downloadFile(inputLink, game, online, dlc, version);
+        console.log(
+          `SENDING LOAD: ${inputLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`
+        );
       }
-      if (!isValidURL(inputLink, selectedProvider)) {
-        alert("Please enter a valid download URL from your selected provider");
-        return;
-      }
-      window.electron.downloadFile(inputLink, game, online, dlc, version);
-      console.log(
-        `SENDING LOAD: ${inputLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`
-      )
-      onClose();
-    }
+      
+      setTimeout(() => {
+        setIsStartingDownload(false);
+        onClose();
+      }, 2000);
+    }, 0);
   };
   
   const handleSelectProvider = (provider) => {
@@ -197,6 +211,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
     console.log(`Selected Link: ${link}`);
   };
 
+  
   return (
     <>
       <Card className="wrap px-5">
@@ -329,11 +344,24 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
               <></>
             )}
           </ModalBody>
-          <ModalFooter>
+            <ModalFooter>
             {selectedProvider ? (
-                <Button aria-label="StartDownloading" variant="ghost" color="success" onClick={downloadFile}>
-                  Start Downloading
-                </Button>
+              <Button 
+                aria-label="StartDownloading" 
+                variant="ghost" 
+                color="success" 
+                onClick={downloadFile}
+                isDisabled={isStartingDownload}
+              >
+                {isStartingDownload ? (
+                  <>
+                    Starting Download
+                    <Spinner size="sm" color="success" />
+                  </>
+                ) : (
+                  "Start Downloading"
+                )}
+              </Button>
             ) : <></>}
           </ModalFooter>
         </ModalContent>

@@ -8,7 +8,7 @@ const os = require('os')
 const { spawn } = require('child_process');
 require("dotenv").config()
 let rpc;
-const CURRENT_VERSION = "5.4.6";
+const CURRENT_VERSION = "5.4.7";
 
 
 // Initialize Discord RPC
@@ -200,7 +200,7 @@ ipcMain.handle('download-file', async (event, link, game, online, dlc, version) 
   }
   const gamesDirectory = settings.downloadDirectory;
   const executablePath = path.join(appDirectory, '/resources/AscendaraDownloader.exe');
-  const downloadProcess = spawn(executablePath, ["download", link, game, online, dlc, version, gamesDirectory]);
+  const downloadProcess = spawn(executablePath, [link, game, online, dlc, version, gamesDirectory]);
   downloadProcesses.set(game, downloadProcess);
   downloadProcess.stdout.on('data', (data) => {
     console.log(`stdout: ${data}`);

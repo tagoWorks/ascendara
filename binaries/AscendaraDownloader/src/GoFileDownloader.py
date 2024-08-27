@@ -9,7 +9,6 @@ import requests
 import hashlib
 from tempfile import NamedTemporaryFile
 
-
 logging.basicConfig(
     level=logging.INFO,
     format="[%(asctime)s][%(funcName)20s()][%(levelname)-8s]: %(message)s",
@@ -64,7 +63,6 @@ class ProgressBar:
         if self.cur == self.total:
             print()
 
-
 class GoFileMeta(type):
     _instances = {}
 
@@ -73,7 +71,6 @@ class GoFileMeta(type):
             instance = super().__call__(*args, **kwargs)
             cls._instances[cls] = instance
         return cls._instances[cls]
-
 
 class GoFile(metaclass=GoFileMeta):
     def __init__(self, game_name: str) -> None:
@@ -86,48 +83,49 @@ class GoFile(metaclass=GoFileMeta):
             data = requests.post("https://api.gofile.io/accounts").json()
             if data["status"] == "ok":
                 self.token = data["data"]["token"]
-                logger.info(f"updated token: {self.token}")
+                logger.info(f"Updated token: {self.token}")
             else:
-                raise Exception("cannot get token")
+                raise Exception("Cannot get token")
 
     def update_wt(self) -> None:
         if self.wt == "":
             alljs = requests.get("https://gofile.io/dist/js/alljs.js").text
             if 'wt: "' in alljs:
                 self.wt = alljs.split('wt: "')[1].split('"')[0]
-                logger.info(f"updated wt: {self.wt}")
+                logger.info(f"Updated wt: {self.wt}")
             else:
-                raise Exception("cannot get wt")
+                raise Exception("Cannot get wt")
+
     def execute(self, dir: str, content_id: str = None, url: str = None, password: str = None, game_info_path: str = None) -> None:
         if content_id is not None:
             self.update_token()
             self.update_wt()
-            dirname = data["data"]["name"]
-            dir_path = os.path.join(dir, self.game_name, sanitize_filename(dirname))
-            hash_password = hashlib.sha256(password.encode()).hexdigest() if password != None else ""
+            hash_password = hashlib.sha256(password.encode()).hexdigest() if password else ""
             data = requests.get(
                 f"https://api.gofile.io/contents/{content_id}?wt={self.wt}&cache=true&password={hash_password}",
                 headers={
                     "Authorization": "Bearer " + self.token,
                 },
             ).json()
+
             if data["status"] == "ok":
                 if data["data"].get("passwordStatus", "passwordOk") == "passwordOk":
                     if data["data"]["type"] == "folder":
                         dirname = data["data"]["name"]
                         dir = os.path.join(dir, sanitize_filename(dirname))
                         for children_id in data["data"]["childrenIds"]:
+                            child_data = data["data"]["children"][children_id]
                             if game_info_path:
                                 with open(game_info_path, 'r') as f:
                                     game_info = json.load(f)
-                                game_info["downloadingdata"]["progressCompleted"] = "Downloading..."
+                                game_info["downloadingData"]["progressCompleted"] = "Downloading..."
                                 safe_write_json(game_info_path, game_info)
-                            if data["data"]["children"][children_id]["type"] == "folder":
+                            if child_data["type"] == "folder":
                                 self.execute(dir=dir, content_id=children_id, password=password, game_info_path=game_info_path)
                             else:
-                                filename = data["data"]["children"][children_id]["name"]
+                                filename = child_data["name"]
                                 file = os.path.join(dir, sanitize_filename(filename))
-                                link = data["data"]["children"][children_id]["link"]
+                                link = child_data["link"]
                                 self.download(link, file, game_info_path=game_info_path)
                     else:
                         filename = data["data"]["name"]
@@ -135,14 +133,16 @@ class GoFile(metaclass=GoFileMeta):
                         link = data["data"]["link"]
                         self.download(link, file, game_info_path=game_info_path)
                 else:
-                    logger.error(f"invalid password: {data['data'].get('passwordStatus')}")
+                    logger.error(f"Invalid password: {data['data'].get('passwordStatus')}")
+            else:
+                logger.error(f"Failed to get content data: {data['status']}")
         elif url is not None:
             if url.startswith("https://gofile.io/d/"):
                 self.execute(dir=dir, content_id=url.split("/")[-1], password=password, game_info_path=game_info_path)
             else:
-                logger.error(f"invalid url: {url}")
+                logger.error(f"Invalid URL: {url}")
         else:
-            logger.error(f"invalid parameters")
+            logger.error(f"Invalid parameters")
 
     def download(self, link: str, file: str, chunk_size: int = 8192, game_info_path: str = None):
         try:
@@ -150,55 +150,61 @@ class GoFile(metaclass=GoFileMeta):
             if not os.path.exists(dir):
                 os.makedirs(dir)
             if not os.path.exists(file):
-                with requests.get(
-                    link, headers={"Cookie": "accountToken=" + self.token}, stream=True
-                ) as r:
+                with requests.get(link, headers={"Cookie": "accountToken=" + self.token}, stream=True) as r:
                     r.raise_for_status()
+                    content_length = int(r.headers.get("Content-Length", 0))
+                    progress_bar = ProgressBar("Downloading", 0, math.ceil(content_length / chunk_size))
+                    downloaded_size = 0
+                    start_time = time.time()
+
                     with open(file, "wb") as f:
-                        content_length = int(r.headers["Content-Length"])
-                        progress_bar = ProgressBar(
-                            "Downloading", 0, math.ceil(content_length / chunk_size)
-                        )
-                        downloaded_size = 0
-                        start_time = time.time()  # Define start_time here
                         for chunk in r.iter_content(chunk_size=chunk_size):
-                            f.write(chunk)
-                            downloaded_size += len(chunk)
-                            progress = downloaded_size / content_length
-                            if game_info_path:
-                                with open(game_info_path, 'r') as f:
-                                    game_info = json.load(f)
-                                game_info["downloadingdata"]["progressCompleted"] = f"{progress * 100:.2f}"
+                            if chunk:
+                                f.write(chunk)
+                                downloaded_size += len(chunk)
+                                progress = downloaded_size / content_length
+                                progress_bar.print()
 
-                                elapsed_time = time.time() - start_time
-                                download_speed = downloaded_size / elapsed_time if elapsed_time > 0 else 0
+                                if game_info_path:
+                                    with open(game_info_path, 'r') as f:
+                                        game_info = json.load(f)
+                                    game_info["downloadingData"]["progressCompleted"] = f"{progress * 100:.2f}%"
 
-                                if download_speed < 1024:
-                                    game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed:.2f} B/s"
-                                elif download_speed < 1024 * 1024:
-                                    game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed / 1024:.2f} KB/s"
-                                else:
-                                    game_info["downloadingdata"]["progressDownloadSpeeds"] = f"{download_speed / (1024 * 1024):.2f} MB/s"
+                                    elapsed_time = time.time() - start_time
+                                    download_speed = downloaded_size / elapsed_time if elapsed_time > 0 else 0
 
-                                remaining_size = content_length - downloaded_size
-                                if download_speed > 0:
-                                    time_until_complete = remaining_size / download_speed
-                                    minutes, seconds = divmod(time_until_complete, 60)
-                                    hours, minutes = divmod(minutes, 60)
-                                    if hours > 0:
-                                        game_info["downloadingdata"]["timeUntilComplete"] = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
+                                    if download_speed < 1024:
+                                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed:.2f} B/s"
+                                    elif download_speed < 1024 * 1024:
+                                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed / 1024:.2f} KB/s"
                                     else:
-                                        game_info["downloadingdata"]["timeUntilComplete"] = f"{int(minutes)}m {int(seconds)}s"
-                                else:
-                                    game_info["downloadingdata"]["timeUntilComplete"] = "Calculating..."
+                                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed / (1024 * 1024):.2f} MB/s"
 
-                                safe_write_json(game_info_path, game_info)
-                            progress_bar.print()
-                    logger.info(f"downloaded: {file} ({link})")
+                                    remaining_size = content_length - downloaded_size
+                                    if download_speed > 0:
+                                        time_until_complete = remaining_size / download_speed
+                                        minutes, seconds = divmod(time_until_complete, 60)
+                                        hours, minutes = divmod(minutes, 60)
+                                        if hours > 0:
+                                            game_info["downloadingData"]["timeUntilComplete"] = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
+                                        else:
+                                            game_info["downloadingData"]["timeUntilComplete"] = f"{int(minutes)}m {int(seconds)}s"
+                                    else:
+                                        game_info["downloadingData"]["timeUntilComplete"] = "Calculating..."
+
+                                    safe_write_json(game_info_path, game_info)
+
+                    logger.info(f"Downloaded: {file} ({link})")
         except Exception as e:
-            logger.error(f"failed to download ({e}): {file} ({link})")
-parser = argparse.ArgumentParser()
-parser.add_argument("url")
-parser.add_argument("-d", type=str, dest="dir", help="output directory")
-parser.add_argument("-p", type=str, dest="password", help="password")
-args = parser.parse_args()
+            logger.error(f"Failed to download ({e}): {file} ({link})")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("url", help="GoFile download URL")
+    parser.add_argument("-d", type=str, dest="dir", help="Output directory")
+    parser.add_argument("-p", type=str, dest="password", help="Password")
+    parser.add_argument("-g", type=str, dest="game_name", help="Game name", required=True)
+    args = parser.parse_args()
+
+    gofile = GoFile(game_name=args.game_name)
+    gofile.execute(dir=args.dir, url=args.url, password=args.password)

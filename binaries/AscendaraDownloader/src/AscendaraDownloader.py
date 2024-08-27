@@ -1,16 +1,16 @@
 import os
 import json
-import urllib.error
 import ssl
 import shutil
 import string
 import sys
-from unrar import rarfile
 import time
 from tempfile import NamedTemporaryFile
 import requests
+from unrar import rarfile
 from requests.adapters import HTTPAdapter
 from urllib3.poolmanager import PoolManager
+import argparse
 
 def resource_path(relative_path):
     try:
@@ -45,29 +45,32 @@ def retryfolder(game, online, dlc, version, download_dir, newfolder):
         }
     }
     game_info["downloadingData"]["extracting"] = True
-    with open(game_info_path, 'w') as f:
-        json.dump(game_info, f, indent=4)
+    safe_write_json(game_info_path, game_info)
 
     extracted_folder = os.path.join(download_dir, newfolder)
     tempdownloading = os.path.join(download_dir, f"temp-{os.urandom(6).hex()}")
-    shutil.copytree(extracted_folder, tempdownloading)
-    shutil.rmtree(extracted_folder)
-    shutil.copytree(tempdownloading, os.path.join(download_dir), dirs_exist_ok=True)
+
+    if os.path.exists(extracted_folder):
+        shutil.copytree(extracted_folder, tempdownloading)
+        shutil.rmtree(extracted_folder)
+        shutil.copytree(tempdownloading, os.path.join(download_dir), dirs_exist_ok=True)
+
     for file in os.listdir(os.path.join(download_dir)):
         if file.endswith(".url"):
             os.remove(os.path.join(download_dir, file))
+
     game_info["downloadingData"]["extracting"] = False
     del game_info["downloadingData"]
     shutil.rmtree(tempdownloading, ignore_errors=True)
-    with open(game_info_path, 'w') as f:
-        json.dump(game_info, f, indent=4)
+    safe_write_json(game_info_path, game_info)
 
 def safe_write_json(filepath, data):
     temp_dir = os.path.dirname(filepath)
+    temp_file_path = None
     try:
         with NamedTemporaryFile('w', delete=False, dir=temp_dir) as temp_file:
             json.dump(data, temp_file, indent=4)
-        temp_file_path = temp_file.name
+            temp_file_path = temp_file.name
         retry_attempts = 3
         for attempt in range(retry_attempts):
             try:
@@ -79,7 +82,7 @@ def safe_write_json(filepath, data):
                 else:
                     raise e
     finally:
-        if os.path.exists(temp_file_path):
+        if temp_file_path and os.path.exists(temp_file_path):
             os.remove(temp_file_path)
 
 def handleerror(game_info, game_info_path, e):
@@ -92,8 +95,7 @@ def handleerror(game_info, game_info_path, e):
         "error": True,
         "message": str(e)
     }
-    with open(game_info_path, 'w') as f:
-        json.dump(game_info, f, indent=4)
+    safe_write_json(game_info_path, game_info)
 
 class SSLContextAdapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
@@ -186,6 +188,8 @@ def download_file(link, game, online, dlc, version, download_dir):
         except Exception as e:
             handleerror(game_info, game_info_path, e)
             raise e
+        finally:
+            session.close()
 
     safe_write_json(game_info_path, game_info)
 
@@ -195,42 +199,55 @@ def download_file(link, game, online, dlc, version, download_dir):
         try:
             if archive_ext == "rar":
                 with rarfile.RarFile(archive_file_path, 'r') as fs:
-                    files = fs.namelist()
-                    fs.extractall(download_path, files)
+                    fs.extractall(download_path)
             elif archive_ext == "zip":
                 shutil.unpack_archive(archive_file_path, download_path, format="zip")
             os.remove(archive_file_path)
             game_info["downloadingData"]["extracting"] = False
+
+            # Clean up extracted files
             for file in os.listdir(download_path):
                 if file.endswith(".url") or file.endswith(".txt"):
                     os.remove(os.path.join(download_path, file))
+
             extracted_folder = os.path.join(download_path, game)
             tempdownloading = os.path.join(download_path, f"temp-{os.urandom(6).hex()}")
-            shutil.copytree(extracted_folder, tempdownloading)
-            shutil.rmtree(extracted_folder)
-            shutil.copytree(tempdownloading, os.path.join(download_dir, game), dirs_exist_ok=True)
-            for file in os.listdir(os.path.join(download_dir, game)):
-                if file.endswith(".url"):
-                    os.remove(os.path.join(download_path, file))
-            game_info["downloadingData"]["extracting"] = False
-            del game_info["downloadingData"]
-            shutil.rmtree(tempdownloading, ignore_errors=True)
+            if os.path.exists(extracted_folder):
+                shutil.copytree(extracted_folder, tempdownloading)
+                shutil.rmtree(extracted_folder)
+                shutil.copytree(tempdownloading, download_path, dirs_exist_ok=True)
+                shutil.rmtree(tempdownloading, ignore_errors=True)
+
             safe_write_json(game_info_path, game_info)
+
         except Exception as e:
-            if "[WinError 183]" in str(e):
-                handleerror(game_info, game_info_path, "Your antivirus software may be blocking the extraction process. Please whitelist the directories to extract automatically in the future.")
             handleerror(game_info, game_info_path, e)
+            raise e
+
     except Exception as e:
-        handleerror(game_info, game_info_path, e)
+        print(f"Failed to download or extract {game}. Error: {e}")
+
+def parse_boolean(value):
+    """Helper function to parse boolean values from command-line arguments."""
+    if value.lower() in ['true', '1', 'yes']:
+        return True
+    elif value.lower() in ['false', '0', 'no']:
+        return False
+    else:
+        raise argparse.ArgumentTypeError(f"Invalid boolean value: {value}")
+
+def main():
+    parser = argparse.ArgumentParser(description="Download and manage game files.")
+    parser.add_argument("link", help="URL of the file to download")
+    parser.add_argument("game", help="Name of the game")
+    parser.add_argument("online", type=parse_boolean, help="Is the game online (true/false)?")
+    parser.add_argument("dlc", type=parse_boolean, help="Is DLC included (true/false)?")
+    parser.add_argument("version", help="Version of the game")
+    parser.add_argument("download_dir", help="Directory to save the downloaded files")
+
+    args = parser.parse_args()
+
+    download_file(args.link, args.game, args.online, args.dlc, args.version, args.download_dir)
 
 if __name__ == "__main__":
-    _, function, *args = sys.argv
-    if function == "download":
-        link, game, online, dlc, version, download_dir = args
-        download_file(link, game, online.lower() == 'true', dlc.lower() == 'true', version, download_dir)
-    elif function == "retryfolder":
-        game, online, dlc, version, download_dir, newfolder = args
-        retryfolder(game, online.lower() == 'true', dlc.lower() == 'true', version, download_dir, newfolder)
-    else:
-        print(f"Invalid function: {function}")
-        sys.exit(1)
+    main()
