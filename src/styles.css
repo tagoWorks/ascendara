@@ -115,6 +115,14 @@
   justify-content: center;
 }
 
+.extensiontab {
+  position: fixed;
+  align-items: center;
+  justify-content: center;
+  bottom: 0;
+  right:0;
+}
+
 .ontop{
   z-index: 9999;
 }

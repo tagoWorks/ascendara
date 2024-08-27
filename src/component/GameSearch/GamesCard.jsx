@@ -19,7 +19,10 @@ import {
   Select,
   SelectItem,
   Spinner,
-  Link
+  Link,
+  Tab,
+  Tabs,
+  Kbd
 } from "@nextui-org/react";
 
 const isValidURL = (url, provider) => {
@@ -67,7 +70,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
   const [showNoDownloadPath, setShowNoDownloadPath] = useState(false);
   const [showDirectoryModal, setShowDirectoryModal] = useState(false);
   const [isStartingDownload, setIsStartingDownload] = useState(false);
-  const [tabKey, setTabKey] = useState("without-extension");
+  const [tabKey, setTabKey] = useState("with-extension");
 
   const handleOpenReport = () => {
     setReportOpen(true);
@@ -267,7 +270,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
         )}
         </CardHeader>
       </Card>
-      <Modal isDismissable={false} isOpen={isOpen} onClose={onClose} size="4xl" className="fixed arial" classNames={{
+      <Modal isDismissable={false} isOpen={isOpen} onClose={onClose} size="5xl" className="fixed arial" classNames={{
                     body: "py-6",
                     backdrop: "bg-[#292f46]/50",
                     base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",
@@ -289,6 +292,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
             <Select
               aria-label="ProviderSelector"
               value={selectedProvider}
+              size="lg"
               onChange={(e) => handleSelectProvider(e.target.value)}
               placeholder="To get started, select a download provider"
             >
@@ -318,32 +322,61 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
                 </>
               ) : (
                 <>
-                  <h3>Download Link:</h3>
-                  <div>
+                <h3>Download Link:</h3>
+                <div>
                   <Snippet size="md" hideSymbol variant="none">
                     <a>https:{selectedLink}</a>
                   </Snippet>
-                  </div>
-                  <h2 className="text-large">Step 1.</h2>
-                  <h3>Copy and paste the link into your browser and find the Download button</h3>
-                  <h2 className="text-large">Step 2.</h2>
-                  <h3>Stop the download once it starts in your browser, and copy the link that the browser started downloading</h3>
-                  <h2 className="text-large">Step 3.</h2>
-                  <h3>Paste the link in the inupt below and click "Start Downloading"</h3>
-                  <Spacer y={2} />
-                  <h3 className="text-small text-default-400">Some providers may limit download speeds</h3>
-                  <Input
-                    label="Enter the download link here"
-                    value={inputLink}
-                    onChange={(e) => setInputLink(e.target.value)}
-                    isInvalid={!isValidURL(inputLink, selectedProvider, game)}
-                    errorMessage="Please enter a valid download URL from your selected provider"/>
-                </>
-              )
-            ) : (
-              <></>
-            )}
-          </ModalBody>
+                </div>
+                <Tabs
+                  selectedKey={tabKey}
+                  onSelectionChange={setTabKey}
+                  aria-label="Download Instructions"
+                  color="secondary"
+                  className="extensiontab"
+                  isVertical
+                  variant="light"
+                  size="md"
+                >
+                  <Tab key="with-extension" title="With Extension">
+                    
+                    <p classname="text-small">Make sure you have the <Link onClick={() => window.electron.openURL('https://ascendara.app/extension')}>Ascendara Download Blocker</Link> extension enabled!</p>
+                    <h2 className="text-large">Step 1. Copy and paste the link into your browser</h2>
+                    <h2 className="text-large">Step 2. Complete the CAPTCHA and start the download</h2>
+                    <h2 className="text-large">Step 3. The extension will stop the download and provide you the direct download link (DDL)</h2>
+                    <h2 className="text-large">Step 4. Paste the DDL in the input below and start the download</h2>
+                  </Tab>
+                  <Tab key="without-extension" title="Without Extension">
+                    <div className="grid grid-cols-2 gap-4">
+                    <h2 className="text-large">Step 1. Copy and paste the link into your browser</h2>
+
+                    <h2 className="text-large">Step 4. Hit <Kbd>CTRL+J</Kbd> to open your downloads</h2>
+
+                    <h2 className="text-large">Step 2. Complete the CAPTCHA and start the download</h2>
+
+                    <h2 className="text-large">Step 5. Copy the link that the browser started downloading</h2>
+
+                    <h2 className="text-large">Step 3. Stop the download once it starts in your browser</h2>
+
+                    <h2 className="text-large">Step 6. Paste the link in the input below and start the download</h2>
+                    </div>
+                  </Tab>
+                </Tabs>
+                <Spacer y={2} />
+                <h3 className="text-small text-default-400">Some providers may limit download speeds</h3>
+                <Input
+                  label="Enter the download link here"
+                  value={inputLink}
+                  onChange={(e) => setInputLink(e.target.value)}
+                  isInvalid={!isValidURL(inputLink, selectedProvider, game)}
+                  errorMessage="Please enter a valid download URL from your selected provider"
+                />
+              </>
+            )
+          ) : (
+            <></>
+          )}
+        </ModalBody>
             <ModalFooter>
             {selectedProvider ? (
               <Button 

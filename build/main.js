@@ -8,7 +8,7 @@ const os = require('os')
 const { spawn } = require('child_process');
 require("dotenv").config()
 let rpc;
-const CURRENT_VERSION = "5.4.7";
+const CURRENT_VERSION = "5.4.8";
 
 
 // Initialize Discord RPC
@@ -316,6 +316,7 @@ ipcMain.handle('is-new', (event) => {
     return false;
   } catch (error) {
     fs.writeFileSync(filePath, JSON.stringify({ timestamp: Date.now() }));
+    shell.openExternal('https://ascendara.app/extension');
     return true;
   }
 });
