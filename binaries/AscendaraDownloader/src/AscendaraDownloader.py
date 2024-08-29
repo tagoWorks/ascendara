@@ -218,7 +218,9 @@ def download_file(link, game, online, dlc, version, download_dir):
                 shutil.copytree(tempdownloading, download_path, dirs_exist_ok=True)
                 shutil.rmtree(tempdownloading, ignore_errors=True)
 
+            del game_info["downloadingData"]
             safe_write_json(game_info_path, game_info)
+
 
         except Exception as e:
             handleerror(game_info, game_info_path, e)

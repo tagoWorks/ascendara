@@ -40,7 +40,7 @@ const CardComponent = ({ game, online, dlc, version, dirlink, downloadingData })
 
   return (
     <>
-      <Card isHoverable className="py-4 px-4">
+      <Card isBlurred className="py-4 px-4 bg-background/60 dark:bg-default-100/50">
         <CardHeader className="justify-between items-center">
           <Dropdown className=''>
             <DropdownTrigger>

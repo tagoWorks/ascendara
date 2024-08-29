@@ -54,7 +54,7 @@ const CustomCardComponent = ({
   };
 
   return (
-    <Card isBlurred className="py-4 px-5 cards bg-background/60 dark:bg-default-100/50">
+    <Card isBlurred className="cards py-4 px-5 cards bg-background/60 dark:bg-default-100/50">
       <CardHeader>
         <div>
           <div className="flex flex-col gap-1 items-start justify-center">
