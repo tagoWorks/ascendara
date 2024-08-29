@@ -100,6 +100,22 @@ const App = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await getGames();
+        await getSettings();
+        await checkIsNew();
+        const isDevWarn = await window.electron.isDevWarn();
+        setShowDevelopmentWarning(!isDevWarn);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+  
+    fetchData();
+  }, []);
+
   const toggleSettingsModal = () => {
     setIsSettingsModalOpen(!isSettingsModalOpen);
   };
@@ -120,7 +136,6 @@ const App = () => {
   return (
     <NextUIProvider>
       <div className={`w-screen h-screen justify-center main-window ${backgroundMotion ? 'animate' : ''}`}>
-        {/* Development Warning Modal */}
         <Modal isDismissable={false} hideCloseButton isOpen={showDevelopmentWarning} onClose={closeDevelopmentWarning}>
           <ModalContent>
             <ModalHeader>

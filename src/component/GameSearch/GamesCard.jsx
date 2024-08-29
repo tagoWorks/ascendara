@@ -217,7 +217,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
   
   return (
     <>
-      <Card className="wrap px-5">
+      <Card isBlurred className="wrap px-5 border-none bg-background/60 dark:bg-default-100/50">
         <CardHeader className="justify-between items-center">
           <div className="flex gap-5">
             <div className="flex flex-col gap-1 items-start justify-center">

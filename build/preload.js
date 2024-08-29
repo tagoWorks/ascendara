@@ -39,6 +39,8 @@ contextBridge.exposeInMainWorld('electron', {
   setBackground: (color, gradient) => ipcRenderer.invoke('set-background', color, gradient),
 
   // Miscellaneous
+  toggleHideDevWarn: () => ipcRenderer.invoke('toggle-hide-dev-warn'),
+  isDevWarn: () => ipcRenderer.invoke('is-dev-warn'),
   isNew: () => ipcRenderer.invoke('is-new'),
   openURL: (url) => ipcRenderer.invoke('open-url', url),
   openReqPath: (game) => ipcRenderer.invoke('required-libraries', game),

@@ -70,7 +70,7 @@ const CardComponent = ({
   };
 
   return (
-    <Card className="py-4 px-5 card">
+    <Card className="py-4 px-5 cards bg-background/60 dark:bg-default-100/50">
       <CardHeader>
         <div>
           <div className="flex flex-col gap-1 items-start justify-center">
@@ -78,9 +78,10 @@ const CardComponent = ({
               <h4 className="font-semibold leading-none text-default-600">
                 {game}
               </h4>
+                <p className="text-small tracking-tight text-default-400">{version}</p>
               <Spacer x={5} />
             </div>
-              <h5 className="text-medium tracking-tight text-default-400">
+              <h5>
                 <div className="flex items-center gap-2">
                   {isUninstalling ? (
                     <Chip color="danger" variant="solid" size="m">
@@ -88,7 +89,6 @@ const CardComponent = ({
                     </Chip>
                   ) : (
                     <>
-                    {version}
                     {online && (
                       <Chip color="success" variant="shadow" size="sm">
                         ONLINE

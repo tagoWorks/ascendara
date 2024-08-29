@@ -120,7 +120,7 @@ const GameBrowse = () => {
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    let cards = 9;
+    let cards = 11;
 
     if (width > 1600) {
       const extraWidthCards = Math.floor((width - 1600) / 100) * 2;

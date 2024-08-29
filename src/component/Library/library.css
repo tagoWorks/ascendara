@@ -13,11 +13,8 @@
 }
 /* library.css */
 .cards {
+  flex: auto;
   display: flex;
-  flex-direction: row;
-  position: relative;
-  flex: 1;
-  flex-wrap: wrap;
   justify-content: space-between;
 }
 
@@ -46,6 +43,14 @@
   flex-wrap: wrap;
   justify-content: space-between;
   padding: 2rem;
+}
+
+.library-game-cards {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  justify-content: space-between;
+  gap: 15px;
 }
 
 .library-games-header{

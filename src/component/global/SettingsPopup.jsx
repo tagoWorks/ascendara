@@ -14,10 +14,34 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
   const [downloadDirectory, setDownloadDirectory] = useState('');
   const [version, setVersion]  = useState(''); 
   const [isReportOpen, setReportOpen] = useState(false);
+  const [isDevWarn, setDevWarn] = useState(window.electron.isDevWarn());
   const [isOldLinksWarningOpen, setOldLinksWarningOpen] = useState(false);
+  const [isDebugModalOpen, setDebugModalOpen] = useState(false);
+  useEffect(() => {
+    const handleF5Press = (event) => {
+      if (event.key === 'F5' && isOpen) {
+        event.preventDefault();
+        onOpenChange(false);
+        setDebugModalOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleF5Press);
+
+    return () => {
+      window.removeEventListener('keydown', handleF5Press);
+    };
+  }, [isOpen, onOpenChange]);
 
   const handleOpenReport = () => {
     setReportOpen(true);
+  };
+
+  const handleOpenLocal = () => {
+    window.electron.openGameDirectory("local", true);
+  };
+  const toggleHideDevWarn = () => {
+    window.electron.toggleHideDevWarn();
   };
 
   const handleCloseReport = () => {
@@ -34,7 +58,6 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
       setDownloadDirectory(settings.downloadDirectory);
       setBackgroundMotion(settings.backgroundMotion);
     });
-
   }, []);
 
   useEffect(() => {
@@ -110,72 +133,74 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
   };
 
   return (
-    <Modal size='5xl' isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange} placement="center" classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}}>
-      <ModalContent>
-        {() => (
-          <>
-            <ModalHeader className="flex flex-col gap-1">
-              <h3>Settings</h3>
-            </ModalHeader>
-            <ModalBody>
-              <Switch
-                isSelected={seamlessGoFileDownloads}
-                value={seamlessGoFileDownloads}
-                onChange={handleSeamlessGoFileDownloadsToggle}
-              >
-                Seamless GoFile Downloads
-                <p className="text-small text-default-500">When downloading a game, if GoFile is a provider the download will seamlessly start</p>
-              </Switch>
-              <Switch
-                isSelected={backgroundMotion}
-                value={backgroundMotion}
-                onChange={handleBackgroundMotionToggle}
-              >
-                Background Motion
-                <p className="text-small text-default-500">Toggle the background gradient motion</p>
-              </Switch>
-              <Switch
-                isDisabled
-                isSelected={allowOldLinks || pendingOldLinksToggle}
-                value={allowOldLinks}
-                onChange={handleAllowOldLinksToggle}
-              >
-                View Old Download Links
-                <p className="text-small text-default-500">Be able to view older versions of games</p>
-              </Switch>
-              <Switch
-                isDisabled
-                isSelected={autoUpdate}
-                value={enableNotifications}
-                onChange={handleAutoUpdateToggle}
-              >
-                Automatically check for updates
-                <p className="text-small text-default-500">Check Ascendara's server for newer versions, and notify when there is one</p>
-              </Switch>
-              <Spacer y={3} />
-              <Button color="danger" size="sm" onClick={handleOpenReport}>Report a Bug</Button>
-              {isReportOpen && <ReportModal
-                isReportOpen={isReportOpen}
-                onReportClose={handleCloseReport}
-              />}
-              <Input
-                onClick={handleSelectDirectory}
-                isReadOnly
-                label="Download Directory"
-                value={downloadDirectory}
-              />
-            </ModalBody>
-            <ModalFooter>
-              <Button variant='ghost' color="primary" onPress={handleSave}>
-                Save
-              </Button>
-              <h2 className="text-small text-default-400 fixed bottom-0 py-4 arial text-center">
-                Ascendara Development Build {version} | NextJS | Electron
-              </h2>
-            </ModalFooter>
-          </>
-        )}
-      </ModalContent>
+    <>
+      <Modal size='5xl' isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange} placement="center" classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}}>
+        <ModalContent>
+          {() => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                <h3>Settings</h3>
+              </ModalHeader>
+              <ModalBody>
+                <Switch
+                  isSelected={seamlessGoFileDownloads}
+                  value={seamlessGoFileDownloads}
+                  onChange={handleSeamlessGoFileDownloadsToggle}
+                >
+                  Seamless GoFile Downloads
+                  <p className="text-small text-default-500">When downloading a game, if GoFile is a provider the download will seamlessly start</p>
+                </Switch>
+                <Switch
+                  isSelected={backgroundMotion}
+                  value={backgroundMotion}
+                  onChange={handleBackgroundMotionToggle}
+                >
+                  Background Motion
+                  <p className="text-small text-default-500">Toggle the background gradient motion</p>
+                </Switch>
+                <Switch
+                  isDisabled
+                  isSelected={allowOldLinks || pendingOldLinksToggle}
+                  value={allowOldLinks}
+                  onChange={handleAllowOldLinksToggle}
+                >
+                  View Old Download Links
+                  <p className="text-small text-default-500">Be able to view older versions of games</p>
+                </Switch>
+                <Switch
+                  isDisabled
+                  isSelected={autoUpdate}
+                  value={enableNotifications}
+                  onChange={handleAutoUpdateToggle}
+                >
+                  Automatically check for updates
+                  <p className="text-small text-default-500">Check Ascendara's server for newer versions, and notify when there is one</p>
+                </Switch>
+                <Spacer y={3} />
+                <Button color="danger" size="sm" onClick={handleOpenReport}>Report a Bug</Button>
+                {isReportOpen && <ReportModal
+                  isReportOpen={isReportOpen}
+                  onReportClose={handleCloseReport}
+                />}
+                <Input
+                  onClick={handleSelectDirectory}
+                  isReadOnly
+                  label="Download Directory"
+                  value={downloadDirectory}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button variant='ghost' color="primary" onPress={handleSave}>
+                  Save
+                </Button>
+                <h2 className="text-small text-default-400 fixed bottom-0 py-4 arial text-center">
+                  Ascendara Development Build {version} | NextJS | Electron
+                </h2>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
       <Modal
         isOpen={isOldLinksWarningOpen}
         onOpenChange={handleOldLinksWarningClose}
@@ -197,7 +222,37 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Modal>
+      <Modal
+        isOpen={isDebugModalOpen}
+        onOpenChange={setDebugModalOpen}
+        hideCloseButton
+        placement="center"
+        isDismissable={false}
+        classNames={{body: "py-6",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}}
+      >
+        <ModalContent>
+          <ModalHeader>
+            <h3>Developer Tools</h3>
+          </ModalHeader>
+          <ModalBody>
+            <Button onPress={handleOpenLocal} >
+              Open Local Directory
+            </Button>
+            <Button onPress >
+              Delete timestamp file
+            </Button>
+            <Switch isSelected={isDevWarn} onChange={toggleHideDevWarn}>
+              Hide Development Warning Modal
+            </Switch>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant='ghost' color="primary" onPress={() => setDebugModalOpen(false)}>
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
   );
 };
 

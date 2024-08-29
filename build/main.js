@@ -8,7 +8,7 @@ const os = require('os')
 const { spawn } = require('child_process');
 require("dotenv").config()
 let rpc;
-const CURRENT_VERSION = "5.4.8";
+const CURRENT_VERSION = "5.4.9";
 
 
 // Initialize Discord RPC
@@ -551,6 +551,30 @@ ipcMain.handle('open-file-dialog', async (event) => {
   }
 });
 
+ipcMain.handle('toggle-hide-dev-warn', () => {
+  const filePath = path.join(app.getPath('home'), 'timestamp.ascendara.json');
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    const settings = JSON.parse(data);
+    settings.hideDevWarn = !settings.hideDevWarn;
+    fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
+  } catch (error) {
+    console.error('Error reading or writing to timestamp file:', error);
+  }   
+});
+
+ipcMain.handle('is-dev-warn', () => {
+  const filePath = path.join(app.getPath('home'), 'timestamp.ascendara.json');
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    const settings = JSON.parse(data);
+    console.log("Returning", settings.hideDevWarn);
+    return settings.hideDevWarn;
+  } catch (error) {
+    console.error('Error reading the timestamp file:', error);
+    return false;
+  }
+});
 
 ipcMain.handle('get-download-directory', () => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
@@ -565,6 +589,11 @@ ipcMain.handle('get-download-directory', () => {
 });
 
 ipcMain.handle('open-game-directory', (event, game, isCustom) => {
+  if (game === 'local') {
+    const executablePath = process.execPath;
+    const executableDir = path.dirname(executablePath);
+    shell.openPath(executableDir);
+  } else {
   if (!isCustom) {
     const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
     try {
@@ -603,7 +632,7 @@ ipcMain.handle('open-game-directory', (event, game, isCustom) => {
     } catch (error) {
       console.error('Error reading the settings file:', error);
     }
-  }
+  }}
 });
 
 ipcMain.handle('modify-game-executable', (event, game, executable) => {
@@ -657,7 +686,7 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
         }
       }
       const executablePath = path.join(appDirectory, '/resources/AscendaraGameHandler.exe');
-      const runGame = spawn(executablePath, [executable, isCustom]);
+      const runGame = spawn(executablePath, [executable, isCustom], "-debug");
       runGameProcesses.set(game, runGame);
   
       rpc.setActivity({
