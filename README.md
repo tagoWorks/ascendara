@@ -47,18 +47,17 @@
 - [ ] Auto create shortcuts
 - [x] Add news section
 - [x] Make game searches less harsh
-- [ ] Show recent games
+- [ ] ~Show recent games~
 - [ ] Storage information ontop of games library
 - [ ] Theme settings
 - [ ] Add different filtering options
 - [ ] Add total time played
-- [ ] Add additional game sources
 - [x] Add tooltips
 - [x] Populate pages
 - [ ] Add notifications for games status
 - [ ] ~Small undisturbing advertisments~
 - [ ] Add different sources
-- [ ] Welcome to app screens/info
+- [x] Welcome to app screens/info
 - [x] Move tabs to the top left
 - [ ] ~Make seperate library, downloads, and browse~
 - [x] Add your own games
