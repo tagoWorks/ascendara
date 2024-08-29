@@ -120,7 +120,7 @@ const GameBrowse = () => {
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    let cards = 11;
+    let cards = 10;
 
     if (width > 1600) {
       const extraWidthCards = Math.floor((width - 1600) / 100) * 2;
@@ -253,6 +253,7 @@ const GameBrowse = () => {
                   game={game.game}
                   online={game.online}
                   version={game.version}
+                  size={game.size}
                   dirlink={game.dirlink}
                   dlc={game.dlc}
                   downloadLinks={game.download_links}

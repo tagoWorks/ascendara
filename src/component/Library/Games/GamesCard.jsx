@@ -3,6 +3,7 @@ import { Card, CardHeader, CardFooter, Chip, Button, Spacer, CircularProgress, D
 import { GamesSetting } from "./svg/ThreeDotsVerticle";
 import { DirectoryIcon } from "./svg/DirectoryIcon";
 import { UpdateIcon } from "./svg/UpdateIcon";
+import { ShortCutIcon } from "./svg/ShortCutIcon";
 import { DeleteIcon } from "./svg/DeleteIcon";
 import { EditIcon } from "./svg/EditIcon";
 
@@ -70,7 +71,7 @@ const CardComponent = ({
   };
 
   return (
-    <Card className="py-4 px-5 cards bg-background/60 dark:bg-default-100/50">
+    <Card isBlurred className="py-4 px-5 cards bg-background/60 dark:bg-default-100/50">
       <CardHeader>
         <div>
           <div className="flex flex-col gap-1 items-start justify-center">
@@ -115,6 +116,13 @@ const CardComponent = ({
           </DropdownTrigger>
           <DropdownMenu variant="faded" aria-label="Game Actions">
             <DropdownSection title="Actions">
+            <DropdownItem isDisabled onClick startContent={
+                <div className="flex items-center justify-start">
+                  <ShortCutIcon className="text-xl text-default-500 pointer-events-none flex-shrink-0" />
+                </div>
+              }>
+                Create a Shortcut
+              </DropdownItem>
               <DropdownItem isDisabled onClick={handleUpdateGame} startContent={
                 <div className="flex items-center justify-start">
                   <UpdateIcon className="text-xl text-default-500 pointer-events-none flex-shrink-0" />

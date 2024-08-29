@@ -568,7 +568,6 @@ ipcMain.handle('is-dev-warn', () => {
   try {
     const data = fs.readFileSync(filePath, 'utf8');
     const settings = JSON.parse(data);
-    console.log("Returning", settings.hideDevWarn);
     return settings.hideDevWarn;
   } catch (error) {
     console.error('Error reading the timestamp file:', error);

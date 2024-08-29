@@ -58,7 +58,7 @@ const isValidURL = (url, provider) => {
   return containsProviderName;
 };
 
-const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) => {
+const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dlc }) => {
   const [inputLink, setInputLink] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedProvider, setSelectedProvider] = useState("");
@@ -251,7 +251,7 @@ const CardComponent = ({ game, online, version, dirlink, downloadLinks, dlc }) =
               size="sm"
               onClick={handleDownload}
             >
-              Download
+              Download {size}
               {downloadLinks["gofile"] && (
                 <SeemlessDownloadIcon size="15px" />
               )}
