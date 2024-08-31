@@ -64,6 +64,7 @@
 - [ ] Create Public API Keys for accounts
 - [ ] Create Retry Download & Extract
 - [ ] Add mulitple checks to alert if antivirus ruined a operation
+- [ ] Add older game versions
 
 ### Ascendara Docs
 - [ ] Create Installation Guide for Ascendara
@@ -72,6 +73,12 @@
 - [ ] Common Game Libraries & How to install
 - [ ] All game sources currently used
 
+# Known Issues
+- Library search breaks the page
+- GoFile, buzzheavier, 1flicher, and other providers are not working properly (MegaDB works)
+- Some games not launching at all
+
+  
 # License & Contact 📃
 This project is published under the [Apache License Version 2.0 License](./LICENSE)
 
