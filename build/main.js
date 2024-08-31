@@ -199,8 +199,17 @@ ipcMain.handle('download-file', async (event, link, game, online, dlc, version) 
     return;
   }
   const gamesDirectory = settings.downloadDirectory;
-  const executablePath = path.join(appDirectory, '/resources/AscendaraDownloader.exe');
-  const downloadProcess = spawn(executablePath, [link, game, online, dlc, version, gamesDirectory]);
+  let executablePath;
+  let spawnCommand;
+  if (link.includes('gofile.io')) {
+    executablePath = path.join(appDirectory, '/resources/GoFileDownloader.exe');
+    spawnCommand = ["https://" + link, game, online, dlc, version, gamesDirectory];
+  } else {
+    executablePath = path.join(appDirectory, '/resources/AscendaraDownloader.exe');
+    spawnCommand = [link, game, online, dlc, version, gamesDirectory];
+  }
+  const downloadProcess = spawn(executablePath, spawnCommand);
+
   downloadProcesses.set(game, downloadProcess);
   downloadProcess.stdout.on('data', (data) => {
     console.log(`stdout: ${data}`);
@@ -212,6 +221,15 @@ ipcMain.handle('download-file', async (event, link, game, online, dlc, version) 
 
   downloadProcess.on('close', (code) => {
     console.log(`child process exited with code ${code}`);
+  });
+  axios.post('https://api.ascendara.app/stats/download', {
+    game: game,
+  },)
+  .then(response => {
+    console.log('Download counter incremented successfully');
+  })
+  .catch(error => {
+    console.error('Error incrementing download counter:', error);
   });
 });
 
@@ -316,7 +334,6 @@ ipcMain.handle('is-new', (event) => {
     return false;
   } catch (error) {
     fs.writeFileSync(filePath, JSON.stringify({ timestamp: Date.now() }));
-    shell.openExternal('https://ascendara.app/extension');
     return true;
   }
 });
@@ -326,14 +343,18 @@ ipcMain.handle('get-settings', () => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
   try {
     const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data);
+    const settings = JSON.parse(data);
+    if (settings.seamlessGoFileDownloads) {
+      delete settings.seamlessGoFileDownloads;
+    }
+    return settings;
   } catch (error) {
     console.error('Error reading the settings file:', error);
     console.log('Creating settings...')
     fs.writeFileSync(filePath,
       JSON.stringify({
+        seamlessDownloads: true,
         enableNotifications: false,
-        seamlessGoFileDownloads: true,
         backgroundMotion: true,
         autoUpdate: false,
         allowOldLinks: false,
@@ -341,8 +362,8 @@ ipcMain.handle('get-settings', () => {
       })
     );
     return {
+      seamlessDownloads: true,
       enableNotifications: false,
-      seamlessGoFileDownloads: true,
       backgroundMotion: true,
       autoUpdate: false,
       allowOldLinks: false,
@@ -769,9 +790,16 @@ ipcMain.handle('required-libraries', async (event, game) => {
   }
 });
 
+
 ipcMain.handle('delete-game', async (event, game) => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
   try {
+    if (game === "localTimestampFile") {
+      const timestampFilePath = path.join(app.getPath('home'), 'timestamp.ascendara.json');
+      fs.rmSync(timestampFilePath, { force: true });
+      return;
+    }
+
     const data = fs.readFileSync(filePath, 'utf8');
     const settings = JSON.parse(data);
     if (!settings.downloadDirectory) {
@@ -783,8 +811,9 @@ ipcMain.handle('delete-game', async (event, game) => {
     fs.rmSync(gameDirectory, { recursive: true, force: true });
   } catch (error) {
     console.error('Error reading the settings file:', error);
-  } 
+  }
 });
+
 
 ipcMain.handle('remove-game', async (event, game) => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');

@@ -63,6 +63,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedProvider, setSelectedProvider] = useState("");
   const [selectedLink, setSelectedLink] = useState("");
+  const [isDownloadStarted, setIsDownloadStarted] = useState(false);
   const [withExtension, setWithExtension] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [isReportOpen, setReportOpen] = useState(false);
@@ -104,12 +105,13 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
       return;
     }
     const settings = await window.electron.getSettings();
-    if (settings.seamlessGoFileDownloads) {
+    if (settings.seamlessDownloads) {
       if (downloadLinks["gofile"] && downloadLinks["gofile"].length > 0) {
         setSelectedProvider("gofile");
         const gofileLink = downloadLinks["gofile"][0];
         setSelectedLink(gofileLink);
         window.electron.downloadFile(gofileLink, game, online, dlc, version);
+        setIsDownloadStarted(true); // Set download started to true
         console.log(
           `SENDING LOAD: ${gofileLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`
         );
@@ -225,6 +227,12 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
                 <h4 className="text-small font-semibold leading-none text-default-600">
                   {game}
                 </h4>
+                  <h5 className="text-small tracking-tight text-default-400">
+                  {version}
+                  </h5>
+                  <Spacer x={2} />
+              </div>
+              <div className="flex items-center gap-2">
                 {online && (
                     <Chip color="success" variant="shadow" size="sm">
                     ONLINE
@@ -237,9 +245,6 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
                 )}
                 <Spacer x={5} />
               </div>
-              <h5 className="text-small tracking-tight text-default-400">
-              {version}
-              </h5>
             </div>
           </div>
           {!isInstalled ? (
@@ -311,7 +316,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
                 <>
                   <h3>Direct Link:</h3>
                   <div>
-                  <Snippet isDisabled size="md" hideSymbol variant="none">
+                  <Snippet size="md" hideSymbol variant="none">
                     <a>https:{selectedLink}</a>
                   </Snippet>
                   </div>
@@ -324,7 +329,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
                 <>
                 <h3>Download Link:</h3>
                 <div>
-                  <Snippet size="md" hideSymbol variant="none">
+                  <Snippet onClick={() => window.electron.openURL(`https://${selectedLink}`)} variant="solid" hideCopyButton size="md" hideSymbol>
                     <a>https:{selectedLink}</a>
                   </Snippet>
                 </div>
@@ -430,6 +435,35 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
           </ModalFooter>
         </ModalContent>
       </Modal>
+      {isDownloadStarted && (
+        <Modal
+          isOpen={isDownloadStarted}
+          onClose={() => setIsDownloadStarted(false)}
+          size="md"
+          className="fixed arial"
+          classNames={{
+            body: "py-6",
+            backdrop: "bg-[#292f46]/50",
+            base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",
+          }}
+        >
+          <ModalContent>
+            <ModalHeader>Downloading {game}</ModalHeader>
+            <ModalBody>
+              <p>{game} is now downloading. Check the progress in the Library.</p>
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                variant="ghost"
+                color="success"
+                onClick={() => window.location.reload()}
+              >
+                Okay
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      )}
     </>
   );
 };

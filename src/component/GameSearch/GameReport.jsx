@@ -121,7 +121,7 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
       classNames={{body: "py-6",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}}
     >
       <ModalContent>
-        <ModalHeader>Reporting a game | {gameName}</ModalHeader>
+        <ModalHeader>Reporting a Game | {gameName}</ModalHeader>
         <ModalBody>
           {reportSubmitted ? (
             <p>Thank you for your help</p>

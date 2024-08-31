@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { NextUIProvider, Tabs, Tab, Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Progress } from "@nextui-org/react";
+import { NextUIProvider, Tabs, Tab, Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Progress, Link } from "@nextui-org/react";
 import "./styles.css";
 import LibraryPage from "./component/Library";
 import BrowsePage from "./component/Browsing";
@@ -18,6 +18,7 @@ const App = () => {
   const [downloadingGames, setDownloadingGames] = useState([]);
   const [backgroundMotion, setBackgroundMotion] = useState();
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showNewModal, setShowNewModal] = useState(false);
   const [showNextModal, setShowNextModal] = useState(false);
   const [isInstallingLibraries, setIsInstallingLibraries] = useState(false);
   const [showDevelopmentWarning, setShowDevelopmentWarning] = useState(true);
@@ -126,12 +127,19 @@ const App = () => {
   
   const closeWelcomeModal = () => {
     setShowWelcomeModal(false);
+    setShowNewModal(true);
+  };
+
+  const closeNewModal = () => {
+    setShowNewModal(false);
     setShowNextModal(true);
   };
-  
+
   const closeDevelopmentWarning = () => {
     setShowDevelopmentWarning(false);
   };
+
+  
 
   return (
     <NextUIProvider>
@@ -164,18 +172,36 @@ const App = () => {
           </ModalContent>
         </Modal>
 
+        
+        <Modal isDismissable={false} hideCloseButton isOpen={showNewModal} onClose={closeNewModal}>
+          <ModalContent>
+            <ModalHeader>
+              <h2>Ascendara Extension</h2>
+            </ModalHeader>
+            <ModalBody>
+              <p>It's recommended that you get the Ascendara Download Blocker chrome extension in order to quickly copy direct download links for Ascendara</p>
+              <p>Would you like to get it now?</p>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant='bordered' color="success" onClick={closeNewModal} onPress={() => window.electron.openURL('https://ascendara.app/extension')}>Get it Now</Button>
+              <Button variant='bordered' onClick={closeNewModal}>Skip</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+
         <Modal isDismissable={false} hideCloseButton isOpen={showNextModal} onClose={() => setShowNextModal(false)}>
           <ModalContent>
             <ModalHeader>
-              <h2>Getting Started</h2>
+              <h2>Game Dependencies</h2>
             </ModalHeader>
             <ModalBody>
               <p>Most games require you to install the following dependencies if you haven't before:<br/> • .NET Framework <br/> • DirectX <br/> • OpenAL <br/> • Visual C++ Redistributable <br/> • XNA Framework Redistributable</p>
               <p>Ascendara can automatically install these dependencies onto your PC.</p>
             </ModalBody>
             <ModalFooter>
-              <Button variant='bordered' onClick={() => setShowNextModal(false)}>Start Exploring</Button>
               <Button variant='bordered' color='success' onClick={handleInstallLibraries}>Install Dependencies</Button>
+              <Button variant='bordered' onClick={() => setShowNextModal(false)}>Start Exploring</Button>
          </ModalFooter>
           </ModalContent>
         </Modal>

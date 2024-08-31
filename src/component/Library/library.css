@@ -55,13 +55,12 @@
 }
 
 .library-games-header{
-  position: fixed;
+  position: relative;
 }
 
 .library-games-header h1{
   font-size: 2rem;
   font-weight: bold;
-  position: fixed;
   top: 5rem;
 }
 

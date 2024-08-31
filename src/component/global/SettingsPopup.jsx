@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Switch, Input, Spacer } from "@nextui-org/react";
 import ReportModal from './AscendaraReport';
 import { WarningIcon } from './WarningIcon';
+import  { SeemlessDownloadIcon } from '../GameSearch/SeemlessDownloadIcon'
 
 const SettingsModal = ({ isOpen, onOpenChange }) => {
   const [enableNotifications, setEnableNotifications] = useState(false);
@@ -10,11 +11,11 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
   const [splitTunnelDownloads, setSplitTunnelDownloads] = useState(false);
   const [allowOldLinks, setAllowOldLinks] = useState(false);
   const [pendingOldLinksToggle, setPendingOldLinksToggle] = useState(false);
-  const [seamlessGoFileDownloads, setSeamlessGoFileDownloads] = useState(false);
+  const [seamlessDownloads, setSeamlessDownloads] = useState(false);
   const [downloadDirectory, setDownloadDirectory] = useState('');
   const [version, setVersion]  = useState(''); 
   const [isReportOpen, setReportOpen] = useState(false);
-  const [isDevWarn, setDevWarn] = useState(window.electron.isDevWarn());
+  const [isDevWarn, setIsDevWarn] = useState(false);
   const [isOldLinksWarningOpen, setOldLinksWarningOpen] = useState(false);
   const [isDebugModalOpen, setDebugModalOpen] = useState(false);
   useEffect(() => {
@@ -36,12 +37,16 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
   const handleOpenReport = () => {
     setReportOpen(true);
   };
+  const handleDeleteTimestamp = () => {
+    window.electron.deleteGame("localTimestampFile");
+  };
 
   const handleOpenLocal = () => {
     window.electron.openGameDirectory("local", true);
   };
   const toggleHideDevWarn = () => {
     window.electron.toggleHideDevWarn();
+    setIsDevWarn(!isDevWarn);
   };
 
   const handleCloseReport = () => {
@@ -53,7 +58,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
       setEnableNotifications(settings.enableNotifications);
       setAutoUpdate(settings.autoUpdate);
       setSplitTunnelDownloads(settings.splitTunnelDownloads);
-      setSeamlessGoFileDownloads(settings.seamlessGoFileDownloads);
+      setSeamlessDownloads(settings.seamlessDownloads);
       setAllowOldLinks(settings.allowOldLinks);
       setDownloadDirectory(settings.downloadDirectory);
       setBackgroundMotion(settings.backgroundMotion);
@@ -95,9 +100,9 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
     setSplitTunnelDownloads((prevState) => !prevState);
   };
 
-  const handleSeamlessGoFileDownloadsToggle = (checked) => {
-    console.log('Seamless GoFile Downloads:', checked);
-    setSeamlessGoFileDownloads((prevState) => !prevState);
+  const handleSeamlessDownloads = (checked) => {
+    console.log('Seamless Downloads:', checked);
+    setSeamlessDownloads((prevState) => !prevState);
   };
 
   const handleSave = () => {
@@ -105,7 +110,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
       enableNotifications,
       autoUpdate,
       splitTunnelDownloads,
-      seamlessGoFileDownloads,
+      seamlessDownloads,
       backgroundMotion
     };
     window.electron.saveSettings(options, downloadDirectory);
@@ -131,24 +136,38 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
     setPendingOldLinksToggle(false);
     setOldLinksWarningOpen(false);
   };
+  
+  useEffect(() => {
+    window.electron.isDevWarn().then((result) => {
+      setIsDevWarn(result);
+    });
+  }, []);
 
   return (
     <>
-      <Modal size='5xl' isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange} placement="center" classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}}>
+      <Modal onClose={handleSave} size='5xl' isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange} placement="center" classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}}>
         <ModalContent>
           {() => (
             <>
-              <ModalHeader className="flex flex-col gap-1">
-                <h3>Settings</h3>
+              <ModalHeader>
+                <h1 className="text-large flex center gap-2">Settings
+                <Button color="danger" size="sm" onClick={handleOpenReport}>Report a Bug</Button>
+                {isReportOpen && <ReportModal
+                  isReportOpen={isReportOpen}
+                  onReportClose={handleCloseReport}
+                />}</h1>
               </ModalHeader>
               <ModalBody>
                 <Switch
-                  isSelected={seamlessGoFileDownloads}
-                  value={seamlessGoFileDownloads}
-                  onChange={handleSeamlessGoFileDownloadsToggle}
+                  isSelected={seamlessDownloads}
+                  value={seamlessDownloads}
+                  onChange={handleSeamlessDownloads}
                 >
-                  Seamless GoFile Downloads
-                  <p className="text-small text-default-500">When downloading a game, if GoFile is a provider the download will seamlessly start</p>
+                  <div className="items-center gap-2" style={{ display: "flex" }}>
+                  Seamless Downloads <SeemlessDownloadIcon size={16}/>
+                  </div>
+                  <p className="text-small text-default-500">When downloading a game, if the provider <br/>
+                     doesn't require CAPTCHA, it will seamlessly start</p>
                 </Switch>
                 <Switch
                   isSelected={backgroundMotion}
@@ -165,7 +184,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
                   onChange={handleAllowOldLinksToggle}
                 >
                   View Old Download Links
-                  <p className="text-small text-default-500">Be able to view older versions of games</p>
+                  <p className="text-small text-default-500">Links for older versions of games will be shown</p>
                 </Switch>
                 <Switch
                   isDisabled
@@ -174,14 +193,10 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
                   onChange={handleAutoUpdateToggle}
                 >
                   Automatically check for updates
-                  <p className="text-small text-default-500">Check Ascendara's server for newer versions, and notify when there is one</p>
+                  <p className="text-small text-default-500">Check Ascendara's server for newer versions, and <br/>
+                    notify when there is one</p>
                 </Switch>
                 <Spacer y={3} />
-                <Button color="danger" size="sm" onClick={handleOpenReport}>Report a Bug</Button>
-                {isReportOpen && <ReportModal
-                  isReportOpen={isReportOpen}
-                  onReportClose={handleCloseReport}
-                />}
                 <Input
                   onClick={handleSelectDirectory}
                   isReadOnly
@@ -190,11 +205,8 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
                 />
               </ModalBody>
               <ModalFooter>
-                <Button variant='ghost' color="primary" onPress={handleSave}>
-                  Save
-                </Button>
-                <h2 className="text-small text-default-400 fixed bottom-0 py-4 arial text-center">
-                  Ascendara Development Build {version} | NextJS | Electron
+                <h2 className="text-small text-default-400 arial text-center">
+                  Ascendara Development Build {version}
                 </h2>
               </ModalFooter>
             </>
@@ -236,13 +248,13 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
           </ModalHeader>
           <ModalBody>
             <Button onPress={handleOpenLocal} >
-              Open Local Directory
+              Open local directory
             </Button>
-            <Button onPress >
+            <Button onPress={handleDeleteTimestamp} >
               Delete timestamp file
             </Button>
             <Switch isSelected={isDevWarn} onChange={toggleHideDevWarn}>
-              Hide Development Warning Modal
+              Hide development warning modal
             </Switch>
           </ModalBody>
           <ModalFooter>

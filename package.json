@@ -1,6 +1,6 @@
 {
   "name": "ascendara",
-  "version": "5.6.1",
+  "version": "5.6.2",
   "main": "main.js",
   "description": "Effortlessly install games directly onto your PC without the hassle of extractions or file locations.",
   "scripts": {
@@ -50,6 +50,10 @@
     "extraResources": [
       {
         "from": "binaries/AscendaraDownloader/dist/AscendaraDownloader.exe",
+        "to": "."
+      },
+      {
+        "from": "binaries/AscendaraDownloader/dist/GoFileDownloader.exe",
         "to": "."
       },
       {
