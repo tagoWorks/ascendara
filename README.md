@@ -75,7 +75,7 @@
 
 # Known Issues
 - Library search breaks the page
-- GoFile, buzzheavier, 1flicher, and other providers are not working properly (MegaDB works)
+- buzzheavier, 1flicher, and other providers are not working properly (MegaDB & GoFile (seamless) works)
 - Some games not launching at all
 
   
