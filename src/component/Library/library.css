@@ -36,14 +36,15 @@
   overflow: hidden;
 }
 
-.library-container{
+.no-results {
   display: flex;
-  flex-direction: column;
-  position: relative;
-  flex: 1;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  padding: 2rem;
+  width: 40rem;
+  height: 20rem;
+}
+
+.no-results h1 {
+  font-size: 2rem;
+  margin: auto;
 }
 
 .library-game-cards {

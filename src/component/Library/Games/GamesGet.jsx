@@ -116,7 +116,7 @@ const Games = () => {
 
   return (
     <>
-      <Input isDisabled className="librarysearchbar" value={searchQuery} onChange={handleSearch} placeholder="Search for games" />
+      <Input className="librarysearchbar" value={searchQuery} onChange={handleSearch} placeholder="Search for games" />
       <Spacer y={7} />
       <div className="flex flex-wrap library-game-cards">
         <Spacer x={4} />
@@ -127,9 +127,9 @@ const Games = () => {
             {renderCards(paginatedGames.filter(game => customGames.includes(game)), true)}
           </>
         ) : (
-          <Card className="flex" style={{ padding: '5rem' }}>
+          <Card isBlurred className="no-results bg-background/60 dark:bg-default-100/50">
             <CardBody>
-              <h1 style={{ display: 'inline' }}>No results found</h1>
+              <h1>No results found</h1>
             </CardBody>
           </Card>
         )}

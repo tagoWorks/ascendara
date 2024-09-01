@@ -438,6 +438,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
       {isDownloadStarted && (
         <Modal
           isOpen={isDownloadStarted}
+          isDismissable={false}
           onClose={() => setIsDownloadStarted(false)}
           size="md"
           className="fixed arial"
@@ -452,15 +453,6 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
             <ModalBody>
               <p>{game} is now downloading. Check the progress in the Library.</p>
             </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="ghost"
-                color="success"
-                onClick={() => window.location.reload()}
-              >
-                Okay
-              </Button>
-            </ModalFooter>
           </ModalContent>
         </Modal>
       )}
