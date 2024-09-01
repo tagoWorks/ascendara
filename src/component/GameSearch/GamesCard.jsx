@@ -451,7 +451,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
           <ModalContent>
             <ModalHeader>Downloading {game}</ModalHeader>
             <ModalBody>
-              <p>{game} is now downloading. Check the progress in the Library.</p>
+              <p>{game} was added to the downloads. Check the progress in the library.</p>
             </ModalBody>
           </ModalContent>
         </Modal>

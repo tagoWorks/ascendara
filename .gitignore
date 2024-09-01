@@ -19,6 +19,7 @@ binaries/AscendaraBackgroundTasks/make-exe.bat
 
 binaries/AscendaraDownloader/AscendaraDownloader.spec
 binaries/AscendaraGameHandler/AscendaraGameHandler.spec
+binaries/AscendaraGameHandler/GoFileDownloader.spec
 package-lock.json
 /binaries/AscendaraDownloader/src/2.0/__pycache__
 exports.txt

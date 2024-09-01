@@ -52,7 +52,12 @@ def execute(game_path, is_custom_game):
             logging.error(error)
         return
 
-    process = subprocess.Popen(exe_path)
+    # Run the game process separately from the executable process
+    if os.name == 'nt':  # Windows
+        process = subprocess.Popen(exe_path, creationflags=subprocess.DETACHED_PROCESS)
+    else:  # Unix/Linux
+        process = subprocess.Popen(exe_path, start_new_session=True)
+
     running = True
     while running:
         if os.path.isfile(exe_path):
@@ -63,7 +68,7 @@ def execute(game_path, is_custom_game):
                 with open(json_file_path, "w") as f:
                     json.dump(data, f, indent=4)
             else:
-                pass  # No need to update the game info file for custom games
+                pass
 
         if process.poll() is not None:
             running = False
