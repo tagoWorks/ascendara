@@ -65,6 +65,7 @@
 - [ ] Create Retry Download & Extract
 - [ ] Add mulitple checks to alert if antivirus ruined a operation
 - [ ] Add older game versions
+- [ ] Sort by popularity
 
 ### Ascendara Docs
 - [x] Create Installation Guide for Ascendara
