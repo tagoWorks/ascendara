@@ -40,6 +40,8 @@
 
 5. Move all files into the `build` directory
 
+6. In the main.js, go towards the bottom and delete `mainWindow.loadURL('http://localhost:5173/')`, and uncomment `mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));` in order to run correctly
+
 6. Build the Electron app
    ```sh
    npm run dist
