@@ -20,29 +20,34 @@
 ## Download Ascendara right now! https://ascendara.app/
 
 # Building the app
-### Note: The Ascendara API requires a key which is private as of now. Game browsing will not function properly. In `Browsing.jsx` replace the link "https://api.ascendara.app/json/games" with "https://api.ascendara.app/developer/json/games" for a preview game in order to make changes to the UI.
+> [!NOTE]  
+> The Ascendara API requires a key which is private as of now. Game browsing will not function properly. In `Browsing.jsx` replace the link "https://api.ascendara.app/json/games" with "https://api.ascendara.app/developer/json/games" for a preview game in order to make changes to the UI.
+1. Clone the repository
+    ```sh
+    git clone https://github.com/tagoWorks/ascendara.git
+    ```
 
-1. Install requirements
+2. Install requirements
     ```sh
     npm install -r
     ```
     
-2. Build the React app
+3. Build the React app
     ```sh
     npm run build
     ```
     This will build the app in `src` into a single index, css, and js file. Look in `src/dist` for the files.
 
-3. In the dist, move the assets folder into the parent folder
+4. In the dist, move the assets folder into the parent folder
 
 4. In the index.html file of the built react app, you will see "assets/index.css", and "assets/index.js". Simply remove the "assets/" leaving just the file
    name in the source.
 
-5. Move all files into the `build` directory
+6. Move all files into the `build` directory
 
-6. In the main.js, go towards the bottom and delete `mainWindow.loadURL('http://localhost:5173/')`, and uncomment `mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));` in order to run correctly
+7. In the main.js, go towards the bottom and delete `mainWindow.loadURL('http://localhost:5173/')`, and uncomment `mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));` in order to run correctly
 
-6. Build the Electron app
+8. Build the Electron app
    ```sh
    npm run dist
    ```
