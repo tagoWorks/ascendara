@@ -304,7 +304,7 @@ const GameBrowse = () => {
           <p>Last updated: {metadata.getDate}</p>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={() => window.electron.openURL('https://docs.ascendara.app/')}>
+          <Button variant="ghost" onClick={() => window.electron.openURL('https://github.com/tagoWorks/ascendara/wiki/Current-Sources')}>
             Read More
           </Button>
           <Button variant="faded" onClick={handleForceRefresh}>

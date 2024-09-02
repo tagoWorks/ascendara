@@ -206,7 +206,15 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
               </ModalBody>
               <ModalFooter>
                 <h2 className="text-small text-default-400 arial text-center">
-                  Ascendara Development Build {version}
+                  Ascendara {version}
+                </h2>
+                <h2 className="text-small text-default-400 arial text-center"> | </h2>
+                <h2 onClick={() => window.electron.openURL('https://github.com/tagoWorks/ascendara/wiki/Usage-Guide')} className="text-small text-default-400 arial text-center">
+                  Usage Guide
+                </h2>
+                <h2 className="text-small text-default-400 arial text-center"> | </h2>
+                <h2 onClick={() => window.electron.openURL('https://tago.works')} className="text-small text-default-400 arial text-center">
+                  tagoWorks
                 </h2>
               </ModalFooter>
             </>
