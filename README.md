@@ -79,12 +79,12 @@ Open settings and click F5 for development tools
 - [ ] Add older game versions
 - [ ] Sort by popularity
 
-### Ascendara Docs
+### [Ascendara Docs](https://github.com/tagoWorks/ascendara/wiki)
 - [x] Create Installation Guide for Ascendara
 - [x] Source and how it works
 - [ ] API Documentation
 - [x] Common Game Libraries & How to install
-- [ ] All game sources currently used
+- [x] All game sources currently used
 
 # License & Contact 📃
 This project is published under the [Apache License Version 2.0 License](./LICENSE)
