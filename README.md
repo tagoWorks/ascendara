@@ -22,23 +22,29 @@
 # Building the app
 ### Note: The Ascendara API requires a key which is private as of now. Game browsing will not function properly.
 
-1. Build the React app
+1. Install requirements
+    ```sh
+    npm install -r
+    ```
+    
+2. Build the React app
     ```sh
     npm run build
     ```
     This will build the app in `src` into a single index, css, and js file. Look in `src/dist` for the files.
 
-2. In the dist, move the assets folder into the parent folder
+3. In the dist, move the assets folder into the parent folder
 
-3. In the index.html file of the built react app, you will see "assets/index.css", and "assets/index.js". Simply remove the "assets/" leaving just the file
+4. In the index.html file of the built react app, you will see "assets/index.css", and "assets/index.js". Simply remove the "assets/" leaving just the file
    name in the source.
 
-4. Move all files into the `build` directory
+5. Move all files into the `build` directory
 
-5. Build the Electron app
+6. Build the Electron app
    ```sh
    npm run dist
    ```
+Open settings and click F5 for development tools
 
 
 # Development Roadmap
