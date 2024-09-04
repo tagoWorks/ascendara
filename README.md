@@ -40,9 +40,9 @@
 
 4. In the dist, move the assets folder into the parent folder
 
-4. In the index.html file of the built react app, you will see "assets/index.css", and "assets/index.js". Simply remove the "assets/" leaving just the file
+4. In the index.html file of the built react app, you will see "assets/index-########.css", and "assets/index-########.js". Simply remove the "assets/" leaving just the file
    name in the source.
-
+   "########" being a random string of characters
 6. Move all files into the `build` directory
 
 7. In the main.js, go towards the bottom and delete `mainWindow.loadURL('http://localhost:5173/')`, and uncomment `mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));` in order to run correctly
