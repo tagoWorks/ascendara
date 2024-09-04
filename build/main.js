@@ -704,7 +704,6 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
         startTimestamp: new Date(),
         largeImageKey: 'ascendara',
         largeImageText: 'Ascendara',
-        smallImageKey: 'playing',
         buttons:[
           {
             label: 'Play on Ascendara',
