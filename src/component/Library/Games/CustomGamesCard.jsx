@@ -138,7 +138,7 @@ const CustomCardComponent = ({
             isLoading={isLoading}
             disabled={isRunning}
           >
-            {isRunning ? "Running" : "PLAY"}
+            {isRunning ? "PLAYING" : "PLAY"}
           </Button>)}
         
       </CardFooter>

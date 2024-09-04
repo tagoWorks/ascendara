@@ -17,6 +17,21 @@
   padding: 50px;
 }
 
+.fixed-icon-size {
+  width: 15px;
+  height: 15px;
+}
+
+.cardhover:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s ease-in-out;
+}
+
+.browsingcards {
+  border-radius: 10px;
+  border: 1px solid #000;
+}
+
 .searchbox {
   position: fixed;
 }

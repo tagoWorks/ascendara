@@ -7,7 +7,8 @@ contextBridge.exposeInMainWorld('electron', {
   saveSettings: (options, directory) => ipcRenderer.invoke('save-settings', options, directory),
   getAPIKey: () => ipcRenderer.invoke('get-api-key'),
   getVersion: () => ipcRenderer.invoke('get-version'),
-
+  hasLaunched: () => ipcRenderer.invoke('has-launched'),
+  
   // Game Management
   getGames: () => ipcRenderer.invoke('get-games'),
   getCustomGames: () => ipcRenderer.invoke('get-custom-games'),
@@ -39,8 +40,6 @@ contextBridge.exposeInMainWorld('electron', {
   setBackground: (color, gradient) => ipcRenderer.invoke('set-background', color, gradient),
 
   // Miscellaneous
-  toggleHideDevWarn: () => ipcRenderer.invoke('toggle-hide-dev-warn'),
-  isDevWarn: () => ipcRenderer.invoke('is-dev-warn'),
   isNew: () => ipcRenderer.invoke('is-new'),
   openURL: (url) => ipcRenderer.invoke('open-url', url),
   openReqPath: (game) => ipcRenderer.invoke('required-libraries', game),

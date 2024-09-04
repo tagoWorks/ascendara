@@ -116,7 +116,7 @@ const Games = () => {
 
   return (
     <>
-      <Input variant="bordered" className="librarysearchbar" value={searchQuery} onChange={handleSearch} placeholder="Search for games" />
+      <Input variant="bordered" className="librarysearchbar" value={searchQuery} onChange={handleSearch} placeholder="Search your library" />
       <Spacer y={7} />
       <div className="flex flex-wrap library-game-cards">
         <Spacer x={4} />

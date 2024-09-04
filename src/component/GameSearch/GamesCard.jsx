@@ -1,6 +1,7 @@
-import React, { useState, useEffect, } from "react";
+import React, { useState, useEffect } from "react";
+import { Progress } from "@nextui-org/react";
 import { ReportIcon } from "./ReportIcon";
-import { SeemlessDownloadIcon } from "./SeemlessDownloadIcon"
+import { SeemlessDownloadIcon } from "./svg/SeemlessDownloadIcon"
 import ReportModal from "./GameReport";
 import {
   Card,
@@ -58,7 +59,7 @@ const isValidURL = (url, provider) => {
   return containsProviderName;
 };
 
-const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dlc }) => {
+const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dlc, icon }) => {
   const [inputLink, setInputLink] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedProvider, setSelectedProvider] = useState("");
@@ -111,7 +112,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
         const gofileLink = downloadLinks["gofile"][0];
         setSelectedLink(gofileLink);
         window.electron.downloadFile(gofileLink, game, online, dlc, version);
-        setIsDownloadStarted(true); // Set download started to true
+        setIsDownloadStarted(true);
         console.log(
           `SENDING LOAD: ${gofileLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`
         );
@@ -206,6 +207,14 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
       }, 2000);
     }, 0);
   };
+
+  useEffect(() => {
+    if (isDownloadStarted) {
+      setTimeout(() => {
+        setIsDownloadStarted(false);
+      }, 2000);
+    }
+  }, [isDownloadStarted]);
   
   const handleSelectProvider = (provider) => {
     setSelectedProvider(provider);
@@ -219,50 +228,53 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
   
   return (
     <>
-      <Card isBlurred className="wrap px-5 border-none bg-background/60 dark:bg-default-100/50">
-        <CardHeader className="justify-between items-center">
-          <div className="flex gap-5">
-            <div className="flex flex-col gap-1 items-start justify-center">
-              <div className="flex items-center gap-2">
-                <h4 className="text-small font-semibold leading-none text-default-600">
-                  {game}
-                </h4>
-                  <h5 className="text-small tracking-tight text-default-400">
-                  {version}
-                  </h5>
-                  <Spacer x={2} />
-              </div>
-              <div className="flex items-center gap-2">
-                {online && (
-                    <Chip color="success" variant="shadow" size="sm">
-                    ONLINE
-                  </Chip>
-                )}
-                {dlc && (
-                  <Chip color="warning" variant="shadow" size="sm">
-                    ALL-DLC
-                </Chip>
-                )}
-                <Spacer x={5} />
-              </div>
-            </div>
-          </div>
-          {!isInstalled ? (
-            <Button
-              aria-label="Download"
-              color="primary"
-              variant="ghost"
-              radius="full"
-              size="sm"
-              onClick={handleDownload}
+    <Card isBlurred className="browsingcards cardhover wrap px-5 border-none bg-background/60 dark:bg-default-100/50">
+      <CardHeader className="justify-between items-center">
+        <div className="flex gap-5">
+          <div className="flex flex-col gap-1 items-start justify-center">
+            <h4
+              className="text-small font-semibold leading-none text-default-600 flex items-center"
+              style={{
+                wordWrap: "break-word",
+                maxWidth: "20ch",
+              }}
             >
-              Download {size}
-              {downloadLinks["gofile"] && (
-                <SeemlessDownloadIcon size="15px" />
-              )}
+              <span style={{ display: "flex", alignItems: "center" }}>
+                {game} <Spacer x={1} /> {icon}
+              </span>
+            </h4>
+            <h5 className="text-small tracking-tight text-default-400">{version}</h5>
+          </div>
+          <div className="flex items-center gap-2">
+            {online && (
+              <Chip color="success" variant="shadow" size="sm">
+                ONLINE
+              </Chip>
+            )}
+            {dlc && (
+              <Chip color="warning" variant="shadow" size="sm">
+                ALL-DLC
+              </Chip>
+            )}
+          </div>
+        </div>
+        <Spacer x={2} />
+        {!isInstalled ? (
+          <Button
+            aria-label="Download"
+            color="primary"
+            variant="ghost"
+            radius="full"
+            size="sm"
+            onClick={handleDownload}
+          >
+            Download {size}
+            {downloadLinks["gofile"] && (
+              <SeemlessDownloadIcon size="15px" />
+            )}
           </Button>
         ) : (
-          <Button 
+          <Button
             isDisabled
             aria-label="Installed"
             color="primary"
@@ -273,7 +285,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
             Installed
           </Button>
         )}
-        </CardHeader>
+      </CardHeader>
       </Card>
       <Modal isDismissable={false} isOpen={isOpen} onClose={onClose} size="5xl" className="fixed arial" classNames={{
                     body: "py-6",
@@ -316,9 +328,12 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
                 <>
                   <h3>Direct Link:</h3>
                   <div>
-                  <Snippet size="md" hideSymbol variant="none">
+                  <Snippet hideSymbol variant="none" size="md">
                     <a>https:{selectedLink}</a>
                   </Snippet>
+                  <Button size="sm" onClick={() => window.electron.openURL(`https://${selectedLink}`)} variant="none">
+                    Open in Browser
+                  </Button>
                   </div>
                   <h2 className="text-large">Thanks to ltsdw on GitHub</h2>
                   <h3>Unlike other providers that require a CAPTCHA verification, <br/>
@@ -329,9 +344,12 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
                 <>
                 <h3>Download Link:</h3>
                 <div>
-                  <Snippet onClick={() => window.electron.openURL(`https://${selectedLink}`)} variant="solid" hideCopyButton size="md" hideSymbol>
+                  <Snippet hideSymbol variant="none" size="md">
                     <a>https:{selectedLink}</a>
                   </Snippet>
+                  <Button size="sm" onClick={() => window.electron.openURL(`https://${selectedLink}`)} variant="none">
+                    Open in Browser
+                  </Button>
                 </div>
                 <Tabs
                   selectedKey={tabKey}
@@ -435,27 +453,31 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
           </ModalFooter>
         </ModalContent>
       </Modal>
-      {isDownloadStarted && (
-        <Modal
-          isOpen={isDownloadStarted}
-          isDismissable={false}
-          onClose={() => setIsDownloadStarted(false)}
-          size="md"
-          className="fixed arial"
-          classNames={{
-            body: "py-6",
-            backdrop: "bg-[#292f46]/50",
-            base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",
-          }}
-        >
-          <ModalContent>
-            <ModalHeader>Downloading {game}</ModalHeader>
-            <ModalBody>
-              <p>{game} was added to the downloads. Check the progress in the library.</p>
-            </ModalBody>
-          </ModalContent>
-        </Modal>
-      )}
+        {isDownloadStarted && (
+          <Modal
+            isOpen={isDownloadStarted}
+            hideCloseButton
+            isDismissable={false}
+            onClose={() => setIsDownloadStarted(false)}
+            size="md"
+            className="fixed arial"
+            classNames={{
+              body: "py-6",
+              backdrop: "bg-[#292f46]/50",
+              base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",
+            }}
+          >
+            <ModalContent>
+              <ModalHeader>Downloading {game}</ModalHeader>
+              <ModalBody>
+                <p>Hang on while {game} gets added to your downloads. Check the progress in the library soon.</p>
+              </ModalBody>
+              <ModalFooter>
+                <Progress color="secondary" isIndeterminate />
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+        )}
     </>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Button, Pagination, Spacer, Spinner, Modal, ModalBody, ModalFooter, ModalContent, ModalHeader } from "@nextui-org/react";
-import { HelpIcon } from "./GameSearch/HelpIcon";
+import { Button, Pagination, Spacer, Spinner, Modal, ModalBody, ModalFooter, ModalContent, ModalHeader, Tooltip } from "@nextui-org/react";
+import { HelpIcon } from "./GameSearch/svg/HelpIcon";
+import { FlameIcon } from "./GameSearch/svg/FlameIcon";
 import "./GameSearch/browsing.css";
 import SearchBox from "./GameSearch/SearchBox";
 import CardComponent from "./GameSearch/GamesCard";
@@ -139,7 +140,7 @@ const GameBrowse = () => {
     const fetchData = async () => {
       try {
         const token = await getToken();
-
+  
         const cachedGames = JSON.parse(localStorage.getItem(CACHE_KEY));
         const cacheExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
         const cachedMetadata = JSON.parse(localStorage.getItem(METADATA_KEY));
@@ -149,8 +150,11 @@ const GameBrowse = () => {
           cachedMetadata &&
           Date.now() < parseInt(cacheExpiry)
         ) {
-          setGames(cachedGames);
-          setFilteredGames(cachedGames);
+          const sortedGames = cachedGames
+            .map(game => ({ ...game, weight: Number(game.weight) }))
+            .sort((a, b) => b.weight - a.weight);
+          setGames(sortedGames);
+          setFilteredGames(sortedGames);
           setMetadata(cachedMetadata);
           setLoading(false);
           setError(false);
@@ -161,19 +165,22 @@ const GameBrowse = () => {
             },
           });
           const data = await response.json();
+          const sortedGames = data.games
+            .map(game => ({ ...game, weight: Number(game.weight) })) 
+            .sort((a, b) => b.weight - a.weight);
           setMetadata(data.metadata);
-          setGames(data.games);
-          setFilteredGames(data.games);
+          setGames(sortedGames);
+          setFilteredGames(sortedGames);
           setLoading(false);
           setError(false);
           setRetryCount(0);
-
-          localStorage.setItem(CACHE_KEY, JSON.stringify(data.games));
+  
+          localStorage.setItem(CACHE_KEY, JSON.stringify(sortedGames));
           localStorage.setItem(METADATA_KEY, JSON.stringify(data.metadata));
           const expiryTime = Date.now() + 3600000;
           localStorage.setItem(CACHE_EXPIRY_KEY, expiryTime.toString());
         }
-
+  
         fetchNews(token);
       } catch (error) {
         console.error("Error fetching games:", error);
@@ -186,35 +193,43 @@ const GameBrowse = () => {
         }
       }
     };
-
+  
     fetchData();
     updateCardsPerPage();
     window.addEventListener("resize", updateCardsPerPage);
-
+  
     return () => {
       window.removeEventListener("resize", updateCardsPerPage);
     };
   }, [retryCount]);
-
+  
   const handleSearch = (query, showOnlineOnly) => {
     if (query.trim() === "") {
-      setFilteredGames(games.filter((game) => (showOnlineOnly ? game.online : true)));
+      const filtered = games
+        .filter((game) => (showOnlineOnly ? game.online : true))
+        .map(game => ({ ...game, weight: Number(game.weight) }))
+        .sort((a, b) => b.weight - a.weight);
+      setFilteredGames(filtered);
     } else {
       const options = {
         keys: ["game"],
         threshold: 0.3,
       };
-
+  
       const fuse = new Fuse(games, options);
       const result = fuse.search(query);
       const filtered = result.map(({ item }) => item).filter((game) => (showOnlineOnly ? game.online : true));
-
-      setFilteredGames(filtered);
+      const sortedFiltered = filtered
+        .map(game => ({ ...game, weight: Number(game.weight) }))
+        .sort((a, b) => b.weight - a.weight);
+  
+      setFilteredGames(sortedFiltered);
     }
-
+  
     setCurrentPage(1);
   };
 
+  
   const indexOfLastGame = currentPage * cardsPerPage;
   const indexOfFirstGame = indexOfLastGame - cardsPerPage;
   const currentGames = filteredGames.slice(indexOfFirstGame, indexOfLastGame);
@@ -227,15 +242,14 @@ const GameBrowse = () => {
     <div style={{ padding: "5rem", display: "flex", height: "100vh" }}>
       <div style={{ flex: 3, overflowY: "hidden", marginRight: "1rem", }}>
         <div className="flex items-center justify-between">
-        
         <h1 className="py-4 text-small font-medium">
             Indexed Games: {metadata.games} | Current Source: {metadata.source}
           </h1>
           <Button isIconOnly color="none" onClick={handleHelpClick}>
             <HelpIcon size={18} />
           </Button>
-        <SearchBox onSearch={handleSearch} />
-        
+          <SearchBox onSearch={handleSearch} />
+          <Spacer y={2}/>
         <div className="flex flex-col items-center gap-8">
         <Spacer y="3"/>
           {loading ? (
@@ -246,7 +260,7 @@ const GameBrowse = () => {
             <ErrorCard message="We couldn't find that game :(" />
           ) : (
             <>
-              <div className="flex justify-center gap-4">
+              <div className="flex gap-1">
                 {currentGames.map((game, index) => (
                   <CardComponent
                   key={index}
@@ -257,6 +271,9 @@ const GameBrowse = () => {
                   dirlink={game.dirlink}
                   dlc={game.dlc}
                   downloadLinks={game.download_links}
+                  icon={filteredGames.indexOf(game) < 8 ?
+                     <FlameIcon className="fixed-icon-size" size={15} /> 
+                     : null}
                 />
                 ))}
               </div>

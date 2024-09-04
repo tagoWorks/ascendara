@@ -8,7 +8,9 @@ const os = require('os')
 const { spawn } = require('child_process');
 require("dotenv").config()
 let rpc;
-const CURRENT_VERSION = "5.6.5";
+let has_launched = false;
+
+const CURRENT_VERSION = "5.7.5";
 
 
 // Initialize Discord RPC
@@ -338,6 +340,17 @@ ipcMain.handle('is-new', (event) => {
   }
 });
 
+// Determine weather to show the dev warning modal or not
+ipcMain.handle('has-launched', (event) => {
+  if (has_launched) {
+    return false;
+  } else {
+    has_launched = true;
+    return true;
+  }
+});
+
+
 // Read the settings JSON file and send it to the renderer process
 ipcMain.handle('get-settings', () => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
@@ -569,30 +582,6 @@ ipcMain.handle('open-file-dialog', async (event) => {
     return null;
   } else {
     return result.filePaths[0];
-  }
-});
-
-ipcMain.handle('toggle-hide-dev-warn', () => {
-  const filePath = path.join(app.getPath('home'), 'timestamp.ascendara.json');
-  try {
-    const data = fs.readFileSync(filePath, 'utf8');
-    const settings = JSON.parse(data);
-    settings.hideDevWarn = !settings.hideDevWarn;
-    fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
-  } catch (error) {
-    console.error('Error reading or writing to timestamp file:', error);
-  }   
-});
-
-ipcMain.handle('is-dev-warn', () => {
-  const filePath = path.join(app.getPath('home'), 'timestamp.ascendara.json');
-  try {
-    const data = fs.readFileSync(filePath, 'utf8');
-    const settings = JSON.parse(data);
-    return settings.hideDevWarn;
-  } catch (error) {
-    console.error('Error reading the timestamp file:', error);
-    return false;
   }
 });
 

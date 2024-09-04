@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Switch, Input, Spacer } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Switch, Input, Spacer, RadioGroup, Radio, Dropdown, DropdownTrigger, DropdownItem, DropdownMenu } from "@nextui-org/react";
 import ReportModal from './AscendaraReport';
 import { WarningIcon } from './WarningIcon';
-import  { SeemlessDownloadIcon } from '../GameSearch/SeemlessDownloadIcon'
+import  { SeemlessDownloadIcon } from '../GameSearch/svg/SeemlessDownloadIcon'
 
 const SettingsModal = ({ isOpen, onOpenChange }) => {
   const [enableNotifications, setEnableNotifications] = useState(false);
@@ -15,7 +15,6 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
   const [downloadDirectory, setDownloadDirectory] = useState('');
   const [version, setVersion]  = useState(''); 
   const [isReportOpen, setReportOpen] = useState(false);
-  const [isDevWarn, setIsDevWarn] = useState(false);
   const [isOldLinksWarningOpen, setOldLinksWarningOpen] = useState(false);
   const [isDebugModalOpen, setDebugModalOpen] = useState(false);
   useEffect(() => {
@@ -44,11 +43,6 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
   const handleOpenLocal = () => {
     window.electron.openGameDirectory("local", true);
   };
-  const toggleHideDevWarn = () => {
-    window.electron.toggleHideDevWarn();
-    setIsDevWarn(!isDevWarn);
-  };
-
   const handleCloseReport = () => {
     setReportOpen(false);
   };
@@ -136,12 +130,6 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
     setPendingOldLinksToggle(false);
     setOldLinksWarningOpen(false);
   };
-  
-  useEffect(() => {
-    window.electron.isDevWarn().then((result) => {
-      setIsDevWarn(result);
-    });
-  }, []);
 
   return (
     <>
@@ -196,7 +184,6 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
                   <p className="text-small text-default-500">Check Ascendara's server for newer versions, and <br/>
                     notify when there is one</p>
                 </Switch>
-                <Spacer y={3} />
                 <Input
                   onClick={handleSelectDirectory}
                   isReadOnly
@@ -209,11 +196,11 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
                   Ascendara {version}
                 </h2>
                 <h2 className="text-small text-default-400 arial text-center"> | </h2>
-                <h2 onClick={() => window.electron.openURL('https://github.com/tagoWorks/ascendara/wiki/Usage-Guide')} className="text-small text-default-400 arial text-center">
+                <h2 onClick={() => window.electron.openURL('https://github.com/tagoWorks/ascendara/wiki/Usage-Guide')} className="show-pointer text-small text-default-400 arial text-center">
                   Usage Guide
                 </h2>
                 <h2 className="text-small text-default-400 arial text-center"> | </h2>
-                <h2 onClick={() => window.electron.openURL('https://tago.works')} className="text-small text-default-400 arial text-center">
+                <h2 onClick={() => window.electron.openURL('https://tago.works')} className="show-pointer text-small text-default-400 arial text-center">
                   tagoWorks
                 </h2>
               </ModalFooter>
@@ -261,9 +248,6 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
             <Button onPress={handleDeleteTimestamp} >
               Delete timestamp file
             </Button>
-            <Switch isSelected={isDevWarn} onChange={toggleHideDevWarn}>
-              Hide development warning modal
-            </Switch>
           </ModalBody>
           <ModalFooter>
             <Button variant='ghost' color="primary" onPress={() => setDebugModalOpen(false)}>

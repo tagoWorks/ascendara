@@ -15,11 +15,18 @@ const Library = () => {
   const [showDirectoryModal, setShowDirectoryModal] = useState(false);
   const gamesPerPage = 6;
 
-  const toggleGamesModal = () => {
-    if (!window.electron.getDownloadDirectory()) {
+  const toggleGamesModal = async () => {  
+    try {
+    const downloadDir = await window.electron.getDownloadDirectory();
+
+    if (downloadDir == '') {
       setShowDirectoryModal(true);
     } else {
       setIsGamesModalOpen(!isGamesModalOpen);
+    }
+  }
+    catch (error){
+      console.error("Failed to fetch directory:",) 
     }
   };
 
@@ -121,6 +128,9 @@ const Library = () => {
           </Button>
         </div>
       )}
+
+      {(games.length > 0 || customGames.length > 0) && (
+        <>
         <div className="library-games-header">
         <h1>
           Your Library
@@ -129,12 +139,11 @@ const Library = () => {
           </Button>
         </h1>
         </div>
-
-      {(games.length > 0 || customGames.length > 0) && (
         <div className="library-container">
           <Spacer y={5} />
           <Games games={displayedGames} />
         </div>
+        </>
       )}
       {downloadingGames.length > 0 && (
         <div className="queue-container">

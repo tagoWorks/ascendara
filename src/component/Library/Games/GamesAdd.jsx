@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Switch, Button, Tooltip } from "@nextui-org/react";
-import { HelpIcon } from '../../GameSearch/HelpIcon';
+import { HelpIcon } from '../../GameSearch/svg/HelpIcon';
 
 const GamesAddModal = ({ isOpen, onOpenChange }) => {
   const [executable, setExecutable] = useState(null);

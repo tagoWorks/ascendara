@@ -21,7 +21,7 @@ const App = () => {
   const [showNewModal, setShowNewModal] = useState(false);
   const [showNextModal, setShowNextModal] = useState(false);
   const [isInstallingLibraries, setIsInstallingLibraries] = useState(false);
-  const [showDevelopmentWarning, setShowDevelopmentWarning] = useState(true);
+  const [showDevelopmentWarning, setShowDevelopmentWarning] = useState(false);
 
   const getGames = async () => {
     try {
@@ -101,14 +101,29 @@ const App = () => {
     fetchData();
   }, []);
 
+  const checkHasLaunched = async () => {
+    try {
+      const hasLaunched = await window.electron.hasLaunched();
+      if (hasLaunched) {
+        console.log("Showing warn")
+        setShowDevelopmentWarning(true);
+      } else {
+        console.log("Launched already")
+        setShowDevelopmentWarning(false)
+      }
+    }
+    catch (error) {
+      console.error("Error checking if launched:" + error)
+    }
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         await getGames();
         await getSettings();
         await checkIsNew();
-        const isDevWarn = await window.electron.isDevWarn();
-        setShowDevelopmentWarning(!isDevWarn);
+        await checkHasLaunched();
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -223,14 +238,14 @@ const App = () => {
 
         <SettingsModal isOpen={isSettingsModalOpen} onOpenChange={toggleSettingsModal} />
         <ThemesModal isOpen={isThemesModalOpen} onOpenChange={toggleThemesModal} />
-        <Tabs isVertical isIconOnly aria-label="Options" color="secondary" variant="bordered" className="tabs">
-          <Tab key="browse" title={<BrowseIcon />}>
-            <BrowsePage />
-          </Tab>
+        <Tabs isVertical isIconOnly aria-label="Options" color="secondary" variant="light" className="tabs">
           <Tab key="games" title={<LibraryIcon />}>
             <div className='flex'>
               <LibraryPage />
             </div>
+          </Tab>
+          <Tab key="browse" title={<BrowseIcon />}>
+            <BrowsePage />
           </Tab>
         </Tabs>
         <Button isIconOnly color="default" size="sm" variant="light" className="configure-loc" onPress={toggleSettingsModal}>
