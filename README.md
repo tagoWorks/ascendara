@@ -19,27 +19,39 @@
 
 ## Download Ascendara right now! https://ascendara.app/
 
-# Building the app
-### Note: The Ascendara API requires a key which is private as of now. Game browsing will not function properly.
+# Building the app [(view wiki)](https://github.com/tagoWorks/ascendara/wiki/Running-as-a-Developer)
+> [!NOTE]  
+> The Ascendara API requires a key which is private as of now. Game browsing will not function properly. In `Browsing.jsx` replace the link "https://api.ascendara.app/json/games" with "https://api.ascendara.app/developer/json/games" for a preview game in order to make changes to the UI.
+1. Clone the repository
+    ```sh
+    git clone https://github.com/tagoWorks/ascendara.git
+    ```
 
-1. Build the React app
+2. Install requirements
+    ```sh
+    npm install -r
+    ```
+    
+3. Build the React app
     ```sh
     npm run build
     ```
     This will build the app in `src` into a single index, css, and js file. Look in `src/dist` for the files.
 
-2. In the dist, move the assets folder into the parent folder
+4. In the dist, move the assets folder into the parent folder
 
-3. In the index.html file of the built react app, you will see "assets/index.css", and "assets/index.js". Simply remove the "assets/" leaving just the file
+4. In the index.html file of the built react app, you will see "assets/index.css", and "assets/index.js". Simply remove the "assets/" leaving just the file
    name in the source.
 
-4. Move all files into the `build` directory
+6. Move all files into the `build` directory
 
-5. Build the Electron app
+7. In the main.js, go towards the bottom and delete `mainWindow.loadURL('http://localhost:5173/')`, and uncomment `mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));` in order to run correctly
+
+8. Build the Electron app
    ```sh
    npm run dist
    ```
-
+Open settings and click F5 for development tools
 
 # Development Roadmap
 
@@ -65,13 +77,14 @@
 - [ ] Create Retry Download & Extract
 - [ ] Add mulitple checks to alert if antivirus ruined a operation
 - [ ] Add older game versions
+- [ ] Sort by popularity
 
-### Ascendara Docs
+### [Ascendara Docs](https://github.com/tagoWorks/ascendara/wiki)
 - [x] Create Installation Guide for Ascendara
 - [x] Source and how it works
 - [ ] API Documentation
 - [x] Common Game Libraries & How to install
-- [ ] All game sources currently used
+- [x] All game sources currently used
 
 # License & Contact 📃
 This project is published under the [Apache License Version 2.0 License](./LICENSE)
