@@ -1,11 +1,12 @@
 /* This component has been modified to use the developer games list in for example games */
-/* Fetching the news and latest games list will not work. To get an API key contact tago */
+/* Fetching the latest news and games list will not work. To get an API key contact tago */
 /* This component is for version 5.7.5 */
 
 import React, { useState, useEffect } from "react";
 import { Button, Pagination, Spacer, Spinner, Modal, ModalBody, ModalFooter, ModalContent, ModalHeader, Tooltip } from "@nextui-org/react";
 import { HelpIcon } from "./GameSearch/svg/HelpIcon";
-import { FlameIcon } from "./GameSearch/svg/FlameIcon";
+/* this will be added back later */
+/* import { FlameIcon } from "./GameSearch/svg/FlameIcon"; */
 import { CheckmarkIcon } from "./GameSearch/svg/CheckmarkIcon";
 import "./GameSearch/browsing.css";
 import SearchBox from "./GameSearch/SearchBox";
@@ -39,7 +40,7 @@ const GameBrowse = () => {
   const handleForceRefresh = async () => {
     const currentTime = Date.now();
     if (forceRefreshTime && currentTime - forceRefreshTime < FORCE_REFRESH_INTERVAL) {
-      alert("You can only force refresh every 30 minutes.");
+      alert("Chill out! You can force refresh once every 60 seconds.");
       return;
     }
 
@@ -57,7 +58,7 @@ const GameBrowse = () => {
 
     localStorage.setItem(CACHE_KEY, JSON.stringify(data.games));
     localStorage.setItem(METADATA_KEY, JSON.stringify(data.metadata));
-    const expiryTime = Date.now() + 3600000;
+    const expiryTime = Date.now() + 60;
     localStorage.setItem(CACHE_EXPIRY_KEY, expiryTime.toString());
     setShowModal(false)
   };
@@ -70,6 +71,33 @@ const GameBrowse = () => {
   const handleCloseModal = () => {
     setShowModal(false);
   };
+  const fetchNews = async () => {
+    try {
+      const cachedNews = JSON.parse(localStorage.getItem(NEWS_CACHE_KEY));
+      const newsCacheExpiry = localStorage.getItem(NEWS_CACHE_EXPIRY_KEY);
+      if (cachedNews && newsCacheExpiry && Date.now() < parseInt(newsCacheExpiry)) {
+        setNews(cachedNews);
+        setNewsLoading(false);
+        setNewsError(false);
+      } else {
+        const response = await fetch("https://api.ascendara.app/developer/json/news", {
+        });
+        const data = await response.json();
+        setNews(data.news);
+        setNewsLoading(false);
+        setNewsError(false);
+
+        localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(data.news));
+        const expiryTime = Date.now() + 1200000;
+        localStorage.setItem(NEWS_CACHE_EXPIRY_KEY, expiryTime.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching news:", error);
+      setNewsError(true);
+      setNewsLoading(false);
+    }
+  };
+
   const updateCardsPerPage = () => {
     const width = window.innerWidth;
     const height = window.innerHeight;
@@ -128,6 +156,8 @@ const GameBrowse = () => {
           const expiryTime = Date.now() + 3600000;
           localStorage.setItem(CACHE_EXPIRY_KEY, expiryTime.toString());
         }
+  
+        fetchNews();
       } catch (error) {
         console.error("Error fetching games:", error);
         if (retryCount < 3) {
@@ -220,9 +250,6 @@ const GameBrowse = () => {
                   verified={game.verified ? (
                     <CheckmarkIcon className="fixed-icon-size" size={15} />
                   ) : null}
-                  popular={filteredGames.indexOf(game) < 8 ?
-                     <FlameIcon className="fixed-icon-size" size={15} /> 
-                     : null}
                 />
                 ))}
               </div>

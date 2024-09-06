@@ -10,7 +10,7 @@ require("dotenv").config()
 let rpc;
 let has_launched = false;
 
-const CURRENT_VERSION = "5.8.5";
+const CURRENT_VERSION = "5.8.6";
 
 
 // Initialize Discord RPC

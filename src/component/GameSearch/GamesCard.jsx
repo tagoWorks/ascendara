@@ -403,7 +403,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
                 >
                   <Tab key="with-extension" title="With Extension">
                     
-                    <p className="text-small">Make sure you have the <Link onClick={() => window.electron.openURL('https://ascendara.app/extension')}>Ascendara Download Blocker</Link> extension enabled!</p>
+                    <p className="text-small">Make sure you have the <Link className="show-pointer" onClick={() => window.electron.openURL('https://ascendara.app/extension')}>Ascendara Download Blocker</Link> extension enabled!</p>
                     <h2 className="text-large">Step 1. Copy and paste the link into your browser</h2>
                     <h2 className="text-large">Step 2. Complete the CAPTCHA and start the download</h2>
                     <h2 className="text-large">Step 3. The extension will stop the download and provide you the direct download link (DDL)</h2>
@@ -533,7 +533,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
         )}
 
 
-      <Modal isDismissable={false} hideCloseButton isOpen={showVerifyModal} onClose={() => setShowVerifyModal(false)}>
+      <Modal hideCloseButton isOpen={showVerifyModal} onClose={() => setShowVerifyModal(false)}>
         <ModalContent>
           <ModalHeader>Trust {game}?</ModalHeader>
           <ModalBody>
