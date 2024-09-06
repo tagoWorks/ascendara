@@ -59,7 +59,7 @@ const isValidURL = (url, provider) => {
   return containsProviderName;
 };
 
-const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dlc, icon }) => {
+const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dlc, verified, popular }) => {
   const [inputLink, setInputLink] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedProvider, setSelectedProvider] = useState("");
@@ -72,7 +72,26 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
   const [showNoDownloadPath, setShowNoDownloadPath] = useState(false);
   const [showDirectoryModal, setShowDirectoryModal] = useState(false);
   const [isStartingDownload, setIsStartingDownload] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [showGameModal, setShowGameModal] = useState(false);
   const [tabKey, setTabKey] = useState("with-extension");
+
+  const getToken = async () => {
+    const AUTHORIZATION = await window.electron.getAPIKey();
+    const response = await fetch("https://api.ascendara.app/auth/token", {
+      headers: {
+        Authorization: `Bearer ${AUTHORIZATION}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.token;
+    } else {
+      throw new Error("Failed to obtain token");
+    }
+  };
 
   const handleOpenReport = () => {
     setReportOpen(true);
@@ -80,6 +99,16 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
 
   const handleCloseReport = () => {
     setReportOpen(false);
+  };
+
+  const handleTrustGameClick = () => {
+    setShowGameModal(false);
+    setShowVerifyModal(true);
+  };
+
+  const handleNevermindClick = () => {
+    setShowVerifyModal(false);
+    setShowGameModal(true);
   };
 
   useEffect(() => {
@@ -92,6 +121,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
 
     window.handleDownloadLink = handleDownloadLink;
   }, [onOpen]);
+
 
   useEffect(() => {
     if (!isOpen) {
@@ -224,7 +254,6 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
     console.log(`Selected Provider: ${provider}`);
     console.log(`Selected Link: ${link}`);
   };
-
   
   return (
     <>
@@ -240,7 +269,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
               }}
             >
               <span style={{ display: "flex", alignItems: "center" }}>
-                {game} <Spacer x={1} /> {icon}
+                {game} <Spacer x={1} /> {verified} {popular}
               </span>
             </h4>
             <h5 className="text-small tracking-tight text-default-400">{version}</h5>
@@ -259,7 +288,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
           </div>
         </div>
         <Spacer x={2} />
-        {!isInstalled ? (
+          {!isInstalled ? (
           <Button
             aria-label="Download"
             color="primary"
@@ -273,16 +302,27 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
               <SeemlessDownloadIcon size="15px" />
             )}
           </Button>
-        ) : (
+        ) : verified ? (
           <Button
-            isDisabled
-            aria-label="Installed"
+            isDisabled={true}
+            aria-label="InstallTrusted"
             color="primary"
             variant="faded"
             radius="full"
             size="sm"
           >
             Installed
+          </Button>
+        ) : (
+          <Button
+            onClick={handleTrustGameClick}
+            aria-label="Installed"
+            color="primary"
+            variant="solid"
+            radius="full"
+            size="sm"
+          >
+            Trust this Game
           </Button>
         )}
       </CardHeader>
@@ -363,7 +403,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
                 >
                   <Tab key="with-extension" title="With Extension">
                     
-                    <p classname="text-small">Make sure you have the <Link onClick={() => window.electron.openURL('https://ascendara.app/extension')}>Ascendara Download Blocker</Link> extension enabled!</p>
+                    <p className="text-small">Make sure you have the <Link onClick={() => window.electron.openURL('https://ascendara.app/extension')}>Ascendara Download Blocker</Link> extension enabled!</p>
                     <h2 className="text-large">Step 1. Copy and paste the link into your browser</h2>
                     <h2 className="text-large">Step 2. Complete the CAPTCHA and start the download</h2>
                     <h2 className="text-large">Step 3. The extension will stop the download and provide you the direct download link (DDL)</h2>
@@ -386,7 +426,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
                   </Tab>
                 </Tabs>
                 <Spacer y={2} />
-                <h3 className="text-small text-default-400">Some providers may limit download speeds</h3>
+                <h3 className="text-small text-default-400"><b>Please note:</b> Certain providers may limit download speeds and the frequency of downloads</h3>
                 <Input
                   label="Enter the download link here"
                   value={inputLink}
@@ -402,6 +442,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
         </ModalBody>
             <ModalFooter>
             {selectedProvider ? (
+              <>
               <Button 
                 aria-label="StartDownloading" 
                 variant="ghost" 
@@ -418,6 +459,18 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
                   "Start Downloading"
                 )}
               </Button>
+              {!verified && (
+                <Button
+                  aria-label="VerifyGame" 
+                  variant="ghost" 
+                  color="primary"
+                  onClick={handleTrustGameClick}
+                  isDisabled={isVerifying}
+                >
+                  Trust this Game
+                </Button>
+              )}
+              </>
             ) : <></>}
           </ModalFooter>
         </ModalContent>
@@ -453,6 +506,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
           </ModalFooter>
         </ModalContent>
       </Modal>
+
         {isDownloadStarted && (
           <Modal
             isOpen={isDownloadStarted}
@@ -460,7 +514,6 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
             isDismissable={false}
             onClose={() => setIsDownloadStarted(false)}
             size="md"
-            className="fixed arial"
             classNames={{
               body: "py-6",
               backdrop: "bg-[#292f46]/50",
@@ -478,6 +531,64 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
             </ModalContent>
           </Modal>
         )}
+
+
+      <Modal isDismissable={false} hideCloseButton isOpen={showVerifyModal} onClose={() => setShowVerifyModal(false)}>
+        <ModalContent>
+          <ModalHeader>Trust {game}?</ModalHeader>
+          <ModalBody>
+            <p>If you've successfully downloaded and played this game before, it's likely to work 
+              for others too! By trusting this game, you're helping to let the Ascendara community 
+              know that it's been tested and works well. <br/>
+               <br/>
+              <b>Please note:</b> It may take up to 30 minutes for this change to take effect.</p>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              aria-label="VerifyGame" 
+              variant="ghost" 
+              color="primary"
+              onClick={async () => {
+                try {
+                  const games = await window.electron.getGames();
+                  const gameExists = games.some((gameItem) => gameItem.game === game);
+                  if (!gameExists) {
+                    console.log(`Game ${game} does not exist in the list of games. Trust request cancelled.`);
+                    return;
+                  }
+
+                  const token = await getToken();
+                  const response = await fetch("https://api.ascendara.app/app/trust", {
+                    method: "POST",
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ gameName: game }),
+                  });
+
+                  if (response.ok) {
+                    console.log("Game trusted successfully");
+                  } else {
+                    console.error("Error trusting game:", response.status);
+                  }
+                } catch (error) {
+                  console.error("Error trusting game:", error);
+                } finally {
+                  setShowVerifyModal(false);
+                }
+              }}
+              isDisabled={isVerifying}
+            >
+              {isVerifying ? <Spinner size="sm" /> : "I trust this game"}
+            </Button>
+            <Button color="danger" variant="ghost" onClick={handleNevermindClick}>
+              Nevermind
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
     </>
   );
 };

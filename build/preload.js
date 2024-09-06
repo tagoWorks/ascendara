@@ -25,6 +25,7 @@ contextBridge.exposeInMainWorld('electron', {
   openDirectoryDialog: () => ipcRenderer.invoke('open-directory-dialog'),
   openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
   getDownloadDirectory: () => ipcRenderer.invoke('get-download-directory'),
+  getGames: () => ipcRenderer.invoke('get-games'),
 
   // Download and Installation
   installDependencies: () => ipcRenderer.invoke('install-dependencies'),

@@ -1,15 +1,17 @@
 import React from "react";
+import { Tooltip } from "@nextui-org/react";
 
 export const CheckmarkIcon = ({
   fill = 'none',
   size,
   height,
   width,
-  stroke = 'currentColor',
-  strokeWidth = 32,
+  stroke = '#87CEEB',
+  strokeWidth = 128,
   ...props
 }) => {
   return (
+    <Tooltip content="Trusted by others on Ascendara">
     <svg
       width={size || width || 24}
       height={size || height || 24}
@@ -27,5 +29,6 @@ export const CheckmarkIcon = ({
         strokeWidth={strokeWidth}
       />
     </svg>
+    </Tooltip>
   );
 };

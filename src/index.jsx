@@ -239,13 +239,13 @@ const App = () => {
         <SettingsModal isOpen={isSettingsModalOpen} onOpenChange={toggleSettingsModal} />
         <ThemesModal isOpen={isThemesModalOpen} onOpenChange={toggleThemesModal} />
         <Tabs isVertical isIconOnly aria-label="Options" color="secondary" variant="light" className="tabs">
+        <Tab key="browse" title={<BrowseIcon />}>
+            <BrowsePage />
+          </Tab>
           <Tab key="games" title={<LibraryIcon />}>
             <div className='flex'>
               <LibraryPage />
             </div>
-          </Tab>
-          <Tab key="browse" title={<BrowseIcon />}>
-            <BrowsePage />
           </Tab>
         </Tabs>
         <Button isIconOnly color="default" size="sm" variant="light" className="configure-loc" onPress={toggleSettingsModal}>

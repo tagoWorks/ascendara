@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, Pagination, Spacer, Spinner, Modal, ModalBody, ModalFooter, ModalContent, ModalHeader, Tooltip } from "@nextui-org/react";
 import { HelpIcon } from "./GameSearch/svg/HelpIcon";
 import { FlameIcon } from "./GameSearch/svg/FlameIcon";
+import { CheckmarkIcon } from "./GameSearch/svg/CheckmarkIcon";
 import "./GameSearch/browsing.css";
 import SearchBox from "./GameSearch/SearchBox";
 import CardComponent from "./GameSearch/GamesCard";
@@ -114,8 +115,6 @@ const GameBrowse = () => {
       setNewsLoading(false);
     }
   };
-
-  
 
   const updateCardsPerPage = () => {
     const width = window.innerWidth;
@@ -271,7 +270,10 @@ const GameBrowse = () => {
                   dirlink={game.dirlink}
                   dlc={game.dlc}
                   downloadLinks={game.download_links}
-                  icon={filteredGames.indexOf(game) < 8 ?
+                  verified={game.verified ? (
+                    <CheckmarkIcon className="fixed-icon-size" size={15} />
+                  ) : null}
+                  popular={filteredGames.indexOf(game) < 8 ?
                      <FlameIcon className="fixed-icon-size" size={15} /> 
                      : null}
                 />

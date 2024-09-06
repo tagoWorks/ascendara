@@ -10,7 +10,7 @@ require("dotenv").config()
 let rpc;
 let has_launched = false;
 
-const CURRENT_VERSION = "5.7.5";
+const CURRENT_VERSION = "5.8.5";
 
 
 // Initialize Discord RPC
@@ -189,6 +189,7 @@ const deleteGameDirectory = async (game) => {
     console.error('Error deleting the game directory:', error);
   }
 };
+
 
 // Download the file
 ipcMain.handle('download-file', async (event, link, game, online, dlc, version) => {
@@ -466,8 +467,6 @@ ipcMain.handle('install-dependencies', async (event) => {
     isInstalling = false;
   }
 });
-
-
 
 ipcMain.handle('get-games', async () => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
