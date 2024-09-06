@@ -1,11 +1,12 @@
-{/* This component has been modified to use the developer games list in for example games */}
-{/* Fetching the news and latest games list will not work. To get an API key contact tago */}
-{/* This component is for version 5.7.5 */}
+/* This component has been modified to use the developer games list in for example games */
+/* Fetching the news and latest games list will not work. To get an API key contact tago */
+/* This component is for version 5.7.5 */
 
 import React, { useState, useEffect } from "react";
 import { Button, Pagination, Spacer, Spinner, Modal, ModalBody, ModalFooter, ModalContent, ModalHeader, Tooltip } from "@nextui-org/react";
 import { HelpIcon } from "./GameSearch/svg/HelpIcon";
 import { FlameIcon } from "./GameSearch/svg/FlameIcon";
+import { CheckmarkIcon } from "./GameSearch/svg/CheckmarkIcon";
 import "./GameSearch/browsing.css";
 import SearchBox from "./GameSearch/SearchBox";
 import CardComponent from "./GameSearch/GamesCard";
@@ -69,7 +70,6 @@ const GameBrowse = () => {
   const handleCloseModal = () => {
     setShowModal(false);
   };
-
   const updateCardsPerPage = () => {
     const width = window.innerWidth;
     const height = window.innerHeight;
@@ -128,7 +128,6 @@ const GameBrowse = () => {
           const expiryTime = Date.now() + 3600000;
           localStorage.setItem(CACHE_EXPIRY_KEY, expiryTime.toString());
         }
-
       } catch (error) {
         console.error("Error fetching games:", error);
         if (retryCount < 3) {
@@ -218,7 +217,10 @@ const GameBrowse = () => {
                   dirlink={game.dirlink}
                   dlc={game.dlc}
                   downloadLinks={game.download_links}
-                  icon={filteredGames.indexOf(game) < 8 ?
+                  verified={game.verified ? (
+                    <CheckmarkIcon className="fixed-icon-size" size={15} />
+                  ) : null}
+                  popular={filteredGames.indexOf(game) < 8 ?
                      <FlameIcon className="fixed-icon-size" size={15} /> 
                      : null}
                 />
