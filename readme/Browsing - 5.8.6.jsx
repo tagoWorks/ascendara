@@ -1,6 +1,6 @@
 /* This component has been modified to use the developer games list in for example games */
 /* Fetching the latest news and games list will not work. To get an API key contact tago */
-/* This component is for version 5.7.5 */
+/* This component is for version 5.8.6 */
 
 import React, { useState, useEffect } from "react";
 import { Button, Pagination, Spacer, Spinner, Modal, ModalBody, ModalFooter, ModalContent, ModalHeader, Tooltip } from "@nextui-org/react";
