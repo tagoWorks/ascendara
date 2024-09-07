@@ -9,9 +9,9 @@ const { spawn } = require('child_process');
 require("dotenv").config()
 let rpc;
 let has_launched = false;
+let is_latest = true;
 
-const CURRENT_VERSION = "5.8.6";
-
+const CURRENT_VERSION = "5.9.7";
 
 // Initialize Discord RPC
 const clientId = process.env.DISCKEY;;
@@ -33,35 +33,18 @@ rpc.login({ clientId }).catch(console.error);
 axios.get('https://api.ascendara.app/')
   .then(response => {
     const latest_version = response.data.appVer;
+    createWindow();
     if (latest_version !== CURRENT_VERSION) {
-      dialog.showMessageBox({
-        message: `Ascendara can not be automatically updated just yet. A newer version of Ascendara was found and in order to use Ascendara, you must download it. The installer will replace your current Ascendara version with the new one.`,
-        buttons: ['Update', 'Cancel'],
-      }).then((result) => {
-        if (result.response === 0) {
-          shell.openExternal('https://ascendara.app/');
-          app.quit();
-        } else if (result.response === 1) {
-          app.quit();
-        }
-      });
-      console.log(`Update available! Current version: ${CURRENT_VERSION}, Latest version: ${latest_version}`);
+      is_latest = false;
+      console.log(`Update available. Version: ${CURRENT_VERSION} < ${latest_version}`);
     } else {
-      console.log(`No update available. Current version: ${CURRENT_VERSION}`);
-      createWindow();
+      console.log(`No update available. Version: ${CURRENT_VERSION}`);
+      is_latest = true;
     }
   })
   .catch(error => {
-    console.error(error);
-    dialog.showMessageBox({
-      message: `Ascendara couldn't automatically check for an update.`,
-      buttons: ['View Status Page']
-    }).then((result) => {
-      if (result.response === 0) {
-        shell.openExternal('https://status.ascendara.app/');
-        app.quit();
-      }
-    });
+    is_latest = false;
+    console.error('Error checking for updates:', error);
   });
 
 let electronDl;
@@ -347,11 +330,37 @@ ipcMain.handle('has-launched', (event) => {
     return false;
   } else {
     has_launched = true;
+    // check ascnedarainstaller tempfile and delete if exists
+    const filePath = path.join(app.getPath('temp'), 'ascendarainstaller.exe');
+    try {
+      fs.unlinkSync(filePath);
+    }
+    catch (error) {
+      console.error(error);
+    }
     return true;
   }
 });
 
-
+ipcMain.handle('is-latest', (event) => {
+  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    const settings = JSON.parse(data);
+    if (!settings.autoUpdate) {
+      console.log('Auto update is disabled');
+      return true;
+    }
+    if (is_latest) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.error('Error reading the settings file:', error);
+    return true;
+  }
+});
 // Read the settings JSON file and send it to the renderer process
 ipcMain.handle('get-settings', () => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
@@ -370,7 +379,7 @@ ipcMain.handle('get-settings', () => {
         seamlessDownloads: true,
         enableNotifications: false,
         backgroundMotion: true,
-        autoUpdate: false,
+        autoUpdate: true,
         allowOldLinks: false,
         downloadDirectory: '',
       })
@@ -379,7 +388,7 @@ ipcMain.handle('get-settings', () => {
       seamlessDownloads: true,
       enableNotifications: false,
       backgroundMotion: true,
-      autoUpdate: false,
+      autoUpdate: true,
       allowOldLinks: false,
       downloadDirectory: '',
     };
@@ -499,6 +508,34 @@ ipcMain.handle('get-games', async () => {
   } catch (error) {
     console.error('Error reading the settings file:', error);
     return [];
+  }
+});
+
+ipcMain.handle('update-ascendara', async () => {
+  if (is_latest) {
+    return;
+  } else {
+    const updateUrl = 'https://lfs.ascendara.app/AscendaraInstaller.exe?update';
+    const tempDir = path.join(os.tmpdir(), 'ascendarainstaller');
+    const installerPath = path.join(tempDir, 'AscendaraInstaller.exe');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
+
+    // Download the installer
+    const res = await fetch(updateUrl);
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    fs.writeFileSync(installerPath, buffer);
+
+    const installerProcess = spawn(installerPath, [], { 
+      detached: true, 
+      stdio: 'ignore',
+      shell: true 
+    });
+
+    installerProcess.unref();
+    app.quit();
   }
 });
 

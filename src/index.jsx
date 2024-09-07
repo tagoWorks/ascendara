@@ -21,7 +21,8 @@ const App = () => {
   const [showNewModal, setShowNewModal] = useState(false);
   const [showNextModal, setShowNextModal] = useState(false);
   const [isInstallingLibraries, setIsInstallingLibraries] = useState(false);
-  const [showDevelopmentWarning, setShowDevelopmentWarning] = useState(false);
+  const [showUpdateWarning, setShowUpdateWarning] = useState(false);
+  const [isUpdatingAscendara, setIsUpdatingAscendara] = useState(false);
 
   const getGames = async () => {
     try {
@@ -105,11 +106,17 @@ const App = () => {
     try {
       const hasLaunched = await window.electron.hasLaunched();
       if (hasLaunched) {
-        console.log("Showing warn")
-        setShowDevelopmentWarning(true);
+        console.log("Checking for update...")
+        const isLatest = await window.electron.isLatest();
+        if (!isLatest) {
+          setShowUpdateWarning(true)
+          console.error("UPDATE AVAILABLE")
+        } else {
+          console.log("Up to date")
+        }
       } else {
         console.log("Launched already")
-        setShowDevelopmentWarning(false)
+        setShowUpdateWarning(false)
       }
     }
     catch (error) {
@@ -150,25 +157,31 @@ const App = () => {
     setShowNextModal(true);
   };
 
-  const closeDevelopmentWarning = () => {
-    setShowDevelopmentWarning(false);
+  const closeUpdateWarning = () => {
+    setShowUpdateWarning(false);
   };
 
   
-
   return (
     <NextUIProvider>
       <div className={`w-screen h-screen justify-center main-window ${backgroundMotion ? 'animate' : ''}`}>
-        <Modal isDismissable={false} hideCloseButton isOpen={showDevelopmentWarning} onClose={closeDevelopmentWarning}>
+        <Modal isDismissable={false} hideCloseButton isOpen={showUpdateWarning} onClose={closeUpdateWarning}>
           <ModalContent>
             <ModalHeader>
-              <h2>Warning</h2>
+              <h1>New Version Available!</h1>
             </ModalHeader>
             <ModalBody>
-              <p>This application is currently in heavy development. Expect many features to be incomplete or non-functional. Please report any issues you encounter.</p>
+              <p>There is a new update available. Please update in order to fix any issues there might be with this version as this project is still in development.</p>
+              <p>Join the <Link onClick={() => window.electron.openURL('https://ascendara.app/discord')} className="show-pointer">Discord server</Link> in order to be informed on the different changes taking place.</p>
             </ModalBody>
             <ModalFooter>
-              <Button variant='bordered' onClick={closeDevelopmentWarning}>Understood</Button>
+              <Button color="warning" onClick={() => {
+                  setShowUpdateWarning(false);
+                  setIsUpdatingAscendara(true);
+                  window.electron.updateAscendara();
+                  }}>
+                Download Update & Relaunch</Button>
+              <Button color='danger' variant='bordered' onClick={closeUpdateWarning}>Later...</Button>
             </ModalFooter>
           </ModalContent>
         </Modal>
@@ -229,6 +242,21 @@ const App = () => {
             <ModalBody>
               <p>The installer executables are going to be downloaded and ran. Please click "Yes" on for each elevated permissions prompt.</p>
               <p>After all dependencies are installed, this popup will close.</p>
+            </ModalBody>
+            <ModalFooter>
+              <Progress isIndeterminate color="secondary" />
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        <Modal isOpen={isUpdatingAscendara} onClose={() => setIsUpdatingAscendara(false)} hideCloseButton isDismissable={false}>
+          <ModalContent>
+            <ModalHeader>
+              <h2>Downloading the latest version...</h2>
+            </ModalHeader>
+            <ModalBody>
+              <p>The installer executable is going to be downloaded and ran.</p>
+              <p>When the installer runs, the app should close.</p>
             </ModalBody>
             <ModalFooter>
               <Progress isIndeterminate color="secondary" />

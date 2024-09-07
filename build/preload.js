@@ -41,6 +41,8 @@ contextBridge.exposeInMainWorld('electron', {
   setBackground: (color, gradient) => ipcRenderer.invoke('set-background', color, gradient),
 
   // Miscellaneous
+  isLatest: () => ipcRenderer.invoke('is-latest'),
+  updateAscendara: () => ipcRenderer.invoke('update-ascendara'),
   isNew: () => ipcRenderer.invoke('is-new'),
   openURL: (url) => ipcRenderer.invoke('open-url', url),
   openReqPath: (game) => ipcRenderer.invoke('required-libraries', game),

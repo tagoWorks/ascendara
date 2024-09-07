@@ -175,14 +175,13 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
                   <p className="text-small text-default-500">Links for older versions of games will be shown</p>
                 </Switch>
                 <Switch
-                  isDisabled
                   isSelected={autoUpdate}
                   value={enableNotifications}
                   onChange={handleAutoUpdateToggle}
                 >
-                  Automatically check for updates
-                  <p className="text-small text-default-500">Check Ascendara's server for newer versions, and <br/>
-                    notify when there is one</p>
+                  Check Version on Launch
+                  <p className="text-small text-default-500">Upon launching Ascendara, it will check <br/>
+                    servers and notify you if there is an update</p> 
                 </Switch>
                 <Input
                   onClick={handleSelectDirectory}
