@@ -94,11 +94,6 @@ const Library = () => {
         onClose={() => setShowDirectoryModal(false)}
         size="md"
         className="fixed arial"
-        classNames={{
-          body: "py-6",
-          backdrop: "bg-[#292f46]/50",
-          base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixedarial",
-        }}
       >
         <ModalContent>
           <ModalHeader>You can't do that yet...</ModalHeader>

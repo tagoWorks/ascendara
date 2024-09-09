@@ -133,7 +133,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
 
   return (
     <>
-      <Modal onClose={handleSave} size='5xl' isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange} placement="center" classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}}>
+      <Modal onClose={handleSave} size='5xl' isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange} placement="center">
         <ModalContent>
           {() => (
             <>
@@ -212,7 +212,6 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
         onOpenChange={handleOldLinksWarningClose}
         hideCloseButton
         placement="center"
-        classNames={{body: "py-6",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}}
       >
         <ModalContent>
           <ModalHeader>
@@ -234,7 +233,6 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
         hideCloseButton
         placement="center"
         isDismissable={false}
-        classNames={{body: "py-6",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}}
       >
         <ModalContent>
           <ModalHeader>

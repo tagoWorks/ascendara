@@ -294,7 +294,7 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
         removeWrapper
         alt={game}
         className="z-0 w-full h-full object-cover"
-        src={imgID ? `https://example.com/image/${imgID}` : '/no-image.png'}
+        src={imgID ? `https://api.ascendara.app/image/${imgID}` : '/no-image.png'}
       />
         <CardFooter className="absolute bg-black/40 bottom-0 z-10 border-default-600 dark:border-default-100">
         {!isInstalled ? (
@@ -336,7 +336,7 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
         )}
       </CardFooter>
     </Card>
-      <Modal isDismissable={false} isOpen={isOpen} onClose={onClose} size="5xl" className="fixed arial" classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial"}}>
+      <Modal isDismissable={false} isOpen={isOpen} onClose={onClose} size="5xl" className="fixed arial">
         <ModalContent>
           <ModalHeader>
               <div>
@@ -486,11 +486,6 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
         onClose={() => setShowDirectoryModal(false)}
         size="md"
         className="fixed arial"
-        classNames={{
-          body: "py-6",
-          backdrop: "bg-[#292f46]/50",
-          base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixedarial",
-        }}
       >
         <ModalContent>
           <ModalHeader>Hang on there!</ModalHeader>
@@ -519,11 +514,6 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
             isDismissable={false}
             onClose={() => setIsDownloadStarted(false)}
             size="md"
-            classNames={{
-              body: "py-6",
-              backdrop: "bg-[#292f46]/50",
-              base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",
-            }}
           >
             <ModalContent>
               <ModalHeader>Downloading {game}</ModalHeader>

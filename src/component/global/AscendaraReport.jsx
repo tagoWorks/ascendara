@@ -114,7 +114,6 @@ const ReportModal = ({ isReportOpen, onReportClose }) => {
       isOpen={isReportOpen}
       onClose={onReportClose}
       className="justify-center arial"
-      classNames={{body: "py-6",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}}
     >
       <ModalContent>
         <ModalHeader>Report a Bug</ModalHeader>

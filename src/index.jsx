@@ -259,14 +259,14 @@ const App = () => {
               <p>When the installer runs, the app should close.</p>
             </ModalBody>
             <ModalFooter>
-              <Progress isIndeterminate color="secondary" />
+              <Progress isIndeterminate color="none" />
             </ModalFooter>
           </ModalContent>
         </Modal>
 
         <SettingsModal isOpen={isSettingsModalOpen} onOpenChange={toggleSettingsModal} />
         <ThemesModal isOpen={isThemesModalOpen} onOpenChange={toggleThemesModal} />
-        <Tabs isVertical isIconOnly aria-label="Options" color="secondary" variant="light" className="tabs">
+        <Tabs isVertical isIconOnly aria-label="Options" color="default" variant="light" className="tabs">
         <Tab key="browse" title={<BrowseIcon />}>
             <BrowsePage />
           </Tab>

@@ -271,8 +271,8 @@ const GameBrowse = () => {
                   dirlink={game.dirlink}
                   dlc={game.dlc}
                   downloadLinks={game.download_links}
-                  verified={game.verified ? (
-                    <CheckmarkIcon className="fixed-icon-size" size={18} />
+                  verified={game.verified >=1 ? (
+                    <CheckmarkIcon count={game.verified} className="fixed-icon-size" size={18} />
                   ) : null}
                   popular={game.popular ? (
                     <FlameIcon className="fixed-icon-size" size={18} />
@@ -283,8 +283,8 @@ const GameBrowse = () => {
               <Spacer y={1} />
               {filteredGames.length > cardsPerPage && (
                 <Pagination
-                  variant="none"
-                  color="secondary"
+                  variant="light"
+                  color="default"
                   total={Math.ceil(filteredGames.length / cardsPerPage)}
                   isCompact
                   initialPage={1}
@@ -314,7 +314,7 @@ const GameBrowse = () => {
           ))
         )}
       </div>
-      <Modal hideCloseButton classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}} isOpen={showModal} onClose={handleCloseModal}>
+      <Modal hideCloseButton isOpen={showModal} onClose={handleCloseModal}>
         <ModalContent>
         <ModalHeader>Indexed Source</ModalHeader>
         <ModalBody>
