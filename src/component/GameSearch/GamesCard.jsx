@@ -6,7 +6,10 @@ import ReportModal from "./GameReport";
 import {
   Card,
   CardHeader,
+  CardBody,
+  CardFooter,
   Chip,
+  Image,
   Button,
   Spacer,
   Modal,
@@ -38,6 +41,9 @@ const isValidURL = (url, provider) => {
     case 'megadb':
       pattern = /^(https?:\/\/)([^\/?#]+)(?::(\d+))?(\/[^?#]*\/[^?#]*\/)([^?#]+)\.(?:zip|rar|7z)$/i;
       break;
+    case 'qiwi':
+      pattern = /^https:\/\/(spyderrock\.com\/[a-zA-Z0-9]+-[\w\s.-]+\.rar)$/i;
+      break;
     case 'buzzheavier':
       pattern = /^https:\/\/dl\.buzzheavier\.com\/\d+(?:\?.*?)?$/i;
       break;
@@ -59,7 +65,7 @@ const isValidURL = (url, provider) => {
   return containsProviderName;
 };
 
-const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dlc, verified, popular }) => {
+const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLinks, dlc, verified, popular }) => {
   const [inputLink, setInputLink] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedProvider, setSelectedProvider] = useState("");
@@ -141,7 +147,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
         setSelectedProvider("gofile");
         const gofileLink = downloadLinks["gofile"][0];
         setSelectedLink(gofileLink);
-        window.electron.downloadFile(gofileLink, game, online, dlc, version);
+        window.electron.downloadFile(gofileLink, game, online, dlc, version, imgID);
         setIsDownloadStarted(true);
         console.log(
           `SENDING LOAD: ${gofileLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`
@@ -210,7 +216,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
     
     setTimeout(() => {
       if (selectedProvider === 'gofile') {
-        window.electron.downloadFile(selectedLink, game, online, dlc, version);
+        window.electron.downloadFile(selectedLink, game, online, dlc, version, imgID);
         console.log(
           `SENDING LOAD: ${selectedLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`
         );
@@ -225,7 +231,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
           setIsStartingDownload(false);
           return;
         }
-        window.electron.downloadFile(inputLink, game, online, dlc, version);
+        window.electron.downloadFile(inputLink, game, online, dlc, version, imgID);
         console.log(
           `SENDING LOAD: ${inputLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`
         );
@@ -257,24 +263,20 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
   
   return (
     <>
-    <Card isBlurred className="browsingcards cardhover wrap px-5 border-none bg-background/60 dark:bg-default-100/50">
-      <CardHeader className="justify-between items-center">
-        <div className="flex gap-5">
-          <div className="flex flex-col gap-1 items-start justify-center">
-            <h4
-              className="text-small font-semibold leading-none text-default-600 flex items-center"
-              style={{
-                wordWrap: "break-word",
-                maxWidth: "20ch",
-              }}
-            >
-              <span style={{ display: "flex", alignItems: "center" }}>
-                {game} <Spacer x={1} /> {verified} {popular}
-              </span>
-            </h4>
-            <h5 className="text-small tracking-tight text-default-400">{version}</h5>
-          </div>
+    <Card isFooterBlurred className="col-span-12 sm:col-span-4 h-[180px] relative overflow-hidden">
+      <CardHeader className="absolute z-20 top-1 flex-col !items-start">
+        <div className="flex flex-wrap justify-center items-center gap-2 text-white">
+          <h4 style={{wordWrap: "break-word",maxWidth: "20ch"}} className="font-medium text-large">
+            {game}
+          </h4>
           <div className="flex items-center gap-2">
+            {verified}
+            {popular}
+          </div>
+        </div>
+        <p className="text-small text-white/40">{version}</p>
+        <Spacer y={1.4}/>
+        <div className="flex items-center gap-2">
             {online && (
               <Chip color="success" variant="shadow" size="sm">
                 ONLINE
@@ -286,13 +288,20 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
               </Chip>
             )}
           </div>
-        </div>
-        <Spacer x={2} />
-          {!isInstalled ? (
+      </CardHeader>
+      <div className="absolute inset-0 bg-black/70 z-10" />
+      <Image
+        removeWrapper
+        alt={game}
+        className="z-0 w-full h-full object-cover"
+        src={`https://api.ascendara.app/image/${imgID}`}
+      />
+        <CardFooter className="absolute bg-black/40 bottom-0 z-10 border-default-600 dark:border-default-100">
+        {!isInstalled ? (
+          
           <Button
             aria-label="Download"
-            color="primary"
-            variant="ghost"
+            variant="none"
             radius="full"
             size="sm"
             onClick={handleDownload}
@@ -307,7 +316,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
             isDisabled={true}
             aria-label="InstallTrusted"
             color="primary"
-            variant="faded"
+            variant="none"
             radius="full"
             size="sm"
           >
@@ -317,21 +326,17 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
           <Button
             onClick={handleTrustGameClick}
             aria-label="Installed"
-            color="primary"
-            variant="solid"
+            color="success"
+            variant="bordered"
             radius="full"
             size="sm"
           >
             Trust this Game
           </Button>
         )}
-      </CardHeader>
-      </Card>
-      <Modal isDismissable={false} isOpen={isOpen} onClose={onClose} size="5xl" className="fixed arial" classNames={{
-                    body: "py-6",
-                    backdrop: "bg-[#292f46]/50",
-                    base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",
-                  }}>
+      </CardFooter>
+    </Card>
+      <Modal isDismissable={false} isOpen={isOpen} onClose={onClose} size="5xl" className="fixed arial" classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial"}}>
         <ModalContent>
           <ModalHeader>
               <div>
@@ -533,7 +538,7 @@ const CardComponent = ({ game, online, version, size, dirlink, downloadLinks, dl
         )}
 
 
-      <Modal hideCloseButton isOpen={showVerifyModal} onClose={() => setShowVerifyModal(false)}>
+      <Modal hideCloseButton isOpen={showVerifyModal} classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial"}} onClose={() => setShowVerifyModal(false)}>
         <ModalContent>
           <ModalHeader>Trust {game}?</ModalHeader>
           <ModalBody>

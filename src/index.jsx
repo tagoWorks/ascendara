@@ -165,7 +165,7 @@ const App = () => {
   return (
     <NextUIProvider>
       <div className={`w-screen h-screen justify-center main-window ${backgroundMotion ? 'animate' : ''}`}>
-        <Modal isDismissable={false} hideCloseButton isOpen={showUpdateWarning} onClose={closeUpdateWarning}>
+        <Modal classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}} isDismissable={false} hideCloseButton isOpen={showUpdateWarning} onClose={closeUpdateWarning}>
           <ModalContent>
             <ModalHeader>
               <h1>New Version Available!</h1>
@@ -186,7 +186,7 @@ const App = () => {
           </ModalContent>
         </Modal>
 
-        <Modal isDismissable={false} hideCloseButton isOpen={showWelcomeModal} onClose={closeWelcomeModal}>
+        <Modal classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}} isDismissable={false} hideCloseButton isOpen={showWelcomeModal} onClose={closeWelcomeModal}>
           <ModalContent>
             <ModalHeader>
               <h2>Welcome to Ascendara!</h2>
@@ -201,7 +201,7 @@ const App = () => {
         </Modal>
 
         
-        <Modal isDismissable={false} hideCloseButton isOpen={showNewModal} onClose={closeNewModal}>
+        <Modal classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}} isDismissable={false} hideCloseButton isOpen={showNewModal} onClose={closeNewModal}>
           <ModalContent>
             <ModalHeader>
               <h2>Ascendara Extension</h2>
@@ -218,7 +218,7 @@ const App = () => {
         </Modal>
 
 
-        <Modal isDismissable={false} hideCloseButton isOpen={showNextModal} onClose={() => setShowNextModal(false)}>
+        <Modal classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}} isDismissable={false} hideCloseButton isOpen={showNextModal} onClose={() => setShowNextModal(false)}>
           <ModalContent>
             <ModalHeader>
               <h2>Game Dependencies</h2>
@@ -234,7 +234,7 @@ const App = () => {
           </ModalContent>
         </Modal>
         
-        <Modal isOpen={isInstallingLibraries} onClose={() => setIsInstallingLibraries(false)} hideCloseButton isDismissable={false}>
+        <Modal classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}} isOpen={isInstallingLibraries} onClose={() => setIsInstallingLibraries(false)} hideCloseButton isDismissable={false}>
           <ModalContent>
             <ModalHeader>
               <h2>Installing Dependencies...</h2>
@@ -249,7 +249,7 @@ const App = () => {
           </ModalContent>
         </Modal>
 
-        <Modal isOpen={isUpdatingAscendara} onClose={() => setIsUpdatingAscendara(false)} hideCloseButton isDismissable={false}>
+        <Modal classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial",}} isOpen={isUpdatingAscendara} onClose={() => setIsUpdatingAscendara(false)} hideCloseButton isDismissable={false}>
           <ModalContent>
             <ModalHeader>
               <h2>Downloading the latest version...</h2>

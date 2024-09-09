@@ -9,22 +9,22 @@ binaries/AscendaraGameHandler/make-exe.bat
 /src/dist
 /dist
 build/main-build.js
-binaries/AscendaraBackgroundTasks/make-exe.bat
 
 /binaries/AscendaraGameHandler/dist
 /binaries/AscendaraDownloader/dist
 
 /binaries/AscendaraDownloader/build
 /binaries/AscendaraGameHandler/build
-/binaries/AscendaraBackgroundTasks/build
 
 binaries/AscendaraDownloader/AscendaraDownloader.spec
 binaries/AscendaraGameHandler/AscendaraGameHandler.spec
 binaries/AscendaraDownloader/GoFileDownloader.spec
-binaries/AscendaraBackgroundTasks/AscendaraBackgroundTasks.spec
 
 package-lock.json
 /binaries/AscendaraDownloader/src/2.0/__pycache__
 exports.txt
 build/icon.ico
 build/header.txt
+
+# Sentry Config File
+.env.sentry-build-plugin

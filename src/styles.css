@@ -31,12 +31,8 @@
 }
 
 .main-window {
-  background-color: #131313;
   background-image: url("./bg.png");
-  background-size: 300% 300%;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  background-position: 0px -200px;
+  background-size: cover;
   font-family: lexenddeca;
   overflow-x: hidden;
 }

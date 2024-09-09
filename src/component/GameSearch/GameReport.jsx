@@ -167,6 +167,12 @@ const ReportModal = ({ isReportOpen, onReportClose, gameName }) => {
                 <AutocompleteItem value="linksnotworking">
                   A Link Is Not Working
                 </AutocompleteItem>
+                <AutocompleteItem value="image-error">
+                  An Image Isn't Loading/Correct
+                </AutocompleteItem>
+                <AutocompleteItem value="image-bad">
+                  An Image Is inappropriate
+                </AutocompleteItem>
               </Autocomplete>
               <Spacer y={5} />
               <Textarea

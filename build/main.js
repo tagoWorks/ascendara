@@ -11,7 +11,7 @@ let rpc;
 let has_launched = false;
 let is_latest = true;
 
-const CURRENT_VERSION = "5.9.7";
+const CURRENT_VERSION = "6.0.0";
 
 // Initialize Discord RPC
 const clientId = process.env.DISCKEY;;
@@ -175,49 +175,98 @@ const deleteGameDirectory = async (game) => {
 
 
 // Download the file
-ipcMain.handle('download-file', async (event, link, game, online, dlc, version) => {
+ipcMain.handle('download-file', async (event, link, game, online, dlc, version, imgID) => {
   console.log(`Downloading file: ${link}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`);
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-  const data = fs.readFileSync(filePath, 'utf8');
-  const settings = JSON.parse(data);
-  if (!settings.downloadDirectory) {
-    console.error('Download directory not set');
-    return;
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    const settings = JSON.parse(data);
+    if (!settings.downloadDirectory) {
+      console.error('Download directory not set');
+      return;
+    }
+    const gamesDirectory = settings.downloadDirectory;
+    const gameDirectory = path.join(gamesDirectory, game);
+    
+    if (!fs.existsSync(gameDirectory)) {
+      fs.mkdirSync(gameDirectory, { recursive: true });
+    }
+
+    const imageLink = `https://api.ascendara.app/image/${imgID}`;
+    axios({
+      url: imageLink,
+      method: 'GET',
+      responseType: 'arraybuffer'
+    }).then(response => {
+      const imageBuffer = Buffer.from(response.data);
+      const mimeType = response.headers['content-type'];
+      const extension = getExtensionFromMimeType(mimeType);
+      const downloadPath = path.join(gameDirectory, `${imgID}${extension}`);
+      const writer = fs.createWriteStream(downloadPath);
+
+      writer.write(imageBuffer);
+      writer.end();
+
+      writer.on('finish', () => {
+        console.log('Image downloaded successfully');
+        let executablePath;
+        let spawnCommand;
+
+        if (link.includes('gofile.io')) {
+          executablePath = path.join(appDirectory, '/resources/GoFileDownloader.exe');
+          spawnCommand = ["https://" + link, game, online, dlc, version, gamesDirectory];
+        } else {
+          executablePath = path.join(appDirectory, '/resources/AscendaraDownloader.exe');
+          spawnCommand = [link, game, online, dlc, version, gamesDirectory];
+        }
+        const gameDownloadProcess = spawn(executablePath, spawnCommand);
+
+        downloadProcesses.set(game, gameDownloadProcess);
+
+        gameDownloadProcess.stdout.on('data', (data) => {
+          console.log(`stdout: ${data}`);
+        });
+
+        gameDownloadProcess.stderr.on('data', (data) => {
+          console.error(`stderr: ${data}`);
+        });
+
+        gameDownloadProcess.on('close', (code) => {
+          console.log(`Game download process exited with code ${code}`);
+        });
+        axios.post('https://api.ascendara.app/stats/download', {
+          game: game,
+        })
+        .then(response => {
+          console.log('Download counter incremented successfully');
+        })
+        .catch(error => {
+          console.error('Error incrementing download counter:', error);
+        });
+      });
+
+      writer.on('error', (err) => {
+        console.error('Error downloading the image:', err);
+      });
+    }).catch(error => {
+      console.error('Error during image download request:', error);
+    });
+
+  } catch (error) {
+    console.error('Error reading the settings file:', error);
   }
-  const gamesDirectory = settings.downloadDirectory;
-  let executablePath;
-  let spawnCommand;
-  if (link.includes('gofile.io')) {
-    executablePath = path.join(appDirectory, '/resources/GoFileDownloader.exe');
-    spawnCommand = ["https://" + link, game, online, dlc, version, gamesDirectory];
-  } else {
-    executablePath = path.join(appDirectory, '/resources/AscendaraDownloader.exe');
-    spawnCommand = [link, game, online, dlc, version, gamesDirectory];
-  }
-  const downloadProcess = spawn(executablePath, spawnCommand);
-
-  downloadProcesses.set(game, downloadProcess);
-  downloadProcess.stdout.on('data', (data) => {
-    console.log(`stdout: ${data}`);
-  });
-
-  downloadProcess.stderr.on('data', (data) => {
-    console.error(`stderr: ${data}`);
-  });
-
-  downloadProcess.on('close', (code) => {
-    console.log(`child process exited with code ${code}`);
-  });
-  axios.post('https://api.ascendara.app/stats/download', {
-    game: game,
-  },)
-  .then(response => {
-    console.log('Download counter incremented successfully');
-  })
-  .catch(error => {
-    console.error('Error incrementing download counter:', error);
-  });
 });
+
+function getExtensionFromMimeType(mimeType) {
+  switch (mimeType) {
+    case 'image/jpeg':
+      return '.jpg';
+    case 'image/png':
+      return '.png';
+    default:
+      return '';
+  }
+}
 
 
 ipcMain.handle('check-retry-extract', async (event, game) => {

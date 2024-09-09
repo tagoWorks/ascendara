@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Button, Pagination, Spacer, Spinner, Modal, ModalBody, ModalFooter, ModalContent, ModalHeader, Tooltip } from "@nextui-org/react";
+import { Button, Pagination, Spacer, Spinner, Modal, ModalBody, ModalFooter, ModalContent, ModalHeader } from "@nextui-org/react";
 import { HelpIcon } from "./GameSearch/svg/HelpIcon";
-/* this will be added back later */
-/* import { FlameIcon } from "./GameSearch/svg/FlameIcon"; */
+import { FlameIcon } from "./GameSearch/svg/FlameIcon";
 import { CheckmarkIcon } from "./GameSearch/svg/CheckmarkIcon";
 import "./GameSearch/browsing.css";
 import SearchBox from "./GameSearch/SearchBox";
@@ -121,15 +120,15 @@ const GameBrowse = () => {
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    let cards = 10;
+    let cards = 6;
 
     if (width > 1600) {
-      const extraWidthCards = Math.floor((width - 1600) / 100) * 2;
+      const extraWidthCards = Math.floor((width - 1600) / 100) * 0;
       cards += extraWidthCards;
     }
 
     if (height > 800) {
-      const extraHeightCards = Math.floor((height - 800) / 100) * 3;
+      const extraHeightCards = Math.floor((height - 800) / 100) * 2;
       cards += extraHeightCards;
     }
 
@@ -177,7 +176,7 @@ const GameBrowse = () => {
   
           localStorage.setItem(CACHE_KEY, JSON.stringify(sortedGames));
           localStorage.setItem(METADATA_KEY, JSON.stringify(data.metadata));
-          const expiryTime = Date.now() + 3600000;
+          const expiryTime = Date.now() + 60;
           localStorage.setItem(CACHE_EXPIRY_KEY, expiryTime.toString());
         }
   
@@ -252,15 +251,15 @@ const GameBrowse = () => {
           <Spacer y={2}/>
         <div className="flex flex-col items-center gap-8">
         <Spacer y="3"/>
-          {loading ? (
-            <Spinner />
-          ) : error ? (
-            <ErrorCard message="Failed to load games. Please try again later." />
-          ) : currentGames.length === 0 ? (
-            <ErrorCard message="We couldn't find that game :(" />
-          ) : (
+        {loading ? (
+          <Spinner size="lg"/>
+        ) : error ? (
+          <ErrorCard message="Failed to load games. Please try again later." />
+        ) : currentGames.length === 0 ? (
+          <ErrorCard message="We couldn't find that game :(" />
+        ) : (
             <>
-              <div className="flex gap-1">
+              <div className="flex gap-3">
                 {currentGames.map((game, index) => (
                   <CardComponent
                   key={index}
@@ -268,11 +267,15 @@ const GameBrowse = () => {
                   online={game.online}
                   version={game.version}
                   size={game.size}
+                  imgID={game.imgID}
                   dirlink={game.dirlink}
                   dlc={game.dlc}
                   downloadLinks={game.download_links}
                   verified={game.verified ? (
-                    <CheckmarkIcon className="fixed-icon-size" size={15} />
+                    <CheckmarkIcon className="fixed-icon-size" size={18} />
+                  ) : null}
+                  popular={game.popular ? (
+                    <FlameIcon className="fixed-icon-size" size={18} />
                   ) : null}
                 />
                 ))}
@@ -324,7 +327,9 @@ const GameBrowse = () => {
           <Button variant="ghost" onClick={() => window.electron.openURL('https://github.com/tagoWorks/ascendara/wiki/Current-Sources')}>
             Read More
           </Button>
-          <Button variant="faded" onClick={handleForceRefresh}>
+          <Button variant="faded" onClick={() => {
+              handleForceRefresh();
+              window.location.reload();}}>
             Force Refresh
           </Button>
         </ModalFooter>
