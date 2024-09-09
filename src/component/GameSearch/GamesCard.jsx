@@ -294,7 +294,7 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
         removeWrapper
         alt={game}
         className="z-0 w-full h-full object-cover"
-        src={`https://api.ascendara.app/image/${imgID}`}
+        src={imgID ? `https://example.com/image/${imgID}` : '/no-image.png'}
       />
         <CardFooter className="absolute bg-black/40 bottom-0 z-10 border-default-600 dark:border-default-100">
         {!isInstalled ? (

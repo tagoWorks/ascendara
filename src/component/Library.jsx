@@ -89,6 +89,7 @@ const Library = () => {
       <GamesAddModal isOpen={isGamesModalOpen} onOpenChange={toggleGamesModal} />
       <Modal
         hideCloseButton
+        isDismissable
         isOpen={showDirectoryModal}
         onClose={() => setShowDirectoryModal(false)}
         size="md"
@@ -123,7 +124,7 @@ const Library = () => {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center">
           <NewLibrary />
           <Spacer y={5} />
-          <Button variant="ghost" onClick={toggleGamesModal}>
+          <Button color="secondary" variant="ghost" onClick={toggleGamesModal}>
             Add a Game
           </Button>
         </div>

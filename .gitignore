@@ -25,6 +25,4 @@ package-lock.json
 exports.txt
 build/icon.ico
 build/header.txt
-
-# Sentry Config File
-.env.sentry-build-plugin
+.DS_Store

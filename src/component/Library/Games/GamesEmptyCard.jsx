@@ -5,9 +5,9 @@ const CardComponent = () => {
   return (
     <Card className="py-4 px-4">
       <CardBody className="">
-            <h1 className="text-2-3 font">Almost there...</h1>
+            <h1 className="text-2-3 font">Getting ready to play...</h1>
         <Spacer y={2} />
-            <h2>Hang on while your game downloads and extracts</h2>
+            <p>Your game is downloading and preparing for launch. This could take a while.</p>
       </CardBody>
     </Card>
   );
