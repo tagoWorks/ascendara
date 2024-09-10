@@ -400,7 +400,7 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
                   selectedKey={tabKey}
                   onSelectionChange={setTabKey}
                   aria-label="Download Instructions"
-                  color="secondary"
+                  color="default"
                   className="extensiontab"
                   isVertical
                   variant="light"
