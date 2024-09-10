@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardHeader, CardFooter, Chip, Button, Spacer, CircularProgress, Dropdown, DropdownTrigger, DropdownMenu, DropdownSection, DropdownItem, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
+import { Card, CardHeader, CardBody, CardFooter, Chip, Button, Spacer, CircularProgress, Dropdown, DropdownTrigger, DropdownMenu, DropdownSection, DropdownItem, Modal, Image, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
 import { GamesSetting } from "./svg/ThreeDotsVerticle";
 import { DirectoryIcon } from "./svg/DirectoryIcon";
 import { UpdateIcon } from "./svg/UpdateIcon";
@@ -19,7 +19,18 @@ const CardComponent = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isUninstalling, setIsUninstalling] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [imageSrc, setImageSrc] = useState(null);
 
+  useEffect(() => {
+    const getImage = async () => {
+      const imageData = await window.electron.getGameImage(game);
+      if (imageData) {
+        setImageSrc(`data:image/jpeg;base64,${imageData}`);
+      }
+    };
+    getImage();
+  }, [game]);
+  
   useEffect(() => {
     const checkIfGameIsRunning = setInterval(async () => {
       const running = await window.electron.isGameRunning(game);
@@ -28,6 +39,7 @@ const CardComponent = ({
 
     return () => clearInterval(checkIfGameIsRunning);
   }, [game]);
+
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
@@ -76,9 +88,15 @@ const CardComponent = ({
     setGames(gamesData);
   };
 
+
   return (
     <>
-      <Card isBlurred className="cards py-4 px-5 cards bg-background/60 dark:bg-default-100/50">
+        <Card className="cards py-4 px-5">
+      <div 
+          className="absolute inset-0 bg-cover bg-center rounded-lg transition-transform duration-300 transform hover:scale-105"
+          style={{ backgroundImage: `url(${imageSrc})` }}
+        />
+        <div className="absolute inset-0 bg-black opacity-50"></div>
         <CardHeader>
           <div>
             <div className="flex flex-col gap-1 items-start justify-center">
@@ -114,6 +132,8 @@ const CardComponent = ({
             </div>
           </div>
         </CardHeader>
+        <CardBody>
+        </CardBody>
         <CardFooter>
           <Dropdown open={isOpen} onOpenChange={setIsOpen} isDisabled={isUninstalling}>
             <DropdownTrigger>
@@ -159,10 +179,10 @@ const CardComponent = ({
           <Spacer x={2} />
           {isUninstalling ? null : (
             <Button
-              color="success"
-              radius="full"
-              size="lg"
-              variant={isRunning ? "solid" : "ghost"}
+              color="primary"
+              radius="md"
+              size="md"
+              variant={isRunning ? "faded" : "solid"}
               spinner={isLoading ? <CircularProgress color="success" size="sm" /> : null}
               onClick={handlePlayGame}
               isLoading={isLoading}

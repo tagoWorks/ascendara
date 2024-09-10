@@ -119,7 +119,7 @@ const Library = () => {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center">
           <NewLibrary />
           <Spacer y={5} />
-          <Button color="secondary" variant="ghost" onClick={toggleGamesModal}>
+          <Button color="default" variant="ghost" onClick={toggleGamesModal}>
             Add a Game
           </Button>
         </div>

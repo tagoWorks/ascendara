@@ -95,7 +95,7 @@ const CardComponent = ({ game, online, dlc, version, dirlink, downloadingData })
           <CardFooter className="wrap justify-between items-center">
             <Progress
               value={downloadingData.progressCompleted}
-              color="secondary"
+              color="default"
             />
             <div className="flex py-2">
               <Chip color="default" variant="bordered" size="sm">
@@ -106,7 +106,7 @@ const CardComponent = ({ game, online, dlc, version, dirlink, downloadingData })
         ) : (
           <Progress
             isIndeterminate={hasError ? false : true}
-            color="secondary"
+            color="default"
           />
         )}
         {hasError ? (

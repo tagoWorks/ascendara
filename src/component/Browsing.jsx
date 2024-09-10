@@ -252,7 +252,7 @@ const GameBrowse = () => {
         <div className="flex flex-col items-center gap-8">
         <Spacer y="3"/>
         {loading ? (
-          <Spinner size="lg"/>
+          <Spinner color="white" size="lg"/>
         ) : error ? (
           <ErrorCard message="Failed to load games. Please try again later." />
         ) : currentGames.length === 0 ? (
@@ -299,7 +299,7 @@ const GameBrowse = () => {
       </div>
       <div className="news-container">
       {newsLoading ? (
-          <Spinner />
+          <Spinner color="white" />
         ) : newsError ? (
           <ErrorCard message="Failed to load news. Please try again later." />
         ) : news.length === 0 ? (

@@ -55,7 +55,6 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
       setSeamlessDownloads(settings.seamlessDownloads);
       setAllowOldLinks(settings.allowOldLinks);
       setDownloadDirectory(settings.downloadDirectory);
-      setBackgroundMotion(settings.backgroundMotion);
     });
   }, []);
 
@@ -68,11 +67,6 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
   const handleNotificationsToggle = (checked) => {
     console.log('Enable Notifications:', checked);
     setEnableNotifications((prevState) => !prevState);
-  };
-
-  const handleBackgroundMotionToggle = (checked) => {
-    console.log('Background Motion:', checked);
-    setBackgroundMotion((prevState) => !prevState);
   };
 
   const handleAllowOldLinksToggle = (checked) => {
@@ -104,8 +98,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
       enableNotifications,
       autoUpdate,
       splitTunnelDownloads,
-      seamlessDownloads,
-      backgroundMotion
+      seamlessDownloads
     };
     window.electron.saveSettings(options, downloadDirectory);
     onOpenChange(false);
@@ -133,7 +126,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
 
   return (
     <>
-      <Modal onClose={handleSave} size='5xl' isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange} placement="center">
+      <Modal onClose={handleSave} size='2xl' isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange} placement="center">
         <ModalContent>
           {() => (
             <>
@@ -156,14 +149,6 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
                   </div>
                   <p className="text-small text-default-500">When downloading a game, if the provider <br/>
                      doesn't require CAPTCHA, it will seamlessly start</p>
-                </Switch>
-                <Switch
-                  isSelected={backgroundMotion}
-                  value={backgroundMotion}
-                  onChange={handleBackgroundMotionToggle}
-                >
-                  Background Motion
-                  <p className="text-small text-default-500">Toggle the background gradient motion</p>
                 </Switch>
                 <Switch
                   isDisabled

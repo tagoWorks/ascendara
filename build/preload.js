@@ -39,6 +39,7 @@ contextBridge.exposeInMainWorld('electron', {
   // Background and UI
   getBackgrounds: () => ipcRenderer.invoke('get-backgrounds'),
   setBackground: (color, gradient) => ipcRenderer.invoke('set-background', color, gradient),
+  getGameImage: (game) => ipcRenderer.invoke('get-game-image', game),
 
   // Miscellaneous
   isLatest: () => ipcRenderer.invoke('is-latest'),

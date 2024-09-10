@@ -1,6 +1,6 @@
 {
   "name": "ascendara",
-  "version": "6.0.0",
+  "version": "6.1.1",
   "main": "main.js",
   "description": "Effortlessly install games directly onto your PC without the hassle of extractions or file locations.",
   "scripts": {
@@ -9,7 +9,7 @@
     "build-react": "npm run build && electron-builder",
     "electron": "electron ./build/main.js",
     "start": "concurrently \"npm run dev\" \"npm run electron\"",
-    "dist": "electron-builder -c.extraMetadata.main=build/main.js"
+    "dist": "electron-builder -c.extraMetadata.main=build/main-build.js"
   },
   "dependencies": {
     "@nextui-org/react": "latest",

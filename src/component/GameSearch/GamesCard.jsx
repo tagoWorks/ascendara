@@ -521,7 +521,7 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
                 <p>Hang on while {game} gets added to your downloads. Check the progress in the library soon.</p>
               </ModalBody>
               <ModalFooter>
-                <Progress color="secondary" isIndeterminate />
+                <Progress color="default" isIndeterminate />
               </ModalFooter>
             </ModalContent>
           </Modal>

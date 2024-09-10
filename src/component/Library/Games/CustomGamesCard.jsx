@@ -93,6 +93,7 @@ const CustomCardComponent = ({
           </div>
         </div>
       </CardHeader>
+      <div className="absolute inset-0 bg-black opacity-50"></div>
       <CardFooter>
         <Dropdown open={isOpen} onOpenChange={setIsOpen} isDisabled={isUninstalling}>
           <DropdownTrigger>
@@ -129,10 +130,10 @@ const CustomCardComponent = ({
         <Spacer x={2} />
         {isUninstalling ? null : (
           <Button
-            color="success"
-            radius="full"
-            size="lg"
-            variant={isRunning ? "solid" : "ghost"}
+            color="primary"
+            radius="md"
+            size="md"
+            variant={isRunning ? "faded" : "solid"}
             spinner={isLoading ? <CircularProgress color="success" size="sm" /> : null}
             onClick={handlePlayGame}
             isLoading={isLoading}

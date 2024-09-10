@@ -122,23 +122,6 @@ const ReportModal = ({ isReportOpen, onReportClose }) => {
             <p>Thank you for your help</p>
           ) : (
             <div>
-              <Card
-                classNames={{
-                  base: "border-[#292f46] bg-[#19172c] fixedarial",
-                }}
-              >
-                <CardBody style={{ display: "flex", alignItems: "center" }}>
-                  <WarningIcon fill="#FF4433" />
-                  <p className="text-small">
-                    When reporting a bug or issues with game info, your IP address
-                    will be obfuscated with a unique ID, and then temporarily stored
-                    in order to prevent spam.
-                  </p>
-                </CardBody>
-              </Card>
-
-              <Spacer y={5} />
-
               <Input
                   isRequired
                   label="What is it that you're reporting?"
