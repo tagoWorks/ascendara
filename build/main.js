@@ -11,7 +11,7 @@ let rpc;
 let has_launched = false;
 let is_latest = true;
 
-const CURRENT_VERSION = "6.1.1";
+const CURRENT_VERSION = "6.2.2";
 
 // Initialize Discord RPC
 const clientId = process.env.DISCKEY;;
@@ -233,7 +233,7 @@ ipcMain.handle('download-file', async (event, link, game, online, dlc, version, 
       const imageBuffer = Buffer.from(response.data);
       const mimeType = response.headers['content-type'];
       const extension = getExtensionFromMimeType(mimeType);
-      const downloadPath = path.join(gameDirectory, `header.ascendara.${extension}`);
+      const downloadPath = path.join(gameDirectory, `header.ascendara${extension}`);
       const writer = fs.createWriteStream(downloadPath);
 
       writer.write(imageBuffer);

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import TrustModal from "../../global/TrustModal";
 import { Card, CardHeader, CardBody, CardFooter, Chip, Button, Spacer, CircularProgress, Dropdown, DropdownTrigger, DropdownMenu, DropdownSection, DropdownItem, Modal, Image, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
 import { GamesSetting } from "./svg/ThreeDotsVerticle";
 import { DirectoryIcon } from "./svg/DirectoryIcon";
 import { UpdateIcon } from "./svg/UpdateIcon";
+import { TrustIcon } from "./svg/TrustIcon";
 import { ShortCutIcon } from "./svg/ShortCutIcon";
 import { DeleteIcon } from "./svg/DeleteIcon";
 import { EditIcon } from "./svg/EditIcon";
@@ -19,6 +21,7 @@ const CardComponent = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isUninstalling, setIsUninstalling] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isTrustModalOpen, setIsTrustModalOpen] = useState(false);
   const [imageSrc, setImageSrc] = useState(null);
 
   useEffect(() => {
@@ -55,7 +58,9 @@ const CardComponent = ({
     window.electron.deleteGame(game);
     window.location.reload();
   };
-
+  const handleTrustGameClick = () => {
+    setIsTrustModalOpen(true);
+  };
   const handleEditGame = async () => {
     const exePath = await window.electron.openFileDialog();
     if (exePath) {
@@ -143,6 +148,13 @@ const CardComponent = ({
             </DropdownTrigger>
             <DropdownMenu variant="faded" aria-label="Game Actions">
               <DropdownSection title="Actions">
+                <DropdownItem onClick={handleTrustGameClick} startContent={
+                  <div className="flex items-center justify-start">
+                    <TrustIcon className="text-xl text-default-500 pointer-events-none flex-shrink-0" />
+                  </div>
+                }>
+                  Trust this Game
+                </DropdownItem>
                   <DropdownItem isDisabled onClick={() => window.electron.createShortcut(game)} startContent={
                     <div className="flex items-center justify-start">
                       <ShortCutIcon className="text-xl text-default-500 pointer-events-none flex-shrink-0" />
@@ -183,7 +195,7 @@ const CardComponent = ({
               radius="md"
               size="md"
               variant={isRunning ? "faded" : "solid"}
-              spinner={isLoading ? <CircularProgress color="success" size="sm" /> : null}
+              spinner={isLoading ? <CircularProgress color="primary" size="sm" /> : null}
               onClick={handlePlayGame}
               isLoading={isLoading}
               disabled={isRunning}
@@ -193,6 +205,7 @@ const CardComponent = ({
         </CardFooter>
       </Card>
 
+      <TrustModal isOpen={isTrustModalOpen} onOpenChange={setIsTrustModalOpen} game={game}/>
       <Modal 
         isDismissable={false}
         hideCloseButton

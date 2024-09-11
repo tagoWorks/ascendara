@@ -154,8 +154,6 @@ class GofileDownloader:
 
     def _downloadContent(self, file_info, chunk_size=16384):
         filepath = os.path.join(self.download_dir, file_info["path"], file_info["filename"])
-        total_size = int(response.headers.get("Content-Length", 0))
-        self.total_size = total_size
         if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
             print(f"{filepath} already exists, skipping.{NEW_LINE}")
             return
@@ -224,16 +222,6 @@ class GofileDownloader:
                 speed = f"{rate / (1024 * 1024 * 1024):.2f} GB/s"
             
             self.game_info["downloadingData"]["progressDownloadSpeeds"] = speed
-            
-            # Calculate remaining time
-            if not done and rate > 0:
-                remaining_size = (100 - progress) / 100 * self.total_size
-                remaining_time = remaining_size / rate
-                hours, remainder = divmod(remaining_time, 3600)
-                minutes, seconds = divmod(remainder, 60)
-                self.game_info["downloadingData"]["timeUntilComplete"] = f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
-            else:
-                self.game_info["downloadingData"]["timeUntilComplete"] = "0s"
             
             if done:
                 print(f"\rDownloading {filename}: 100% Complete!{NEW_LINE}")

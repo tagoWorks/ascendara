@@ -78,6 +78,7 @@ const CardComponent = ({ game, online, dlc, version, dirlink, downloadingData })
             </div>
           </div>
         </CardHeader>
+        <div className="absolute inset-0 bg-black opacity-50"></div>
         <CardBody className="justify-between items-center">
           {isDownloading ? (
             <div className="py-3 flex gap-2">

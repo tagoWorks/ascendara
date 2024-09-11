@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { WarningIcon } from "../global/WarningIcon";
-
 import {
   Autocomplete,
   AutocompleteItem,

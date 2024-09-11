@@ -3,6 +3,7 @@ import { Progress } from "@nextui-org/react";
 import { ReportIcon } from "./ReportIcon";
 import { SeemlessDownloadIcon } from "./svg/SeemlessDownloadIcon"
 import ReportModal from "./GameReport";
+import TrustModal from "../global/TrustModal";
 import {
   Card,
   CardHeader,
@@ -71,33 +72,15 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
   const [selectedProvider, setSelectedProvider] = useState("");
   const [selectedLink, setSelectedLink] = useState("");
   const [isDownloadStarted, setIsDownloadStarted] = useState(false);
-  const [withExtension, setWithExtension] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [isReportOpen, setReportOpen] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [showNoDownloadPath, setShowNoDownloadPath] = useState(false);
   const [showDirectoryModal, setShowDirectoryModal] = useState(false);
   const [isStartingDownload, setIsStartingDownload] = useState(false);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
+  const [isTrustModalOpen, setIsTrustModalOpen] = useState(false);
   const [showGameModal, setShowGameModal] = useState(false);
   const [tabKey, setTabKey] = useState("with-extension");
-
-  const getToken = async () => {
-    const AUTHORIZATION = await window.electron.getAPIKey();
-    const response = await fetch("https://api.ascendara.app/auth/token", {
-      headers: {
-        Authorization: `Bearer ${AUTHORIZATION}`,
-      },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      return data.token;
-    } else {
-      throw new Error("Failed to obtain token");
-    }
-  };
 
   const handleOpenReport = () => {
     setReportOpen(true);
@@ -109,12 +92,7 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
 
   const handleTrustGameClick = () => {
     setShowGameModal(false);
-    setShowVerifyModal(true);
-  };
-
-  const handleNevermindClick = () => {
-    setShowVerifyModal(false);
-    setShowGameModal(true);
+    setIsTrustModalOpen(true);
   };
 
   useEffect(() => {
@@ -128,7 +106,6 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
     window.handleDownloadLink = handleDownloadLink;
   }, [onOpen]);
 
-
   useEffect(() => {
     if (!isOpen) {
       setInputLink("");
@@ -136,6 +113,7 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
       setSelectedLink("");
     }
   }, [isOpen]);
+
   const handleDownload = async () => {
     if (showNoDownloadPath) {
       setShowDirectoryModal(true);
@@ -311,27 +289,16 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
               <SeemlessDownloadIcon size="15px" />
             )}
           </Button>
-        ) : verified ? (
+        ) : (
           <Button
             isDisabled={true}
             aria-label="InstallTrusted"
             color="primary"
             variant="none"
-            radius="full"
+            radius="md"
             size="sm"
           >
             Installed
-          </Button>
-        ) : (
-          <Button
-            onClick={handleTrustGameClick}
-            aria-label="Installed"
-            color="success"
-            variant="bordered"
-            radius="full"
-            size="sm"
-          >
-            Trust this Game
           </Button>
         )}
       </CardFooter>
@@ -464,17 +431,14 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
                   "Start Downloading"
                 )}
               </Button>
-              {!verified && (
                 <Button
                   aria-label="VerifyGame" 
                   variant="ghost" 
                   color="primary"
                   onClick={handleTrustGameClick}
-                  isDisabled={isVerifying}
                 >
                   Trust this Game
                 </Button>
-              )}
               </>
             ) : <></>}
           </ModalFooter>
@@ -506,7 +470,7 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
           </ModalFooter>
         </ModalContent>
       </Modal>
-
+      <TrustModal isOpen={isTrustModalOpen} onOpenChange={setIsTrustModalOpen} game={game}/>
         {isDownloadStarted && (
           <Modal
             isOpen={isDownloadStarted}
@@ -526,63 +490,6 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
             </ModalContent>
           </Modal>
         )}
-
-
-      <Modal hideCloseButton isOpen={showVerifyModal} classNames={{body: "py-6",backdrop: "bg-[#292f46]/50",base: "border-[#292f46] bg-[#19172c] dark:bg-[#19172c] fixed arial"}} onClose={() => setShowVerifyModal(false)}>
-        <ModalContent>
-          <ModalHeader>Trust {game}?</ModalHeader>
-          <ModalBody>
-            <p>If you've successfully downloaded and played this game before, it's likely to work 
-              for others too! By trusting this game, you're helping to let the Ascendara community 
-              know that it's been tested and works well. <br/>
-               <br/>
-              <b>Please note:</b> It may take up to 30 minutes for this change to take effect.</p>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              aria-label="VerifyGame" 
-              variant="ghost" 
-              color="primary"
-              onClick={async () => {
-                try {
-                  const games = await window.electron.getGames();
-                  const gameExists = games.some((gameItem) => gameItem.game === game);
-                  if (!gameExists) {
-                    console.log(`Game ${game} does not exist in the list of games. Trust request cancelled.`);
-                    return;
-                  }
-
-                  const token = await getToken();
-                  const response = await fetch("https://api.ascendara.app/app/trust", {
-                    method: "POST",
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ gameName: game }),
-                  });
-
-                  if (response.ok) {
-                    console.log("Game trusted successfully");
-                  } else {
-                    console.error("Error trusting game:", response.status);
-                  }
-                } catch (error) {
-                  console.error("Error trusting game:", error);
-                } finally {
-                  setShowVerifyModal(false);
-                }
-              }}
-              isDisabled={isVerifying}
-            >
-              {isVerifying ? <Spinner size="sm" /> : "I trust this game"}
-            </Button>
-            <Button color="danger" variant="ghost" onClick={handleNevermindClick}>
-              Nevermind
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
 
     </>
   );

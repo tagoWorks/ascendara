@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Switch, Input, Spacer, RadioGroup, Radio, Dropdown, DropdownTrigger, DropdownItem, DropdownMenu } from "@nextui-org/react";
 import ReportModal from './AscendaraReport';
-import { WarningIcon } from './WarningIcon';
 import  { SeemlessDownloadIcon } from '../GameSearch/svg/SeemlessDownloadIcon'
 
 const SettingsModal = ({ isOpen, onOpenChange }) => {

@@ -1,6 +1,6 @@
 {
   "name": "ascendara",
-  "version": "6.1.1",
+  "version": "6.2.2",
   "main": "main.js",
   "description": "Effortlessly install games directly onto your PC without the hassle of extractions or file locations.",
   "scripts": {
