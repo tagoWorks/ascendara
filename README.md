@@ -77,7 +77,7 @@ Open settings and click F5 for development tools
 - [ ] Create Retry Download & Extract
 - [ ] Add mulitple checks to alert if antivirus ruined a operation
 - [ ] Add older game versions
-- [ ] Sort by popularity
+- [x] Sort by popularity
 
 ### [Ascendara Docs](https://github.com/tagoWorks/ascendara/wiki)
 - [x] Create Installation Guide for Ascendara
