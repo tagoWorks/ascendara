@@ -1,6 +1,6 @@
-/* This component has been modified to use the developer games list in for example games */
+/* This component has been modified to use the developer data for games list & news */
 /* Fetching the latest news and games list will not work. To get an API key contact tago */
-/* This component is for version 6.2.2 */
+/* This component is for version 6.2.3 */
 
 import React, { useState, useEffect } from "react";
 import { Button, Pagination, Spacer, Spinner, Modal, ModalBody, ModalFooter, ModalContent, ModalHeader } from "@nextui-org/react";
@@ -70,6 +70,7 @@ const GameBrowse = () => {
   const handleCloseModal = () => {
     setShowModal(false);
   };
+
   const fetchNews = async () => {
     try {
       const cachedNews = JSON.parse(localStorage.getItem(NEWS_CACHE_KEY));
