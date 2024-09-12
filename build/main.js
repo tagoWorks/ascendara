@@ -11,7 +11,7 @@ let rpc;
 let has_launched = false;
 let is_latest = true;
 
-const CURRENT_VERSION = "6.2.2";
+const CURRENT_VERSION = "6.2.3";
 
 // Initialize Discord RPC
 const clientId = process.env.DISCKEY;;
@@ -207,8 +207,8 @@ ipcMain.handle('get-game-image', async (event, game) => {
 
 
 // Download the file
-ipcMain.handle('download-file', async (event, link, game, online, dlc, version, imgID) => {
-  console.log(`Downloading file: ${link}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`);
+ipcMain.handle('download-file', async (event, link, game, online, dlc, version, imgID, size) => {
+  console.log(`Downloading file: ${link}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}, size: ${size}`);
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
   try {
     const data = fs.readFileSync(filePath, 'utf8');
@@ -246,10 +246,11 @@ ipcMain.handle('download-file', async (event, link, game, online, dlc, version, 
 
         if (link.includes('gofile.io')) {
           executablePath = path.join(appDirectory, '/resources/GoFileDownloader.exe');
-          spawnCommand = ["https://" + link, game, online, dlc, version, gamesDirectory];
+          spawnCommand = ["https://" + link, game, online, dlc, version, size, gamesDirectory];
         } else {
           executablePath = path.join(appDirectory, '/resources/AscendaraDownloader.exe');
-          spawnCommand = [link, game, online, dlc, version, gamesDirectory];
+          spawnCommand = [link, game, online, dlc, version, size, gamesDirectory];
+          console.log(spawnCommand)
         }
         const gameDownloadProcess = spawn(executablePath, spawnCommand);
 
@@ -617,6 +618,30 @@ ipcMain.handle('update-ascendara', async () => {
     app.quit();
   }
 });
+
+ipcMain.handle('uninstall-ascendara', async () => {
+  const executablePath = process.execPath;
+  const executableDir = path.dirname(executablePath);
+  const uninstallerPath = path.join(executableDir + "\\Uninstall Ascendara.exe");
+  const timestampFilePath = path.join(app.getPath('home'), 'timestamp.ascendara.json');
+  try {
+    fs.unlinkSync(timestampFilePath);
+  } catch (error) {
+    console.error('Error deleting timestamp file:', error);
+  }
+  const settingsFilePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  try {
+    fs.unlinkSync(settingsFilePath);
+  } catch (error) {
+    console.error('Error deleting settings file:', error);
+  }
+  shell.openExternal("https://ascendara.app/uninstall");
+  const process = spawn('powershell.exe', ['-Command', `Start-Process -FilePath "${uninstallerPath}" -Verb RunAs -Wait`], { shell: true });
+  process.on('error', (error) => {
+    reject(error);
+  });
+});
+
 
 ipcMain.handle('save-custom-game', async (event, game, online, dlc, version, executable) => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');

@@ -25,6 +25,8 @@ contextBridge.exposeInMainWorld('electron', {
   openDirectoryDialog: () => ipcRenderer.invoke('open-directory-dialog'),
   openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
   getDownloadDirectory: () => ipcRenderer.invoke('get-download-directory'),
+  getTotalSpace: () => ipcRenderer.invoke('get-total-space'),
+  getSpaceUsed: () => ipcRenderer.invoke('get-space-used'),
   getGames: () => ipcRenderer.invoke('get-games'),
 
   // Download and Installation
@@ -32,7 +34,7 @@ contextBridge.exposeInMainWorld('electron', {
   killDownload: (game) => ipcRenderer.invoke('stop-download', game),
   killAllDownloads: () => ipcRenderer.invoke('stop-all-downloads'),
   retryDownload: (link, game, online, dlc, version) => ipcRenderer.invoke('retry-download', link, game, online, dlc, version),
-  downloadFile: (link, game, online, dlc, version, imgID) => ipcRenderer.invoke('download-file', link, game, online, dlc, version, imgID),
+  downloadFile: (link, game, online, dlc, version, imgID, size) => ipcRenderer.invoke('download-file', link, game, online, dlc, version, imgID, size),
   checkRetryExtract: (game) => ipcRenderer.invoke('check-retry-extract', game),
   retryExtract: (game, online, dlc, version) => ipcRenderer.invoke('retry-extract', game, online, dlc, version),
 
@@ -44,6 +46,7 @@ contextBridge.exposeInMainWorld('electron', {
   // Miscellaneous
   isLatest: () => ipcRenderer.invoke('is-latest'),
   updateAscendara: () => ipcRenderer.invoke('update-ascendara'),
+  uninstallAscendara: () => ipcRenderer.invoke('uninstall-ascendara'),
   isNew: () => ipcRenderer.invoke('is-new'),
   openURL: (url) => ipcRenderer.invoke('open-url', url),
   openReqPath: (game) => ipcRenderer.invoke('required-libraries', game),

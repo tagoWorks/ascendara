@@ -24,7 +24,7 @@ def sanitize_folder_name(name):
     sanitized_name = ''.join(c for c in name if c in valid_chars)
     return sanitized_name
 
-def retryfolder(game, online, dlc, version, download_dir, newfolder):
+def retryfolder(game, online, dlc, version, size, download_dir, newfolder):
     game_info_path = os.path.join(download_dir, f"{game}.ascendara.json")
     newfolder = sanitize_folder_name(newfolder)
 
@@ -33,6 +33,7 @@ def retryfolder(game, online, dlc, version, download_dir, newfolder):
         "online": online,
         "dlc": dlc,
         "version": version if version else "",
+        "size": size,
         "executable": os.path.join(download_dir, f"{game}.exe"),
         "isRunning": False,
         "downloadingData": {
@@ -101,10 +102,10 @@ class SSLContextAdapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
         context = ssl.create_default_context()
         context.set_ciphers('DEFAULT@SECLEVEL=1')
-        kwargs['ssl_context'] = context
+        kwargs['ssl_context'] = context 
         return super().init_poolmanager(*args, **kwargs)
 
-def download_file(link, game, online, dlc, version, download_dir):
+def download_file(link, game, online, dlc, version, size, download_dir):
     game = sanitize_folder_name(game)
     download_path = os.path.join(download_dir, game)
     os.makedirs(download_path, exist_ok=True)
@@ -116,6 +117,7 @@ def download_file(link, game, online, dlc, version, download_dir):
         "online": online,
         "dlc": dlc,
         "version": version if version else "",
+        "size": size,
         "executable": os.path.join(download_path, f"{game}.exe"),
         "isRunning": False,
         "downloadingData": {
@@ -245,11 +247,12 @@ def main():
     parser.add_argument("online", type=parse_boolean, help="Is the game online (true/false)?")
     parser.add_argument("dlc", type=parse_boolean, help="Is DLC included (true/false)?")
     parser.add_argument("version", help="Version of the game")
+    parser.add_argument("size", help="Size of the file in (ex: 12 GB, 439 MB)")
     parser.add_argument("download_dir", help="Directory to save the downloaded files")
 
     args = parser.parse_args()
 
-    download_file(args.link, args.game, args.online, args.dlc, args.version, args.download_dir)
+    download_file(args.link, args.game, args.online, args.dlc, args.version, args.size, args.download_dir)
 
 if __name__ == "__main__":
     main()

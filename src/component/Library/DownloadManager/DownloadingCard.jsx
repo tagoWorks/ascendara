@@ -126,10 +126,10 @@ const CardComponent = ({ game, online, dlc, version, dirlink, downloadingData })
                 <DropdownMenu className='justify-center'>
                   <DropdownSection>
                     <DropdownItem variant='flat' color='default' aria-label='Confirm' description='Attempt to redownload the game and extract again.' onClick={handleRetryDownload}>
-                      Re-download & Extract
+                      Retry Download
                     </DropdownItem>
                     {!window.electron.checkRetryExtract(game) && (
-                      <DropdownItem variant='flat' color='default' aria-label='Confirm' description={'Selected the extracted game folder.'} onClick={handleRetryFolderExtract}>
+                      <DropdownItem variant='flat' color='default' aria-label='Confirm' description='Select the extracted game folder.' onClick={handleRetryFolderExtract}>
                         Select Game Folder
                       </DropdownItem>
                     )}

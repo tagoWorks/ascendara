@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import TrustModal from "../../global/TrustModal";
-import { Card, CardHeader, CardBody, CardFooter, Chip, Button, Spacer, CircularProgress, Dropdown, DropdownTrigger, DropdownMenu, DropdownSection, DropdownItem, Modal, Image, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
+import { Card, CardHeader, CardBody, CardFooter, Chip, Button, Spacer, Spinner, Dropdown, DropdownTrigger, DropdownMenu, DropdownSection, DropdownItem, Modal, Image, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
 import { GamesSetting } from "./svg/ThreeDotsVerticle";
 import { DirectoryIcon } from "./svg/DirectoryIcon";
 import { UpdateIcon } from "./svg/UpdateIcon";
@@ -195,12 +195,11 @@ const CardComponent = ({
               radius="md"
               size="md"
               variant={isRunning ? "faded" : "solid"}
-              spinner={isLoading ? <CircularProgress color="primary" size="sm" /> : null}
               onClick={handlePlayGame}
-              isLoading={isLoading}
               disabled={isRunning}
             >
               {isRunning ? "PLAYING" : "PLAY"}
+              {isLoading ? <Spinner color="default" size="sm" /> : null}
             </Button>)}
         </CardFooter>
       </Card>

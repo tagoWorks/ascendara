@@ -13,6 +13,8 @@ const Library = () => {
   const [isGamesModalOpen, setIsGamesModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showDirectoryModal, setShowDirectoryModal] = useState(false);
+  const [totalSpace, setTotalSpace] = useState(0);
+  const [spaceUsed, setSpaceUsed] = useState(0);
   const gamesPerPage = 6;
 
   const toggleGamesModal = async () => {  
@@ -65,6 +67,21 @@ const Library = () => {
       console.error("Error fetching custom games:", error);
     }
   };
+
+
+  const getSpaceStats = async () => {
+    try {
+      const totalSpaceValue = await window.electron.getTotalSpace();
+      setTotalSpace(totalSpaceValue);
+      const spaceUsedValue = await window.electron.getSpaceUsed();
+      setSpaceUsed(spaceUsedValue);
+    } catch (error) {
+      console.error("Error fetching space stats:", error);
+    }
+  };
+
+  /* useEffect(() => {getSpaceStats();}); */
+
 
   useEffect(() => {
     getGames();

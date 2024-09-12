@@ -48,7 +48,7 @@ def handleerror(game_info, game_info_path, e):
     safe_write_json(game_info_path, game_info)
 
 class GofileDownloader:
-    def __init__(self, game, online, dlc, version, download_dir, max_workers=5):
+    def __init__(self, game, online, dlc, version, size, download_dir, max_workers=5):
         self._token = self._getToken()
         self._max_workers = max_workers
         self._lock = Lock()
@@ -56,6 +56,7 @@ class GofileDownloader:
         self.online = online
         self.dlc = dlc
         self.version = version
+        self.size = size
         self.download_dir = os.path.join(download_dir, game)
         os.makedirs(self.download_dir, exist_ok=True)
         self.game_info_path = os.path.join(self.download_dir, f"{game}.ascendara.json")
@@ -64,6 +65,7 @@ class GofileDownloader:
             "online": online,
             "dlc": dlc,
             "version": version if version else "",
+            "size": size,
             "executable": os.path.join(self.download_dir, f"{game}.exe"),
             "isRunning": False,
             "downloadingData": {
@@ -297,13 +299,14 @@ def main():
     parser.add_argument("online", type=parse_boolean, help="Is the game online (true/false)?")
     parser.add_argument("dlc", type=parse_boolean, help="Is DLC included (true/false)?")
     parser.add_argument("version", help="Version of the game")
+    parser.add_argument("size", help="Size of the file in (ex: 12 GB, 439 MB)")
     parser.add_argument("download_dir", help="Directory to save the downloaded files")
     parser.add_argument("--password", help="Password for protected content", default=None)
 
     args = parser.parse_args()
 
     try:
-        downloader = GofileDownloader(args.game, args.online, args.dlc, args.version, args.download_dir)
+        downloader = GofileDownloader(args.game, args.online, args.dlc, args.version, args.size, args.download_dir)
         downloader.download_from_gofile(args.url, args.password)
     except Exception as e:
         handleerror(downloader.game_info, downloader.game_info_path, e)

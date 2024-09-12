@@ -68,7 +68,8 @@ const TrustModal = ({ isOpen, onOpenChange, game }) => {
         <ModalBody>
           <p>If you've successfully downloaded and played this game before, it's likely to work 
             for others too! By trusting this game, you're helping to let the Ascendara community 
-            know that it's been tested and works well. <br/>
+            know that it's been tested and works well. Trusting a game you already trusted in the
+            past does nothing.<br/>
             <br/>
             <b>Please note:</b> It may take up to 30 minutes for this change to take effect.</p>
         </ModalBody>

@@ -78,8 +78,6 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
   const [showNoDownloadPath, setShowNoDownloadPath] = useState(false);
   const [showDirectoryModal, setShowDirectoryModal] = useState(false);
   const [isStartingDownload, setIsStartingDownload] = useState(false);
-  const [isTrustModalOpen, setIsTrustModalOpen] = useState(false);
-  const [showGameModal, setShowGameModal] = useState(false);
   const [tabKey, setTabKey] = useState("with-extension");
 
   const handleOpenReport = () => {
@@ -88,11 +86,6 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
 
   const handleCloseReport = () => {
     setReportOpen(false);
-  };
-
-  const handleTrustGameClick = () => {
-    setShowGameModal(false);
-    setIsTrustModalOpen(true);
   };
 
   useEffect(() => {
@@ -125,10 +118,10 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
         setSelectedProvider("gofile");
         const gofileLink = downloadLinks["gofile"][0];
         setSelectedLink(gofileLink);
-        window.electron.downloadFile(gofileLink, game, online, dlc, version, imgID);
+        window.electron.downloadFile(gofileLink, game, online, dlc, version, imgID, size);
         setIsDownloadStarted(true);
         console.log(
-          `SENDING LOAD: ${gofileLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`
+          `SENDING LOAD: ${gofileLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}, size: ${size}`
         );
       } else {
         onOpen();
@@ -194,9 +187,9 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
     
     setTimeout(() => {
       if (selectedProvider === 'gofile') {
-        window.electron.downloadFile(selectedLink, game, online, dlc, version, imgID);
+        window.electron.downloadFile(selectedLink, game, online, dlc, version, imgID, size);
         console.log(
-          `SENDING LOAD: ${selectedLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`
+          `SENDING LOAD: ${selectedLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}, size: ${size}`
         );
       } else {
         if (inputLink.trim() === '') {
@@ -209,9 +202,9 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
           setIsStartingDownload(false);
           return;
         }
-        window.electron.downloadFile(inputLink, game, online, dlc, version, imgID);
+        window.electron.downloadFile(inputLink, game, online, dlc, version, imgID, size);
         console.log(
-          `SENDING LOAD: ${inputLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}`
+          `SENDING LOAD: ${inputLink}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}, size: ${size}`
         );
       }
       
@@ -431,14 +424,6 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
                   "Start Downloading"
                 )}
               </Button>
-                <Button
-                  aria-label="VerifyGame" 
-                  variant="ghost" 
-                  color="primary"
-                  onClick={handleTrustGameClick}
-                >
-                  Trust this Game
-                </Button>
               </>
             ) : <></>}
           </ModalFooter>
@@ -470,7 +455,6 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
           </ModalFooter>
         </ModalContent>
       </Modal>
-      <TrustModal isOpen={isTrustModalOpen} onOpenChange={setIsTrustModalOpen} game={game}/>
         {isDownloadStarted && (
           <Modal
             isOpen={isDownloadStarted}
