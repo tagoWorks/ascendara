@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { Tabs, Tab, Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Progress, Link } from "@nextui-org/react";
+import { Tabs, Tab, Button, Modal, ModalContent, ModalHeader, ModalBody, Checkbox, ModalFooter, Progress, Link } from "@nextui-org/react";
 import "./styles.css";
 import LibraryPage from "./component/Library";
 import BrowsePage from "./component/Browsing";
@@ -23,6 +23,8 @@ const App = () => {
   const [showUpdateWarning, setShowUpdateWarning] = useState(false);
   const [isUpdatingAscendara, setIsUpdatingAscendara] = useState(false);
   const [selectedTab, setSelectedTab] = useState("browse");
+  const [privacyPolicyChecked, setPrivacyPolicyChecked] = useState(false);
+  const [termsOfServiceChecked, setTermsOfServiceChecked] = useState(false);
 
   const getGames = async () => {
     try {
@@ -182,9 +184,31 @@ const App = () => {
             </ModalHeader>
             <ModalBody>
               <p>Ascendara is still in development and issues are expected. Please report any issues in the Discord server or "Report a Bug" in settings. Remember to set your download directory before installing or adding any games.</p>
+              <div className="mt-4">
+                <Checkbox
+                  isSelected={privacyPolicyChecked}
+                  onValueChange={setPrivacyPolicyChecked}
+                >
+                  I agree to the <Link href="#" onClick={() => window.electron.openURL('https://ascendara.app/privacy')}>Privacy Policy</Link>
+                </Checkbox>
+              </div>
+              <div className="mt-2">
+                <Checkbox
+                  isSelected={termsOfServiceChecked}
+                  onValueChange={setTermsOfServiceChecked}
+                >
+                  I agree to the <Link href="#" onClick={() => window.electron.openURL('https://ascendara.app/terms')}>Terms of Service</Link>
+                </Checkbox>
+              </div>
             </ModalBody>
             <ModalFooter>
-              <Button variant='bordered' onClick={closeWelcomeModal}>Next</Button>
+              <Button
+                variant='bordered'
+                onClick={closeWelcomeModal}
+                isDisabled={!privacyPolicyChecked || !termsOfServiceChecked}
+              >
+                Next
+              </Button>
             </ModalFooter>
           </ModalContent>
         </Modal>
