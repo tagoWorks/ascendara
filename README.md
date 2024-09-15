@@ -12,9 +12,6 @@
     
 </div>
 
-![Development](https://img.shields.io/badge/UNDER%20DEVELOPMENT-FF3100)
-
-
 > With Ascendara, you can easily download, manage, and play pre-installed games without needs to go through the hassle of extracting, installing, and moving files. Ascendara's game list comes from a custom webscraper which for now only has games from [STEAMRIP](https://steamrip.com/), but plans for more sources later on.
 
 ## Download Ascendara right now! https://ascendara.app/
