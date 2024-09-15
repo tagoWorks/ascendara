@@ -10,7 +10,7 @@ export const FlameIcon = ({
   ...props
 }) => {
   return (
-    <Tooltip content="This game is pretty popular right now">
+    <Tooltip delay={750} content="This game is pretty popular right now">
     <svg
       width={size || width || 144}
       height={size || height || 234}

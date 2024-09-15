@@ -191,16 +191,18 @@ const CardComponent = ({
           <Spacer x={2} />
           {isUninstalling ? null : (
             <Button
-              color="primary"
-              radius="md"
-              size="md"
-              variant={isRunning ? "faded" : "solid"}
-              onClick={handlePlayGame}
-              disabled={isRunning}
-            >
-              {isRunning ? "PLAYING" : "PLAY"}
-              {isLoading ? <Spinner color="default" size="sm" /> : null}
-            </Button>)}
+            color="dark"
+            radius="md"
+            size="md"
+            variant={isRunning ? "outline" : "solid"}
+            style={{ backgroundColor: isRunning ? "#000" : "#fff", color: isRunning ? "#fff" : "#000" }}
+            onClick={handlePlayGame}
+            disabled={isRunning}
+          >
+            {isRunning ? "PLAYING" : "PLAY"}
+            {isLoading ? <Spinner color="default" size="sm" /> : null}
+          </Button>
+          )}
         </CardFooter>
       </Card>
 

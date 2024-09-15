@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { NextUIProvider, Tabs, Tab, Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Progress, Link } from "@nextui-org/react";
+import { Tabs, Tab, Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Progress, Link } from "@nextui-org/react";
 import "./styles.css";
 import LibraryPage from "./component/Library";
 import BrowsePage from "./component/Browsing";
@@ -22,6 +22,7 @@ const App = () => {
   const [isInstallingLibraries, setIsInstallingLibraries] = useState(false);
   const [showUpdateWarning, setShowUpdateWarning] = useState(false);
   const [isUpdatingAscendara, setIsUpdatingAscendara] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("browse");
 
   const getGames = async () => {
     try {
@@ -147,9 +148,11 @@ const App = () => {
     setShowUpdateWarning(false);
   };
 
-  
+  const handleTabChange = (key) => {
+    setSelectedTab(key);
+  };
+
   return (
-    <NextUIProvider>
       <div className={`w-screen h-screen justify-center main-window`}>
         <Modal isDismissable={false} hideCloseButton isOpen={showUpdateWarning} onClose={closeUpdateWarning}>
           <ModalContent>
@@ -252,11 +255,26 @@ const App = () => {
 
         <SettingsModal isOpen={isSettingsModalOpen} onOpenChange={toggleSettingsModal} />
         <ThemesModal isOpen={isThemesModalOpen} onOpenChange={toggleThemesModal} />
-        <Tabs isVertical isIconOnly aria-label="Options" color="default" variant="light" className="tabs">
-        <Tab key="browse" title={<BrowseIcon />}>
+        <Tabs 
+          isVertical 
+          isIconOnly 
+          aria-label="Options" 
+          color="white" 
+          variant="light" 
+          className="tabs"
+          selectedKey={selectedTab}
+          onSelectionChange={handleTabChange}
+        >
+          <Tab 
+            key="browse" 
+            title={<BrowseIcon fill={selectedTab === "browse" ? "black" : "white"} />}
+          >
             <BrowsePage />
           </Tab>
-          <Tab key="games" title={<LibraryIcon />}>
+          <Tab 
+            key="games" 
+            title={<LibraryIcon fill={selectedTab === "games" ? "black" : "white"} />}
+          >
             <div className='flex'>
               <LibraryPage />
             </div>
@@ -266,7 +284,6 @@ const App = () => {
           <SettingsIcon />
         </Button>
       </div>
-    </NextUIProvider>
   );
 };
 

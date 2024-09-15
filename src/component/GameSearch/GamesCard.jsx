@@ -4,6 +4,7 @@ import { ReportIcon } from "./ReportIcon";
 import { SeemlessDownloadIcon } from "./svg/SeemlessDownloadIcon"
 import ReportModal from "./GameReport";
 import TrustModal from "../global/TrustModal";
+import "../../styles.css";
 import {
   Card,
   CardHeader,
@@ -26,6 +27,7 @@ import {
   Spinner,
   Link,
   Tab,
+  Tooltip,
   Tabs,
   Kbd
 } from "@nextui-org/react";
@@ -249,14 +251,18 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
         <Spacer y={1.4}/>
         <div className="flex items-center gap-2">
             {online && (
-              <Chip color="success" variant="shadow" size="sm">
-                ONLINE
-              </Chip>
+              <Tooltip delay={750} content="This game comes with an ONLINE-FIX">
+                <Chip color="success" variant="shadow" size="sm">
+                  ONLINE
+                </Chip>
+              </Tooltip>
             )}
             {dlc && (
-              <Chip color="warning" variant="shadow" size="sm">
-                ALL-DLC
-              </Chip>
+              <Tooltip delay={750} content="This game comes with all DLC's">
+                <Chip color="warning" variant="shadow" size="sm">
+                  ALL-DLC
+                </Chip>
+              </Tooltip>
             )}
           </div>
       </CardHeader>

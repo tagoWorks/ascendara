@@ -5,6 +5,7 @@ import { AddGamesIcon } from "./Library/Games/svg/AddGame";
 import Downloads from "./Library/DownloadManager/DownloadManager";
 import NewLibrary from "./Library/NewLibrary";
 import GamesAddModal from "./Library/Games/GamesAdd";
+import "../styles.css";
 
 const Library = () => {
   const [games, setGames] = useState([]);
@@ -15,7 +16,7 @@ const Library = () => {
   const [showDirectoryModal, setShowDirectoryModal] = useState(false);
   const [totalSpace, setTotalSpace] = useState(0);
   const [spaceUsed, setSpaceUsed] = useState(0);
-  const gamesPerPage = 6;
+  const gamesPerPage = 8;
 
   const toggleGamesModal = async () => {  
     try {
@@ -102,7 +103,7 @@ const Library = () => {
   const totalPages = Math.ceil((games.length > 0? games.length : customGames.length) / gamesPerPage);
 
   return (
-    <div className="library">
+    <div className="library-container">
       <GamesAddModal isOpen={isGamesModalOpen} onOpenChange={toggleGamesModal} />
       <Modal
         hideCloseButton
@@ -131,43 +132,35 @@ const Library = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-      <Spacer y={20} />
-      {games.length === 0 && customGames.length === 0 && downloadingGames.length === 0 && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center">
+      
+      {games.length === 0 && customGames.length === 0 && downloadingGames.length === 0 ? (
+        <div className="empty-library">
           <NewLibrary />
           <Spacer y={5} />
           <Button color="default" variant="ghost" onClick={toggleGamesModal}>
             Add a Game
           </Button>
         </div>
-      )}
-
-      {(games.length > 0 || customGames.length > 0) && (
+      ) : (
         <>
-        <div className="library-games-header">
-        <h1>
-          Your Library
-          <Button className="translate-y-1" isIconOnly variant="none" onClick={toggleGamesModal}>
-            <AddGamesIcon width={20} height={20} />
-          </Button>
-        </h1>
-        </div>
-        <div className="library-container">
-          <Spacer y={5} />
-          <Games games={displayedGames} />
-        </div>
+          <div className="library-header">
+            <h1 className="library-title">
+              Your Library
+              <Button isIconOnly variant="light" onClick={toggleGamesModal}>
+                <AddGamesIcon width={20} height={20} />
+              </Button>
+            </h1>
+          </div>
+          <div className="games-grid-container">
+            <Games games={displayedGames} />
+          </div>
+          {downloadingGames.length > 0 && (
+            <div className="downloads-section">
+              <h2 className="downloads-title">Downloads</h2>
+              <Downloads games={downloadingGames} />
+            </div>
+          )}
         </>
-      )}
-      {downloadingGames.length > 0 && (
-        <div className="queue-container">
-          <Spacer y={20} />
-          <h1 className="text-large">
-            Downloads
-          </h1>
-          <Spacer y={5} />
-          <Downloads games={downloadingGames} />
-          <Spacer y={20} />
-        </div>
       )}
     </div>
   );

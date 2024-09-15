@@ -120,7 +120,7 @@ const GameBrowse = () => {
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    let cards = 6;
+    let cards = 5;
 
     if (width > 1600) {
       const extraWidthCards = Math.floor((width - 1600) / 100) * 0;
@@ -259,7 +259,7 @@ const GameBrowse = () => {
           <ErrorCard message="We couldn't find that game :(" />
         ) : (
             <>
-              <div className="flex gap-3">
+              <div className="flex gap-3 justify-center flex-wrap">
                 {currentGames.map((game, index) => (
                   <CardComponent
                   key={index}
@@ -280,15 +280,16 @@ const GameBrowse = () => {
                 />
                 ))}
               </div>
-              <Spacer y={1} />
               {filteredGames.length > cardsPerPage && (
                 <Pagination
-                  variant="light"
-                  color="default"
                   total={Math.ceil(filteredGames.length / cardsPerPage)}
                   isCompact
                   initialPage={1}
-                  className="pagination"
+                  classNames={{
+                    wrapper: "gap-0 overflow-visible h-8 rounded border border-divider",
+                    item: "w-8 h-8 text-small rounded-none bg-black-900 text-white border-gray-700 hover:bg-gray-700",
+                    cursor: "bg-white text-black font-bold border-white"
+                  }}
                   onChange={handlePageChange}
                 />
               )}

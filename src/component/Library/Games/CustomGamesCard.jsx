@@ -130,17 +130,18 @@ const CustomCardComponent = ({
         <Spacer x={2} />
         {isUninstalling ? null : (
           <Button
-            color="primary"
-            radius="md"
-            size="md"
-            variant={isRunning ? "faded" : "solid"}
-            spinner={isLoading ? <CircularProgress color="success" size="sm" /> : null}
-            onClick={handlePlayGame}
-            isLoading={isLoading}
-            disabled={isRunning}
-          >
-            {isRunning ? "PLAYING" : "PLAY"}
-          </Button>)}
+          color="dark"
+          radius="md"
+          size="md"
+          variant={isRunning ? "outline" : "solid"}
+          style={{ backgroundColor: isRunning ? "#000" : "#fff", color: isRunning ? "#fff" : "#000" }}
+          onClick={handlePlayGame}
+          disabled={isRunning}
+        >
+          {isRunning ? "PLAYING" : "PLAY"}
+          {isLoading ? <Spinner color="gray" size="sm" /> : null}
+        </Button>
+        )}
         
       </CardFooter>
     </Card>
