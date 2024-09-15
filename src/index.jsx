@@ -136,9 +136,12 @@ const App = () => {
     setIsThemesModalOpen(!isThemesModalOpen);
   };
   
-  const closeWelcomeModal = () => {
-    setShowWelcomeModal(false);
-    setShowNewModal(true);
+  const closeWelcomeModal = async () => {
+    if (privacyPolicyChecked && termsOfServiceChecked) {
+      await window.electron.createTimestamp();
+      setShowWelcomeModal(false);
+      setShowNewModal(true);
+    }
   };
 
   const closeNewModal = () => {

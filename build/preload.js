@@ -44,6 +44,7 @@ contextBridge.exposeInMainWorld('electron', {
   getGameImage: (game) => ipcRenderer.invoke('get-game-image', game),
 
   // Miscellaneous
+  createTimestamp: () => ipcRenderer.invoke('create-timestamp'),
   isLatest: () => ipcRenderer.invoke('is-latest'),
   updateAscendara: () => ipcRenderer.invoke('update-ascendara'),
   uninstallAscendara: () => ipcRenderer.invoke('uninstall-ascendara'),

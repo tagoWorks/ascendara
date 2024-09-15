@@ -401,9 +401,15 @@ ipcMain.handle('is-new', (event) => {
     fs.accessSync(filePath);
     return false;
   } catch (error) {
-    fs.writeFileSync(filePath, JSON.stringify({ timestamp: Date.now() }));
+    // Don't create the file here anymore
     return true;
   }
+});
+
+// Add a new handler to create the timestamp file
+ipcMain.handle('create-timestamp', () => {
+  const filePath = path.join(app.getPath('home'), 'timestamp.ascendara.json');
+  fs.writeFileSync(filePath, JSON.stringify({ timestamp: Date.now() }));
 });
 
 // Determine weather to show the dev warning modal or not
