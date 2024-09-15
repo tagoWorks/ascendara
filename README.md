@@ -6,9 +6,9 @@
     <br />
     
     
-   ![GitHub last commit](https://img.shields.io/github/last-commit/t-a-g-o/ascendara)
-   ![GitHub issues](https://img.shields.io/github/issues-raw/t-a-g-o/ascendara)
-   ![GitHub](https://img.shields.io/github/license/t-a-g-o/ascendara)
+   ![GitHub last commit](https://img.shields.io/github/last-commit/tagoWorks/ascendara)
+   ![GitHub issues](https://img.shields.io/github/issues-raw/tagoWorks/ascendara)
+   ![GitHub](https://img.shields.io/github/license/tagoWorks/ascendara)
     
 </div>
 
