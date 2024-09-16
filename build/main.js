@@ -56,8 +56,16 @@ const downloadProcesses = new Map();
 const runGameProcesses = new Map();
 const appDirectory = path.join(path.dirname(app.getPath('exe')));
 console.log(appDirectory)
+
+let apiKeyOverride = null;
+
+ipcMain.handle('override-api-key', (event, newApiKey) => {
+  apiKeyOverride = newApiKey;
+  console.log('API Key overridden:', apiKeyOverride);
+});
+
 ipcMain.handle('get-api-key', () => {
-  return process.env.AUTHORIZATION;
+  return apiKeyOverride || process.env.AUTHORIZATION;
 });
 
 // Get all backgrounds from backgrounds folder (for themes/bg later on)
