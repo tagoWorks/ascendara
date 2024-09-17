@@ -50,9 +50,9 @@
    ```
 Open settings and click F5 for development tools
 
-# Development Roadmap
+# Development Roadmap [(view wiki)](https://github.com/tagoWorks/ascendara/wiki/Contributing#development-roadmap)
 
-### [Ascendara App](https://github.com/tagoWorks/ascendara/wiki/Contributing#development-roadmap)
+### Ascendara App
 - [ ] Auto create shortcuts
 - [x] Add news section
 - [x] Make game searches less harsh
