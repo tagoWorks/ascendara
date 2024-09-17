@@ -52,7 +52,7 @@ Open settings and click F5 for development tools
 
 # Development Roadmap
 
-### Ascendara App
+### [Ascendara App](https://github.com/tagoWorks/ascendara/wiki/Contributing#development-roadmap)
 - [ ] Auto create shortcuts
 - [x] Add news section
 - [x] Make game searches less harsh
@@ -75,13 +75,6 @@ Open settings and click F5 for development tools
 - [ ] Add mulitple checks to alert if antivirus ruined a operation
 - [ ] Add older game versions
 - [x] Sort by popularity
-
-### [Ascendara Docs](https://github.com/tagoWorks/ascendara/wiki)
-- [x] Create Installation Guide for Ascendara
-- [x] Source and how it works
-- [ ] API Documentation
-- [x] Common Game Libraries & How to install
-- [x] All game sources currently used
 
 # License & Contact 📃
 This project is published under the [Apache License Version 2.0 License](./LICENSE)
