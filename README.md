@@ -8,8 +8,7 @@
     
    ![GitHub last commit](https://img.shields.io/github/last-commit/tagoWorks/ascendara)
    ![GitHub issues](https://img.shields.io/github/issues-raw/tagoWorks/ascendara)
-   ![GitHub](https://img.shields.io/github/license/tagoWorks/ascendara)
-    
+   
 </div>
 
 > With Ascendara, you can easily download, manage, and play pre-installed games without needs to go through the hassle of extracting, installing, and moving files. Ascendara's game list comes from a custom webscraper which for now only has games from [STEAMRIP](https://steamrip.com/), but plans for more sources later on.
