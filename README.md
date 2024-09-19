@@ -17,8 +17,7 @@
 ## Download Ascendara right now! https://ascendara.app/
 
 # Building the app [(view wiki)](https://github.com/tagoWorks/ascendara/wiki/Running-as-a-Developer)
-> [!NOTE]  
-> The Ascendara API requires a key which is private as of now. Game browsing will not function properly. In `Browsing.jsx` replace the link "https://api.ascendara.app/json/games" with "https://api.ascendara.app/developer/json/games" for a preview game in order to make changes to the UI. Or you can use the component in the `readme` directory with this process already completed.
+
 1. Clone the repository
     ```sh
     git clone https://github.com/tagoWorks/ascendara.git
@@ -70,7 +69,7 @@ Open settings and click F5 for development tools
 - [x] Move tabs to the top left
 - [ ] ~Make seperate library, downloads, and browse~
 - [x] Add your own games
-- [ ] Create Public API Keys for accounts
+- [x] Create Public API
 - [ ] Create Retry Download & Extract
 - [ ] Add mulitple checks to alert if antivirus ruined a operation
 - [ ] Add older game versions
