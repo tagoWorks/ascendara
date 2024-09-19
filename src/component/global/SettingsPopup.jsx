@@ -18,6 +18,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
   const [downloadDirectory, setDownloadDirectory] = useState('');
   const [version, setVersion]  = useState(''); 
   const [isReportOpen, setReportOpen] = useState(false);
+  const [apiKey, setApiKey] = useState('');
   const [isOldLinksWarningOpen, setOldLinksWarningOpen] = useState(false);
   const [isUninstallModalOpen, setUninstallModalOpen] = useState(false);
   const [isUninstallingModalOpen, setUninstallingModalOpen] = useState(false);
@@ -136,6 +137,10 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
     setUninstallingModalOpen(false);
   };
   
+  const handleApiKeyChange = (newApiKey) => {
+    window.electron.overrideApiKey(newApiKey);
+  };
+
   const handleUninstallingModalOpen = () => {
     setUninstallModalOpen(false);
     onOpenChange(false);
@@ -302,8 +307,7 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
 
         </ModalContent>
       </Modal>
-
-      
+    
       <Modal
         isOpen={isDebugModalOpen}
         onOpenChange={setDebugModalOpen}
@@ -322,6 +326,11 @@ const SettingsModal = ({ isOpen, onOpenChange }) => {
             <Button onPress={handleDeleteTimestamp} >
               Delete timestamp file
             </Button>
+            <Input
+            label="API Key"
+            value={apiKey}
+            onChange={(e) => handleApiKeyChange(e.target.value)}
+          />
           </ModalBody>
           <ModalFooter>
             <Button variant='ghost' color="primary" onPress={() => setDebugModalOpen(false)}>

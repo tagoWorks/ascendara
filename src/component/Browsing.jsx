@@ -41,12 +41,7 @@ const GameBrowse = () => {
 
     setForceRefreshTime(currentTime);
     localStorage.setItem(FORCE_REFRESH_KEY, currentTime.toString());
-
-    const token = await getToken();
     const response = await fetch("https://api.ascendara.app/json/games", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
     const data = await response.json();
     setMetadata(data.metadata);
@@ -70,23 +65,7 @@ const GameBrowse = () => {
   const handleCloseModal = () => {
     setShowModal(false);
   };
-  const getToken = async () => {
-    const AUTHORIZATION = await window.electron.getAPIKey();
-    const response = await fetch("https://api.ascendara.app/auth/token", {
-      headers: {
-        Authorization: `Bearer ${AUTHORIZATION}`,
-      },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      return data.token;
-    } else {
-      throw new Error("Failed to obtain token");
-    }
-  };
-
-  const fetchNews = async (token) => {
+  const fetchNews = async () => {
     try {
       const cachedNews = JSON.parse(localStorage.getItem(NEWS_CACHE_KEY));
       const newsCacheExpiry = localStorage.getItem(NEWS_CACHE_EXPIRY_KEY);
@@ -96,9 +75,6 @@ const GameBrowse = () => {
         setNewsError(false);
       } else {
         const response = await fetch("https://api.ascendara.app/json/news", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         });
         const data = await response.json();
         setNews(data.news);
@@ -138,8 +114,6 @@ const GameBrowse = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = await getToken();
-  
         const cachedGames = JSON.parse(localStorage.getItem(CACHE_KEY));
         const cacheExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
         const cachedMetadata = JSON.parse(localStorage.getItem(METADATA_KEY));
@@ -159,9 +133,6 @@ const GameBrowse = () => {
           setError(false);
         } else {
           const response = await fetch("https://api.ascendara.app/json/games", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
           });
           const data = await response.json();
           const sortedGames = data.games
@@ -180,7 +151,7 @@ const GameBrowse = () => {
           localStorage.setItem(CACHE_EXPIRY_KEY, expiryTime.toString());
         }
   
-        fetchNews(token);
+        fetchNews();
       } catch (error) {
         console.error("Error fetching games:", error);
         if (retryCount < 3) {
