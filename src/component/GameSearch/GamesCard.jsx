@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Progress } from "@nextui-org/react";
 import { ReportIcon } from "./ReportIcon";
 import { SeemlessDownloadIcon } from "./svg/SeemlessDownloadIcon"
+import { DMCANoticeIcon } from "./svg/DMCANoticeIcon"
 import ReportModal from "./GameReport";
-import TrustModal from "../global/TrustModal";
 import "../../styles.css";
 import {
   Card,
@@ -433,6 +433,19 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
               </>
             ) : <></>}
           </ModalFooter>
+            
+            <Button
+              aria-label="DMCANotice"
+              variant="solid"
+              radius="none"
+              color="danger"
+              size="sm"
+              onClick={() => window.electron.openURL('https://ascendara.app/dmca')}
+            >
+              <DMCANoticeIcon size="15px" />
+              DMCA Notice
+              <DMCANoticeIcon size="15px" />
+            </Button>
         </ModalContent>
       </Modal>
       <Modal
