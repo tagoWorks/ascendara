@@ -239,6 +239,7 @@ const GameBrowse = () => {
                   version={game.version}
                   size={game.size}
                   imgID={game.imgID}
+                  category={game.category}
                   dirlink={game.dirlink}
                   dlc={game.dlc}
                   downloadLinks={game.download_links}

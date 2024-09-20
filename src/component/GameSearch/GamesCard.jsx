@@ -8,7 +8,6 @@ import "../../styles.css";
 import {
   Card,
   CardHeader,
-  CardBody,
   CardFooter,
   Chip,
   Image,
@@ -68,7 +67,7 @@ const isValidURL = (url, provider) => {
   return containsProviderName;
 };
 
-const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLinks, dlc, verified, popular }) => {
+const CardComponent = ({ game, category, online, version, size, dirlink, imgID, downloadLinks, dlc, verified, popular }) => {
   const [inputLink, setInputLink] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedProvider, setSelectedProvider] = useState("");
@@ -234,37 +233,84 @@ const CardComponent = ({ game, online, version, size, dirlink, imgID, downloadLi
     console.log(`Selected Link: ${link}`);
   };
   
+  const renderCategories = () => {
+    if (category.length <= 3) {
+      return category.map((cat, index) => (
+        <Chip
+          key={index}
+          size="sm"
+          variant="flat"
+          className="text-tiny bg-white/10 text-white"
+        >
+          {cat}
+        </Chip>
+      ));
+    } else {
+      const visibleCategories = category.slice(0, 2).map((cat, index) => (
+        <Chip
+          key={index}
+          size="sm"
+          variant="flat"
+          className="text-tiny bg-white/10 text-white"
+        >
+          {cat}
+        </Chip>
+      ));
+
+      const remainingCategories = category.slice(2).join(", ");
+
+      return [
+        ...visibleCategories,
+        <Tooltip key="more" content={remainingCategories}>
+          <Chip
+            size="sm"
+            variant="flat"
+            className="text-tiny bg-white/10 text-white"
+          >
+            ...
+          </Chip>
+        </Tooltip>
+      ];
+    }
+  };
+
   return (
     <>
     <Card isFooterBlurred className="col-span-12 sm:col-span-4 h-[180px] relative overflow-hidden">
-      <CardHeader className="absolute z-20 top-1 flex-col !items-start">
-        <div className="flex flex-wrap justify-center items-center gap-2 text-white">
-          <h4 style={{wordWrap: "break-word",maxWidth: "20ch"}} className="font-medium text-large">
-            {game}
-          </h4>
-          <div className="flex items-center gap-2">
-            {verified}
-            {popular}
+      <CardHeader className="absolute z-20 top-1 flex-col !items-start w-full">
+        <div className="flex justify-between items-start w-full">
+          <div className="flex flex-col items-start max-w-[70%]">
+            <h4 style={{wordWrap: "break-word", maxWidth: "20ch"}} className="font-medium text-large text-white">
+              {game}
+            </h4>
+            <p className="text-small text-white/40">{version}</p>
+            <div className="flex items-center gap-2 mt-1">
+              {online && (
+                <Tooltip delay={750} content="This game comes with an ONLINE-FIX">
+                  <Chip color="success" variant="shadow" size="sm">
+                    ONLINE
+                  </Chip>
+                </Tooltip>
+              )}
+              {dlc && (
+                <Tooltip delay={750} content="This game comes with all DLC's">
+                  <Chip color="warning" variant="shadow" size="sm">
+                    ALL-DLC
+                  </Chip>
+                </Tooltip>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-1 max-w-[30%]">
+            <div className="flex flex-wrap gap-1 justify-end">
+              {renderCategories()}
+            </div>
+            <div className="flex items-center gap-1 mt-1">
+              {verified}
+              {popular}
+            </div>
           </div>
         </div>
-        <p className="text-small text-white/40">{version}</p>
-        <Spacer y={1.4}/>
-        <div className="flex items-center gap-2">
-            {online && (
-              <Tooltip delay={750} content="This game comes with an ONLINE-FIX">
-                <Chip color="success" variant="shadow" size="sm">
-                  ONLINE
-                </Chip>
-              </Tooltip>
-            )}
-            {dlc && (
-              <Tooltip delay={750} content="This game comes with all DLC's">
-                <Chip color="warning" variant="shadow" size="sm">
-                  ALL-DLC
-                </Chip>
-              </Tooltip>
-            )}
-          </div>
       </CardHeader>
       <div className="absolute inset-0 bg-black/70 z-10" />
       <Image
