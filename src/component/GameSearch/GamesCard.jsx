@@ -284,6 +284,10 @@ const CardComponent = ({ game, category, online, version, size, dirlink, imgID, 
               {game}
             </h4>
             <p className="text-small text-white/40">{version}</p>
+            <div className="flex items-center gap-1 mt-1">
+              {verified}
+              {popular}
+            </div>
             <div className="flex items-center gap-2 mt-1">
               {online && (
                 <Tooltip delay={750} content="This game comes with an ONLINE-FIX">
@@ -304,10 +308,6 @@ const CardComponent = ({ game, category, online, version, size, dirlink, imgID, 
           <div className="flex flex-col items-end gap-1 max-w-[30%]">
             <div className="flex flex-wrap gap-1 justify-end">
               {renderCategories()}
-            </div>
-            <div className="flex items-center gap-1 mt-1">
-              {verified}
-              {popular}
             </div>
           </div>
         </div>
