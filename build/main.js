@@ -11,7 +11,7 @@ let rpc;
 let has_launched = false;
 let is_latest = true;
 
-const CURRENT_VERSION = "6.3.1";
+const CURRENT_VERSION = "6.3.2";
 
 // Initialize Discord RPC
 const clientId = process.env.DISCKEY;;

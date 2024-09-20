@@ -234,7 +234,7 @@ const CardComponent = ({ game, category, online, version, size, dirlink, imgID, 
   };
   
   const renderCategories = () => {
-    if (category.length <= 3) {
+    if (category.length <= 5) {
       return category.map((cat, index) => (
         <Chip
           key={index}
@@ -246,7 +246,7 @@ const CardComponent = ({ game, category, online, version, size, dirlink, imgID, 
         </Chip>
       ));
     } else {
-      const visibleCategories = category.slice(0, 2).map((cat, index) => (
+      const visibleCategories = category.slice(0, 4).map((cat, index) => (
         <Chip
           key={index}
           size="sm"
@@ -305,11 +305,6 @@ const CardComponent = ({ game, category, online, version, size, dirlink, imgID, 
               )}
             </div>
           </div>
-          <div className="flex flex-col items-end gap-1 max-w-[30%]">
-            <div className="flex flex-wrap gap-1 justify-end">
-              {renderCategories()}
-            </div>
-          </div>
         </div>
       </CardHeader>
       <div className="absolute inset-0 bg-black/70 z-10" />
@@ -360,6 +355,12 @@ const CardComponent = ({ game, category, online, version, size, dirlink, imgID, 
                   onReportClose={handleCloseReport}
                   setReportReason={setReportReason}
                 />}
+              
+                <div className="flex flex-col justify-center items-center">
+                  <div className="flex-wrap gap-1 justify-end ml-4">
+                    {renderCategories()}
+                  </div>
+                </div>
               </div>
             </ModalHeader>
           <ModalBody>

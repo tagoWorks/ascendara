@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import TrustModal from "../../global/TrustModal";
-import { Card, CardHeader, CardBody, CardFooter, Chip, Button, Spacer, Spinner, Dropdown, DropdownTrigger, DropdownMenu, DropdownSection, DropdownItem, Modal, Image, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
+import { Card, CardHeader, CardBody, CardFooter, Chip, Button, Spacer, Dropdown, DropdownTrigger, DropdownMenu, DropdownSection, DropdownItem, Modal, Image, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
 import { GamesSetting } from "./svg/ThreeDotsVerticle";
 import { DirectoryIcon } from "./svg/DirectoryIcon";
 import { UpdateIcon } from "./svg/UpdateIcon";
@@ -18,7 +18,6 @@ const CardComponent = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [isUninstalling, setIsUninstalling] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isTrustModalOpen, setIsTrustModalOpen] = useState(false);
@@ -200,7 +199,6 @@ const CardComponent = ({
             disabled={isRunning}
           >
             {isRunning ? "PLAYING" : "PLAY"}
-            {isLoading ? <Spinner color="default" size="sm" /> : null}
           </Button>
           )}
         </CardFooter>

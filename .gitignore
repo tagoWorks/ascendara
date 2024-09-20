@@ -8,7 +8,7 @@ binaries/AscendaraGameHandler/make-exe.bat
 /.vscode
 /src/dist
 /dist
-build/main-build.js
+/main-build
 
 /binaries/AscendaraGameHandler/dist
 /binaries/AscendaraDownloader/dist
