@@ -19,8 +19,10 @@ const App = () => {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
   const [showNextModal, setShowNextModal] = useState(false);
+  const [brokenVersions, setBrokenVersions] = useState([]);
   const [isInstallingLibraries, setIsInstallingLibraries] = useState(false);
   const [showUpdateWarning, setShowUpdateWarning] = useState(false);
+  const [showReqUpdateWarning, setShowReqUpdateWarning] = useState(false);
   const [isUpdatingAscendara, setIsUpdatingAscendara] = useState(false);
   const [selectedTab, setSelectedTab] = useState("browse");
   const [privacyPolicyChecked, setPrivacyPolicyChecked] = useState(false);
@@ -114,12 +116,27 @@ const App = () => {
     }
   }
 
+  const fetchBrokenVersions = async () => {
+    try {
+      const response = await fetch('https://api.ascendara.app/app/brokenversions');
+      const brokenVersionsData = await response.json();
+      setBrokenVersions(brokenVersionsData);
+      const currentVersion = await window.electron.getVersion();
+      if (brokenVersionsData.includes(currentVersion)) {
+        setShowReqUpdateWarning(true);
+      }
+    } catch (error) {
+      console.error("Error fetching broken versions:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         await getGames();
         await checkIsNew();
         await checkHasLaunched();
+        await fetchBrokenVersions();
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -127,6 +144,7 @@ const App = () => {
   
     fetchData();
   }, []);
+
 
   const toggleSettingsModal = () => {
     setIsSettingsModalOpen(!isSettingsModalOpen);
@@ -176,6 +194,26 @@ const App = () => {
                   }}>
                 Download Update & Relaunch</Button>
               <Button color='danger' variant='bordered' onClick={closeUpdateWarning}>Later...</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        <Modal isDismissable={false} hideCloseButton isOpen={showReqUpdateWarning}>
+          <ModalContent>
+            <ModalHeader>
+                <h1>Ascendara Update Required</h1>
+              </ModalHeader>
+              <ModalBody>
+                <p>This version has been flagged due to major issues or security vulnerabilities. Please update to the latest version to ensure your safety and optimal performance.</p>
+                <p>Join the <Link onClick={() => window.electron.openURL('https://ascendara.app/discord')} className="show-pointer">Discord server</Link> for more information on why this update is important.</p>
+              </ModalBody>
+            <ModalFooter>
+              <Button color="success" onClick={() => {
+                  setShowUpdateWarning(false);
+                  setIsUpdatingAscendara(true);
+                  window.electron.updateAscendara();
+                  }}>
+                Download Update & Relaunch</Button>
             </ModalFooter>
           </ModalContent>
         </Modal>

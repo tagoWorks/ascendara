@@ -130,8 +130,8 @@ const Games = () => {
           <Card isBlurred className="no-results bg-background/60 dark:bg-default-100/50">
             <CardBody>
               <h1>No results found</h1>
-              <p className="text-small text-default-400 text-center">Try changing your search query</p>
-              <p className="text-small text-default-400 text-center">Or if you feel like this is incorrect <span className="show-pointer" onClick={() => window.electron.openURL('https://github.com/tagoWorks/ascendara/issues/new')}>open a bug report in the GitHub </span></p>
+              <p className="text-small text-default-400 text-center">Make sure your game isn't still downloading.</p>
+              <p className="text-small text-default-400 text-center">If you feel like this is not right report a bug in settings, or <span className="show-pointer" onClick={() => window.electron.openURL('https://github.com/tagoWorks/ascendara/issues/new')}>submit a new issue in the GitHub</span></p>
             </CardBody>
           </Card>
         )}

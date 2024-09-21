@@ -279,16 +279,18 @@ const CardComponent = ({ game, category, online, version, size, dirlink, imgID, 
     <Card isFooterBlurred className="col-span-12 sm:col-span-4 h-[180px] relative overflow-hidden">
       <CardHeader className="absolute z-20 top-1 flex-col !items-start w-full">
         <div className="flex justify-between items-start w-full">
-          <div className="flex flex-col items-start max-w-[70%]">
-            <h4 style={{wordWrap: "break-word", maxWidth: "20ch"}} className="font-medium text-large text-white">
-              {game}
-            </h4>
-            <p className="text-small text-white/40">{version}</p>
-            <div className="flex items-center gap-1 mt-1">
-              {verified}
-              {popular}
+          <div className="flex flex-col items-start max-w-full">
+            <div className="flex items-center gap-1 flex-wrap">
+              <h4 style={{wordWrap: "break-word", maxWidth: "20ch"}} className="font-medium text-large text-white">
+                {game}
+              </h4>
+              <div className="absolute top-2 right-2 flex fixed items-center">
+                {popular}
+                {verified}
+              </div>
             </div>
-            <div className="flex items-center gap-2 mt-1">
+            <p className="text-small text-white/40">{version}</p>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               {online && (
                 <Tooltip delay={750} content="This game comes with an ONLINE-FIX">
                   <Chip color="success" variant="shadow" size="sm">
@@ -357,7 +359,7 @@ const CardComponent = ({ game, category, online, version, size, dirlink, imgID, 
                 />}
               
                 <div className="flex flex-col justify-center items-center">
-                  <div className="flex-wrap gap-1 justify-end ml-4">
+                  <div className="flex-wrap">
                     {renderCategories()}
                   </div>
                 </div>
