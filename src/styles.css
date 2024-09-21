@@ -12,15 +12,6 @@
     background-position: 0% 50%;
   }
 }
-@font-face {
-  font-family: lexenddeca;
-  src: url(./LexendDeca-Regular.ttf);
-}
-
-
-.lexenddeca {
-  font-family: lexenddeca;
-}
 
 .arial {
   font-family: arial;
