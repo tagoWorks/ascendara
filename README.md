@@ -75,6 +75,6 @@ Open settings and click F5 for development tools
 - [x] Sort by popularity
 
 # License & Contact 📃
-This project is published under the [Apache License Version 2.0 License](./LICENSE)
+This project is published under the [CC BY-NC 1.0 Universal License (Non-Commercial Use Only)](./LICENSE)
 
 If you are interested in working together, or want to get in contact with me please email me at santiago@tago.works
