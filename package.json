@@ -1,6 +1,6 @@
 {
   "name": "ascendara",
-  "version": "6.3.4",
+  "version": "6.3.5",
   "main": "main.js",
   "description": "Download games effortlessly with Ascendara. Copy the link, paste it into the app, and download.",
   "scripts": {

@@ -11,10 +11,34 @@ let rpc;
 let has_launched = false;
 let is_latest = true;
 
-const CURRENT_VERSION = "6.3.4";
+const CURRENT_VERSION = "6.3.5";
+
+const clientId = process.env.DISCKEY;;
+
+
+// create the app window
+function createWindow() {
+  const mainWindow = new BrowserWindow({
+    title: 'Ascendara',
+    icon: path.join(__dirname, 'icon.ico'),
+    width: 1600,
+    height: 800,
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: true,
+      contextIsolation: true,
+    }
+  });
+  mainWindow.loadURL('http://localhost:5173/')
+  //mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));
+  mainWindow.setMinimumSize(1600, 800);
+}
+app.on('ready', () => {
+  createWindow();
+});
 
 // Initialize Discord RPC
-const clientId = process.env.DISCKEY;;
 rpc = new Client({ transport: 'ipc' });
 
 rpc.on('ready', () => {
@@ -28,12 +52,9 @@ rpc.on('ready', () => {
 });
 
 rpc.login({ clientId }).catch(console.error);
-
-
 axios.get('https://api.ascendara.app/')
   .then(response => {
     const latest_version = response.data.appVer;
-    createWindow();
     if (latest_version !== CURRENT_VERSION) {
       is_latest = false;
       console.log(`Update available. Version: ${CURRENT_VERSION} < ${latest_version}`);
@@ -43,7 +64,7 @@ axios.get('https://api.ascendara.app/')
     }
   })
   .catch(error => {
-    is_latest = false;
+    is_latest = true;
     console.error('Error checking for updates:', error);
   });
 
@@ -1040,24 +1061,6 @@ ipcMain.handle('download-finished', async (event, game) => {
         await fs.remove(meiFolderPath);
       }
     }});
-
-function createWindow() {
-  const mainWindow = new BrowserWindow({
-    title: 'Ascendara',
-    icon: path.join(__dirname, 'icon.ico'),
-    width: 1600,
-    height: 800,
-    autoHideMenuBar: true,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: true,
-      contextIsolation: true,
-    }
-  });
-  mainWindow.loadURL('http://localhost:5173/')
-  //mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));
-  mainWindow.setMinimumSize(1600, 800);
-}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
