@@ -52,6 +52,7 @@ Open settings and click F5 for development tools
 
 ### Ascendara App
 - [ ] Auto create shortcuts
+- [ ] Be able to run scripts optionally instead of execute game file
 - [x] Add news section
 - [x] Make game searches less harsh
 - [ ] ~Show recent games~
