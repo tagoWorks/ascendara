@@ -11,7 +11,7 @@ let rpc;
 let has_launched = false;
 let is_latest = true;
 
-const CURRENT_VERSION = "6.3.5";
+const CURRENT_VERSION = "6.3.6";
 
 const clientId = process.env.DISCKEY;;
 
@@ -535,7 +535,7 @@ ipcMain.handle('install-dependencies', async (event) => {
       fs.mkdirSync(tempDir);
     }
 
-    const zipUrl = 'https://storage.ascendara.app/files/deps.zip';
+    const zipUrl = 'https://x.tago.works/storage/ascendara-deps.zip';
     const zipPath = path.join(tempDir, 'deps.zip');
     const res = await fetch(zipUrl);
     const arrayBuffer = await res.arrayBuffer();
