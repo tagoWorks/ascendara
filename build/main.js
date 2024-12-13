@@ -479,6 +479,35 @@ ipcMain.handle('has-launched', (event) => {
   }
 });
 
+
+ipcMain.handle('set-timestamp-value', async (event, key, value) => {
+  const filePath = TIMESTAMP_FILE;
+  try {
+    let timestamp = {};
+    if (fs.existsSync(filePath)) {
+      timestamp = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    }
+    timestamp[key] = value;
+    fs.writeFileSync(filePath, JSON.stringify(timestamp, null, 2));
+  } catch (error) {
+    console.error('Error setting timestamp value:', error);
+  }
+});
+
+ipcMain.handle('get-timestamp-value', async (event, key) => {
+  const filePath = TIMESTAMP_FILE;
+  try {
+    let timestamp = {};
+    if (fs.existsSync(filePath)) {
+      timestamp = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    }
+    return timestamp[key];
+  } catch (error) {
+    console.error('Error getting timestamp value:', error);
+    return null;
+  }
+});
+
 ipcMain.handle('is-latest', async () => {
   try {
     const response = await axios.get('https://api.ascendara.app/');
@@ -1255,8 +1284,11 @@ function createWindow() {
       contextIsolation: true,
     }
   });
-  mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));
-  // mainWindow.loadURL('http://localhost:5173');
+  // When in production:
+  // mainwindow.loadFile('file://' + path.join(__dirname, 'index.html'));
+
+  
+  mainWindow.loadURL('http://localhost:5173');
   mainWindow.setMinimumSize(1600, 800);
 
   mainWindow.on('maximize', () => {

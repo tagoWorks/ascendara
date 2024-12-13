@@ -14,6 +14,11 @@ import { useTheme } from './contexts/ThemeContext';
 import './Index.css';
 import { Toaster, toast } from 'sonner';
 import { analytics } from './services/analyticsService';
+import UpdateOverlay from './components/UpdateOverlay';
+import { chaoticOrbit } from 'ldrs'
+
+chaoticOrbit.register()
+
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -30,6 +35,7 @@ const AppRoutes = () => {
   const [shouldShowWelcome, setShouldShowWelcome] = useState(null);
   const [isNewInstall, setIsNewInstall] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [iconData, setIconData] = useState('');
   const location = useLocation();
   const hasChecked = useRef(false);
@@ -98,6 +104,29 @@ const AppRoutes = () => {
       console.log('Starting app initialization...');
 
       try {
+        // Check if we're finishing up an update
+        const isUpdatingValue = await window.electron.getTimestampValue('isUpdating');
+        setIsUpdating(isUpdatingValue);
+
+        if (isUpdatingValue) {
+          // Clear the updating flag after a delay
+          setTimeout(async () => {
+            await window.electron.setTimestampValue('isUpdating', false);
+            setIsUpdating(false);
+            setIsLoading(false);
+            const hasLaunched = await window.electron.hasLaunched();
+            if (!hasLaunched) {
+              const data = await checkWelcomeStatus();
+              setWelcomeData(data);
+            } else {
+              const isV7 = await window.electron.isV7();
+              setShouldShowWelcome(!isV7);
+              setWelcomeData({ isNew: false, isV7 });
+            }
+          }, 2000);
+          return;
+        }
+
         const hasLaunched = await window.electron.hasLaunched();
         console.log('Has launched check:', hasLaunched);
 
@@ -186,7 +215,13 @@ const AppRoutes = () => {
         description: 'Ascendara downloaded the update and is ready to install and restart now',
         action: {
           label: 'Install & Restart',
-          onClick: () => window.electron.updateAscendara()
+          onClick: async () => {
+            setIsUpdating(true);
+            await window.electron.setTimestampValue('isUpdating', true);
+            setTimeout(() => {
+              window.electron.updateAscendara();
+            }, 1000);
+          }
         },
         duration: Infinity,
         id: 'update-ready'
@@ -210,7 +245,7 @@ const AppRoutes = () => {
     };
   }, [shouldShowWelcome]);
 
-  if (isLoading) {
+  if (isLoading || isUpdating) {
     console.log('Rendering loading screen...');
     return (
       <motion.div 
@@ -232,6 +267,20 @@ const AppRoutes = () => {
               ease: "easeOut"
             }}
           />
+        )}
+        {isUpdating && (
+          <>
+          <motion.div 
+            className="loading-text"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            Finishing up... Please don't close Ascendara
+          </motion.div>
+          <br />
+          <l-chaotic-orbit />
+          </>
         )}
       </motion.div>
     );
@@ -256,6 +305,7 @@ const AppRoutes = () => {
   
   return (
     <>
+      {isUpdating && <UpdateOverlay />}
       <ScrollToTop />
       <Routes>
         <Route 
@@ -305,20 +355,21 @@ class ErrorBoundary extends React.Component {
     });
   }
 
+
   render() {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
           <div className="max-w-md w-full space-y-4 text-center">
-            <h2 className="text-2xl font-bold text-destructive">Something went wrong</h2>
+            <h2 className="text-2xl font-bold text-destructive">Oh no...</h2>
             <p className="text-muted-foreground">
-              We're sorry, but something went wrong. Please try refreshing the page.
+              Ascendara did not like what just happened. No worries, if you have analytics enabled this error has been tracked and we'll get this fixed.
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 text-secondary-foreground"
             >
-              Refresh Page
+              Reload Ascendara
             </button>
           </div>
         </div>
@@ -328,6 +379,7 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
+
 
 function ToasterWithTheme() {
   const { theme } = useTheme();
@@ -341,6 +393,7 @@ function ToasterWithTheme() {
           background: 'rgb(var(--color-card))',
           color: 'rgb(var(--color-card-foreground))',
           border: '1px solid rgb(var(--color-border))',
+          padding: '16px',
         },
         descriptionStyle: {
           color: 'rgb(var(--color-muted-foreground))'

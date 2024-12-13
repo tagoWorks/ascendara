@@ -566,7 +566,7 @@ function Settings() {
                         />
                       </div>
                       <div className="flex items-center justify-between">
-                        <Label>Fitgirl Rbelepacks</Label>
+                        <Label>Fitgirl Repacks</Label>
                         <Switch
                           disabled
                           checked={settings.enabledSources.fitgirlrepacks}

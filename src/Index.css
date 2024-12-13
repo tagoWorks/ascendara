@@ -5,15 +5,23 @@
   right: 0;
   bottom: 0;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  background-color: var(--background);
+  justify-content: center;
+  background: var(--background);
 }
 
 .loading-icon {
   width: 128px;
   height: 128px;
   object-fit: contain;
+}
+
+.loading-text {
+  font-size: 1.2rem;
+  color: var(--text);
+  margin-top: 20px;
+  opacity: 0.9;
 }
 
 .toaster-container {
@@ -45,4 +53,4 @@
 
 [data-sonner-toast] [data-button]:hover {
   background: rgba(255, 255, 255, 0.2) !important;
-} 
+}

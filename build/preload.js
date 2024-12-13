@@ -75,6 +75,8 @@ contextBridge.exposeInMainWorld('electron', {
   },
   checkV7Welcome: () => ipcRenderer.invoke('check-v7-welcome'),
   setV7: () => ipcRenderer.invoke('set-v7'),
+  setTimestampValue: (key, value) => ipcRenderer.invoke('set-timestamp-value', key, value),
+  getTimestampValue: (key) => ipcRenderer.invoke('get-timestamp-value', key),
   getAssetPath: (filename) => ipcRenderer.invoke('get-asset-path', filename),
 
   // Window management
