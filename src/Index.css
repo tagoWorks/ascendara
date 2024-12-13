@@ -1,0 +1,48 @@
+.loading-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--background);
+}
+
+.loading-icon {
+  width: 128px;
+  height: 128px;
+  object-fit: contain;
+}
+
+.toaster-container {
+  position: fixed !important;
+  z-index: 9999 !important;
+}
+
+[data-sonner-toaster] {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: auto;
+}
+
+[data-sonner-toast] [data-description] {
+  margin-top: 4px !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  opacity: 0.9 !important;
+}
+
+[data-sonner-toast] [data-button] {
+  font-size: 0.875rem !important;
+  padding: 6px 12px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 4px !important;
+  margin-top: 8px !important;
+  transition: background-color 0.2s !important;
+}
+
+[data-sonner-toast] [data-button]:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+} 

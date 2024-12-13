@@ -7,38 +7,21 @@ const fs = require('fs-extra');
 const os = require('os')
 const { spawn } = require('child_process');
 require("dotenv").config()
+const disk = require('diskusage');
+const { exec } = require('child_process');
 let rpc;
 let has_launched = false;
 let is_latest = true;
+let updateDownloadInProgress = false;
+let updateDownloaded = false;
+let downloadUpdatePromise = null;
+let notificationShown = false;
 
-const CURRENT_VERSION = "6.3.6";
 
-const clientId = process.env.DISCKEY;;
-
-
-// create the app window
-function createWindow() {
-  const mainWindow = new BrowserWindow({
-    title: 'Ascendara',
-    icon: path.join(__dirname, 'icon.ico'),
-    width: 1600,
-    height: 800,
-    autoHideMenuBar: true,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: true,
-      contextIsolation: true,
-    }
-  });
-  mainWindow.loadURL('http://localhost:5173/')
-  //mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));
-  mainWindow.setMinimumSize(1600, 800);
-}
-app.on('ready', () => {
-  createWindow();
-});
+const CURRENT_VERSION = "7.0.0";
 
 // Initialize Discord RPC
+const clientId = process.env.DISCKEY;;
 rpc = new Client({ transport: 'ipc' });
 
 rpc.on('ready', () => {
@@ -52,23 +35,75 @@ rpc.on('ready', () => {
 });
 
 rpc.login({ clientId }).catch(console.error);
-axios.get('https://api.ascendara.app/')
-  .then(response => {
+
+
+
+async function checkVersionAndUpdate() {
+  try {
+    const response = await axios.get('https://api.ascendara.app/');
     const latest_version = response.data.appVer;
-    if (latest_version !== CURRENT_VERSION) {
-      is_latest = false;
-      console.log(`Update available. Version: ${CURRENT_VERSION} < ${latest_version}`);
-    } else {
-      console.log(`No update available. Version: ${CURRENT_VERSION}`);
-      is_latest = true;
+    
+    is_latest = latest_version === CURRENT_VERSION;
+    console.log(`Version check: Current=${CURRENT_VERSION}, Latest=${latest_version}, Is Latest=${is_latest}`);
+    
+    if (!is_latest) {
+      const settings = await getSettings();
+      if (settings.autoUpdate && !updateDownloadInProgress) {
+        // Start background download
+        downloadUpdatePromise = downloadUpdateInBackground();
+      } else if (!settings.autoUpdate && !notificationShown) {
+        // Show update available notification
+        notificationShown = true; // Ensure notification is only shown once
+        BrowserWindow.getAllWindows().forEach(window => {
+          window.webContents.send('update-available');
+        });
+      }
     }
-  })
-  .catch(error => {
-    is_latest = true;
-    console.error('Error checking for updates:', error);
-  });
+    
+    return is_latest;
+  } catch (error) {
+    console.error('Error checking version:', error);
+    return true;
+  }
+}
+
+async function downloadUpdateInBackground() {
+  if (updateDownloadInProgress) return;
+  updateDownloadInProgress = true;
+
+  try {
+    const updateUrl = 'https://lfs.ascendara.app/AscendaraInstaller.exe?update';
+    const tempDir = path.join(os.tmpdir(), 'ascendarainstaller');
+    const installerPath = path.join(tempDir, 'AscendaraInstaller.exe');
+
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
+    const response = await axios({
+      url: updateUrl,
+      method: 'GET',
+      responseType: 'arraybuffer'
+    });
+
+    fs.writeFileSync(installerPath, Buffer.from(response.data));
+    
+    updateDownloaded = true;
+    updateDownloadInProgress = false;
+
+    // Notify that update is ready
+    BrowserWindow.getAllWindows().forEach(window => {
+      window.webContents.send('update-ready');
+    });
+  } catch (error) {
+    console.error('Error downloading update:', error);
+    updateDownloadInProgress = false;
+  }
+}
+
+
 
 let electronDl;
+const TIMESTAMP_FILE = path.join(os.homedir(), 'timestamp.ascendara.json');
 
 (async () => {
   electronDl = await import('electron-dl');
@@ -86,58 +121,8 @@ ipcMain.handle('override-api-key', (event, newApiKey) => {
 });
 
 ipcMain.handle('get-api-key', () => {
-  return apiKeyOverride || process.env.AUTHORIZATION;
+  return apiKeyOverride || APIKEY;
 });
-
-// Get all backgrounds from backgrounds folder (for themes/bg later on)
-ipcMain.handle('get-backgrounds', async () => {
-  const backgroundsDirectory = path.join(app.getPath('userData'), '/backgrounds');
-  const files = await fs.readdir(backgroundsDirectory);
-
-  const backgrounds = await Promise.all(files.map(async (file) => {
-    const filePath = path.join(backgroundsDirectory, file);
-    const fileBuffer = await fs.readFile(filePath);
-    const fileBase64 = fileBuffer.toString('base64');
-
-    return {
-      name: file,
-      preview: `data:image/png;base64,${fileBase64}`,
-    };
-  }));
-
-  return backgrounds;
-});
-
-
-ipcMain.handle('set-background', async (event, color, gradient) => {
-  console.log(color, gradient);
-  const backgroundsDirectory = path.join(app.getPath('userData'), '/backgrounds');
-  const files = await fs.readdir(backgroundsDirectory);
-
-  const backgroundFile = files.find(file => {
-    const name = file.replace(/\.(png|jpg|jpeg)$/i, '');
-    const isGradient = name.includes('(Gradient)');
-    const isSolid = name.includes('(Solid)');
-    const isMatch = isGradient ? gradient : isSolid ? !gradient : false;
-    const colorMatch = name.replace(/\s*\([^)]*\)\s*/g, '').toLowerCase() === color.toLowerCase();
-    return isMatch && colorMatch;
-  });
-
-  if (backgroundFile) {
-    const backgroundPath = path.join(backgroundsDirectory, backgroundFile);
-    const backgroundBuffer = await fs.readFile(backgroundPath);
-    const backgroundBase64 = backgroundBuffer.toString('base64');
-    console.log(backgroundPath)
-
-    const mainWindow = BrowserWindow.getFocusedWindow();
-    if (mainWindow) {
-      mainWindow.webContents.executeJavaScript(`
-        document.body.style.background-image = 'url(data:image/png;base64,${backgroundBase64})';
-      `);
-    }
-  }
-});
-
 
 // Handle external urls
 ipcMain.handle('open-url', async (event, url) => {
@@ -424,21 +409,56 @@ ipcMain.handle('retry-download', async (event, link, game, online, dlc, version)
 })
 
 
-ipcMain.handle('is-new', (event) => {
-  const filePath = path.join(app.getPath('home'), 'timestamp.ascendara.json');
+ipcMain.handle('is-new', () => {
+  const filePath = TIMESTAMP_FILE;
   try {
     fs.accessSync(filePath);
-    return false;
+    return false; // File exists, not new
   } catch (error) {
-    // Don't create the file here anymore
-    return true;
+    return true; // File does not exist, is new
   }
 });
 
-// Add a new handler to create the timestamp file
+ipcMain.handle('is-v7', () => {
+  try {
+    const data = fs.readFileSync(TIMESTAMP_FILE, 'utf8');
+    const timestamp = JSON.parse(data);
+    return timestamp.hasOwnProperty('v7') && timestamp.v7 === true;
+  } catch (error) {
+    return false; // If there's an error, assume not v7
+  }
+});
+
+ipcMain.handle('set-v7', () => {
+  const filePath = path.join(os.homedir(), 'timestamp.ascendara.json');
+  try {
+    let timestamp = {
+      timestamp: Date.now(),
+      v7: true
+    };
+
+    // If file exists, update it while preserving the original timestamp
+    if (fs.existsSync(filePath)) {
+      const existingData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      timestamp.timestamp = existingData.timestamp;
+    }
+
+    fs.writeFileSync(filePath, JSON.stringify(timestamp, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Error setting v7:', error);
+    return false;
+  }
+});
+
 ipcMain.handle('create-timestamp', () => {
-  const filePath = path.join(app.getPath('home'), 'timestamp.ascendara.json');
-  fs.writeFileSync(filePath, JSON.stringify({ timestamp: Date.now() }));
+  const filePath = path.join(os.homedir(), 'timestamp.ascendara.json');
+  const timestamp = {
+    timestamp: Date.now(),
+    v7: true
+  };
+  console.log(timestamp)
+  fs.writeFileSync(filePath, JSON.stringify(timestamp, null, 2));
 });
 
 // Determine weather to show the dev warning modal or not
@@ -459,137 +479,242 @@ ipcMain.handle('has-launched', (event) => {
   }
 });
 
-ipcMain.handle('is-latest', (event) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle('is-latest', async () => {
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
-    const settings = JSON.parse(data);
-    if (!settings.autoUpdate) {
-      console.log('Auto update is disabled');
-      return true;
-    }
-    if (is_latest) {
-      return true;
-    } else {
-      return false;
-    }
+    const response = await axios.get('https://api.ascendara.app/');
+    const latest_version = response.data.appVer;
+    
+    is_latest = latest_version === CURRENT_VERSION;
+    console.log(`Version check: Current=${CURRENT_VERSION}, Latest=${latest_version}, Is Latest=${is_latest}`);
+    
+    return is_latest;
   } catch (error) {
-    console.error('Error reading the settings file:', error);
-    return true;
+    console.error('Error checking version:', error);
+    return true; // Return true on error to prevent update notifications
   }
 });
 // Read the settings JSON file and send it to the renderer process
 ipcMain.handle('get-settings', () => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
-    const settings = JSON.parse(data);
-    if (settings.seamlessGoFileDownloads) {
-      delete settings.seamlessGoFileDownloads;
+    let settings = {};
+    
+    // Try to read existing settings
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath, 'utf8');
+      settings = JSON.parse(data);
     }
-    return settings;
-  } catch (error) {
-    console.error('Error reading the settings file:', error);
-    console.log('Creating settings...')
-    fs.writeFileSync(filePath,
-      JSON.stringify({
-        seamlessDownloads: true,
-        enableNotifications: false,
-        autoUpdate: true,
-        allowOldLinks: false,
-        downloadDirectory: '',
-      })
-    );
-    return {
+    
+    // Define default settings
+    const defaultSettings = {
       seamlessDownloads: true,
-      enableNotifications: false,
+      checkVersionOnLaunch: true,
+      viewOldDownloadLinks: false,
+      seeInappropriateContent: false,
+      sendAnalytics: true,
       autoUpdate: true,
-      allowOldLinks: false,
-      downloadDirectory: '',
+      notifications: true,
+      primaryGameSource: 'steamrip',
+      enabledSources: {
+        steamrip: true,
+      },
+      ascendaraSettings: {
+        preferredCDN: 'default',
+      },
+      downloadDirectory: settings.downloadDirectory || ''
     };
+
+    // Merge existing settings with defaults, preserving existing values
+    const mergedSettings = {
+      ...defaultSettings,
+      ...settings,
+      enabledSources: {
+        ...defaultSettings.enabledSources,
+        ...(settings.enabledSources || {})
+      },
+      ascendaraSettings: {
+        ...defaultSettings.ascendaraSettings,
+        ...(settings.ascendaraSettings || {})
+      },
+      // Ensure download directory is preserved from existing settings
+      downloadDirectory: settings.downloadDirectory || defaultSettings.downloadDirectory
+    };
+
+    // Save merged settings only if file doesn't exist
+    if (!fs.existsSync(filePath)) {
+      fs.writeFileSync(filePath, JSON.stringify(mergedSettings, null, 2));
+    }
+
+    return mergedSettings;
+  } catch (error) {
+    console.error('Error reading settings:', error);
+    // Return default settings if there's an error
+    const defaultSettings = {
+      seamlessDownloads: true,
+      checkVersionOnLaunch: true,
+      viewOldDownloadLinks: false,
+      seeInappropriateContent: false,
+      sendAnalytics: true,
+      autoUpdate: true,
+      notifications: true,
+      primaryGameSource: 'steamrip',
+      enabledSources: {
+        steamrip: true,
+        steamunlocked: false,
+        fitpackgames: false,
+      },
+      ascendaraSettings: {
+        preferredCDN: 'auto',
+        preferredRegion: 'auto',
+        useP2P: true
+      },
+      downloadDirectory: ''
+    };
+    return defaultSettings;
   }
 });
 
 // Save the settings JSON file
-ipcMain.handle('save-settings', (event, options, directory) => {
+ipcMain.handle('save-settings', async (event, options, directory) => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, '{}');
+  try {
+    let existingSettings = {};
+    
+    // Try to read existing settings
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath, 'utf8');
+      existingSettings = JSON.parse(data);
+    }
+
+    // Merge new settings with existing ones
+    const mergedSettings = {
+      ...existingSettings,
+      ...options,
+      // Preserve existing download directory if none provided
+      downloadDirectory: directory || existingSettings.downloadDirectory || options.downloadDirectory
+    };
+
+    // Save merged settings
+    fs.writeFileSync(filePath, JSON.stringify(mergedSettings, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Error saving settings:', error);
+    return false;
   }
-  const data = JSON.stringify({ ...options, downloadDirectory: directory });
-  fs.writeFileSync(filePath, data);
 });
 
 let isInstalling = false;
 
 ipcMain.handle('install-dependencies', async (event) => {
-  if (isInstalling) {
-    return { success: false, message: 'Installation already in progress' };
-  }
-
-  isInstalling = true;
-
-  try {
-    const tempDir = path.join(os.tmpdir(), 'ascendaradependencies');
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir);
+    if (isInstalling) {
+        return { success: false, message: 'Installation already in progress' };
     }
 
-    const zipUrl = 'https://x.tago.works/storage/ascendara-deps.zip';
-    const zipPath = path.join(tempDir, 'deps.zip');
-    const res = await fetch(zipUrl);
-    const arrayBuffer = await res.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    fs.writeFileSync(zipPath, buffer);
+    isInstalling = true;
 
-    await fs.createReadStream(zipPath)
-      .pipe(unzipper.Extract({ path: tempDir }))
-      .promise();
+    try {
+        const tempDir = path.join(os.tmpdir(), 'ascendaradependencies');
+        if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir);
+        }
 
-    const files = fs.readdirSync(tempDir);
-    const executables = files.filter(file => path.extname(file) === '.exe');
+        const zipUrl = 'https://storage.ascendara.app/files/deps.zip';
+        const zipPath = path.join(tempDir, 'deps.zip');
+        const res = await fetch(zipUrl);
+        const arrayBuffer = await res.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        fs.writeFileSync(zipPath, buffer);
 
-    for (const executable of executables) {
-      const exePath = path.join(tempDir, executable);
-      
-      // Check if the file is executable
-      fs.chmodSync(exePath, '755');
+        await fs.createReadStream(zipPath)
+            .pipe(unzipper.Extract({ path: tempDir }))
+            .promise();
 
-      // Run the executable with elevated privileges
-      await new Promise((resolve, reject) => {
-        console.log(`Starting installation of: ${executable}`);
-        const process = spawn('powershell.exe', ['-Command', `Start-Process -FilePath "${exePath}" -Verb RunAs -Wait`], { shell: true });
-        process.on('error', (error) => {
-          reject(error);
+        const files = fs.readdirSync(tempDir);
+        const executables = files.filter(file => path.extname(file) === '.exe');
+        const msis = files.filter(file => path.extname(file) === '.msi');
+
+        for (const executable of executables) {
+            const exePath = path.join(tempDir, executable);
+            
+            // Notify the renderer that installation has started
+            event.sender.send('dependency-installation-status', { name: executable, status: 'starting' });
+
+            // Check if the file is executable
+            fs.chmodSync(exePath, '755');
+
+            // Run the executable with elevated privileges
+            await new Promise((resolve, reject) => {
+                console.log(`Starting installation of: ${executable}`);
+                const process = spawn('powershell.exe', ['-Command', `Start-Process -FilePath "${exePath}" -Verb RunAs -Wait`], { shell: true });
+                process.on('error', (error) => {
+                    reject(error);
+                });
+                process.on('exit', (code) => {
+                    if (code === 0) {
+                        console.log(`Finished installing: ${executable}`);
+                        // Notify the renderer that installation has finished
+                        event.sender.send('dependency-installation-status', { name: executable, status: 'finished' });
+                        resolve();
+                    } else {
+                        console.error(`Failed to install: ${executable}`);
+                        // Notify the renderer that installation has failed
+                        event.sender.send('dependency-installation-status', { name: executable, status: 'failed' });
+                        reject(new Error(`Process exited with code ${code}`));
+                    }
+                });
+            });
+        }
+
+        // Handle .msi files
+        for (const msi of msis) {
+            const msiPath = path.join(tempDir, msi);
+            // Notify the renderer that installation has started
+            event.sender.send('dependency-installation-status', { name: msi, status: 'starting' });
+
+            await new Promise((resolve, reject) => {
+                console.log(`Starting installation of: ${msi}`);
+                const process = spawn(msiPath, [], { 
+                    detached: true, 
+                    shell: true, 
+                    stdio: 'ignore', // Ignore stdio to prevent output
+                    windowsHide: true // Hide the command prompt window
+                });
+                process.on('error', (error) => {
+                    reject(error);
+                });
+                process.on('exit', (code) => {
+                    if (code === 0) {
+                        console.log(`Finished installing: ${msi}`);
+                        // Notify the renderer that installation has finished
+                        event.sender.send('dependency-installation-status', { name: msi, status: 'finished' });
+                        resolve();
+                    } else {
+                        console.error(`Failed to install: ${msi}`);
+                        // Notify the renderer that installation has failed
+                        event.sender.send('dependency-installation-status', { name: msi, status: 'failed' });
+                        reject(new Error(`Process exited with code ${code}`));
+                    }
+                });
+            });
+        }
+
+        // Clean up
+        fs.rm(tempDir, { recursive: true, force: true }, (err) => {
+            if (err) {
+                console.error('Error removing temp directory:', err);
+            } else {
+                console.log('Temp directory removed successfully');
+            }
         });
-        process.on('exit', (code) => {
-          if (code === 0) {
-            console.log(`Finished installing: ${executable}`);
-            resolve();
-          } else {
-            reject(new Error(`Process exited with code ${code}`));
-          }
-        });
-      });
+
+        console.log('All installations complete');
+        return { success: true, message: 'All dependencies installed successfully' };
+    } catch (error) {
+        console.error('An error occurred:', error);
+        return { success: false, message: error.message };
+    } finally {
+        isInstalling = false;
     }
-
-    // Clean up
-    fs.rm(tempDir, { recursive: true, force: true }, (err) => {
-      if (err) {
-        console.error('Error removing temp directory:', err);
-      } else {
-        console.log('Temp directory removed successfully');
-      }
-    });
-
-    console.log('All installations complete');
-    return { success: true, message: 'All dependencies installed successfully' };
-  } catch (error) {
-    console.error('An error occurred:', error);
-    return { success: false, message: error.message };
-  } finally {
-    isInstalling = false;
-  }
 });
 
 ipcMain.handle('get-games', async () => {
@@ -626,23 +751,32 @@ ipcMain.handle('get-games', async () => {
   }
 });
 
+async function getSettings() {
+  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Error reading settings:', error);
+    return { autoUpdate: true }; // Default to true if settings file doesn't exist
+  }
+}
+
 ipcMain.handle('update-ascendara', async () => {
-  if (is_latest) {
-    return;
-  } else {
-    const updateUrl = 'https://lfs.ascendara.app/AscendaraInstaller.exe?update';
+  if (is_latest) return;
+  
+  if (!updateDownloaded) {
+    if (downloadUpdatePromise) {
+      await downloadUpdatePromise;
+    } else {
+      await downloadUpdateInBackground();
+    }
+  }
+  
+  if (updateDownloaded) {
     const tempDir = path.join(os.tmpdir(), 'ascendarainstaller');
     const installerPath = path.join(tempDir, 'AscendaraInstaller.exe');
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir);
-    }
-
-    // Download the installer
-    const res = await fetch(updateUrl);
-    const arrayBuffer = await res.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    fs.writeFileSync(installerPath, buffer);
-
+    
     const installerProcess = spawn(installerPath, [], { 
       detached: true, 
       stdio: 'ignore',
@@ -651,6 +785,25 @@ ipcMain.handle('update-ascendara', async () => {
 
     installerProcess.unref();
     app.quit();
+  }
+});
+
+app.whenReady().then(async () => {
+  try {
+    await checkVersionAndUpdate();
+    createWindow();
+  } catch (error) {
+    console.error('Error during startup:', error);
+    createWindow();
+  }
+});
+
+ipcMain.handle('check-for-updates', async () => {
+  try {
+    return await checkVersionAndUpdate();
+  } catch (error) {
+    console.error('Error checking for updates:', error);
+    return true; // Return true to prevent update notifications on error
   }
 });
 
@@ -1062,6 +1215,59 @@ ipcMain.handle('download-finished', async (event, game) => {
       }
     }});
 
+ipcMain.handle('minimize-window', () => {
+  const win = BrowserWindow.getFocusedWindow();
+  if (win) win.minimize();
+});
+
+ipcMain.handle('maximize-window', () => {
+  const win = BrowserWindow.getFocusedWindow();
+  if (win) {
+    if (win.isMaximized()) {
+      win.unmaximize();
+    } else {
+      win.maximize();
+    }
+  }
+});
+
+ipcMain.handle('close-window', () => {
+  const win = BrowserWindow.getFocusedWindow();
+  if (win) win.close();
+});
+
+function createWindow() {
+  const mainWindow = new BrowserWindow({
+    title: 'Ascendara',
+    icon: path.join(__dirname, 'icon.ico'),
+    width: 1600,
+    height: 800,
+    frame: false,
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: 'rgba(0, 0, 0, 0)',
+      symbolColor: '#000000',
+      height: 28
+    },
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: true,
+      contextIsolation: true,
+    }
+  });
+  mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));
+  // mainWindow.loadURL('http://localhost:5173');
+  mainWindow.setMinimumSize(1600, 800);
+
+  mainWindow.on('maximize', () => {
+    mainWindow.webContents.send('window-state-changed', true);
+  });
+
+  mainWindow.on('unmaximize', () => {
+    mainWindow.webContents.send('window-state-changed', false);
+  });
+}
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
@@ -1072,4 +1278,97 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+
+ipcMain.handle('welcome-complete', (event) => {
+  // Notify all windows
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('welcome-complete');
+  });
+});
+
+ipcMain.handle('check-v7-welcome', async () => {
+  try {
+    const v7Path = path.join(app.getPath('userData'), 'v7.json');
+    return !fs.existsSync(v7Path);
+  } catch (error) {
+    console.error('Error checking v7 welcome:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('get-asset-path', (event, filename) => {
+  let assetPath;
+  if (!app.isPackaged) {
+    // In development
+    assetPath = path.join(__dirname, '..', 'public', filename);
+  } else {
+    // In production
+    assetPath = path.join(process.resourcesPath, 'public', filename);
+  }
+  
+  if (!fs.existsSync(assetPath)) {
+    console.error(`Asset not found: ${assetPath}`);
+    return null;
+  }
+
+  // Return the raw file data as base64
+  const imageBuffer = fs.readFileSync(assetPath);
+  return `data:image/png;base64,${imageBuffer.toString('base64')}`;
+});
+
+ipcMain.handle('clear-cache', async () => {
+  try {
+    const mainWindow = BrowserWindow.getFocusedWindow();
+    if (mainWindow) {
+      // Clear all browser data including cache, cookies, storage etc.
+      await mainWindow.webContents.session.clearStorageData({
+        storages: [
+          'appcache',
+          'cookies',
+          'filesystem',
+          'indexdb',
+          'localstorage',
+          'shadercache',
+          'websql',
+          'serviceworkers',
+          'cachestorage'
+        ]
+      });
+      
+      // Clear HTTP cache specifically
+      await mainWindow.webContents.session.clearCache();
+      
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error clearing cache:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('get-drive-space', async (event, directory) => {
+    try {
+        const { available } = await disk.check(directory);
+        return { freeSpace: available };
+    } catch (error) {
+        console.error('Error getting drive space:', error);
+        return { freeSpace: 0 };
+    }
+});
+
+ipcMain.handle('get-platform', () => {
+    return process.platform
+})
+
+// Add the settings change event emitter
+ipcMain.on('settings-changed', () => {
+    BrowserWindow.getAllWindows().forEach(window => {
+        window.webContents.send('settings-updated')
+    })
+})
+
+ipcMain.handle('is-update-downloaded', () => {
+  return updateDownloaded;
 });

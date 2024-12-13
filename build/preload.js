@@ -1,14 +1,23 @@
 const { contextBridge, ipcRenderer } = require('electron');
-const { link } = require('original-fs');
+const https = require('https');
+
+// Create a map to store callbacks
+const callbacks = new Map();
 
 contextBridge.exposeInMainWorld('electron', {
+  ipcRenderer: {
+    on: (channel, func) => ipcRenderer.on(channel, (event, ...args) => func(event, ...args)),
+    off: (channel, func) => ipcRenderer.off(channel, func),
+    invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+  },
+
   // Settings and Configuration
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (options, directory) => ipcRenderer.invoke('save-settings', options, directory),
   getAPIKey: () => ipcRenderer.invoke('get-api-key'),
   getVersion: () => ipcRenderer.invoke('get-version'),
   hasLaunched: () => ipcRenderer.invoke('has-launched'),
-  
+
   // Game Management
   getGames: () => ipcRenderer.invoke('get-games'),
   getCustomGames: () => ipcRenderer.invoke('get-custom-games'),
@@ -25,9 +34,7 @@ contextBridge.exposeInMainWorld('electron', {
   openDirectoryDialog: () => ipcRenderer.invoke('open-directory-dialog'),
   openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
   getDownloadDirectory: () => ipcRenderer.invoke('get-download-directory'),
-  getTotalSpace: () => ipcRenderer.invoke('get-total-space'),
-  getSpaceUsed: () => ipcRenderer.invoke('get-space-used'),
-  getGames: () => ipcRenderer.invoke('get-games'),
+  getDriveSpace: (directory) => ipcRenderer.invoke('get-drive-space', directory),
 
   // Download and Installation
   installDependencies: () => ipcRenderer.invoke('install-dependencies'),
@@ -48,11 +55,98 @@ contextBridge.exposeInMainWorld('electron', {
   isLatest: () => ipcRenderer.invoke('is-latest'),
   updateAscendara: () => ipcRenderer.invoke('update-ascendara'),
   uninstallAscendara: () => ipcRenderer.invoke('uninstall-ascendara'),
-  isNew: () => ipcRenderer.invoke('is-new'),
   openURL: (url) => ipcRenderer.invoke('open-url', url),
   overrideApiKey: (newApiKey) => ipcRenderer.invoke('override-api-key', newApiKey),
   openReqPath: (game) => ipcRenderer.invoke('required-libraries', game),
-  modifyGameExecutable: (game, executable) => ipcRenderer.invoke('modify-game-executable', game, executable)
+  modifyGameExecutable: (game, executable) => ipcRenderer.invoke('modify-game-executable', game, executable),
+  getAssetPath: (filename) => ipcRenderer.invoke('get-asset-path', filename),
+
+  // Welcome flow functions
+  isNew: () => ipcRenderer.invoke('is-new'),
+  isV7: () => ipcRenderer.invoke('is-v7'),
+  hasLaunched: () => ipcRenderer.invoke('has-launched'),
+
+  // Callback handling
+  onWelcomeComplete: (callback) => {
+    ipcRenderer.on('welcome-complete', () => callback());
+  },
+  triggerWelcomeComplete: () => {
+    ipcRenderer.invoke('welcome-complete');
+  },
+  checkV7Welcome: () => ipcRenderer.invoke('check-v7-welcome'),
+  setV7: () => ipcRenderer.invoke('set-v7'),
+  getAssetPath: (filename) => ipcRenderer.invoke('get-asset-path', filename),
+
+  // Window management
+  minimizeWindow: () => ipcRenderer.invoke('minimize-window'),
+  maximizeWindow: () => ipcRenderer.invoke('maximize-window'),
+  closeWindow: () => ipcRenderer.invoke('close-window'),
+  onWindowStateChange: (callback) => {
+    ipcRenderer.on('window-state-changed', (_, maximized) => callback(maximized));
+  },
+  clearCache: () => ipcRenderer.invoke('clear-cache'),
+
+  request: (url, options) => {
+    return new Promise((resolve, reject) => {
+      const req = https.request(url, {
+        method: options.method,
+        headers: options.headers,
+        timeout: options.timeout
+      }, (res) => {
+        let data = '';
+        
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        
+        res.on('end', () => {
+          resolve({
+            ok: res.statusCode >= 200 && res.statusCode < 300,
+            status: res.statusCode,
+            data: data
+          });
+        });
+      });
+
+      req.on('error', (error) => {
+        reject(error);
+      });
+
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error('Request timed out'));
+      });
+
+      req.end();
+    });
+  },
+
+  onUpdateAvailable: (callback) => {
+    ipcRenderer.on('update-available', callback);
+  },
+  
+  onUpdateReady: (callback) => {
+    ipcRenderer.on('update-ready', callback);
+  },
+  
+  removeUpdateAvailableListener: (callback) => {
+    ipcRenderer.removeListener('update-available', callback);
+  },
+  
+  removeUpdateReadyListener: (callback) => {
+    ipcRenderer.removeListener('update-ready', callback);
+  },
+  
+  updateAscendara: () => ipcRenderer.invoke('update-ascendara'),
+  isUpdateDownloaded: () => ipcRenderer.invoke('is-update-downloaded'),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  platform: ipcRenderer.invoke('get-platform'),
+  onSettingsChanged: (callback) => {
+    ipcRenderer.on('settings-updated', callback);
+    return () => {
+      ipcRenderer.removeListener('settings-updated', callback);
+    }
+  },
 });
 
 window.addEventListener('DOMContentLoaded', () => {

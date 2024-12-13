@@ -1,6 +1,6 @@
 {
   "name": "ascendara",
-  "version": "6.3.6",
+  "version": "7.0.0",
   "main": "main.js",
   "description": "Download games effortlessly with Ascendara. Copy the link, paste it into the app, and download.",
   "scripts": {
@@ -8,26 +8,53 @@
     "build": "vite build ./src",
     "build-react": "npm run build && electron-builder",
     "electron": "electron ./build/main.js",
-    "start": "concurrently \"npm run dev\" \"npm run electron\"",
-    "dist": "electron-builder -c.extraMetadata.main=build/main.js"
+    "start": "concurrently \"vite\" \"wait-on tcp:5173 && electron ./build/main.js\"",
+    "dist": "python execute.py",
+    "buildwithelectron": "electron-builder -c.extraMetadata.main=build/main.js"
   },
   "dependencies": {
+    "@million/lint": "^1.0.13",
     "@nextui-org/react": "latest",
+    "@radix-ui/react-alert-dialog": "^1.1.2",
+    "@radix-ui/react-aspect-ratio": "^1.1.0",
+    "@radix-ui/react-checkbox": "^1.1.2",
+    "@radix-ui/react-dialog": "^1.1.2",
+    "@radix-ui/react-dropdown-menu": "^2.1.2",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-progress": "^1.1.0",
+    "@radix-ui/react-radio-group": "^1.2.1",
+    "@radix-ui/react-scroll-area": "^1.2.1",
+    "@radix-ui/react-select": "^2.1.2",
+    "@radix-ui/react-separator": "^1.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.1",
+    "@radix-ui/react-tabs": "^1.1.1",
+    "@radix-ui/react-toggle": "^1.1.0",
+    "@radix-ui/react-tooltip": "^1.1.4",
     "0r": "^1.0.0",
     "axios": "^1.6.8",
     "child_process": "^1.0.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "discord-rpc": "^4.0.1",
+    "diskusage": "^1.2.0",
     "dotenv": "^16.4.5",
     "electron-dl": "^4.0.0",
-    "framer-motion": "^11.2.6",
+    "framer-motion": "^11.13.3",
     "fs-extra": "^11.2.0",
     "fuse.js": "^7.0.0",
     "lockfile": "^1.0.4",
+    "lucide-react": "^0.468.0",
+    "next-themes": "^0.4.4",
     "path": "^0.12.7",
-    "react": "latest",
+    "react": "^18.3.1",
     "react-dom": "^18.2.0",
+    "react-icons": "^5.4.0",
     "react-router-dom": "^6.23.1",
+    "sonner": "^1.7.1",
+    "tailwind-merge": "^2.5.5",
+    "tailwindcss-animate": "^1.0.7",
     "unzipper": "^0.12.1"
   },
   "devDependencies": {
@@ -39,8 +66,9 @@
     "electron-builder": "^24.13.3",
     "esbuild-wasm": "0.17.12",
     "postcss": "^8.4.21",
-    "tailwindcss": "^3.2.7",
-    "vite": "^4.1.4"
+    "tailwindcss": "^3.4.16",
+    "vite": "^4.1.4",
+    "wait-on": "^8.0.1"
   },
   "keywords": [],
   "author": "tagoWorks",
@@ -48,7 +76,17 @@
   "build": {
     "asar": true,
     "appId": "com.tagoworks.ascendara",
+    "icon": "build/icon.ico",
+    "files": [
+      "build/*",
+      "package.json",
+      "public/*"
+    ],
     "extraResources": [
+      {
+        "from": "public",
+        "to": "public"
+      },
       {
         "from": "binaries/AscendaraDownloader/dist/AscendaraDownloader.exe",
         "to": "."
@@ -61,10 +99,6 @@
         "from": "binaries/AscendaraGameHandler/dist/AscendaraGameHandler.exe",
         "to": "."
       }
-    ],
-    "files": [
-      "build/*",
-      "package.json"
     ],
     "productName": "Ascendara",
     "directories": {
