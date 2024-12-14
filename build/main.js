@@ -7,21 +7,19 @@ const fs = require('fs-extra');
 const os = require('os')
 const { spawn } = require('child_process');
 require("dotenv").config()
-const disk = require('diskusage');
-const { exec } = require('child_process');
 let rpc;
 let has_launched = false;
 let is_latest = true;
-let updateDownloadInProgress = false;
 let updateDownloaded = false;
-let downloadUpdatePromise = null;
-let notificationShown = false;
+let updateDownloadInProgress = false;
+let isDev = false;
 
-
-const CURRENT_VERSION = "7.0.0";
+const CURRENT_VERSION = "7.1.0";
+APIKEY = "4qWstsYpCdMbNOBz0653ODL_upu-0ohXqD1vyf4IdUw"
+analyticsAPI = "AIzaSyDhYXKtD7BpDnJ0O3DhYXKtD7BpDnJ0O3DhYXKtD7BpDnJ0"
 
 // Initialize Discord RPC
-const clientId = process.env.DISCKEY;;
+const clientId = '1277379302945718356';
 rpc = new Client({ transport: 'ipc' });
 
 rpc.on('ready', () => {
@@ -142,6 +140,10 @@ ipcMain.handle('stop-all-downloads', async () => {
   }
   downloadProcesses.clear();
   runGameProcesses.clear();
+});
+
+ipcMain.handle('is-update-downloaded', () => {
+  return updateDownloaded;
 });
 
 ipcMain.handle('get-version', async () => {
@@ -479,6 +481,9 @@ ipcMain.handle('has-launched', (event) => {
   }
 });
 
+ipcMain.handle('get-analytics-key', () => {
+  return analyticsAPI;
+});
 
 ipcMain.handle('set-timestamp-value', async (event, key, value) => {
   const filePath = TIMESTAMP_FILE;
@@ -1284,11 +1289,12 @@ function createWindow() {
       contextIsolation: true,
     }
   });
-  // When in production:
-  // mainwindow.loadFile('file://' + path.join(__dirname, 'index.html'));
+  if (isDev) {
+    mainWindow.loadURL('http://localhost:5173');
+  } else {
+    mainWindow.loadFile('file://' + path.join(__dirname, 'index.html'));
+  }
 
-  
-  mainWindow.loadURL('http://localhost:5173');
   mainWindow.setMinimumSize(1600, 800);
 
   mainWindow.on('maximize', () => {
@@ -1400,7 +1406,3 @@ ipcMain.on('settings-changed', () => {
         window.webContents.send('settings-updated')
     })
 })
-
-ipcMain.handle('is-update-downloaded', () => {
-  return updateDownloaded;
-});

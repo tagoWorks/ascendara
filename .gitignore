@@ -32,3 +32,4 @@ dist-ssr
 /main-build
 analytics.py
 package-lock.json
+src/services/analyticsService.js

@@ -125,6 +125,9 @@ export default function DownloadPage() {
         gameData.size
       );
       
+      // Add a 2-second delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       // Show success notification
       toast.success("Download started successfully!");
       
@@ -425,7 +428,7 @@ export default function DownloadPage() {
                 {isStartingDownload ? (
                   <>
                     <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-                    Starting Download...
+                    Downloading
                   </>
                 ) : (
                   "Download Now"
@@ -476,4 +479,4 @@ export default function DownloadPage() {
       </div>
     </div>
   );
-} 
+}

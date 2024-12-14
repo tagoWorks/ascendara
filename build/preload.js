@@ -14,7 +14,7 @@ contextBridge.exposeInMainWorld('electron', {
   // Settings and Configuration
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (options, directory) => ipcRenderer.invoke('save-settings', options, directory),
-  getAPIKey: () => ipcRenderer.invoke('get-api-key'),
+  getAnalyticsKey: () => ipcRenderer.invoke('get-analytics-key'),
   getVersion: () => ipcRenderer.invoke('get-version'),
   hasLaunched: () => ipcRenderer.invoke('has-launched'),
 
@@ -60,6 +60,7 @@ contextBridge.exposeInMainWorld('electron', {
   openReqPath: (game) => ipcRenderer.invoke('required-libraries', game),
   modifyGameExecutable: (game, executable) => ipcRenderer.invoke('modify-game-executable', game, executable),
   getAssetPath: (filename) => ipcRenderer.invoke('get-asset-path', filename),
+  getAnalyticsKey: () => ipcRenderer.invoke('get-analytics-key'),
 
   // Welcome flow functions
   isNew: () => ipcRenderer.invoke('is-new'),
@@ -122,7 +123,7 @@ contextBridge.exposeInMainWorld('electron', {
       req.end();
     });
   },
-
+  
   onUpdateAvailable: (callback) => {
     ipcRenderer.on('update-available', callback);
   },

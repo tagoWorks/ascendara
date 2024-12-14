@@ -28,6 +28,7 @@ const Search = memo(() => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [showDLC, setShowDLC] = useState(false);
   const [showOnline, setShowOnline] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const gamesPerPage = useWindowSize();
   const [size, setSize] = useState(() => {
     const savedSize = localStorage.getItem('navSize');
@@ -40,6 +41,24 @@ const Search = memo(() => {
   const loaderRef = useRef(null);
   const gamesPerLoad = useWindowSize();
   const [apiMetadata, setApiMetadata] = useState(null);
+
+  const refreshGames = async () => {
+    setIsRefreshing(true);
+    try {
+      const response = await gameService.getAllGames();
+      setGames(Array.isArray(response.games) ? response.games : []);
+      setApiMetadata(response.metadata || null);
+    } catch (error) {
+      console.error('Error refreshing games:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    refreshGames().finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -176,8 +195,33 @@ const Search = memo(() => {
                       <p>Ascendara uses a custom developed database to store game links and information. This database is updated monthly.</p>
                       <Separator className="bg-border/50" />
                       <p>Total Games: {apiMetadata.games.toLocaleString()}</p>
-                      <p>Source: STEAMRIP</p>
+                      <p>Source: {apiMetadata.source}</p>
                       <p>Last Updated: {apiMetadata.getDate}</p>
+                      <Separator className="bg-border/50" />
+                      <div className="pt-2">
+                        <Button
+                          variant="outline"
+                          onClick={refreshGames}
+                          disabled={isRefreshing}
+                          className="w-full flex items-center justify-center gap-2"
+                        >
+                          <svg
+                            className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                          </svg>
+                          {isRefreshing ? 'Refreshing Index...' : 'Refresh Index'}
+                        </Button>
+                      </div>
                     </div>
                   </AlertDialogHeader>
                 </AlertDialogContent>
@@ -191,9 +235,9 @@ const Search = memo(() => {
                 <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   placeholder="Search games..."
-                  className="pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
                 />
               </div>
               <Sheet>
@@ -354,4 +398,4 @@ function useWindowSize() {
   return gamesPerPage;
 }
 
-export default Search; 
+export default Search;

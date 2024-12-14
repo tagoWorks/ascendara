@@ -1,25 +1,35 @@
 const API_URL = 'https://api.ascendara.app';
 const CACHE_KEY = 'ascendara_games_cache';
-const CACHE_TIMESTAMP_KEY = 'ascendara_games_timestamp';
-const METADATA_CACHE_KEY = 'ascendara_metadata_cache';
+const CACHE_TIMESTAMP_KEY = 'local_ascendara_games_timestamp';
+const METADATA_CACHE_KEY = 'local_ascendara_metadata_cache';
+const LAST_UPDATED_KEY = 'local_ascendara_last_updated';
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
 import { checkServerStatus } from './serverStatus';
 
 const gameService = {
+  parseDateString(dateStr) {
+    if (!dateStr) return null;
+    return new Date(dateStr).getTime();
+  },
+
   async getCachedData() {
     const cachedGames = localStorage.getItem(CACHE_KEY);
     const cachedMetadata = localStorage.getItem(METADATA_CACHE_KEY);
     const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+    const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
     const now = Date.now();
 
-    if (cachedGames && cachedMetadata && timestamp) {
+    if (cachedGames && cachedMetadata && timestamp && lastUpdated) {
       const age = now - parseInt(timestamp);
       if (age < CACHE_DURATION) {
-        return {
-          games: JSON.parse(cachedGames),
-          metadata: JSON.parse(cachedMetadata)
-        };
+        const shouldRefresh = await this.shouldRefreshData();
+        if (!shouldRefresh) {
+          return {
+            games: JSON.parse(cachedGames),
+            metadata: JSON.parse(cachedMetadata)
+          };
+        }
       }
     }
 
@@ -59,10 +69,10 @@ const gameService = {
     return {
       games: data.games,
       metadata: {
-        apiversion: data.apiversion,
+        apiversion: data.metadata.apiversion,
         games: data.games.length,
-        getDate: new Date().toLocaleString(),
-        source: data.source || 'API'
+        getDate: data.metadata.getDate,
+        source: data.metadata.source
       }
     };
   },
@@ -72,18 +82,34 @@ const gameService = {
       localStorage.setItem(CACHE_KEY, JSON.stringify(data.games));
       localStorage.setItem(METADATA_CACHE_KEY, JSON.stringify(data.metadata));
       localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+      if (data.metadata?.getDate) {
+        localStorage.setItem(LAST_UPDATED_KEY, data.metadata.getDate);
+      }
     } catch (error) {
       console.error('Error updating cache:', error);
+    }
+  },
+
+  async shouldRefreshData() {
+    const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
+    if (!lastUpdated) return true;
+
+    try {
+      const response = await fetch(`${API_URL}/json/games`);
+      const data = await response.json();
+      const serverLastUpdated = data.getDate;
+      
+      return !lastUpdated || lastUpdated !== serverLastUpdated;
+    } catch (error) {
+      console.error('Error checking last updated:', error);
+      return false;
     }
   },
 
   async getAllGames() {
     try {
       const data = await this.getCachedData();
-      return {
-        games: Array.isArray(data.games) ? data.games : [],
-        metadata: data.metadata
-      };
+      return data;
     } catch (error) {
       console.error('Error in getAllGames:', error);
       return { games: [], metadata: null };

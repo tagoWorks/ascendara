@@ -13,12 +13,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from './contexts/ThemeContext';
 import './Index.css';
 import { Toaster, toast } from 'sonner';
-import { analytics } from './services/analyticsService';
 import UpdateOverlay from './components/UpdateOverlay';
+import { analytics } from './services/analyticsService'
 import { chaoticOrbit } from 'ldrs'
 
 chaoticOrbit.register()
-
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -36,6 +35,7 @@ const AppRoutes = () => {
   const [isNewInstall, setIsNewInstall] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
   const [iconData, setIconData] = useState('');
   const location = useLocation();
   const hasChecked = useRef(false);
@@ -164,6 +164,17 @@ const AppRoutes = () => {
     }
   };
 
+  const handleInstallAndRestart = async () => {
+    setIsInstalling(true);
+    // Set isUpdating timestamp first
+    await window.electron.setTimestampValue('isUpdating', true);
+    // Add a small delay to show the overlay before starting the update
+    setTimeout(() => {
+      setIsUpdating(true);
+      window.electron.updateAscendara();
+    }, 1000);
+  };
+
   useEffect(() => {
     console.log('State update:', {
       isLoading,
@@ -215,13 +226,7 @@ const AppRoutes = () => {
         description: 'Ascendara downloaded the update and is ready to install and restart now',
         action: {
           label: 'Install & Restart',
-          onClick: async () => {
-            setIsUpdating(true);
-            await window.electron.setTimestampValue('isUpdating', true);
-            setTimeout(() => {
-              window.electron.updateAscendara();
-            }, 1000);
-          }
+          onClick: handleInstallAndRestart
         },
         duration: Infinity,
         id: 'update-ready'
@@ -245,7 +250,7 @@ const AppRoutes = () => {
     };
   }, [shouldShowWelcome]);
 
-  if (isLoading || isUpdating) {
+  if (isLoading || isUpdating || isInstalling) {
     console.log('Rendering loading screen...');
     return (
       <motion.div 
@@ -282,6 +287,16 @@ const AppRoutes = () => {
           <l-chaotic-orbit />
           </>
         )}
+        {isInstalling && (
+          <motion.div 
+            className="loading-text"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            Installing update...
+          </motion.div>
+        )}
       </motion.div>
     );
   }
@@ -304,7 +319,20 @@ const AppRoutes = () => {
   console.log('Rendering main routes with location:', location.pathname);
   
   return (
-    <>
+    <motion.div className="app-container">
+      {isInstalling && (
+        <motion.div 
+          className="update-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="update-content">
+            <div className="update-message">Installing update...</div>
+            <l-chaotic-orbit size="45" speed="1.5" color="var(--text-color)" />
+          </div>
+        </motion.div>
+      )}
       {isUpdating && <UpdateOverlay />}
       <ScrollToTop />
       <Routes>
@@ -332,7 +360,7 @@ const AppRoutes = () => {
           <Route path="download" element={<DownloadPage />} />
         </Route>
       </Routes>
-    </>
+    </motion.div>
   );
 };
 
