@@ -1,6 +1,6 @@
 {
   "name": "ascendara",
-  "version": "7.1.0",
+  "version": "7.1.1",
   "main": "main.js",
   "description": "Download games effortlessly with Ascendara. Copy the link, paste it into the app, and download.",
   "scripts": {
@@ -101,15 +101,16 @@
         "to": "."
       }
     ],
+    "extraMetadata": {
+      "main": "build/main.js"
+    },
+    "win": {
+      "target": "nsis"
+    },
     "productName": "Ascendara",
     "directories": {
       "output": "dist",
       "buildResources": "build"
-    },
-    "win": {
-      "target": [
-        "nsis"
-      ]
     }
   }
 }

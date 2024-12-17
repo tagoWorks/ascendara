@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { Client } = require('discord-rpc');
+const disk = require('diskusage');
 const path = require('path');
 const axios = require('axios');
 const unzipper = require('unzipper');
@@ -14,12 +15,18 @@ let updateDownloaded = false;
 let updateDownloadInProgress = false;
 let isDev = false;
 
-const CURRENT_VERSION = "7.1.0";
-APIKEY = "4qWstsYpCdMbNOBz0653ODL_upu-0ohXqD1vyf4IdUw"
-analyticsAPI = "AIzaSyDhYXKtD7BpDnJ0O3DhYXKtD7BpDnJ0O3DhYXKtD7BpDnJ0"
-
+const CURRENT_VERSION = "7.1.1";
+let config;
+try {
+    config = require('./config.js');
+} catch (e) {
+    config = {};
+}
+const APIKEY = process.env.DISCKEY || config.DISCKEY;
+const analyticsAPI = process.env.ASCENDARA_API_KEY || config.ASCENDARA_API_KEY;
 // Initialize Discord RPC
 const clientId = '1277379302945718356';
+// Initialize Discord RPC
 rpc = new Client({ transport: 'ipc' });
 
 rpc.on('ready', () => {
@@ -140,10 +147,6 @@ ipcMain.handle('stop-all-downloads', async () => {
   }
   downloadProcesses.clear();
   runGameProcesses.clear();
-});
-
-ipcMain.handle('is-update-downloaded', () => {
-  return updateDownloaded;
 });
 
 ipcMain.handle('get-version', async () => {
@@ -1292,7 +1295,7 @@ function createWindow() {
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
   } else {
-    mainWindow.loadFile('file://' + path.join(__dirname, 'index.html'));
+    mainWindow.loadFile(path.join(__dirname, 'index.html'));
   }
 
   mainWindow.setMinimumSize(1600, 800);
@@ -1389,6 +1392,7 @@ ipcMain.handle('clear-cache', async () => {
 ipcMain.handle('get-drive-space', async (event, directory) => {
     try {
         const { available } = await disk.check(directory);
+        console.log(`Available space on ${directory}: ${available} bytes`);
         return { freeSpace: available };
     } catch (error) {
         console.error('Error getting drive space:', error);
@@ -1406,3 +1410,7 @@ ipcMain.on('settings-changed', () => {
         window.webContents.send('settings-updated')
     })
 })
+
+ipcMain.handle('is-update-downloaded', () => {
+  return updateDownloaded;
+});

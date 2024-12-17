@@ -141,16 +141,25 @@ const AppRoutes = () => {
           console.log('Is V7:', isV7);
           setShouldShowWelcome(!isV7);
           setWelcomeData({ isNew: false, isV7 });
+          await ensureMinLoadingTime();
           setIsLoading(false);
         }
       } catch (error) {
         console.error('Error in app initialization:', error);
+        await ensureMinLoadingTime();
         setIsLoading(false);
         setShouldShowWelcome(false);
       }
     };
 
     initializeApp();
+
+    // Cleanup function to ensure loading states are reset if component unmounts
+    return () => {
+      setIsLoading(false);
+      setIsUpdating(false);
+      setIsInstalling(false);
+    };
   }, []);
 
   const handleWelcomeComplete = async (withTour = false) => {
@@ -273,29 +282,20 @@ const AppRoutes = () => {
             }}
           />
         )}
+        {isInstalling && <UpdateOverlay />}
         {isUpdating && (
           <>
-          <motion.div 
-            className="loading-text"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            Finishing up... Please don't close Ascendara
-          </motion.div>
-          <br />
-          <l-chaotic-orbit />
+            <motion.div 
+              className="loading-text"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              Finishing up... Please don't close Ascendara
+            </motion.div>
+            <br />
+            <l-chaotic-orbit />
           </>
-        )}
-        {isInstalling && (
-          <motion.div 
-            className="loading-text"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            Installing update...
-          </motion.div>
         )}
       </motion.div>
     );
@@ -320,20 +320,6 @@ const AppRoutes = () => {
   
   return (
     <motion.div className="app-container">
-      {isInstalling && (
-        <motion.div 
-          className="update-overlay"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="update-content">
-            <div className="update-message">Installing update...</div>
-            <l-chaotic-orbit size="45" speed="1.5" color="var(--text-color)" />
-          </div>
-        </motion.div>
-      )}
-      {isUpdating && <UpdateOverlay />}
       <ScrollToTop />
       <Routes>
         <Route 

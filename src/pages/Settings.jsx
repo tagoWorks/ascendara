@@ -427,7 +427,7 @@ function Settings() {
                           readOnly
                           className="flex-1"
                         />
-                        <Button onClick={handleDirectorySelect}>Browse</Button>
+                        <Button onClick={handleDirectorySelect}>Select</Button>
                       </div>
                     </div>
                     

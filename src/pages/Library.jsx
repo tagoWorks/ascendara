@@ -211,7 +211,7 @@ const Library = () => {
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogTitle className="text-2xl font-bold text-foreground">Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
                 {gameToDelete?.isCustom 
                   ? `This will remove ${gameToDelete?.game || gameToDelete?.name} from your library. The game files will not be deleted.`
@@ -232,12 +232,14 @@ const Library = () => {
                   <Button
                     variant="outline"
                     onClick={() => setGameToDelete(null)}
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     Cancel
                   </Button>
                   <Button
                     variant="destructive"
                     onClick={() => handleDeleteGame(gameToDelete)}
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     {gameToDelete?.isCustom ? 'Remove' : 'Uninstall'}
                   </Button>
