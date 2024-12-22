@@ -42,6 +42,7 @@ const Downloads = () => {
   const [totalSpeed, setTotalSpeed] = useState('0.00 MB/s');
   const [activeDownloads, setActiveDownloads] = useState(0);
   const [stoppingDownloads, setStoppingDownloads] = useState(new Set());
+  const [showFirstTimeAlert, setShowFirstTimeAlert] = useState(false);
 
   useEffect(() => {
     const fetchDownloadingGames = async () => {
@@ -56,6 +57,12 @@ const Downloads = () => {
             downloadingData.error
           );
         });
+        
+        // Show first-time alert if this is the first download
+        if (downloading.length === 1 && !localStorage.getItem('hasShownFirstDownloadAlert')) {
+          setShowFirstTimeAlert(true);
+          localStorage.setItem('hasShownFirstDownloadAlert', 'true');
+        }
         
         setDownloadingGames(downloading);
         
@@ -241,6 +248,20 @@ const Downloads = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <AlertDialog open={showFirstTimeAlert} onOpenChange={setShowFirstTimeAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-primary">Download Started</AlertDialogTitle>
+              <AlertDialogDescription>
+                You can safely close Ascendara - in the background the download will continue and will automatically be added to your library when complete.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction>Got it!</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
@@ -292,20 +313,18 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                 Open Folder
               </DropdownMenuItem>
               {hasError ? (
-                <>
-                  <DropdownMenuItem onClick={() => onRetry(game)}>
-                    <RefreshCcw className="mr-2 h-4 w-4" />
-                    Retry Download
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => onStop(game)}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                  </DropdownMenuItem>
-                </>
-              ) : (
+                <><DropdownMenuItem onClick={() => onRetry(game)}>
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  Retry Download
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onStop(game)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </> ) : (
                 <DropdownMenuItem 
                   onClick={() => onStop(game)}
                   className="text-destructive focus:text-destructive"
@@ -326,39 +345,36 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
             <span>Download failed. Please try again.</span>
           </div>
         ) : (
-          <>
+          <><div className="space-y-4">
             {isDownloading && (
-              <div className="space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-primary font-medium">{downloadingData.progressDownloadSpeeds}</span>
-                  <span className="text-muted-foreground">ETA: {downloadingData.timeUntilComplete}</span>
-                </div>
-                <Progress 
-                  value={parseFloat(downloadingData.progressCompleted)} 
-                  className="h-2 bg-primary/10"
-                />
-                <div className="text-right text-sm font-medium text-primary">
-                  {downloadingData.progressCompleted}%
-                </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-primary font-medium">{downloadingData.progressDownloadSpeeds}</span>
+                <span className="text-muted-foreground">ETA: {downloadingData.timeUntilComplete}</span>
               </div>
             )}
-            {isExtracting && (
-              <div className="flex items-center space-x-2 bg-primary/5 p-3 rounded-lg">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <span className="text-primary font-medium">Extracting files...</span>
-              </div>
-            )}
-            {isUpdating && (
-              <div className="flex items-center space-x-2 bg-primary/5 p-3 rounded-lg">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <span className="text-primary font-medium">Updating game...</span>
-              </div>
-            )}
-          </>
-        )}
+            <Progress 
+              value={parseFloat(downloadingData.progressCompleted)} 
+              className="h-2 bg-primary/10"
+            />
+            <div className="text-right text-sm font-medium text-primary">
+              {downloadingData.progressCompleted}%</div>
+          </div>
+          {isExtracting && (
+            <div className="flex items-center space-x-2 bg-primary/5 p-3 rounded-lg">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-primary font-medium">Extracting files...</span>
+            </div>
+          )}
+          {isUpdating && (
+            <div className="flex items-center space-x-2 bg-primary/5 p-3 rounded-lg">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-primary font-medium">Updating game...</span>
+            </div>
+          )}
+        </> )}
       </CardContent>
     </Card>
   );
 };
 
-export default Downloads; 
+export default Downloads;

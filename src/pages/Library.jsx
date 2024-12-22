@@ -54,9 +54,20 @@ const Library = () => {
       const installedGames = await window.electron.getGames();
       const customGames = await window.electron.getCustomGames();
 
+      // Filter out games that are currently downloading
+      const filteredInstalledGames = installedGames.filter(game => {
+        const { downloadingData } = game;
+        return !downloadingData || !(
+          downloadingData.downloading ||
+          downloadingData.extracting ||
+          downloadingData.updating ||
+          downloadingData.error
+        );
+      });
+
       // Combine both types of games
       const allGames = [
-        ...(installedGames || []).map(game => ({
+        ...(filteredInstalledGames || []).map(game => ({
           ...game,
           isCustom: false
         })),

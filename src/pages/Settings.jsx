@@ -391,7 +391,7 @@ function Settings() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label>Analytics</Label>
+                        <Label>Ascendara Analytics</Label>
                         <p className="text-sm text-muted-foreground">Help improve Ascendara by sending usage data. This data is anonymous and cannot be used to identify you.</p>
                       </div>
                       <Switch
@@ -399,6 +399,18 @@ function Settings() {
                         onCheckedChange={() => handleSettingChange('sendAnalytics')}
                       />
                     </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label>Ascendara Updates</Label>
+                        <p className="text-sm text-muted-foreground">Automatically download new versions of Ascendara and ask you to install them when ready</p>
+                      </div>
+                      <Switch
+                        checked={settings.autoUpdate}
+                        onCheckedChange={() => handleSettingChange('autoUpdate')}
+                      />
+                    </div>
+                    
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label>Mature Content</Label>
@@ -409,18 +421,6 @@ function Settings() {
                         onCheckedChange={() => handleSettingChange('seeInappropriateContent')}
                       />
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Auto Updates</Label>
-                        <p className="text-sm text-muted-foreground">Automatically download updates and ask you to install them when ready</p>
-                      </div>
-                      <Switch
-                        checked={settings.autoUpdate}
-                        onCheckedChange={() => handleSettingChange('autoUpdate')}
-                      />
-                    </div>
-                    
                     <Separator className="my-4" />
                     
                     <div className="flex items-center justify-between">

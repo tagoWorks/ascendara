@@ -52,7 +52,7 @@ const isValidURL = (url, provider) => {
   return containsProviderName;
 };
 
-const VERIFIED_PROVIDERS = ['megadb', 'gofile'];
+const VERIFIED_PROVIDERS = ['megadb', 'gofile', 'datanodes'];
 
 export default function DownloadPage() {
   const { state } = useLocation();
