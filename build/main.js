@@ -12,20 +12,21 @@ let rpc;
 let has_launched = false;
 let is_latest = true;
 let updateDownloaded = false;
+let notificationShown = false;
 let updateDownloadInProgress = false;
 let isDev = false;
 
-const CURRENT_VERSION = "7.1.1";
+const CURRENT_VERSION = "7.2.1";
 let config;
 try {
-    config = require('./config.js');
+    config = require('./config.prod.js');
 } catch (e) {
     config = {};
 }
-const APIKEY = process.env.DISCKEY || config.DISCKEY;
+const APIKEY = process.env.AUTHORIZATION || config.AUTHORIZATION;
 const analyticsAPI = process.env.ASCENDARA_API_KEY || config.ASCENDARA_API_KEY;
-// Initialize Discord RPC
-const clientId = '1277379302945718356';
+const clientId = process.env.DISCKEY || config.DISCKEY;
+
 // Initialize Discord RPC
 rpc = new Client({ transport: 'ipc' });
 
@@ -595,6 +596,7 @@ ipcMain.handle('get-settings', () => {
       autoUpdate: true,
       notifications: true,
       primaryGameSource: 'steamrip',
+      language: 'en',
       enabledSources: {
         steamrip: true,
         steamunlocked: false,

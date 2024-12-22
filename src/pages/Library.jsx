@@ -35,6 +35,8 @@ import {
 } from "../components/ui/alert-dialog";
 import { Separator } from "../components/ui/separator";
 import { Progress } from "../components/ui/progress";
+import recentGamesService from '../services/recentGamesService';
+import imageCacheService from '../services/imageCacheService';
 
 const Library = () => {
   const [games, setGames] = useState([]);
@@ -93,6 +95,23 @@ const Library = () => {
   const handlePlayGame = async (game) => {
     try {
       await window.electron.playGame(game.game || game.name, game.isCustom);
+      
+      // Get and cache the game image before saving to recently played
+      const imageBase64 = await window.electron.getGameImage(game.game || game.name);
+      if (imageBase64) {
+        await imageCacheService.getImage(game.imgID);
+      }
+      
+      // Save to recently played games
+      recentGamesService.addRecentGame({
+        game: game.game || game.name,
+        name: game.name,
+        imgID: game.imgID,
+        version: game.version,
+        isCustom: game.isCustom,
+        online: game.online,
+        dlc: game.dlc
+      });
     } catch (error) {
       console.error('Error playing game:', error);
       setError('Failed to launch game');
@@ -157,8 +176,7 @@ const Library = () => {
             <p className="text-muted-foreground">
               {games.length === 0 
                 ? "No games in your library yet"
-                : `${games.length} game${games.length === 1 ? '' : 's'} in your library`
-              }
+                : `${games.length} game${games.length === 1 ? '' : 's'} in your library`}
             </p>
           </div>
 
@@ -228,7 +246,7 @@ const Library = () => {
                   </p>
                 </div>
               ) : (
-                <>
+                < >
                   <Button
                     variant="outline"
                     onClick={() => setGameToDelete(null)}
@@ -243,7 +261,7 @@ const Library = () => {
                   >
                     {gameToDelete?.isCustom ? 'Remove' : 'Uninstall'}
                   </Button>
-                </>
+                </ >
               )}
             </AlertDialogFooter>
           </AlertDialogContent>

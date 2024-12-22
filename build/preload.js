@@ -56,7 +56,7 @@ contextBridge.exposeInMainWorld('electron', {
   updateAscendara: () => ipcRenderer.invoke('update-ascendara'),
   uninstallAscendara: () => ipcRenderer.invoke('uninstall-ascendara'),
   openURL: (url) => ipcRenderer.invoke('open-url', url),
-  overrideApiKey: (newApiKey) => ipcRenderer.invoke('override-api-key', newApiKey),
+  getAPIKey: () => ipcRenderer.invoke('get-api-key'),
   openReqPath: (game) => ipcRenderer.invoke('required-libraries', game),
   modifyGameExecutable: (game, executable) => ipcRenderer.invoke('modify-game-executable', game, executable),
   getAssetPath: (filename) => ipcRenderer.invoke('get-asset-path', filename),

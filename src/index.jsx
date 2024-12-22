@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Search from './pages/Search';
@@ -16,6 +17,8 @@ import { Toaster, toast } from 'sonner';
 import UpdateOverlay from './components/UpdateOverlay';
 import { analytics } from './services/analyticsService'
 import { chaoticOrbit } from 'ldrs'
+import ContextMenu from './components/ContextMenu';
+import './components/ContextMenu.css';
 
 chaoticOrbit.register()
 
@@ -365,10 +368,23 @@ class ErrorBoundary extends React.Component {
     // Track error with analytics
     analytics.trackError(error, {
       componentStack: errorInfo.componentStack,
-      severity: 'fatal'
+      severity: 'fatal',
+      componentName: this.constructor.name,
+      previousRoute: this.props.location?.state?.from,
+      userFlow: this.props.location?.state?.flow,
+      props: JSON.stringify(this.props, (key, value) => {
+        // Avoid circular references and sensitive data
+        if (key === 'children' || typeof value === 'function') return '[Redacted]';
+        return value;
+      }),
+      state: JSON.stringify(this.state),
+      customData: {
+        renderPhase: 'componentDidCatch',
+        reactVersion: React.version,
+        lastRender: Date.now()
+      }
     });
   }
-
 
   render() {
     if (this.state.hasError) {
@@ -393,7 +409,6 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
-
 
 function ToasterWithTheme() {
   const { theme } = useTheme();
@@ -439,10 +454,15 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        <Router>
-          <AppRoutes />
-          <ToasterWithTheme />
-        </Router>
+        <LanguageProvider>
+          <Router>
+            <ToasterWithTheme />
+            <ContextMenu />
+            <AnimatePresence mode="wait">
+              <AppRoutes />
+            </AnimatePresence>
+          </Router>
+        </LanguageProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

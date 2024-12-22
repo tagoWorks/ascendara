@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "../components/ui/button";
-import { AlertDialog, AlertDialogDescription } from "../components/ui/alert-dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogCancel } from "../components/ui/alert-dialog";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "../components/ui/tooltip";
 import { Switch } from "../components/ui/switch";
 import { Separator } from "../components/ui/separator";
 import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
-import { Loader2Icon, InfoIcon, CopyIcon, CheckIcon } from "lucide-react";
+import { Textarea } from "../components/ui/textarea";
+import { Loader2Icon, InfoIcon, CopyIcon, CheckIcon, BadgeCheckIcon } from "lucide-react";
 import imageCacheService from '../services/imageCacheService';
 import { toast } from "sonner";
 
@@ -23,6 +24,9 @@ const isValidURL = (url, provider) => {
   switch (provider.toLowerCase()) {
     case 'megadb':
       pattern = /^(https?:\/\/)([^\/?#]+)(?::(\d+))?(\/[^?#]*\/[^?#]*\/)([^?#]+)\.(?:zip|rar|7z)$/i;
+      break;
+    case 'datanodes':
+      pattern = /^https:\/\/node\d+\.datanodes\.to(?::\d+)?\/d\/[a-z0-9]+\/.*\.(?:zip|rar|7z)$/i;
       break;
     case 'qiwi':
       pattern = /^https:\/\/(spyderrock\.com\/[a-zA-Z0-9]+-[\w\s.-]+\.rar)$/i;
@@ -48,6 +52,8 @@ const isValidURL = (url, provider) => {
   return containsProviderName;
 };
 
+const VERIFIED_PROVIDERS = ['megadb', 'gofile'];
+
 export default function DownloadPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -61,6 +67,125 @@ export default function DownloadPage() {
   const [cachedImage, setCachedImage] = useState(null);
   const [isValidLink, setIsValidLink] = useState(true);
   const [showCopySuccess, setShowCopySuccess] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDetails, setReportDetails] = useState("");
+  const [showNewUserGuide, setShowNewUserGuide] = useState(false);
+  const [guideStep, setGuideStep] = useState(0);
+  const [guideImages, setGuideImages] = useState({});
+  const [settings, setSettings] = useState({ downloadBlocker: false });
+
+  useEffect(() => {
+    const loadFileFromPath = async (path) => {
+      try {
+        const data = await window.electron.getAssetPath(path);
+        if (data) {
+          setGuideImages(prev => ({
+            ...prev,
+            [path]: data
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to load:', error);
+      }
+    };
+
+    const guideImagePaths = [
+      '/guide/guide-toggle.png',
+      '/guide/guide-start.png',
+      '/guide/guide-copy.png',
+      '/guide/guide-download.png',
+      '/guide/guide-downloads.png'
+    ];
+
+    guideImagePaths.forEach(path => loadFileFromPath(path));
+  }, []);
+
+  useEffect(() => {
+    // Load initial settings
+    const loadSettings = async () => {
+      try {
+        const savedSettings = await window.electron.getSettings();
+        if (savedSettings) {
+          setSettings(savedSettings);
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  const guideSteps = [
+    {
+      title: "Step 1: The Ascendara Download Blocker",
+      description: (
+        <div>
+          <p>The Ascendara Download Blocker is a Chrome extension that helps you catch the direct download link (DDL) for a game.</p>
+          <p className="text-muted-foreground">
+            Don't have the extension yet? {' '}
+            <span 
+              className="text-primary hover:underline cursor-pointer"
+              onClick={() => window.electron.openURL('https://ascendara.app/extension')}
+            >
+              Install it Now
+            </span>
+          </p>
+        </div>
+      )
+    },
+    {
+      title: "Step 2: Enable the Blocker",
+      description: "Make sure the Ascendara Download Blocker toggle is enabled before proceeding.",
+      image: guideImages['/guide/guide-toggle.png']
+    },
+    {
+      title: "Step 3: Start the download",
+      description: "Complete the CAPTCHA, and start the download.",
+      image: guideImages['/guide/guide-start.png']
+    },
+    {
+      title: "Step 4: Copy the Link",
+      description: "Copy the direct download link and paste it into Ascendara.",
+      image: guideImages['/guide/guide-copy.png']
+    },
+    {
+      title: "Step 5: Start the download",
+      description: "Start the download by clicking the Download Now button.",
+      image: guideImages['/guide/guide-download.png']
+    },
+    {
+      title: "View your downloads",
+      description: "Go to the downloads page to view your downloading game.",
+      image: guideImages['/guide/guide-downloads.png']
+    }
+  ];
+
+  const handleStartGuide = () => {
+    setGuideStep(1);
+  };
+
+  const handleNextStep = () => {
+    if (guideStep < guideSteps.length) {
+      setGuideStep(guideStep + 1);
+    } else {
+      const newSettings = { ...settings, downloadBlocker: true };
+      window.electron.saveSettings(newSettings)
+        .then(() => {
+          setSettings(newSettings);
+          setShowNewUserGuide(false);
+          setGuideStep(0);
+        })
+        .catch(error => {
+          console.error('Failed to save settings:', error);
+        });
+    }
+  };
+
+  const handleCloseGuide = () => {
+    setShowNewUserGuide(false);
+    setGuideStep(0);
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -181,6 +306,91 @@ export default function DownloadPage() {
     }
   }, [gameData, selectedProvider]);
 
+  const checkIfNewUser = async () => {
+    const settings = await window.electron.getSettings();
+    if (!settings.downloadDirectory) {
+      return true;
+    }
+    const games = await window.electron.getGames();
+    return games.length === 0;
+  };
+
+  const handleCopyLink = async () => {
+    const link = downloadLinks[selectedProvider][0].startsWith('//')
+      ? `https:${downloadLinks[selectedProvider][0]}`
+      : downloadLinks[selectedProvider][0];
+    await navigator.clipboard.writeText(link);
+    setShowCopySuccess(true);
+    setTimeout(() => setShowCopySuccess(false), 1000);
+
+    const isNewUser = await checkIfNewUser();
+    if (isNewUser) {
+      setShowNewUserGuide(true);
+    }
+  };
+
+  const handleOpenInBrowser = async () => {
+    const link = downloadLinks[selectedProvider][0].startsWith('//')
+      ? `https:${downloadLinks[selectedProvider][0]}`
+      : downloadLinks[selectedProvider][0];
+    window.electron.openURL(link);
+
+    const isNewUser = await checkIfNewUser();
+    if (isNewUser) {
+      setShowNewUserGuide(true);
+    }
+  };
+
+  const handleSubmitReport = async () => {
+    if (!reportReason || !reportDetails.trim()) {
+      toast.error("Please fill out all fields");
+      return;
+    }
+
+    setIsReporting(true);
+    try {
+      const token = await window.electron.getAPIKey();
+      const response = await fetch("https://api.ascendara.app/auth/token", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to obtain token");
+      }
+
+      const { token: authToken } = await response.json();
+
+      const reportResponse = await fetch("https://api.ascendara.app/app/report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          reportType: "GameBrowsing",
+          reason: reportReason,
+          details: reportDetails,
+          gameName: gameData.game,
+        }),
+      });
+
+      if (!reportResponse.ok) {
+        throw new Error("Failed to submit report");
+      }
+
+      toast.success("Thank you for reporting this game");
+      setReportReason("");
+      setReportDetails("");
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      toast.error("Failed to submit report. Please try again.");
+    } finally {
+      setIsReporting(false);
+    }
+  };
+
   if (!gameData) {
     return (
       <div className="container max-w-7xl mx-auto p-6">
@@ -226,7 +436,80 @@ export default function DownloadPage() {
               className="w-48 h-28 object-cover rounded-lg"
             />
             <div className="flex flex-col gap-1">
-              <h1 className="text-4xl font-bold">{gameData.game}</h1>
+              <div className="flex justify-between items-center mb-4">
+                <h1 className="text-2xl font-bold">{gameData.game}</h1>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button  variant="outline" size="sm">
+                      Report Broken Game
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSubmitReport();
+                    }}>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Report Game: {gameData.game}</AlertDialogTitle>
+                        <AlertDialogDescription className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Why are you reporting this game?</label>
+                            <Select
+                              value={reportReason}
+                              onValueChange={setReportReason}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a reason" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="gamedetails">Game Details Misleading</SelectItem>
+                                <SelectItem value="filesnotdownloading">Files Not Downloading</SelectItem>
+                                <SelectItem value="notagame">This isn't a game</SelectItem>
+                                <SelectItem value="linksnotworking">A Link Is Not Working</SelectItem>
+                                <SelectItem value="image-error">An Image Isn't Loading/Correct</SelectItem>
+                                <SelectItem value="image-bad">An Image Is Inappropriate</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Description</label>
+                            <Textarea
+                              placeholder="Please provide more details about the issue"
+                              value={reportDetails}
+                              onChange={(e) => setReportDetails(e.target.value)}
+                              className="min-h-[100px]"
+                            />
+                          </div>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter className="gap-2">
+                        <AlertDialogCancel
+                          onClick={() => {
+                            setReportReason("");
+                            setReportDetails("");
+                          }}
+                        >
+                          Cancel
+                        </AlertDialogCancel>
+                        <Button
+                          type="submit"
+                          variant="destructive"
+                          disabled={isReporting}
+                        >
+                          {isReporting ? (
+                            <>
+                              <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                              Submitting...
+                            </>
+                          ) : (
+                            "Submit Report"
+                          )}
+                        </Button>
+                      </AlertDialogFooter>
+                    </form>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded">
                   {gameData.version}
@@ -316,17 +599,35 @@ export default function DownloadPage() {
                           case 'qiwi':
                             displayName = 'QIWI';
                             break;
+                          case 'datanodes':
+                            displayName = 'DataNodes';
+                            break;
                           default:
                             // Capitalize first letter of provider name
                             displayName = provider.charAt(0).toUpperCase() + provider.slice(1);
                         }
+                        const isVerified = VERIFIED_PROVIDERS.includes(provider.toLowerCase());
                         return (
                           <SelectItem 
                             key={provider} 
                             value={provider}
                             className="hover:bg-muted focus:bg-muted"
                           >
-                            {displayName}
+                            <div className="flex items-center gap-2">
+                              {displayName}
+                              {isVerified && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <BadgeCheckIcon className="h-4 w-4 text-primary" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Verified Provider</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
                           </SelectItem>
                         );
                       })}
@@ -343,15 +644,8 @@ export default function DownloadPage() {
                     <Label>Download Link:</Label>
                     <div className="flex items-center gap-2 mt-1">
                       <div 
-                        className="flex-1 bg-gray-100 p-2 rounded-md text-sm flex items-center justify-between group cursor-pointer hover:bg-gray-200 transition-colors"
-                        onClick={async () => {
-                          const link = downloadLinks[selectedProvider][0].startsWith('//')
-                            ? `https:${downloadLinks[selectedProvider][0]}`
-                            : downloadLinks[selectedProvider][0];
-                          await navigator.clipboard.writeText(link);
-                          setShowCopySuccess(true);
-                          setTimeout(() => setShowCopySuccess(false), 1000);
-                        }}
+                        className="flex-1 bg-muted p-2 rounded-md text-sm flex items-center justify-between group cursor-pointer hover:bg-muted/80 transition-colors"
+                        onClick={handleCopyLink}
                       >
                         <span>{downloadLinks[selectedProvider][0].startsWith('//') 
                           ? `https:${downloadLinks[selectedProvider][0]}` 
@@ -364,11 +658,7 @@ export default function DownloadPage() {
                       </div>
                       <Button 
                         size="sm" 
-                        onClick={() => window.electron.openURL(
-                          downloadLinks[selectedProvider][0].startsWith('//')
-                            ? `https:${downloadLinks[selectedProvider][0]}`
-                            : downloadLinks[selectedProvider][0]
-                        )} 
+                        onClick={handleOpenInBrowser} 
                         variant="outline"
                       >
                         Open in Browser
@@ -423,7 +713,7 @@ export default function DownloadPage() {
               <Button
                 onClick={handleDownload}
                 disabled={isStartingDownload || !selectedProvider || (selectedProvider !== 'gofile' && (!inputLink || !isValidLink))}
-                className="w-full"
+                className="w-full text-secondary"
               >
                 {isStartingDownload ? (
                   <>
@@ -451,14 +741,14 @@ export default function DownloadPage() {
                   ) : (
                     <div>
                       {useAscendara ? (
-                        <ol className="list-decimal list-inside space-y-3 text-sm text-muted-foreground">
+                        <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
                           <li>Open the link in your browser and enabled the extension</li>
                           <li>Complete the CAPTCHA and start the download</li>
                           <li>The extension will automatically stop and capture the direct download link</li>
                           <li>Paste the DDL above and click Download Now</li>
                         </ol>
                       ) : (
-                        <ol className="list-decimal list-inside space-y-3 text-sm text-muted-foreground">
+                        <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
                           <li>Copy and paste the link into your browser</li>
                           <li>Complete the CAPTCHA and start the download</li>
                           <li>Stop the download once it starts in your browser</li>
@@ -477,6 +767,58 @@ export default function DownloadPage() {
           </div>
         </div>
       </div>
+
+      {/* New User Guide Alert Dialog */}
+      <AlertDialog open={showNewUserGuide} onOpenChange={handleCloseGuide}>
+        <AlertDialogContent className="sm:max-w-[425px]">
+          <AlertDialogHeader>
+            {guideStep === 0 ? (
+              <>
+                <AlertDialogTitle className="text-primary">Downloading with Ascendara</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You haven't installed a game before, so Ascendara will guide you through the setup process.
+                </AlertDialogDescription>
+              </>
+            ) : (
+              <>
+                <AlertDialogTitle className="text-primary">{guideSteps[guideStep - 1].title}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {guideSteps[guideStep - 1].description}
+                </AlertDialogDescription>
+                <div className="mt-4 space-y-4">
+                  {guideSteps[guideStep - 1].image && (
+                    <img 
+                      src={guideSteps[guideStep - 1].image}
+                      alt={guideSteps[guideStep - 1].title}
+                      className="w-full rounded-lg border border-border"
+                    />
+                  )}
+                  {guideSteps[guideStep - 1].action && (
+                    <Button 
+                      className="w-full" 
+                      onClick={guideSteps[guideStep - 1].action.onClick}
+                    >
+                      {guideSteps[guideStep - 1].action.label}
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-muted-foreground" onClick={handleCloseGuide}>
+              {guideStep === 0 ? 'No Thanks' : 'Close'}
+            </AlertDialogCancel>
+            <Button onClick={guideStep === 0 ? handleStartGuide : handleNextStep}>
+              {guideStep === 0 ? 'Start Guide' : 
+               guideStep === guideSteps.length ? 'Finish' : 
+               guideStep === 1 ? 'I installed it →' :
+               guideStep === 2 ? 'Blocker is Enabled →' :
+               'Next Step →'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

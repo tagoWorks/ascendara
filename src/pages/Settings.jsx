@@ -7,7 +7,7 @@ import { Label } from '../components/ui/label';
 import { Card } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { CircleAlert, Zap } from "lucide-react";
+import { CircleAlert, Languages, Zap } from "lucide-react";
 
 const themes = [
   // Light themes
@@ -25,6 +25,19 @@ const themes = [
   { id: 'sunset', name: 'Sunset', group: 'dark' },
   { id: 'forest', name: 'Forest', group: 'dark' },
   { id: 'ocean', name: 'Deep Ocean', group: 'dark' },
+];
+
+const languages = [
+  { id: 'en', name: 'English', icon: '🇺🇸' },
+  { id: 'es', name: 'Español', icon: '🇪🇸' },
+  { id: 'fr', name: 'Français', icon: '🇫🇷' },
+  { id: 'de', name: 'Deutsch', icon: '🇩🇪' },
+  { id: 'it', name: 'Italiano', icon: '🇮🇹' },
+  { id: 'pt', name: 'Português', icon: '🇵🇹' },
+  { id: 'ru', name: 'Русский', icon: '🇷🇺' },
+  { id: 'zh', name: '中文', icon: '🇨🇳' },
+  { id: 'ja', name: '日本語', icon: '🇯🇵' },
+  { id: 'ko', name: '한국어', icon: '🇰🇷' },
 ];
 
 const getThemeColors = (themeId) => {
@@ -135,6 +148,7 @@ function Settings() {
     autoUpdate: true,
     notifications: true,
     primaryGameSource: 'steamrip',
+    language: 'en',
     enabledSources: {
       steamrip: true,
       steamunlocked: false,
@@ -301,6 +315,16 @@ function Settings() {
     });
   }, []);
 
+  const handleLanguageChange = useCallback((value) => {
+    setSettings(prev => {
+      const newSettings = {
+        ...prev,
+        language: value
+      };
+      return newSettings;
+    });
+  }, []);
+
   // Theme handling
   const handleThemeChange = useCallback((newTheme) => {
     setTheme(newTheme);
@@ -385,8 +409,6 @@ function Settings() {
                         onCheckedChange={() => handleSettingChange('seeInappropriateContent')}
                       />
                     </div>
-
-                    <Separator className="my-4" />
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
@@ -398,6 +420,8 @@ function Settings() {
                         onCheckedChange={() => handleSettingChange('autoUpdate')}
                       />
                     </div>
+                    
+                    <Separator className="my-4" />
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
@@ -494,7 +518,7 @@ function Settings() {
               </div>
             </Card>
 
-            {/* New Warning Card */}
+            {/* Warning Card */}
             <Card className="p-6 border-yellow-500/50 bg-yellow-500/5">
               <div className="space-y-4">
                 <div className="flex items-center gap-3 text-yellow-500">
@@ -594,12 +618,49 @@ function Settings() {
                             <SelectValue placeholder="Select CDN" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="auto">US East</SelectItem>
+                            <SelectItem value="default">US East</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Language Settings Card */}
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4 text-primary">Language Settings</h2>
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Languages className="w-5 h-5 text-primary" />
+                    <p className="text-sm text-muted-foreground">Choose your preferred language for the application interface.</p>
+                  </div>
+                  <Select
+                    disabled
+                    value={settings.language}
+                    onValueChange={handleLanguageChange}
+                  >
+                    <SelectTrigger className="w-full max-w-xs">
+                      <SelectValue>
+                        <div className="flex items-center gap-2">
+                          <span>{languages.find(lang => lang.id === settings.language)?.icon}</span>
+                          <span>{languages.find(lang => lang.id === settings.language)?.name}</span>
+                        </div>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {languages.map(language => (
+                        <SelectItem key={language.id} value={language.id}>
+                          <div className="flex items-center gap-2">
+                            <span>{language.icon}</span>
+                            <span>{language.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </Card>
@@ -674,4 +735,4 @@ function ThemeButton({ theme, currentTheme, onSelect }) {
   );
 }
 
-export default Settings; 
+export default Settings;

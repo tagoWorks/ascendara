@@ -1,56 +1,76 @@
-import React, { memo, useState, useEffect, useMemo } from 'react';
+import React, { memo, useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from "./ui/card";
 import { AspectRatio } from "./ui/aspect-ratio";
 import { Clock } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import imageCacheService from '../services/imageCacheService';
 import { useNavigate } from 'react-router-dom';
-import { useCallback } from 'react';
 
 // Memoized sub-components
-const useImageLoader = (imgID) => {
-  const [cachedImage, setCachedImage] = useState(null);
-  const [loading, setLoading] = useState(true);
+const useImageLoader = (imgID, onIntersect) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageSrc, setImageSrc] = useState(null);
+
+  const observerRef = useCallback(node => {
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+            onIntersect?.(imgID);
+            observer.disconnect();
+          }
+        });
+      },
+      { rootMargin: '50px' }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [imgID, onIntersect]);
 
   useEffect(() => {
     let mounted = true;
 
     const loadImage = async () => {
-      if (!imgID) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      const cached = await imageCacheService.getImage(imgID);
+      if (!isVisible || !imgID) return;
       
-      if (mounted) {
-        setCachedImage(cached);
-        setLoading(false);
+      try {
+        const src = await imageCacheService.getImage(imgID);
+        if (mounted && src) {
+          setImageSrc(src);
+        }
+      } catch (error) {
+        console.error('Error loading image:', error);
       }
     };
 
     loadImage();
     return () => { mounted = false; };
-  }, [imgID]);
+  }, [imgID, isVisible]);
 
-  return { cachedImage, loading };
+  return { observerRef, isVisible, imageLoaded, setImageLoaded, imageSrc };
 };
 
-const GameImage = memo(({ imgID, gameName }) => {
-  const { cachedImage, loading } = useImageLoader(imgID);
+const GameImage = memo(({ imgID, gameName, onIntersect }) => {
+  const { observerRef, isVisible, imageLoaded, setImageLoaded, imageSrc } = useImageLoader(imgID, onIntersect);
 
   return (
-    <div className="relative group">
+    <div className="relative group" ref={observerRef}>
       <AspectRatio ratio={16/9}>
-        {loading && (
+        {(!imageLoaded || !imageSrc) && (
           <Skeleton className="absolute inset-0 w-full h-full bg-muted" />
         )}
-        {cachedImage && (
+        {isVisible && imageSrc && (
           <img
-            src={cachedImage}
+            src={imageSrc}
             alt={gameName}
-            className={`w-full h-full object-cover rounded-t-lg transition-opacity duration-300 ${loading ? 'opacity-0' : 'opacity-100'}`}
+            className="w-full h-full object-cover rounded-t-lg transition-opacity duration-200"
+            style={{ opacity: imageLoaded ? 1 : 0 }}
+            onLoad={() => setImageLoaded(true)}
           />
         )}
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -74,7 +94,7 @@ const Categories = memo(({ categories }) => (
 
 const UpdateDate = memo(({ date }) => {
   if (!date) return null;
-  const formattedDate = useMemo(() => new Date(date), [date]);
+  const formattedDate = new Date(date);
   
   return (
     <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
@@ -103,13 +123,17 @@ const HomeGameCard = memo(({ game, variant = 'default' }) => {
     }, 300);
   }, [navigate, game]);
 
+  const handleImageLoad = useCallback((imgID) => {
+    imageCacheService.getImage(imgID);
+  }, []);
+
   if (variant === 'compact') {
     return (
       <Card 
         className="h-full overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
         onClick={handleClick}
       >
-        <GameImage imgID={game.imgID} gameName={game.game} />
+        <GameImage imgID={game.imgID} gameName={game.game} onIntersect={handleImageLoad} />
         <CardContent className="p-3">
           <h3 className="font-semibold text-sm truncate">{game.game}</h3>
           <Categories categories={game.category} />
@@ -126,13 +150,10 @@ const HomeGameCard = memo(({ game, variant = 'default' }) => {
       >
         <div className="flex flex-col sm:flex-row h-full">
           <div className="sm:w-1/3">
-            <GameImage imgID={game.imgID} gameName={game.game} />
+            <GameImage imgID={game.imgID} gameName={game.game} onIntersect={handleImageLoad} />
           </div>
           <CardContent className="flex-1 p-4 flex flex-col">
             <h3 className="font-semibold text-lg mb-2">{game.game}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-2 flex-grow">
-              {game.description || 'No description available'}
-            </p>
             <div className="mt-auto">
               <Categories categories={game.category} />
               <UpdateDate date={game.date} />
@@ -148,12 +169,9 @@ const HomeGameCard = memo(({ game, variant = 'default' }) => {
       className="h-full overflow-hidden hover:shadow-lg transition-shadow cursor-pointer flex flex-col"
       onClick={handleClick}
     >
-      <GameImage imgID={game.imgID} gameName={game.game} />
+      <GameImage imgID={game.imgID} gameName={game.game} onIntersect={handleImageLoad} />
       <CardContent className="p-4 flex flex-col flex-grow">
         <h3 className="font-semibold text-lg mb-2">{game.game}</h3>
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-2 flex-grow">
-          {game.description || 'No description available'}
-        </p>
         <div className="mt-auto">
           <Categories categories={game.category} />
           <UpdateDate date={game.date} />
@@ -163,4 +181,4 @@ const HomeGameCard = memo(({ game, variant = 'default' }) => {
   );
 });
 
-export default HomeGameCard; 
+export default HomeGameCard;

@@ -2,17 +2,20 @@ import React, { useState, useEffect, memo, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Skeleton } from "../components/ui/skeleton";
 import HomeGameCard from '../components/HomeGameCard';
+import RecentGameCard from '../components/RecentGameCard';
 import { useTheme } from '../contexts/ThemeContext';
 import { 
   Sword,
   Flame,
   Globe,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Clock
 } from 'lucide-react';
 import gameService from '../services/gameService';
 import Tour from '../components/Tour';
 import imageCacheService from '../services/imageCacheService';
+import recentGamesService from '../services/recentGamesService';
 
 const Home = memo(() => {
   const navigate = useNavigate();
@@ -23,7 +26,7 @@ const Home = memo(() => {
   const [autoPlay, setAutoPlay] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const [showTour, setShowTour] = useState(false);
-  const [cachedImages, setCachedImages] = useState({});
+  const [carouselImages, setCarouselImages] = useState({});
 
   useEffect(() => {
     const loadGames = async () => {
@@ -59,41 +62,21 @@ const Home = memo(() => {
     return () => clearInterval(timer);
   }, [autoPlay, games]);
 
-  useEffect(() => {
-    const cacheImages = async () => {
-      const visibleGames = [
-        ...getFeaturedGames(games),
-        ...getRecentGames(games).slice(0, 4),
-        ...getTopGames(games).slice(0, 4)
-      ];
-
-      const uniqueImageIds = new Set(visibleGames.map(game => game.imgID).filter(Boolean));
-      
-      const newCachedImages = {};
-
-      for (const imgID of uniqueImageIds) {
-        if (!cachedImages[imgID]) {
-          const cachedImage = await imageCacheService.getImage(imgID);
-          if (cachedImage) {
-            newCachedImages[imgID] = cachedImage;
-          }
-        }
-      }
-
-      if (Object.keys(newCachedImages).length > 0) {
-        setCachedImages(prev => ({
+  const handleImageIntersect = useCallback(async (imgID) => {
+    if (!imgID || carouselImages[imgID]) return;
+    
+    try {
+      const src = await imageCacheService.getImage(imgID);
+      if (src) {
+        setCarouselImages(prev => ({
           ...prev,
-          ...newCachedImages
+          [imgID]: src
         }));
       }
-
-      imageCacheService.pruneCache();
-    };
-
-    if (games.length > 0) {
-      cacheImages();
+    } catch (error) {
+      console.error('Error loading carousel image:', error);
     }
-  }, [games, cachedImages]);
+  }, [carouselImages]);
 
   const getFeaturedGames = (games) => {
     if (!Array.isArray(games)) return [];
@@ -101,10 +84,21 @@ const Home = memo(() => {
   };
 
   const getRecentGames = (games) => {
-    if (!Array.isArray(games)) return [];
-    return [...games]
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 6);
+    const recentlyPlayed = recentGamesService.getRecentGames();
+    
+    // If games array is not available yet, return just the cached data
+    if (!Array.isArray(games) || games.length === 0) {
+      return recentlyPlayed;
+    }
+    
+    // Once games are loaded, merge with full game details
+    return recentlyPlayed.map(recentGame => {
+      const gameDetails = games.find(g => g.game === recentGame.game) || recentGame;
+      return {
+        ...gameDetails,
+        lastPlayed: recentGame.lastPlayed
+      };
+    });
   };
 
   const getTopGames = (games) => {
@@ -160,6 +154,31 @@ const Home = memo(() => {
       }));
   };
 
+  const handlePlayGame = async (game) => {
+    try {
+      await window.electron.playGame(game.game || game.name, game.isCustom);
+      
+      // Get and cache the game image
+      const imageBase64 = await window.electron.getGameImage(game.game || game.name);
+      if (imageBase64) {
+        await imageCacheService.getImage(game.imgID);
+      }
+      
+      // Update recently played
+      recentGamesService.addRecentGame({
+        game: game.game || game.name,
+        name: game.name,
+        imgID: game.imgID,
+        version: game.version,
+        isCustom: game.isCustom,
+        online: game.online,
+        dlc: game.dlc
+      });
+    } catch (error) {
+      console.error('Error playing game:', error);
+    }
+  };
+
   const handlePrevSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev === 0 ? getFeaturedGames(games).length - 1 : prev - 1));
     setAutoPlay(false);
@@ -206,13 +225,20 @@ const Home = memo(() => {
               >
                 {featuredGames.map((game, index) => (
                   <div key={index} className="min-w-full">
-                    <div className="relative aspect-[21/9]">
-                      {!cachedImages[game.imgID] && (
+                    <div 
+                      className="relative aspect-[21/9]"
+                      ref={node => {
+                        if (node && !carouselImages[game.imgID]) {
+                          handleImageIntersect(game.imgID);
+                        }
+                      }}
+                    >
+                      {!carouselImages[game.imgID] && (
                         <Skeleton className="absolute inset-0 w-full h-full bg-muted" />
                       )}
-                      {cachedImages[game.imgID] && (
+                      {carouselImages[game.imgID] && (
                         <img 
-                          src={cachedImages[game.imgID]}
+                          src={carouselImages[game.imgID]}
                           alt={game.game}
                           className="w-full h-full object-cover"
                         />
@@ -220,7 +246,6 @@ const Home = memo(() => {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                       <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
                         <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">{game.game}</h2>
-                        <p className="text-white/80 text-base md:text-lg max-w-2xl line-clamp-2">{game.description || 'No description available'}</p>
                         <div className="flex gap-2 mt-4">
                           {game.category.slice(0, 3).map((cat, idx) => (
                             <span key={idx} className="px-3 py-1 rounded-full bg-white/10 text-white text-sm backdrop-blur-sm">
@@ -261,6 +286,24 @@ const Home = memo(() => {
               ))}
             </div>
           </div>
+
+          {recentGames.length > 0 && (
+            <section className="space-y-4" data-section="recent-games">
+              <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                <Clock className="w-6 h-6 text-primary" />
+                Recently Played
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {recentGames.slice(0, 4).map((game, index) => (
+                  <RecentGameCard 
+                    key={`recent-${game.game}-${index}`} 
+                    game={game}
+                    onPlay={handlePlayGame}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -338,7 +381,7 @@ const Home = memo(() => {
           </section>
 
           <div className="text-center text-muted-foreground/50 py-8">
-            That's it... go play some games
+            That's it... go find some games
           </div>
         </div>
       </div>

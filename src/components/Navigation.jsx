@@ -121,7 +121,7 @@ const Navigation = memo(({ items }) => {
                   <ChevronRight className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 rotate-90 w-4 h-4 text-border" />
                 </div>
               </Link>
-              {index === 0 && (
+              {index === 3 && (
                 <div className="w-px h-8 bg-border/50" />
               )}
             </React.Fragment>

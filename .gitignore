@@ -13,6 +13,15 @@ dist-ssr
 *.local
 
 # Editor directories and files
+/binaries/AscendaraDownloader/build
+/binaries
+/main-build
+analytics.py
+package-lock.json
+src/services/analyticsService.js
+exports.txt
+build/icon.ico
+build/config.prod.js
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -26,10 +35,3 @@ dist-ssr
 
 # Million Lint
 .million
-/binaries/AscendaraDownloader/build
-/binaries
-/build
-/main-build
-analytics.py
-package-lock.json
-src/services/analyticsService.js

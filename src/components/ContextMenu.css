@@ -1,0 +1,42 @@
+.context-menu {
+  background: rgb(var(--color-popover));
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgb(var(--color-foreground) / 0.1);
+  backdrop-filter: blur(10px);
+  min-width: 200px;
+  overflow: hidden;
+  border: 1px solid rgb(var(--color-border));
+}
+
+.context-menu-content {
+  padding: 4px;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  width: 100%;
+  border: none;
+  background: none;
+  color: rgb(var(--color-popover-foreground));
+  cursor: pointer;
+  font-size: 14px;
+  text-align: left;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.context-menu-item:hover {
+  background-color: rgb(var(--color-accent));
+  color: rgb(var(--color-accent-foreground));
+}
+
+.context-menu-item .icon {
+  font-size: 16px;
+  color: rgb(var(--color-muted-foreground));
+}
+
+.context-menu-item:hover .icon {
+  color: rgb(var(--color-accent-foreground));
+}

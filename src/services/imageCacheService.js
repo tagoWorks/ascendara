@@ -96,8 +96,7 @@ class ImageCacheService {
     });
   }
 
-  // Add method to manage cache size
-  pruneCache(maxSize = 50) { // Keep only the most recent 50 images by default
+  pruneCache(maxSize = 400) { 
     if (this.cache.size <= maxSize) return;
 
     const entries = Array.from(this.cache.entries());

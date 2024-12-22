@@ -1,6 +1,6 @@
 {
   "name": "ascendara",
-  "version": "7.1.1",
+  "version": "7.2.1",
   "main": "main.js",
   "description": "Download games effortlessly with Ascendara. Copy the link, paste it into the app, and download.",
   "scripts": {
@@ -18,6 +18,7 @@
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
     "@radix-ui/react-checkbox": "^1.1.2",
+    "@radix-ui/react-context-menu": "^2.2.4",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-dropdown-menu": "^2.1.2",
     "@radix-ui/react-label": "^2.1.0",
@@ -44,6 +45,7 @@
     "framer-motion": "^11.13.3",
     "fs-extra": "^11.2.0",
     "fuse.js": "^7.0.0",
+    "i18next": "^24.1.2",
     "ldrs": "^1.0.2",
     "lockfile": "^1.0.4",
     "lucide-react": "^0.468.0",
@@ -51,6 +53,7 @@
     "path": "^0.12.7",
     "react": "^18.3.1",
     "react-dom": "^18.2.0",
+    "react-i18next": "^15.2.0",
     "react-icons": "^5.4.0",
     "react-router-dom": "^6.23.1",
     "sonner": "^1.7.1",
