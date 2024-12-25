@@ -32,6 +32,7 @@ Downloads Page
 
 
 # Building the app from source [(view wiki)](https://github.com/tagoWorks/ascendara/wiki/Running-as-a-Developer)
+### Make sure you have all the dpendencies required to build the app from source. [View requirements here](https://github.com/tagoWorks/ascendara/wiki/Running-as-a-Developer#install-the-prerequisites-onto-your-computer)
 
 1. Clone the repository
     ```sh
@@ -47,8 +48,7 @@ Downloads Page
     ```sh
     npm run dist
     ```
-Open settings and click F5 for development tools
-
+    
 # Development Roadmap [(view wiki)](https://github.com/tagoWorks/ascendara/wiki/Contributing#development-roadmap)
 
 ### Ascendara App
