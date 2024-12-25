@@ -49,7 +49,7 @@ Downloads Page
     npm run dist
     ```
     
-# Development Roadmap [(view wiki)](https://github.com/tagoWorks/ascendara/wiki/Contributing#development-roadmap)
+# Development Roadmap
 
 ### Ascendara App
 - [ ] Auto create shortcuts
