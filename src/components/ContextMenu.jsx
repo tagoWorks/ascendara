@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TriangleAlert } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 import ReportIssue from './ReportIssue';
 
 const ContextMenu = () => {
@@ -8,6 +9,7 @@ const ContextMenu = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isReportOpen, setIsReportOpen] = useState(false);
   const menuRef = useRef(null);
+  const { t } = useLanguage();
 
   const handleContextMenu = (e) => {
     e.preventDefault();
@@ -75,7 +77,7 @@ const ContextMenu = () => {
             <div className="context-menu-content">
               <button onClick={handleReport} className="context-menu-item">
                 <TriangleAlert className="w-4 h-4 mr-2" />
-                Report Issue
+                {t('common.reportIssue')}
               </button>
               {/* Add other menu items here */}
             </div>

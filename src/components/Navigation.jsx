@@ -1,6 +1,7 @@
 import React, { useState, useEffect, memo, useCallback, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   Home, 
   Search, 
@@ -14,6 +15,7 @@ import {
 
 const Navigation = memo(({ items }) => {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const location = useLocation();
   const [hoveredItem, setHoveredItem] = useState(null);
   const [size, setSize] = useState(() => {
@@ -63,12 +65,12 @@ const Navigation = memo(({ items }) => {
   }, [location.pathname]);
 
   const navItems = useMemo(() => [
-    { path: '/', label: 'Home', icon: Home, color: 'from-blue-500 to-cyan-400' },
-    { path: '/search', label: 'Search', icon: Search, color: 'from-purple-500 to-pink-400' },
-    { path: '/library', label: 'Library', icon: Library, color: 'from-green-500 to-emerald-400' },
-    { path: '/downloads', label: 'Downloads', icon: Download, color: 'from-orange-500 to-amber-400' },
-    { path: '/settings', label: 'Settings', icon: Settings, color: 'from-slate-500 to-gray-400' }
-  ], []);
+    { path: '/', label: t('common.home'), icon: Home, color: 'from-blue-500 to-cyan-400' },
+    { path: '/search', label: t('common.search'), icon: Search, color: 'from-purple-500 to-pink-400' },
+    { path: '/library', label: t('common.library'), icon: Library, color: 'from-green-500 to-emerald-400' },
+    { path: '/downloads', label: t('common.downloads'), icon: Download, color: 'from-orange-500 to-amber-400' },
+    { path: '/settings', label: t('common.settings'), icon: Settings, color: 'from-slate-500 to-gray-400' }
+  ], [t]);
 
   useEffect(() => {
     const handleResize = () => {

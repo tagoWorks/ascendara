@@ -8,6 +8,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Switch } from "../components/ui/switch";
 import { Label } from "../components/ui/label";
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +48,8 @@ const Library = () => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isUninstalling, setIsUninstalling] = useState(false);
+  const [launchingGame, setLaunchingGame] = useState(null);
+  const { t } = useLanguage();
 
   const loadGames = async () => {
     try {
@@ -104,18 +107,36 @@ const Library = () => {
   });
 
   const handlePlayGame = async (game) => {
+    const gameName = game.game || game.name;
+    setLaunchingGame(gameName);
+    
     try {
-      await window.electron.playGame(game.game || game.name, game.isCustom);
+      // First check if game is already running
+      const isRunning = await window.electron.isGameRunning(gameName);
+      if (isRunning) {
+        return; // Game is already running, no need to launch
+      }
+
+      // Launch the game
+      await window.electron.playGame(gameName, game.isCustom);
+      
+      // Wait a second and check if the game process started
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const launchSuccessful = await window.electron.isGameRunning(gameName);
+      
+      if (!launchSuccessful) {
+        throw new Error('Game failed to launch');
+      }
       
       // Get and cache the game image before saving to recently played
-      const imageBase64 = await window.electron.getGameImage(game.game || game.name);
+      const imageBase64 = await window.electron.getGameImage(gameName);
       if (imageBase64) {
         await imageCacheService.getImage(game.imgID);
       }
       
       // Save to recently played games
       recentGamesService.addRecentGame({
-        game: game.game || game.name,
+        game: gameName,
         name: game.name,
         imgID: game.imgID,
         version: game.version,
@@ -124,8 +145,14 @@ const Library = () => {
         dlc: game.dlc
       });
     } catch (error) {
-      console.error('Error playing game:', error);
-      setError('Failed to launch game');
+      console.error('Error launching game:', error);
+      await window.electron.ipcRenderer.invoke('show-message-box', {
+        type: 'error',
+        title: t('library.launchError'),
+        message: t('library.launchErrorMessage', { game: gameName })
+      });
+    } finally {
+      setLaunchingGame(null);
     }
   };
 
@@ -166,7 +193,7 @@ const Library = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-foreground">Loading games...</div>
+        <div className="text-foreground">{t('library.loadingGames')}</div>
       </div>
     );
   }
@@ -182,17 +209,17 @@ const Library = () => {
         
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold text-primary">Games Library</h1>
+            <h1 className="text-3xl font-bold text-primary">{t('library.installedGames')}</h1>
             <Separator orientation="vertical" className="h-8" />
             <p className="text-muted-foreground">
               {games.length === 0 
-                ? "No games in your library yet"
-                : `${games.length} game${games.length === 1 ? '' : 's'} in your library`}
+                ? t('library.noGamesMessage')
+                : `${games.length} ${t('library.game')}${games.length === 1 ? '' : 's'} ${t('library.inYourLibrary')}`}
             </p>
           </div>
 
           <Input
-            placeholder="Search games..."
+            placeholder={t('library.searchLibrary')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="max-w-sm"
@@ -207,10 +234,10 @@ const Library = () => {
             <AlertDialogContent className="sm:max-w-[425px] bg-background border-border">
               <AlertDialogHeader className="space-y-2">
                 <AlertDialogTitle className="text-2xl font-bold text-foreground">
-                  Add Game
+                  {t('library.addGame')}
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-muted-foreground">
-                  Add a custom game to your library. Choose the executable file and configure the game settings.
+                  {t('library.addGameDescription')}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AddGameForm onSuccess={() => {
@@ -229,6 +256,7 @@ const Library = () => {
               onSelect={() => setSelectedGame(game)}
               isSelected={isGameSelected(game, selectedGame)}
               onOpenDirectory={() => handleOpenDirectory(game)}
+              isLaunching={launchingGame === (game.game || game.name)}
             />
           ))}
         </div>
@@ -240,12 +268,11 @@ const Library = () => {
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle className="text-2xl font-bold text-foreground">Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('library.uninstallGame')}</AlertDialogTitle>
               <AlertDialogDescription>
                 {gameToDelete?.isCustom 
-                  ? `This will remove ${gameToDelete?.game || gameToDelete?.name} from your library. The game files will not be deleted.`
-                  : `This will uninstall ${gameToDelete?.game || gameToDelete?.name} from your system. This action cannot be undone.`
-                }
+                  ? t('library.removeGameFromLibrary')
+                  : t('library.uninstallGameWarning')}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="flex justify-end gap-2">
@@ -253,7 +280,7 @@ const Library = () => {
                 <div className="w-full">
                   <Progress className="w-full" value={undefined} />
                   <p className="text-sm text-muted-foreground mt-2 text-center">
-                    Uninstalling {gameToDelete?.game || gameToDelete?.name}...
+                    {t('library.uninstallingGame')} {gameToDelete?.game || gameToDelete?.name}...
                   </p>
                 </div>
               ) : (
@@ -263,14 +290,14 @@ const Library = () => {
                     onClick={() => setGameToDelete(null)}
                     className="text-muted-foreground hover:text-foreground"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </Button>
                   <Button
                     variant="destructive"
                     onClick={() => handleDeleteGame(gameToDelete)}
                     className="text-muted-foreground hover:text-foreground"
                   >
-                    {gameToDelete?.isCustom ? 'Remove' : 'Uninstall'}
+                    {gameToDelete?.isCustom ? t('library.removeGame') : t('library.uninstallGame')}
                   </Button>
                 </ >
               )}
@@ -283,6 +310,7 @@ const Library = () => {
 };
 
 const AddGameCard = React.forwardRef((props, ref) => {
+  const { t } = useLanguage();
   return (
     <Card 
       ref={ref}
@@ -296,9 +324,9 @@ const AddGameCard = React.forwardRef((props, ref) => {
         <div className="rounded-full bg-muted p-6 group-hover:bg-primary/10">
           <Plus className="w-8 h-8" />
         </div>
-        <h3 className="mt-4 font-semibold text-lg">Add Game</h3>
+        <h3 className="mt-4 font-semibold text-lg">{t('library.addGame')}</h3>
         <p className="text-sm text-center mt-2">
-          Add a custom game to your library
+          {t('library.addGameDescription')}
         </p>
       </CardContent>
     </Card>
@@ -307,17 +335,49 @@ const AddGameCard = React.forwardRef((props, ref) => {
 
 AddGameCard.displayName = "AddGameCard";
 
-const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpenDirectory }) => {
+const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpenDirectory, isLaunching }) => {
+  const { t } = useLanguage();
   const [isRunning, setIsRunning] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [imageData, setImageData] = useState(null);
 
-  // Add image loading effect
+  // Check game running status periodically
   useEffect(() => {
+    let isMounted = true;
+
+    const checkGameStatus = async () => {
+      try {
+        if (!isMounted) return;
+        const running = await window.electron.isGameRunning(game.game || game.name);
+        if (isMounted) {
+          setIsRunning(running);
+        }
+      } catch (error) {
+        console.error('Error checking game status:', error);
+      }
+    };
+
+    // Initial check
+    checkGameStatus();
+
+    // Set up interval for periodic checks
+    const interval = setInterval(checkGameStatus, 1000);
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [game]);
+
+  // Load game image
+  useEffect(() => {
+    let isMounted = true;
+
     const loadGameImage = async () => {
       try {
         const imageBase64 = await window.electron.getGameImage(game.game || game.name);
-        if (imageBase64) {
+        if (imageBase64 && isMounted) {
           setImageData(`data:image/jpeg;base64,${imageBase64}`);
         }
       } catch (error) {
@@ -326,15 +386,10 @@ const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpe
     };
 
     loadGameImage();
-  }, [game]);
 
-  useEffect(() => {
-    const checkGameStatus = setInterval(async () => {
-      const running = await window.electron.isGameRunning(game.game || game.name);
-      setIsRunning(running);
-    }, 1000);
-
-    return () => clearInterval(checkGameStatus);
+    return () => {
+      isMounted = false;
+    };
   }, [game]);
 
   return (
@@ -365,12 +420,12 @@ const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpe
               <div className="flex gap-2">
                 {game.online && (
                   <span className="px-2 py-1 rounded-full bg-primary/20 text-primary text-xs">
-                    Online Fix
+                    {t('library.onlineFix')}
                   </span>
                 )}
                 {game.dlc && (
                   <span className="px-2 py-1 rounded-full bg-primary/20 text-primary text-xs">
-                    All DLCs
+                    {t('library.allDLCs')}
                   </span>
                 )}
               </div>
@@ -378,11 +433,28 @@ const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpe
                 className="w-full gap-2"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onPlay();
+                  if (!isRunning && !isLaunching) {
+                    onPlay();
+                  }
                 }}
+                disabled={isLaunching || isRunning}
               >
-                <Play className="w-4 h-4" />
-                {isRunning ? 'Running' : 'Play'}
+                {isLaunching ? (
+                  <>
+                    <Progress className="w-4 h-4" value={undefined} />
+                    {t('library.launching')}
+                  </>
+                ) : isRunning ? (
+                  <>
+                    <Play className="w-4 h-4" />
+                    {t('library.running')}
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4" />
+                    {t('library.play')}
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -391,7 +463,7 @@ const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpe
       <CardFooter className="flex justify-between items-center p-4">
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-foreground truncate">{game.game}</h3>
-          <p className="text-sm text-muted-foreground">{game.version || 'No version'}</p>
+          <p className="text-sm text-muted-foreground">{game.version || t('library.noVersion')}</p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -406,18 +478,23 @@ const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpe
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={onOpenDirectory}>
               <FolderOpen className="w-4 h-4 mr-2" />
-              Open Directory
+              {t('library.openGameDirectory')}
             </DropdownMenuItem>
             {!game.isCustom && (
-              <DropdownMenuItem onClick={() => window.electron.modifyGameExecutable(game.game, game.executable)}>
+              <DropdownMenuItem onClick={async () => {
+                const exePath = await window.electron.openFileDialog();
+                if (exePath) {
+                  await window.electron.modifyGameExecutable(game.game || game.name, exePath);
+                }
+              }}>
                 <Pencil className="w-4 h-4 mr-2" />
-                Change Executable
+                {t('library.changeExecutable')}
               </DropdownMenuItem>
             )}
             {!game.isCustom && game.downloadingData && (
               <DropdownMenuItem onClick={() => window.electron.openReqPath(game.game)}>
                 <Shield className="w-4 h-4 mr-2" />
-                Required Libraries
+                {t('library.requiredLibraries')}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem 
@@ -428,7 +505,7 @@ const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpe
               className="text-destructive"
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              {game.isCustom ? 'Remove from Library' : 'Uninstall'}
+              {game.isCustom ? t('library.removeGameFromLibrary') : t('library.uninstallGame')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -438,6 +515,7 @@ const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpe
 };
 
 const AddGameForm = ({ onSuccess }) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     executable: '',
     name: '',
@@ -474,7 +552,7 @@ const AddGameForm = ({ onSuccess }) => {
     <div className="space-y-6">
       <div className="space-y-4">
         <div>
-          <h4 className="text-sm font-medium text-foreground mb-2">Game Executable</h4>
+          <h4 className="text-sm font-medium text-foreground mb-2">{t('library.gameExecutable')}</h4>
           <Button 
             type="button" 
             variant="outline" 
@@ -482,12 +560,12 @@ const AddGameForm = ({ onSuccess }) => {
             onClick={handleChooseExecutable}
           >
             <FolderOpen className="w-4 h-4 mr-2" />
-            {formData.executable || 'Choose executable file'}
+            {formData.executable || t('library.chooseExecutableFile')}
           </Button>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-foreground">Game Name</Label>
+          <Label htmlFor="name" className="text-foreground">{t('library.gameName')}</Label>
           <Input
             id="name"
             value={formData.name}
@@ -500,7 +578,7 @@ const AddGameForm = ({ onSuccess }) => {
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label htmlFor="hasVersion" className="flex-1 text-foreground">Version</Label>
+            <Label htmlFor="hasVersion" className="flex-1 text-foreground">{t('library.version')}</Label>
             <Switch
               id="hasVersion"
               checked={formData.hasVersion}
@@ -517,14 +595,14 @@ const AddGameForm = ({ onSuccess }) => {
               id="version"
               value={formData.version}
               onChange={(e) => setFormData(prev => ({ ...prev, version: e.target.value }))}
-              placeholder="e.g. 1.0.0"
+              placeholder={t('library.versionPlaceholder')}
               className="bg-background border-input"
             />
           )}
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="isOnline" className="flex-1 text-foreground">Has Online Fix</Label>
+          <Label htmlFor="isOnline" className="flex-1 text-foreground">{t('library.hasOnlineFix')}</Label>
           <Switch
             id="isOnline"
             checked={formData.isOnline}
@@ -533,7 +611,7 @@ const AddGameForm = ({ onSuccess }) => {
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="hasDLC" className="flex-1 text-foreground">Includes All DLCs</Label>
+          <Label htmlFor="hasDLC" className="flex-1 text-foreground">{t('library.includesAllDLCs')}</Label>
           <Switch
             id="hasDLC"
             checked={formData.hasDLC}
@@ -548,14 +626,14 @@ const AddGameForm = ({ onSuccess }) => {
           onClick={() => onSuccess()}
           className="bg-background text-primary hover:bg-accent"
         >
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={!formData.executable || !formData.name}
           className="bg-primary text-primary-foreground hover:bg-primary/90"
         >
-          Add Game
+          {t('library.addGame')}
         </Button>
       </AlertDialogFooter>
     </div>

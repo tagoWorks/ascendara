@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Switch } from '../components/ui/switch';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -28,17 +29,17 @@ const themes = [
 ];
 
 const languages = [
-  { id: 'en', name: 'English', icon: '🇺🇸' },
-  { id: 'es', name: 'Español', icon: '🇪🇸' },
-  { id: 'fr', name: 'Français', icon: '🇫🇷' },
-  { id: 'de', name: 'Deutsch', icon: '🇩🇪' },
-  { id: 'it', name: 'Italiano', icon: '🇮🇹' },
-  { id: 'pt', name: 'Português', icon: '🇵🇹' },
-  { id: 'ru', name: 'Русский', icon: '🇷🇺' },
-  { id: 'zh', name: '中文', icon: '🇨🇳' },
-  { id: 'ja', name: '日本語', icon: '🇯🇵' },
-  { id: 'ko', name: '한국어', icon: '🇰🇷' },
-];
+    { id: 'en', name: 'English', icon: '🇺🇸' },
+    { id: 'es', name: 'Español', icon: '🇪🇸' },
+    { id: 'zh-CN', name: '中文', icon: '🇨🇳' },
+    { id: 'ar', name: 'العربية', icon: '🇸🇦' },
+    { id: 'hi', name: 'हिन्दी', icon: '🇮🇳' },
+    { id: 'bn', name: 'বাংলা', icon: '🇧🇩' },
+    { id: 'pt', name: 'Português', icon: '🇵🇹' },
+    { id: 'ru', name: 'Русский', icon: '🇷🇺' },
+    { id: 'ja', name: '日本語', icon: '🇯🇵' },
+  ];
+
 
 const getThemeColors = (themeId) => {
   const themeMap = {
@@ -137,6 +138,7 @@ function createDebouncedFunction(func, wait) {
 
 function Settings() {
   const { theme, setTheme } = useTheme();
+  const { language, changeLanguage, t } = useLanguage();
   const [downloadPath, setDownloadPath] = useState('');
   const [version, setVersion] = useState('');
   const [settings, setSettings] = useState({
@@ -153,9 +155,6 @@ function Settings() {
       steamrip: true,
       steamunlocked: false,
       fitgirlrepacks: false,
-    },
-    ascendaraSettings: {
-      preferredCDN: 'default',
     }
   });
   
@@ -323,16 +322,18 @@ function Settings() {
       };
       return newSettings;
     });
-  }, []);
+    // Use changeLanguage from the context
+    changeLanguage(value);
+  }, [changeLanguage]);
 
   // Theme handling
   const handleThemeChange = useCallback((newTheme) => {
     setTheme(newTheme);
-    localStorage.setItem('selectedTheme', newTheme);
+    localStorage.setItem('ascendara-theme', newTheme);
   }, [setTheme]);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('selectedTheme');
+    const savedTheme = localStorage.getItem('ascendara-theme');
     if (savedTheme) {
       setTheme(savedTheme);
     }
@@ -373,9 +374,9 @@ function Settings() {
     <div className="min-h-screen bg-background">
       <div className="container max-w-7xl mx-auto p-4 md:p-8">
         <div className="flex items-center gap-4 mb-6">
-          <h1 className="text-3xl font-bold text-primary">Settings</h1>
+          <h1 className="text-3xl font-bold text-primary">{t('settings.title')}</h1>
           <Separator orientation="vertical" className="h-8" />
-          <p className="text-muted-foreground">Configure your app preferences</p>
+          <p className="text-muted-foreground">{t('settings.configure')}</p>
           <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
             <span>Version {version}</span>
           </div>
@@ -387,12 +388,12 @@ function Settings() {
             <Card className="p-6 h-fit">
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-xl font-semibold mb-4 text-primary">General</h2>
+                  <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.general')}</h2>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label>Ascendara Analytics</Label>
-                        <p className="text-sm text-muted-foreground">Help improve Ascendara by sending usage data. This data is anonymous and cannot be used to identify you.</p>
+                        <Label>{t('settings.ascendaraAnalytics')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('settings.ascendaraAnalyticsDescription')}</p>
                       </div>
                       <Switch
                         checked={settings.sendAnalytics}
@@ -402,8 +403,8 @@ function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label>Ascendara Updates</Label>
-                        <p className="text-sm text-muted-foreground">Automatically download new versions of Ascendara and ask you to install them when ready</p>
+                        <Label>{t('settings.ascendaraUpdates')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('settings.ascendaraUpdatesDescription')}</p>
                       </div>
                       <Switch
                         checked={settings.autoUpdate}
@@ -413,8 +414,8 @@ function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label>Mature Content</Label>
-                        <p className="text-sm text-muted-foreground">Show games with mature or inappropriate content</p>
+                        <Label>{t('settings.matureContent')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('settings.matureContentDescription')}</p>
                       </div>
                       <Switch
                         checked={settings.seeInappropriateContent}
@@ -425,25 +426,25 @@ function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label>Clear Cache</Label>
-                        <p className="text-sm text-muted-foreground">Clear application cache data</p>
+                        <Label>{t('settings.clearCache')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('settings.clearCacheDescription')}</p>
                       </div>
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={handleClearCache}
                       >
-                        Clear
+                        {t('settings.clearCacheButton')}
                       </Button>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h2 className="text-xl font-semibold mb-4 text-primary">Downloads</h2>
+                  <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.downloads')}</h2>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="downloadPath">Download Location</Label>
+                      <Label htmlFor="downloadPath">{t('settings.downloadLocation')}</Label>
                       <div className="flex gap-2">
                         <Input 
                           id="downloadPath"
@@ -451,7 +452,7 @@ function Settings() {
                           readOnly
                           className="flex-1"
                         />
-                        <Button onClick={handleDirectorySelect}>Select</Button>
+                        <Button className="text-secondary" onClick={handleDirectorySelect}>{t('settings.selectDirectory')}</Button>
                       </div>
                     </div>
                     
@@ -461,10 +462,10 @@ function Settings() {
                       <div className="space-y-0.5">
                         <Label> 
                           <span className="flex items-center gap-1">
-                            Seamless Downloads <Zap size={12} />
+                            {t('settings.seamlessDownloads')} <Zap size={12} />
                           </span>
                         </Label>
-                        <p className="text-sm text-muted-foreground">Instantly download games without needing to select a provider</p>
+                        <p className="text-sm text-muted-foreground">{t('settings.seamlessDownloadsDescription')}</p>
                       </div>
                       <Switch
                         checked={settings.seamlessDownloads}
@@ -475,7 +476,7 @@ function Settings() {
                 </div>
 
                 <div>
-                  <h2 className="text-xl font-semibold mb-4 text-primary">Quick Links</h2>
+                  <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.quickLinks')}</h2>
                   <div className="grid gap-2">
                     <Button 
                       variant="outline" 
@@ -486,7 +487,7 @@ function Settings() {
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M9 5l7 7-7 7" />
                         </svg>
-                        Privacy Policy
+                        {t('settings.privacyPolicy')}
                       </span>
                     </Button>
                     <Button 
@@ -498,7 +499,7 @@ function Settings() {
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M9 5l7 7-7 7" />
                         </svg>
-                        Terms of Service
+                        {t('settings.termsOfService')}
                       </span>
                     </Button>
                     <Button 
@@ -510,7 +511,7 @@ function Settings() {
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M9 5l7 7-7 7" />
                         </svg>
-                        DMCA
+                        {t('settings.dmca')}
                       </span>
                     </Button>
                   </div>
@@ -523,19 +524,19 @@ function Settings() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3 text-yellow-500">
                   <CircleAlert className="w-5 h-5" />
-                  <h2 className="text-lg font-semibold mb-0">Please Read</h2>
+                  <h2 className="text-lg font-semibold mb-0">{t('settings.warningTitle')}</h2>
                 </div>
                 
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Ascendara is designed as a testing platform for video games, allowing users to evaluate gameplay, performance, and compatibility before making a purchase decision. Ascendara strongly encourages users to support game developers by purchasing games they enjoy.
+                  {t('settings.warningDescription')}
                 </p>
                 
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Game developers invest significant time, resources, and creativity into creating the experiences we all enjoy. Your purchase directly supports their ability to continue making great games and sustains the gaming industry.
+                  {t('settings.warningSupportDevelopers')}
                 </p>
 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
-                  <span>Please support the developers by purchasing games you enjoy.</span>
+                  <span>{t('settings.warningSupportDevelopersCallToAction')}</span>
                 </div>
               </div>
             </Card>
@@ -545,25 +546,25 @@ function Settings() {
           <div className="lg:col-span-8 space-y-6">
             {/* Game Sources Card */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 text-primary">Game Sources</h2>
+              <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.gameSources')}</h2>
               <div className="space-y-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Primary Source</Label>
-                      <p className="text-sm text-muted-foreground">Select your preferred game source</p>
+                      <Label>{t('settings.primarySource')}</Label>
+                      <p className="text-sm text-muted-foreground">{t('settings.primarySourceDescription')}</p>
                     </div>
                     <Select 
                       value={settings.primaryGameSource}
                       onValueChange={handlePrimarySourceChange}
                     >
                       <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select source" />
+                        <SelectValue placeholder={t('settings.selectSource')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="steamrip">SteamRip</SelectItem>
-                        <SelectItem disabled value="steamunlocked">SteamUnlocked</SelectItem>
-                        <SelectItem disabled value="fitgirlrepacks">Fitgirl repacks</SelectItem>
+                        <SelectItem value="steamrip">{t('settings.steamRip')}</SelectItem>
+                        <SelectItem disabled value="steamunlocked">{t('settings.steamUnlocked')}</SelectItem>
+                        <SelectItem disabled value="fitgirlrepacks">{t('settings.fitgirlRepacks')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -571,10 +572,10 @@ function Settings() {
                   <Separator />
 
                   <div className="space-y-4">
-                    <h3 className="text-sm font-medium">Enabled Sources</h3>
+                    <h3 className="text-sm font-medium">{t('settings.enabledSources')}</h3>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <Label>SteamRip</Label>
+                        <Label>{t('settings.steamRip')}</Label>
                         <Switch
                           disabled
                           checked={settings.enabledSources.steamrip}
@@ -582,7 +583,7 @@ function Settings() {
                         />
                       </div>
                       <div className="flex items-center justify-between">
-                        <Label>SteamUnlocked</Label>
+                        <Label>{t('settings.steamUnlocked')}</Label>
                         <Switch
                           disabled
                           checked={settings.enabledSources.steamunlocked}
@@ -590,7 +591,7 @@ function Settings() {
                         />
                       </div>
                       <div className="flex items-center justify-between">
-                        <Label>Fitgirl Repacks</Label>
+                        <Label>{t('settings.fitgirlRepacks')}</Label>
                         <Switch
                           disabled
                           checked={settings.enabledSources.fitgirlrepacks}
@@ -603,23 +604,17 @@ function Settings() {
                   <Separator />
 
                   <div className="space-y-4">
-                    <h3 className="text-sm font-medium">Ascendara Settings</h3>
+                    <h3 className="text-sm font-medium">{t('settings.ascendaraSettings')}</h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
-                          <Label>Download Server</Label>
-                          <p className="text-sm text-muted-foreground">Server for downloading Ascendara updates or files</p>
+                          <Label>{t('settings.downloadServer')}</Label>
+                          <p className="text-sm text-muted-foreground">{t('settings.downloadServerDescription')}</p>
                         </div>
-                        <Select
-                          value={settings.ascendaraSettings.preferredCDN}
-                          onValueChange={(value) => handleAscendaraSettingChange('preferredCDN', value)}
-                        >
+                        <Select disabled>
                           <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Select CDN" />
+                            <SelectValue placeholder={t('settings.usEast')} />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="default">US East</SelectItem>
-                          </SelectContent>
                         </Select>
                       </div>
                     </div>
@@ -630,32 +625,31 @@ function Settings() {
 
             {/* Language Settings Card */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 text-primary">Language Settings</h2>
+              <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.languageSettings')}</h2>
               <div className="space-y-6">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Languages className="w-5 h-5 text-primary" />
-                    <p className="text-sm text-muted-foreground">Choose your preferred language for the application interface.</p>
+                    <p className="text-sm text-muted-foreground">{t('settings.languageSettingsDescription')}</p>
                   </div>
                   <Select
-                    disabled
                     value={settings.language}
                     onValueChange={handleLanguageChange}
                   >
                     <SelectTrigger className="w-full max-w-xs">
                       <SelectValue>
                         <div className="flex items-center gap-2">
-                          <span>{languages.find(lang => lang.id === settings.language)?.icon}</span>
-                          <span>{languages.find(lang => lang.id === settings.language)?.name}</span>
+                          <span>{languages.find(l => l.id === settings.language)?.icon}</span>
+                          <span>{languages.find(l => l.id === settings.language)?.name}</span>
                         </div>
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {languages.map(language => (
-                        <SelectItem key={language.id} value={language.id}>
+                      {languages.map((lang) => (
+                        <SelectItem key={lang.id} value={lang.id}>
                           <div className="flex items-center gap-2">
-                            <span>{language.icon}</span>
-                            <span>{language.name}</span>
+                            <span>{lang.icon}</span>
+                            <span>{lang.name}</span>
                           </div>
                         </SelectItem>
                       ))}
@@ -667,10 +661,10 @@ function Settings() {
 
             {/* Theme Card */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 text-primary">Theme</h2>
+              <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.theme')}</h2>
               <div className="space-y-6">
                 <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-muted-foreground">Light Themes</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">{t('settings.lightThemes')}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     {groupedThemes.light.map((t) => (
                       <ThemeButton key={t.id} theme={t} currentTheme={theme} onSelect={handleThemeChange} />
@@ -681,7 +675,7 @@ function Settings() {
                 <Separator />
                 
                 <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-muted-foreground">Dark Themes</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">{t('settings.darkThemes')}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     {groupedThemes.dark.map((t) => (
                       <ThemeButton key={t.id} theme={t} currentTheme={theme} onSelect={handleThemeChange} />

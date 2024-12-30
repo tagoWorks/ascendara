@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +21,7 @@ const ReportIssue = ({ isOpen, onClose }) => {
   const [details, setDetails] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [authToken, setAuthToken] = useState("");
+  const { t } = useLanguage();
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -28,8 +30,8 @@ const ReportIssue = ({ isOpen, onClose }) => {
         setAuthToken(token);
       } catch (error) {
         console.error("Error fetching token:", error);
-        toast.error("Authentication Failed", {
-          description: "Unable to authenticate. Please try again later."
+        toast.error(t('common.reportDialog.authFailed'), {
+          description: t('common.reportDialog.authFailedDesc')
         });
       }
     };
@@ -64,8 +66,8 @@ const ReportIssue = ({ isOpen, onClose }) => {
 
   const handleSubmit = async () => {
     if (!reportReason.trim() || !details.trim()) {
-      toast.error("Missing Information", {
-        description: "Please fill out all required fields."
+      toast.error(t('common.reportDialog.missingInfo'), {
+        description: t('common.reportDialog.missingInfoDesc')
       });
       return;
     }
@@ -96,12 +98,12 @@ const ReportIssue = ({ isOpen, onClose }) => {
     });
 
     toast.promise(promise, {
-      loading: "Submitting report...",
+      loading: t('common.reportDialog.submitting'),
       success: () => {
         onClose();
-        return "Thank you for your report!";
+        return t('common.reportDialog.success');
       },
-      error: "Failed to submit report. Please try again."
+      error: t('common.reportDialog.error'),
     });
   };
 
@@ -109,40 +111,36 @@ const ReportIssue = ({ isOpen, onClose }) => {
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent className="sm:max-w-[425px]">
         <AlertDialogHeader>
-          <AlertDialogTitle>Report an Issue</AlertDialogTitle>
+          <AlertDialogTitle>{t('common.reportDialog.title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Help us improve Ascendara by reporting any issues you encounter.
+            {t('common.reportDialog.description')}
           </AlertDialogDescription>
         </AlertDialogHeader>
+
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="reason" className="col-span-4">
-              What are you reporting?
-            </Label>
+          <div className="grid gap-2">
+            <Label htmlFor="reason">{t('common.reportDialog.reasonLabel')}</Label>
             <Input
               id="reason"
-              className="col-span-4"
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}
-              placeholder="Brief description of the issue"
+              placeholder={t('common.reportDialog.reasonPlaceholder')}
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="details" className="col-span-4">
-              Detailed Description
-            </Label>
+          <div className="grid gap-2">
+            <Label htmlFor="details">{t('common.reportDialog.detailsLabel')}</Label>
             <Textarea
               id="details"
-              className="col-span-4"
               value={details}
               onChange={(e) => setDetails(e.target.value)}
-              placeholder="Please provide as much detail as possible"
+              placeholder={t('common.reportDialog.detailsPlaceholder')}
               rows={4}
             />
           </div>
         </div>
+
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t('common.reportDialog.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleSubmit}
             disabled={isLoading}
@@ -151,10 +149,10 @@ const ReportIssue = ({ isOpen, onClose }) => {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
+                {t('common.reportDialog.submitting')}
               </>
             ) : (
-              "Submit Report"
+              t('common.reportDialog.submit')
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

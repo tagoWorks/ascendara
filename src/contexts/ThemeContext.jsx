@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ThemeProvider as NextThemeProvider, useTheme as useNextTheme } from 'next-themes'
 
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
   return (
-    <NextThemeProvider attribute="data-theme" defaultTheme="purple" themes={['light', 'dark', 'midnight', 'cyberpunk', 'sunset', 'forest', 'blue', 'purple', 'emerald', 'rose']}>
+    <NextThemeProvider attribute="data-theme" defaultTheme="purple" enableSystem={false} storageKey="ascendara-theme" themes={['light', 'dark', 'midnight', 'cyberpunk', 'sunset', 'forest', 'blue', 'purple', 'emerald', 'rose']}>
       {children}
     </NextThemeProvider>
   )
@@ -13,4 +13,4 @@ export function ThemeProvider({ children }) {
 
 export function useTheme() {
   return useNextTheme()
-} 
+}

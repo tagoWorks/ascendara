@@ -67,3 +67,34 @@
 [data-sonner-toast] [data-button]:hover {
   background: rgba(255, 255, 255, 0.2) !important;
 }
+
+/* Hide Google Translate widget but keep it functional */
+.goog-te-banner-frame {
+  display: none !important;
+}
+
+.goog-te-gadget {
+  font-size: 0 !important;
+}
+
+.goog-te-gadget > * {
+  display: none !important;
+}
+
+.goog-te-menu-value {
+  display: none !important;
+}
+
+.VIpgJd-ZVi9od-l4eHX-hSRGPd,
+.VIpgJd-ZVi9od-l4eHX-hSRGPd:link,
+.VIpgJd-ZVi9od-l4eHX-hSRGPd:visited,
+.VIpgJd-ZVi9od-l4eHX-hSRGPd:hover,
+.VIpgJd-ZVi9od-l4eHX-hSRGPd:active {
+  display: none !important;
+}
+
+/* Ensure translated text maintains app styling */
+.translated-ltr,
+.translated-rtl {
+  font-family: inherit !important;
+}

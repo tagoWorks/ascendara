@@ -12,6 +12,8 @@ import { Textarea } from "../components/ui/textarea";
 import { Loader2Icon, InfoIcon, CopyIcon, CheckIcon, BadgeCheckIcon } from "lucide-react";
 import imageCacheService from '../services/imageCacheService';
 import { toast } from "sonner";
+import { useLanguage } from '../contexts/LanguageContext';
+import { sanitizeText } from '../lib/utils';
 
 const isValidURL = (url, provider) => {
   const trimmedUrl = url.trim();
@@ -54,11 +56,17 @@ const isValidURL = (url, provider) => {
 
 const VERIFIED_PROVIDERS = ['megadb', 'gofile', 'datanodes'];
 
+const sanitizeGameName = (name) => {
+  if (!name) return '';
+  // Replace special dash character with standard hyphen
+  return name.replace(/[–—]/g, '-');
+};
+
 export default function DownloadPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { gameData } = state || {};
-
+  const { t } = useLanguage();
   const [selectedProvider, setSelectedProvider] = useState("");
   const [inputLink, setInputLink] = useState("");
   const [isStartingDownload, setIsStartingDownload] = useState(false);
@@ -118,45 +126,39 @@ export default function DownloadPage() {
 
   const guideSteps = [
     {
-      title: "Step 1: The Ascendara Download Blocker",
+      title: t('download.newUserGuide.steps.0.title'),
       description: (
         <div>
-          <p>The Ascendara Download Blocker is a Chrome extension that helps you catch the direct download link (DDL) for a game.</p>
+          <p>{t('download.newUserGuide.steps.0.description')}</p>
           <p className="text-muted-foreground">
-            Don't have the extension yet? {' '}
-            <span 
-              className="text-primary hover:underline cursor-pointer"
-              onClick={() => window.electron.openURL('https://ascendara.app/extension')}
-            >
-              Install it Now
-            </span>
+            {t('download.newUserGuide.steps.0.note')}
           </p>
         </div>
       )
     },
     {
-      title: "Step 2: Enable the Blocker",
-      description: "Make sure the Ascendara Download Blocker toggle is enabled before proceeding.",
+      title: t('download.newUserGuide.steps.1.title'),
+      description: t('download.newUserGuide.steps.1.description'),
       image: guideImages['/guide/guide-toggle.png']
     },
     {
-      title: "Step 3: Start the download",
-      description: "Complete the CAPTCHA, and start the download.",
+      title: t('download.newUserGuide.steps.2.title'),
+      description: t('download.newUserGuide.steps.2.description'),
       image: guideImages['/guide/guide-start.png']
     },
     {
-      title: "Step 4: Copy the Link",
-      description: "Copy the direct download link and paste it into Ascendara.",
+      title: t('download.newUserGuide.steps.3.title'),
+      description: t('download.newUserGuide.steps.3.description'),
       image: guideImages['/guide/guide-copy.png']
     },
     {
-      title: "Step 5: Start the download",
-      description: "Start the download by clicking the Download Now button.",
+      title: t('download.newUserGuide.steps.4.title'),
+      description: t('download.newUserGuide.steps.4.description'),
       image: guideImages['/guide/guide-download.png']
     },
     {
-      title: "View your downloads",
-      description: "Go to the downloads page to view your downloading game.",
+      title: t('download.newUserGuide.steps.5.title'),
+      description: t('download.newUserGuide.steps.5.description'),
       image: guideImages['/guide/guide-downloads.png']
     }
   ];
@@ -240,9 +242,10 @@ export default function DownloadPage() {
 
     setIsStartingDownload(true);
     try {
+      const sanitizedGameName = sanitizeText(gameData.game);
       await window.electron.downloadFile(
-        inputLink,
-        gameData.game,
+        sanitizeText(inputLink),
+        sanitizedGameName,
         gameData.online,
         gameData.dlc,
         gameData.version,
@@ -254,13 +257,13 @@ export default function DownloadPage() {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Show success notification
-      toast.success("Download started successfully!");
+      toast.success(t('download.toast.downloadStarted'));
       
       // Redirect to downloads page
       navigate('/downloads');
     } catch (error) {
       console.error('Download failed:', error);
-      toast.error("Failed to start download. Please try again.");
+      toast.error(t('download.toast.downloadFailed'));
       setIsStartingDownload(false);
     }
   };
@@ -316,9 +319,10 @@ export default function DownloadPage() {
   };
 
   const handleCopyLink = async () => {
-    const link = downloadLinks[selectedProvider][0].startsWith('//')
+    let link = downloadLinks[selectedProvider][0].startsWith('//')
       ? `https:${downloadLinks[selectedProvider][0]}`
       : downloadLinks[selectedProvider][0];
+    link = sanitizeText(link);
     await navigator.clipboard.writeText(link);
     setShowCopySuccess(true);
     setTimeout(() => setShowCopySuccess(false), 1000);
@@ -330,9 +334,10 @@ export default function DownloadPage() {
   };
 
   const handleOpenInBrowser = async () => {
-    const link = downloadLinks[selectedProvider][0].startsWith('//')
+    let link = downloadLinks[selectedProvider][0].startsWith('//')
       ? `https:${downloadLinks[selectedProvider][0]}`
       : downloadLinks[selectedProvider][0];
+    link = sanitizeText(link);
     window.electron.openURL(link);
 
     const isNewUser = await checkIfNewUser();
@@ -343,7 +348,7 @@ export default function DownloadPage() {
 
   const handleSubmitReport = async () => {
     if (!reportReason || !reportDetails.trim()) {
-      toast.error("Please fill out all fields");
+      toast.error(t('download.reportError'));
       return;
     }
 
@@ -380,12 +385,12 @@ export default function DownloadPage() {
         throw new Error("Failed to submit report");
       }
 
-      toast.success("Thank you for reporting this game");
+      toast.success(t('download.toast.reportSubmitted'));
       setReportReason("");
       setReportDetails("");
     } catch (error) {
       console.error("Error submitting report:", error);
-      toast.error("Failed to submit report. Please try again.");
+      toast.error(t('download.toast.reportFailed'));
     } finally {
       setIsReporting(false);
     }
@@ -396,7 +401,7 @@ export default function DownloadPage() {
       <div className="container max-w-7xl mx-auto p-6">
         <AlertDialog variant="destructive">
           <AlertDialogDescription>
-            No game data found. Redirecting to search...
+            {t('download.noGameData')}
           </AlertDialogDescription>
         </AlertDialog>
       </div>
@@ -415,6 +420,10 @@ export default function DownloadPage() {
 
   console.log('Final Available Providers:', providers);
 
+  if (gameData && gameData.game) {
+    gameData.game = sanitizeGameName(gameData.game);
+  }
+
   return (
     <div className="container max-w-7xl mx-auto flex flex-col p-4 min-h-screen pt-24 fade-in">
       <div className="w-full max-w-6xl">
@@ -425,7 +434,7 @@ export default function DownloadPage() {
             className="w-fit"
             onClick={() => navigate(-1)}
           >
-            ← Back
+            ← {t('common.back')}
           </Button>
 
           {/* Game Header Section */}
@@ -440,8 +449,8 @@ export default function DownloadPage() {
                 <h1 className="text-2xl font-bold">{gameData.game}</h1>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button  variant="outline" size="sm">
-                      Report Broken Game
+                    <Button variant="outline" size="sm">
+                      {t('download.reportBroken')}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -450,31 +459,31 @@ export default function DownloadPage() {
                       handleSubmitReport();
                     }}>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Report Game: {gameData.game}</AlertDialogTitle>
+                        <AlertDialogTitle>{t('download.reportBroken')}: {gameData.game}</AlertDialogTitle>
                         <AlertDialogDescription className="space-y-4">
                           <div className="space-y-2">
-                            <label className="text-sm font-medium">Why are you reporting this game?</label>
+                            <label className="text-sm font-medium">{t('download.reportReason')}</label>
                             <Select
                               value={reportReason}
                               onValueChange={setReportReason}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a reason" />
+                                <SelectValue placeholder={t('download.selectProvider')} />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="gamedetails">Game Details Misleading</SelectItem>
-                                <SelectItem value="filesnotdownloading">Files Not Downloading</SelectItem>
-                                <SelectItem value="notagame">This isn't a game</SelectItem>
-                                <SelectItem value="linksnotworking">A Link Is Not Working</SelectItem>
-                                <SelectItem value="image-error">An Image Isn't Loading/Correct</SelectItem>
-                                <SelectItem value="image-bad">An Image Is Inappropriate</SelectItem>
+                                <SelectItem value="gamedetails">{t('download.reportReasons.gameDetails')}</SelectItem>
+                                <SelectItem value="filesnotdownloading">{t('download.reportReasons.filesNotDownloading')}</SelectItem>
+                                <SelectItem value="notagame">{t('download.reportReasons.notAGame')}</SelectItem>
+                                <SelectItem value="linksnotworking">{t('download.reportReasons.linksNotWorking')}</SelectItem>
+                                <SelectItem value="image-error">{t('download.reportReasons.imageError')}</SelectItem>
+                                <SelectItem value="image-bad">{t('download.reportReasons.imageBad')}</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium">Description</label>
+                            <label className="text-sm font-medium">{t('download.reportDescription')}</label>
                             <Textarea
-                              placeholder="Please provide more details about the issue"
+                              placeholder={t('download.reportDescription')}
                               value={reportDetails}
                               onChange={(e) => setReportDetails(e.target.value)}
                               className="min-h-[100px]"
@@ -489,7 +498,7 @@ export default function DownloadPage() {
                             setReportDetails("");
                           }}
                         >
-                          Cancel
+                          {t('common.cancel')}
                         </AlertDialogCancel>
                         <Button
                           type="submit"
@@ -499,10 +508,10 @@ export default function DownloadPage() {
                           {isReporting ? (
                             <>
                               <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-                              Submitting...
+                              {t('download.submitting')}
                             </>
                           ) : (
-                            "Submit Report"
+                            t('download.submitReport')
                           )}
                         </Button>
                       </AlertDialogFooter>
@@ -519,12 +528,12 @@ export default function DownloadPage() {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span className="text-sm bg-green-500/10 text-green-500 px-2 py-0.5 rounded flex items-center gap-1">
-                          ONLINE
+                          {t('download.online')}
                           <InfoIcon className="h-4 w-4" />
                         </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="text-secondary">Online multiplayer capabilities enabled through online-fix.me</p>
+                        <p className="text-secondary">{t('download.onlineTooltip')}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -534,18 +543,18 @@ export default function DownloadPage() {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span className="text-sm bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded flex items-center gap-1">
-                          ALL-DLC
+                          {t('download.allDlc')}
                           <InfoIcon className="h-4 w-4" />
                         </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="text-secondary">Includes all downloadable content (DLC) available for this game</p>
+                        <p className="text-secondary">{t('download.allDlcTooltip')}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">Size: {gameData.size}</p>
+              <p className="text-sm text-muted-foreground">{t('download.size')}: {gameData.size}</p>
             </div>
           </div>
 
@@ -558,10 +567,10 @@ export default function DownloadPage() {
               <div className="flex items-center gap-2">
                 <InfoIcon className="h-5 w-5 text-primary" />
                 <span className="text-sm font-medium">
-                  DMCA Notice: Ascendara uses outsourced links and files and does not host anything on its own servers.
+                  {t('download.dmcaNotice')}
                 </span>
               </div>
-              <span className="text-sm text-primary hover:underline">Learn More →</span>
+              <span className="text-sm text-primary hover:underline">{t('common.learnMore')}</span>
             </div>
           </div>
 
@@ -570,160 +579,162 @@ export default function DownloadPage() {
           {/* Download Options Section - Two columns with reduced spacing */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Left Column - Download Options */}
-            <div className="space-y-3">
-              <h2 className="text-xl font-semibold">Download Options</h2>
-              
-              <div className="space-y-2">
-                <Label>Download Source</Label>
-                {providers.length > 0 ? (
-                  <Select 
-                    value={selectedProvider}
-                    onValueChange={setSelectedProvider}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a download provider" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border-border">
-                      {providers.map((provider) => {
-                        let displayName;
-                        switch(provider.toLowerCase()) {
-                          case 'gofile':
-                            displayName = 'Seamless (GoFile)';
-                            break;
-                          case 'megadb':
-                            displayName = 'Default (MegaDB)';
-                            break;
-                          case 'buzzheavier':
-                            displayName = 'BuzzHeavier';
-                            break;
-                          case 'qiwi':
-                            displayName = 'QIWI';
-                            break;
-                          case 'datanodes':
-                            displayName = 'DataNodes';
-                            break;
-                          default:
-                            // Capitalize first letter of provider name
-                            displayName = provider.charAt(0).toUpperCase() + provider.slice(1);
-                        }
-                        const isVerified = VERIFIED_PROVIDERS.includes(provider.toLowerCase());
-                        return (
-                          <SelectItem 
-                            key={provider} 
-                            value={provider}
-                            className="hover:bg-muted focus:bg-muted"
-                          >
-                            <div className="flex items-center gap-2">
-                              {displayName}
-                              {isVerified && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <BadgeCheckIcon className="h-4 w-4 text-primary" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Verified Provider</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                            </div>
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p>No download providers available for this game.</p>
-                )}
-              </div>
-
-              {selectedProvider && (
-                <div className="space-y-3">
-                  <div>
-                    <Label>Download Link:</Label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div 
-                        className="flex-1 bg-muted p-2 rounded-md text-sm flex items-center justify-between group cursor-pointer hover:bg-muted/80 transition-colors"
-                        onClick={handleCopyLink}
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <h2 className="text-xl font-semibold">{t('download.downloadOptions.downloadOptions')}</h2>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>{t('download.downloadOptions.downloadSource')}</Label>
+                    {providers.length > 0 ? (
+                      <Select 
+                        value={selectedProvider}
+                        onValueChange={setSelectedProvider}
                       >
-                        <span>{downloadLinks[selectedProvider][0].startsWith('//') 
-                          ? `https:${downloadLinks[selectedProvider][0]}` 
-                          : downloadLinks[selectedProvider][0]}</span>
-                        {showCopySuccess ? (
-                          <CheckIcon className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <CopyIcon className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        )}
-                      </div>
-                      <Button 
-                        size="sm" 
-                        onClick={handleOpenInBrowser} 
-                        variant="outline"
-                      >
-                        Open in Browser
-                      </Button>
-                    </div>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('download.downloadOptions.selectProvider')} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border-border">
+                          {providers.map((provider) => {
+                            let displayName;
+                            switch(provider.toLowerCase()) {
+                              case 'gofile':
+                                displayName = 'Seamless (GoFile)';
+                                break;
+                              case 'megadb':
+                                displayName = 'Default (MegaDB)';
+                                break;
+                              case 'buzzheavier':
+                                displayName = 'BuzzHeavier';
+                                break;
+                              case 'qiwi':
+                                displayName = 'QIWI';
+                                break;
+                              case 'datanodes':
+                                displayName = 'DataNodes';
+                                break;
+                              default:
+                                displayName = provider.charAt(0).toUpperCase() + provider.slice(1);
+                            }
+                            const isVerified = VERIFIED_PROVIDERS.includes(provider.toLowerCase());
+                            return (
+                              <SelectItem 
+                                key={provider} 
+                                value={provider}
+                                className="hover:bg-muted focus:bg-muted"
+                              >
+                                <div className="flex items-center gap-2">
+                                  {displayName}
+                                  {isVerified && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <BadgeCheckIcon className="h-4 w-4 text-primary" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Verified Provider</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p>{t('download.downloadOptions.noProviders')}</p>
+                    )}
                   </div>
 
-                  {selectedProvider !== "gofile" && (
-                    <div>
-                      <Input
-                        placeholder="Paste your direct download link (DDL) here"
-                        value={inputLink}
-                        onChange={handleInputChange}
-                        className={!isValidLink ? "border-red-500" : ""}
-                      />
-                      {!isValidLink && (
-                        <p className="text-red-500 text-sm mt-1">
-                          Please enter a valid download link for {selectedProvider}
+                  {selectedProvider && (
+                    <div className="space-y-3">
+                      <div>
+                        <Label>{t('download.downloadOptions.downloadLink')}</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div 
+                            className="flex-1 bg-muted p-2 rounded-md text-sm flex items-center justify-between group cursor-pointer hover:bg-muted/80 transition-colors"
+                            onClick={handleCopyLink}
+                          >
+                            <span>{downloadLinks[selectedProvider][0].startsWith('//') 
+                              ? `https:${downloadLinks[selectedProvider][0]}` 
+                              : downloadLinks[selectedProvider][0]}</span>
+                            {showCopySuccess ? (
+                              <CheckIcon className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <CopyIcon className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            )}
+                          </div>
+                          <Button 
+                            size="sm" 
+                            onClick={handleOpenInBrowser} 
+                            variant="outline"
+                          >
+                            {t('download.downloadOptions.openInBrowser')}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {selectedProvider !== "gofile" && (
+                        <div>
+                          <Input
+                            placeholder={t('download.downloadOptions.pasteLink')}
+                            value={inputLink}
+                            onChange={handleInputChange}
+                            className={!isValidLink ? "border-red-500" : ""}
+                          />
+                          {!isValidLink && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {t('download.downloadOptions.invalidLink')} {selectedProvider}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {selectedProvider && selectedProvider !== "gofile" && (
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="ascendara-blocker"
+                          checked={useAscendara}
+                          onCheckedChange={(checked) => {
+                            setUseAscendara(checked);
+                            localStorage.setItem('useAscendara', JSON.stringify(checked));
+                          }}
+                        />
+                        <Label htmlFor="ascendara-blocker" className="text-sm">
+                          {t('download.downloadOptions.ascendaraBlocker')}
+                        </Label>
+                      </div>
+                      {!useAscendara && (
+                        <p 
+                          className="text-xs text-muted-foreground hover:underline cursor-pointer"
+                          onClick={() => window.electron.openURL('https://ascendara.app/extension')}
+                        >
+                          {t('download.downloadOptions.getExtension')}
                         </p>
                       )}
                     </div>
                   )}
-                </div>
-              )}
 
-              {selectedProvider && selectedProvider !== "gofile" && (
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="ascendara-blocker"
-                      checked={useAscendara}
-                      onCheckedChange={(checked) => {
-                        setUseAscendara(checked);
-                        localStorage.setItem('useAscendara', JSON.stringify(checked));
-                      }}
-                    />
-                    <Label htmlFor="ascendara-blocker" className="text-sm">
-                      Ascendara Download Blocker
-                    </Label>
-                  </div>
-                  {!useAscendara && (
-                    <p 
-                      className="text-xs text-muted-foreground hover:underline cursor-pointer"
-                      onClick={() => window.electron.openURL('https://ascendara.app/extension')}
-                    >
-                      Don't have the extension? Get it for Chrome or Firefox
-                    </p>
-                  )}
+                  <Button
+                    onClick={handleDownload}
+                    disabled={isStartingDownload || !selectedProvider || (selectedProvider !== 'gofile' && (!inputLink || !isValidLink))}
+                    className="w-full text-secondary"
+                  >
+                    {isStartingDownload ? (
+                      <>
+                        <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                        {t('download.downloadOptions.downloading')}
+                      </>
+                    ) : (
+                      t('download.downloadOptions.downloadNow')
+                    )}
+                  </Button>
                 </div>
-              )}
-
-              <Button
-                onClick={handleDownload}
-                disabled={isStartingDownload || !selectedProvider || (selectedProvider !== 'gofile' && (!inputLink || !isValidLink))}
-                className="w-full text-secondary"
-              >
-                {isStartingDownload ? (
-                  <>
-                    <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-                    Downloading
-                  </>
-                ) : (
-                  "Download Now"
-                )}
-              </Button>
+              </div>
             </div>
 
             {/* Right Column - Instructions */}
@@ -733,35 +744,34 @@ export default function DownloadPage() {
                 <div>
                   {selectedProvider === "gofile" ? (
                     <div className="space-y-2">
-                      <h2 className="text-large">Thanks to ltsdw on GitHub</h2>
-                      <h3>Unlike other providers that require a CAPTCHA verification, <br/>
-                        GoFile allows direct downloads through their API without such interruptions.</h3>
-                      <h3 className="text-large">Simply click on Download to start downloading this game.</h3>
+                      <h2 className="text-large">{t('download.downloadOptions.gofileInstructions.thanks')}</h2>
+                      <h3>{t('download.downloadOptions.gofileInstructions.description')}</h3>
+                      <h3 className="text-large">{t('download.downloadOptions.gofileInstructions.action')}</h3>
                     </div>
                   ) : (
                     <div>
                       {useAscendara ? (
                         <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                          <li>Open the link in your browser and enabled the extension</li>
-                          <li>Complete the CAPTCHA and start the download</li>
-                          <li>The extension will automatically stop and capture the direct download link</li>
-                          <li>Paste the DDL above and click Download Now</li>
+                          <li>{t('download.downloadOptions.blockerInstructions.step1')}</li>
+                          <li>{t('download.downloadOptions.blockerInstructions.step2')}</li>
+                          <li>{t('download.downloadOptions.blockerInstructions.step3')}</li>
+                          <li>{t('download.downloadOptions.blockerInstructions.step4')}</li>
                         </ol>
                       ) : (
                         <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                          <li>Copy and paste the link into your browser</li>
-                          <li>Complete the CAPTCHA and start the download</li>
-                          <li>Stop the download once it starts in your browser</li>
-                          <li>Hit <kbd>CTRL+J</kbd> to open your downloads</li>
-                          <li>Copy the link that the browser started downloading</li>
-                          <li>Paste the DDL above and click Download Now</li>
+                          <li>{t('download.downloadOptions.manualInstructions.step1')}</li>
+                          <li>{t('download.downloadOptions.manualInstructions.step2')}</li>
+                          <li>{t('download.downloadOptions.manualInstructions.step3')}</li>
+                          <li>{t('download.downloadOptions.manualInstructions.step4')}</li>
+                          <li>{t('download.downloadOptions.manualInstructions.step5')}</li>
+                          <li>{t('download.downloadOptions.manualInstructions.step6')}</li>
                         </ol>
                       )}
                     </div>
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Please select a download provider to see the instructions.</p>
+                <p className="text-sm text-muted-foreground">{t('download.downloadOptions.selectProviderPrompt')}</p>
               )}
             </div>
           </div>
@@ -774,22 +784,24 @@ export default function DownloadPage() {
           <AlertDialogHeader>
             {guideStep === 0 ? (
               <>
-                <AlertDialogTitle className="text-primary">Downloading with Ascendara</AlertDialogTitle>
+                <AlertDialogTitle className="text-primary">{t('download.newUserGuide.title')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  You haven't installed a game before, so Ascendara will guide you through the setup process.
+                  {t('download.newUserGuide.description')}
                 </AlertDialogDescription>
               </>
             ) : (
               <>
-                <AlertDialogTitle className="text-primary">{guideSteps[guideStep - 1].title}</AlertDialogTitle>
+                <AlertDialogTitle className="text-primary">
+                  {t(`download.newUserGuide.steps.${guideStep - 1}.title`)}
+                </AlertDialogTitle>
                 <AlertDialogDescription>
-                  {guideSteps[guideStep - 1].description}
+                  {t(`download.newUserGuide.steps.${guideStep - 1}.description`)}
                 </AlertDialogDescription>
                 <div className="mt-4 space-y-4">
                   {guideSteps[guideStep - 1].image && (
                     <img 
                       src={guideSteps[guideStep - 1].image}
-                      alt={guideSteps[guideStep - 1].title}
+                      alt={t(`download.newUserGuide.steps.${guideStep - 1}.title`)}
                       className="w-full rounded-lg border border-border"
                     />
                   )}
@@ -807,14 +819,14 @@ export default function DownloadPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="text-muted-foreground" onClick={handleCloseGuide}>
-              {guideStep === 0 ? 'No Thanks' : 'Close'}
+              {guideStep === 0 ? t('download.newUserGuide.noThanks') : t('download.newUserGuide.close')}
             </AlertDialogCancel>
             <Button onClick={guideStep === 0 ? handleStartGuide : handleNextStep}>
-              {guideStep === 0 ? 'Start Guide' : 
-               guideStep === guideSteps.length ? 'Finish' : 
-               guideStep === 1 ? 'I installed it →' :
-               guideStep === 2 ? 'Blocker is Enabled →' :
-               'Next Step →'}
+              {guideStep === 0 ? t('download.newUserGuide.startGuide') : 
+               guideStep === guideSteps.length ? t('download.newUserGuide.finish') : 
+               guideStep === 1 ? t('download.newUserGuide.installed') :
+               guideStep === 2 ? t('download.newUserGuide.blockerEnabled') :
+               t('download.newUserGuide.nextStep')}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

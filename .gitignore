@@ -35,3 +35,4 @@ build/config.prod.js
 
 # Million Lint
 .million
+/src/translations/json

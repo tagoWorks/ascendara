@@ -7,6 +7,8 @@ import { AspectRatio } from "../components/ui/aspect-ratio";
 import { Skeleton } from "../components/ui/skeleton";
 import { useNavigate } from 'react-router-dom';
 import imageCacheService from '../services/imageCacheService';
+import { useLanguage } from '../contexts/LanguageContext';
+import { sanitizeText } from '../lib/utils';
 
 const useImageLoader = (imgID) => {
   const [cachedImage, setCachedImage] = useState(null);
@@ -42,6 +44,8 @@ const GameCard = memo(function GameCard({ game, compact }) {
   const [showAllTags, setShowAllTags] = useState(false);
   const { cachedImage, loading } = useImageLoader(game?.imgID);
   const [seamlessDownloads, setSeamlessDownloads] = useState(false);
+  const { t } = useLanguage();
+  const sanitizedGameName = sanitizeText(game.game);
 
   if (!game) {
     return null;
@@ -108,7 +112,7 @@ const GameCard = memo(function GameCard({ game, compact }) {
           className="w-[120px] h-[68px] object-cover rounded-lg"
         />
         <div>
-          <h3 className="font-medium text-foreground">{game.title || game.game}</h3>
+          <h3 className="font-medium text-foreground">{sanitizedGameName}</h3>
           <div className="flex flex-wrap gap-1 mt-1">
             {categories.map((cat) => (
               <span 
@@ -146,13 +150,13 @@ const GameCard = memo(function GameCard({ game, compact }) {
             {game.dlc && (
               <div className="px-2.5 py-1.5 rounded-md bg-background/95 backdrop-blur-sm border border-border/50 shadow-sm flex items-center gap-1.5">
                 <Gift className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-medium">DLC</span>
+                <span className="text-xs font-medium">{t('gameCard.dlc')}</span>
               </div>
             )}
             {game.online && (
               <div className="px-2.5 py-1.5 rounded-md bg-background/95 backdrop-blur-sm border border-border/50 shadow-sm flex items-center gap-1.5">
                 <Gamepad2 className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-medium">Online</span>
+                <span className="text-xs font-medium">{t('gameCard.online')}</span>
               </div>
             )}
           </div>
@@ -160,7 +164,7 @@ const GameCard = memo(function GameCard({ game, compact }) {
         <div className="p-4 h-full">
           <div className="flex items-center gap-2 mb-2">
             <h3 className="font-semibold text-lg line-clamp-1 text-foreground">
-              {game.game}
+              {sanitizedGameName}
             </h3>
           </div>
           <div className="flex flex-wrap gap-1 mb-2">
@@ -194,17 +198,17 @@ const GameCard = memo(function GameCard({ game, compact }) {
                   setShowAllTags(false);
                 }}
               >
-                Show Less
+                {t('gameCard.showLess')}
               </Badge>
             )}
           </div>
           <div className="text-sm space-y-1">
             <p className="flex items-center justify-between text-foreground">
-              Size: <span className="font-medium">{game.size}</span>
+              {t('gameCard.size')}: <span className="font-medium">{game.size}</span>
             </p>
             {game.version && (
               <p className="flex items-center justify-between text-foreground">
-                Version: <span className="font-medium">{game.version}</span>
+                {t('gameCard.version')}: <span className="font-medium">{game.version}</span>
               </p>
             )}
           </div>
@@ -222,7 +226,7 @@ const GameCard = memo(function GameCard({ game, compact }) {
           ) : (
             <Download className="w-4 h-4 mr-2" />
           )}
-          Download
+          {t('gameCard.download')}
         </Button>
       </CardFooter>
     </Card>

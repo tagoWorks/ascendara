@@ -5,6 +5,7 @@ import { Button } from "../components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "../components/ui/sheet";
 import { Label } from "../components/ui/label";
 import { Separator } from "../components/ui/separator";
+import { useLanguage } from '../contexts/LanguageContext';
 import GameCard from '../components/GameCard';
 import CategoryFilter from '../components/CategoryFilter';
 import { 
@@ -41,6 +42,7 @@ const Search = memo(() => {
   const loaderRef = useRef(null);
   const gamesPerLoad = useWindowSize();
   const [apiMetadata, setApiMetadata] = useState(null);
+  const { t } = useLanguage();
 
   const refreshGames = async () => {
     setIsRefreshing(true);
@@ -183,20 +185,20 @@ const Search = memo(() => {
         <div className="max-w-[1400px] mx-auto">
           {apiMetadata && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-              <span>{apiMetadata.games.toLocaleString()} Games Indexed</span>
+              <span>{apiMetadata.games.toLocaleString()} {t('search.gamesIndexed')}</span>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <InfoIcon className="w-4 h-4 cursor-pointer hover:text-foreground transition-colors" />
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Indexed Information</AlertDialogTitle>
+                    <AlertDialogTitle>{t('search.indexedInformation')}</AlertDialogTitle>
                     <div className="space-y-2 mt-4 text-sm text-muted-foreground">
-                      <p>Ascendara uses a custom developed database to store game links and information. This database is updated monthly.</p>
+                      <p>{t('search.indexedInformationDescription')}</p>
                       <Separator className="bg-border/50" />
-                      <p>Total Games: {apiMetadata.games.toLocaleString()}</p>
-                      <p>Source: {apiMetadata.source}</p>
-                      <p>Last Updated: {apiMetadata.getDate}</p>
+                      <p>{t('search.totalGames')}: {apiMetadata.games.toLocaleString()}</p>
+                      <p>{t('search.source')}: {apiMetadata.source}</p>
+                      <p>{t('search.lastUpdated')}: {apiMetadata.getDate}</p>
                       <Separator className="bg-border/50" />
                       <div className="pt-2">
                         <Button
@@ -219,7 +221,7 @@ const Search = memo(() => {
                               d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                             />
                           </svg>
-                          {isRefreshing ? 'Refreshing Index...' : 'Refresh Index'}
+                          {isRefreshing ? t('search.refreshingIndex') : t('search.refreshIndex')}
                         </Button>
                       </div>
                     </div>
@@ -234,7 +236,7 @@ const Search = memo(() => {
               <div className="relative flex-1">
                 <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  placeholder="Search games..."
+                  placeholder={t('search.placeholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -247,7 +249,7 @@ const Search = memo(() => {
                     className="flex items-center gap-2 hover:bg-accent border-0"
                   >
                     <SlidersHorizontal className="w-4 h-4" />
-                    Filters
+                    {t('search.filters')}
                     {(showDLC || showOnline || selectedCategories.length > 0) && (
                       <span className="w-2 h-2 rounded-full bg-primary" />
                     )}
@@ -255,7 +257,7 @@ const Search = memo(() => {
                 </SheetTrigger>
                 <SheetContent className="border-0 bg-background p-6">
                   <SheetHeader>
-                    <SheetTitle className="text-foreground">Filters</SheetTitle>
+                    <SheetTitle className="text-foreground">{t('search.filterOptions')}</SheetTitle>
                   </SheetHeader>
                   <div className="mt-6 space-y-4">
                     <div className="flex items-center">
@@ -267,7 +269,7 @@ const Search = memo(() => {
                           className={`text-foreground cursor-pointer ${showDLC ? 'font-bold' : ''}`}
                           onClick={() => setShowDLC(prev => !prev)}
                         >
-                          DLC Games
+                          {t('search.showDLC')}
                         </Label>
                       </div>
                     </div>
@@ -280,13 +282,13 @@ const Search = memo(() => {
                           className={`text-foreground cursor-pointer ${showOnline ? 'font-bold' : ''}`}
                           onClick={() => setShowOnline(prev => !prev)}
                         >
-                          Online Multiplayer
+                          {t('search.showOnline')}
                         </Label>
                       </div>
                     </div>
                     <Separator className="bg-border/50" />
                     <div className="space-y-4">
-                      <h4 className="text-sm font-medium text-foreground">Sort By</h4>
+                      <h4 className="text-sm font-medium text-foreground">{t('search.sortBy')}</h4>
                       <RadioGroup 
                         defaultValue={`${sortBy}-${sortOrder}`}
                         onValueChange={(value) => {
@@ -299,32 +301,32 @@ const Search = memo(() => {
                         <div className="flex items-center space-x-3">
                           <RadioGroupItem value="weight-desc" id="weight-desc" />
                           <Label htmlFor="weight-desc" className="text-sm text-muted-foreground hover:text-foreground cursor-pointer">
-                            Most Popular
+                            {t('search.mostPopular')}
                           </Label>
                         </div>
                         <div className="flex items-center space-x-3">
                           <RadioGroupItem value="weight-asc" id="weight-asc" />
                           <Label htmlFor="weight-asc" className="text-sm text-muted-foreground hover:text-foreground cursor-pointer">
-                            Least Popular
+                            {t('search.leastPopular')}
                           </Label>
                         </div>
                         <div className="flex items-center space-x-3">
                           <RadioGroupItem value="name-asc" id="name-asc" />
                           <Label htmlFor="name-asc" className="text-sm text-muted-foreground hover:text-foreground cursor-pointer">
-                            Alphabetical A-Z
+                            {t('search.alphabeticalAZ')}
                           </Label>
                         </div>
                         <div className="flex items-center space-x-3">
                           <RadioGroupItem value="name-desc" id="name-desc" />
                           <Label htmlFor="name-desc" className="text-sm text-muted-foreground hover:text-foreground cursor-pointer">
-                            Alphabetical Z-A
+                            {t('search.alphabeticalZA')}
                           </Label>
                         </div>
                       </RadioGroup>
                     </div>
                     <Separator className="bg-border/50" />
                     <div className="space-y-4">
-                      <h4 className="text-sm font-medium text-foreground">Categories</h4>
+                      <h4 className="text-sm font-medium text-foreground">{t('search.categories')}</h4>
                       <CategoryFilter
                         selectedCategories={selectedCategories}
                         setSelectedCategories={setSelectedCategories}
@@ -345,7 +347,7 @@ const Search = memo(() => {
               </div>
             ) : displayedGames.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-lg text-muted-foreground">No games found</p>
+                <p className="text-lg text-muted-foreground">{t('search.noResults')}</p>
               </div>
             ) : (
               <div className="relative">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, useEffect, memo, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -16,7 +16,8 @@ import {
   Layout,
   CheckCircle,
   Loader,
-  XCircle
+  XCircle,
+  Globe2
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -28,36 +29,171 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../components/ui/alert-dialog";
+import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const executableToLabelMap = {
-    'dotNetFx40_Full_x86_x64.exe': '.NET Framework',
-    'dxwebsetup.exe': 'DirectX',
-    'oalinst.exe': 'OpenAL',
-    'VC_redist.x64.exe': 'Visual C++',
-    'xnafx40_redist.msi': 'XNA Framework',
+  'dotNetFx40_Full_x86_x64.exe': t => '.NET Framework 4.0',
+  'dxwebsetup.exe': t => 'DirectX',
+  'oalinst.exe': t => 'OpenAL',
+  'VC_redist.x64.exe': t => 'Visual C++ Redistributable',
+  'xnafx40_redist.msi': t => 'XNA Framework',
 };
 
-const UPDATE_FEATURES = [
-  {
-    icon: <Download className="w-5 h-5" />,
-    title: "Automatic Updates",
-    description: "Get the latest features and improvements as soon as they're available"
-  },
-  {
-    icon: <Shield className="w-5 h-5" />,
-    title: "Security Patches",
-    description: "Stay protected with important security updates"
-  },
-  {
-    icon: <Zap className="w-5 h-5" />,
-    title: "Bug Fixes",
-    description: "Receive fixes for any issues automatically"
-  }
+const SUPPORTED_LANGUAGES = [
+  { id: 'en', name: 'English', icon: '🇺🇸' },
+  { id: 'es', name: 'Español', icon: '🇪🇸' },
+  { id: 'zh-CN', name: '中文', icon: '🇨🇳' },
+  { id: 'ar', name: 'العربية', icon: '🇸🇦' },
+  { id: 'hi', name: 'हिन्दी', icon: '🇮🇳' },
+  { id: 'bn', name: 'বাংলা', icon: '🇧🇩' },
+  { id: 'pt', name: 'Português', icon: '🇵🇹' },
+  { id: 'ru', name: 'Русский', icon: '🇷🇺' },
+  { id: 'ja', name: '日本語', icon: '🇯🇵' },
 ];
 
+const themes = [
+  // Light themes
+  { id: 'light', name: 'Arctic Sky', group: 'light' },
+  { id: 'blue', name: 'Ocean Blue', group: 'light' },
+  { id: 'purple', name: 'Royal Purple', group: 'light' },
+  { id: 'emerald', name: 'Emerald', group: 'light' },
+  { id: 'rose', name: 'Rose', group: 'light' },
+  { id: 'amber', name: 'Amber Sand', group: 'light' },
+  
+  // Dark themes
+  { id: 'dark', name: 'Dark Blue', group: 'dark' },
+  { id: 'midnight', name: 'Midnight', group: 'dark' },
+  { id: 'cyberpunk', name: 'Cyberpunk', group: 'dark' },
+  { id: 'sunset', name: 'Sunset', group: 'dark' },
+  { id: 'forest', name: 'Forest', group: 'dark' },
+  { id: 'ocean', name: 'Deep Ocean', group: 'dark' },
+];
+
+const getThemeColors = (themeId) => {
+  const themeMap = {
+    light: {
+      bg: 'bg-white',
+      primary: 'bg-blue-500',
+      secondary: 'bg-slate-100',
+      text: 'text-slate-900'
+    },
+    dark: {
+      bg: 'bg-slate-900',
+      primary: 'bg-blue-500',
+      secondary: 'bg-slate-800',
+      text: 'text-slate-100'
+    },
+    blue: {
+      bg: 'bg-blue-50',
+      primary: 'bg-blue-600',
+      secondary: 'bg-blue-100',
+      text: 'text-blue-900'
+    },
+    purple: {
+      bg: 'bg-purple-50',
+      primary: 'bg-purple-500',
+      secondary: 'bg-purple-100',
+      text: 'text-purple-900'
+    },
+    emerald: {
+      bg: 'bg-emerald-50',
+      primary: 'bg-emerald-500',
+      secondary: 'bg-emerald-100',
+      text: 'text-emerald-900'
+    },
+    rose: {
+      bg: 'bg-rose-50',
+      primary: 'bg-rose-500',
+      secondary: 'bg-rose-100',
+      text: 'text-rose-900'
+    },
+    cyberpunk: {
+      bg: 'bg-gray-900',
+      primary: 'bg-pink-500',
+      secondary: 'bg-gray-800',
+      text: 'text-pink-500'
+    },
+    sunset: {
+      bg: 'bg-slate-800',
+      primary: 'bg-orange-500',
+      secondary: 'bg-slate-700',
+      text: 'text-orange-400'
+    },
+    forest: {
+      bg: 'bg-[#141E1B]',
+      primary: 'bg-green-500',
+      secondary: 'bg-[#1C2623]',
+      text: 'text-green-300'
+    },
+    ocean: {
+      bg: 'bg-slate-900',
+      primary: 'bg-blue-400',
+      secondary: 'bg-slate-800',
+      text: 'text-blue-300'
+    },
+    midnight: {
+      bg: 'bg-[#0F172A]',
+      primary: 'bg-indigo-500',
+      secondary: 'bg-[#1E293B]',
+      text: 'text-indigo-300'
+    },
+    amber: {
+      bg: 'bg-amber-50',
+      primary: 'bg-amber-500',
+      secondary: 'bg-amber-100',
+      text: 'text-amber-900'
+    }
+  };
+  return themeMap[themeId] || themeMap.light;
+};
+
+function ThemeButton({ theme, currentTheme, onSelect }) {
+  const colors = getThemeColors(theme.id);
+  
+  return (
+    <button
+      onClick={() => onSelect(theme.id)}
+      className={`group relative overflow-hidden rounded-xl transition-all ${
+        currentTheme === theme.id 
+          ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' 
+          : 'hover:ring-1 hover:ring-primary/50'
+      }`}
+    >
+      <div className={`aspect-[4/3] ${colors.bg} border border-border`}>
+        <div className="h-full p-4">
+          <div className={`h-full rounded-lg ${colors.secondary} p-3 shadow-sm`}>
+            <div className="space-y-2">
+              <div className={`h-3 w-24 rounded-full ${colors.primary} opacity-80`} />
+              <div className={`h-2 w-16 rounded-full ${colors.primary} opacity-40`} />
+            </div>
+            <div className="mt-4 space-y-2">
+              <div className={`h-8 rounded-md ${colors.bg} bg-opacity-50`} />
+              <div className={`h-8 rounded-md ${colors.bg} bg-opacity-30`} />
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className={`absolute bottom-0 left-0 right-0 p-3 
+        ${colors.bg} bg-opacity-80 backdrop-blur-sm`}>
+        <div className="flex items-center justify-between">
+          <span className={`font-medium ${colors.text}`}>{theme.name}</span>
+          <div className={`w-3 h-3 rounded-full ${colors.primary}`} />
+        </div>
+      </div>
+    </button>
+  );
+}
+
 const Welcome = memo(({ welcomeData, onComplete }) => {
+  const { t, changeLanguage, language } = useLanguage();
+  const { setTheme } = useTheme();
   const [isV7Welcome, setIsV7Welcome] = useState(false);
-  const [step, setStep] = useState('welcome');
+  const [step, setStep] = useState('language');
+  const [selectedLanguage, setSelectedLanguage] = useState(language);
+  const [selectedTheme, setSelectedTheme] = useState('light');
+  const [showingLightThemes, setShowingLightThemes] = useState(true);
   const [privacyChecked, setPrivacyChecked] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
@@ -82,6 +218,82 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
   const [isExiting, setIsExiting] = useState(false);
   const [showAnalyticsStep, setShowAnalyticsStep] = useState(false);
   const [autoUpdate, setAutoUpdate] = useState(true);
+  const [currentLangIndex, setCurrentLangIndex] = useState(0);
+
+  const features = useMemo(() => [
+    {
+      icon: <Download className="w-5 h-5" />,
+      title: t('welcome.automaticUpdatesTitle'),
+      description: t('welcome.automaticUpdatesDesc')
+    },
+    {
+      icon: <Shield className="w-5 h-5" />,
+      title: t('welcome.securityPatchesTitle'),
+      description: t('welcome.securityPatchesDesc')
+    },
+    {
+      icon: <Zap className="w-5 h-5" />,
+      title: t('welcome.bugFixesTitle'),
+      description: t('welcome.bugFixesDesc')
+    }
+  ], [t]);
+
+  const analyticsFeatures = useMemo(() => [
+    {
+      title: t('welcome.helpIdentifyAndFix'),
+    },
+    {
+      title: t('welcome.influenceFutureFeatures'),
+    },
+    {
+      title: t('welcome.bePartOfImproving'),
+    }
+  ], [t]);
+
+
+  const v7Features = useMemo(() => [
+    {
+      icon: <Palette className="w-5 h-5" />,
+      title: t('welcome.freshNewLookTitle'),
+      description: t('welcome.freshNewLookDesc')
+    },
+    {
+      icon: <Zap className="w-5 h-5" />,
+      title: t('welcome.lightningFastTitle'),
+      description: t('welcome.lightningFastDesc')
+    },
+    {
+      icon: <Layout className="w-5 h-5" />,
+      title: t('welcome.smartOrganizationTitle'),
+      description: t('welcome.smartOrganizationDesc')
+    },
+    {
+      icon: <PuzzleIcon className="w-5 h-5" />,
+      title: t('welcome.improvedUXTitle'),
+      description: t('welcome.improvedUXDesc')
+    }
+  ], [t]);
+
+  const langPreferenceMessages = useMemo(() => [
+    { text: "What's your preferred language?", lang: "en" },
+    { text: "¿Cuál es tu idioma preferido?", lang: "es" },
+    { text: "您喜欢使用哪种语言？", lang: "zh-CN" },
+    { text: "ما هي لغتك المفضلة؟", lang: "ar" },
+    { text: "आपकी पसंदीदा भाषा क्या है?", lang: "hi" },
+    { text: "আপনার পছন্দের ভাষা কি?", lang: "bn" },
+    { text: "Qual é a sua língua preferida?", lang: "pt" },
+    { text: "Какой язык вы предпочитаете?", lang: "ru" }
+  ], []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentLangIndex((prevIndex) => 
+        prevIndex === langPreferenceMessages.length - 1 ? 0 : prevIndex + 1
+      );
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [langPreferenceMessages.length]);
 
   useEffect(() => {
     const checkWelcomeType = async () => {
@@ -111,7 +323,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
 
   useEffect(() => {
     const handleDependencyStatus = (event, { name, status }) => {
-      const label = executableToLabelMap[name];
+      const label = executableToLabelMap[name](t);
       if (!label) return;
 
       console.log(`Received status for ${label}: ${status}`);
@@ -150,22 +362,25 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
     return () => {
       window.electron.ipcRenderer.off('dependency-installation-status', handleDependencyStatus);
     };
-  }, []);
+  }, [t]);
 
   const handleNext = () => {
-    if (step === 'welcome') {
+    if (step === 'language') {
+      setStep('welcome');
+    } else if (step === 'welcome') {
       setStep('directory');
     } else if (step === 'directory') {
       setStep('extension');
     } else if (step === 'extension') {
+      setStep('theme');
+    } else if (step === 'theme') {
       setStep('analytics');
     } else if (step === 'analytics') {
       setStep('updates');
     } else if (step === 'updates') {
       setStep('dependencies');
-    } else if (step === 'dependencies') {
-      setStep('installationComplete');
-    } else if (step === 'installationComplete') {
+    } else if (step === 'dependencies') { 
+      handleAnalyticsChoice(analyticsConsent);
       handleExit(true);
     }
   };
@@ -185,7 +400,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
 
     // Listen for dependency installation status
     const handleDependencyStatus = (event, { name, status }) => {
-        const label = executableToLabelMap[name];
+        const label = executableToLabelMap[name](t);
         if (!label) return;
 
         if (status === 'finished') {
@@ -298,29 +513,6 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
     }
   };
 
-  const v7Features = [
-    {
-      icon: <Palette className="w-5 h-5" />,
-      title: "Fresh New Look",
-      description: "Your favorite game testing app, now with a modern design and customizable themes that you've been requesting"
-    },
-    {
-      icon: <Zap className="w-5 h-5" />,
-      title: "Lightning Fast",
-      description: "V7 is optimized for speed and performance to make your experience smoother and faster than ever"
-    },
-    {
-      icon: <Layout className="w-5 h-5" />,
-      title: "Smart Organization",
-      description: "New filtering and sorting options to manage your game searching and downloading"
-    },
-    {
-      icon: <PuzzleIcon className="w-5 h-5" />,
-      title: "Improved User Experience",
-      description: "Things are broken up into more pages and better organized to make sure you can find what you need"
-    }
-  ];
-
   const handleAnalyticsChoice = async (enableAnalytics) => {
     try {
       // Get current settings first
@@ -374,6 +566,18 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
     }
   };
 
+  const handleLanguageSelect = async (langId) => {
+    setSelectedLanguage(langId);
+    await changeLanguage(langId);
+    handleNext();
+  };
+
+  const handleThemeSelect = (themeId) => {
+    setSelectedTheme(themeId);
+    setTheme(themeId);
+    localStorage.setItem('ascendara-theme', themeId);
+  };
+
   if (isV7Welcome) {
     if (showAnalyticsStep) {
       return (
@@ -391,11 +595,11 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
               className="text-center mb-8"
               variants={itemVariants}
             >
-              <h2 className="text-3xl font-bold tracking-tight mb-4">
-                Help Us Improve Ascendara
+              <h2 className="text-3xl font-bold mb-4">
+                {t('welcome.helpImprove')}
               </h2>
-              <p className="text-lg text-foreground/80 mb-8">
-                Choose how you'd like to help make Ascendara better for everyone.
+              <p className="text-lg text-muted-foreground mb-8">
+                {t('welcome.chooseHowToHelp')}
               </p>
             </motion.div>
 
@@ -416,20 +620,20 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                   <div className={`p-2 rounded-lg ${analyticsConsent ? 'bg-primary/20' : 'bg-muted'}`}>
                     <Rocket className={`w-6 h-6 ${analyticsConsent ? 'text-primary' : 'text-muted-foreground'}`} />
                   </div>
-                  <h3 className="text-xl font-semibold">Share & Improve</h3>
+                  <h3 className="text-xl font-semibold">{t('welcome.shareAndImprove')}</h3>
                 </div>
                 <ul className="space-y-3 text-left mb-6">
                   <li className="flex items-start space-x-2">
                     <CheckCircle2 className={`w-5 h-5 ${analyticsConsent ? 'text-primary' : 'text-muted-foreground'} shrink-0 mt-0.5`} />
-                    <span>Help identify and fix issues faster</span>
+                    <span>{t('welcome.helpIdentifyAndFix')}</span>
                   </li>
                   <li className="flex items-start space-x-2">
                     <CheckCircle2 className={`w-5 h-5 ${analyticsConsent ? 'text-primary' : 'text-muted-foreground'} shrink-0 mt-0.5`} />
-                    <span>Influence future features</span>
+                    <span>{t('welcome.influenceFutureFeatures')}</span>
                   </li>
                   <li className="flex items-start space-x-2">
                     <CheckCircle2 className={`w-5 h-5 ${analyticsConsent ? 'text-primary' : 'text-muted-foreground'} shrink-0 mt-0.5`} />
-                    <span>Be part of improving Ascendara</span>
+                    <span>{t('welcome.bePartOfImproving')}</span>
                   </li>
                 </ul>
               </button>
@@ -447,14 +651,13 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                   <div className={`p-2 rounded-lg ${!analyticsConsent ? 'bg-primary/20' : 'bg-muted'}`}>
                     <Shield className={`w-6 h-6 ${!analyticsConsent ? 'text-primary' : 'text-muted-foreground'}`} />
                   </div>
-                  <h3 className="text-xl font-semibold">Stay Private</h3>
+                  <h3 className="text-xl font-semibold">{t('welcome.stayPrivate')}</h3>
                 </div>
                 <div className="space-y-4 text-left mb-6">
-                  <p>Opt out of sharing anonymous usage data. You can always enable this later in settings if you change your mind.</p>
+                  <p>{t('welcome.optOutOfSharing')}</p>
                   <div className="bg-card/30 p-4 rounded-lg">
                     <p className="text-sm text-muted-foreground">
-                      Ascendara never collects personal information or game data.
-                      All analytics are anonymous and used solely to improve Ascendara.
+                      {t('welcome.ascendaraNeverCollects')}
                     </p>
                   </div>
                 </div>
@@ -472,7 +675,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                 }}
                 className="mb-4 px-12 py-6 text-lg font-semibold text-primary bg-primary/10 hover:bg-primary/20"
               >
-                See What's New
+                {t('welcome.seeWhatsNew')}
               </Button>
               <button
                 onClick={() => {
@@ -481,7 +684,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                 }}
                 className="text-sm text-foreground/60 hover:text-primary transition-colors"
               >
-                I'll explore on my own
+                {t('welcome.exploreOnMyOwn')}
               </button>
             </motion.div>
           </motion.div>
@@ -504,8 +707,8 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
             className="text-center mb-8"
             variants={itemVariants}
           >
-            <h1 className="text-6xl font-bold tracking-tight">
-              <span className="text-4xl block mb-2 text-foreground/80">Say Hello to</span>
+            <h1 className="text-6xl font-bold">
+              <span className="text-4xl block mb-2 text-foreground/80">{t('welcome.sayHelloTo')}</span>
               <div className="relative inline-flex items-center">
                 <span className="bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent">
                   Ascendara&nbsp;
@@ -523,8 +726,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
             className="text-xl mb-10 max-w-2xl mx-auto text-center text-foreground/80"
             variants={itemVariants}
           >
-            Your continued support has made Ascendara what it is today. Ascendara has been completely 
-            rebuilt from the ground up with a new look and feel you've been asking for. 
+            {t('welcome.yourContinuedSupport')}
           </motion.p>
 
           <motion.div 
@@ -549,7 +751,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
             className="text-center text-foreground/70 text-sm mb-8"
             variants={itemVariants}
           >
-            Every update is inspired by your feedback. Thank you for being part of the journey.
+            {t('welcome.everyUpdateIsInspired')}
           </motion.p>
 
           <motion.div 
@@ -561,7 +763,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
               onClick={() => setShowAnalyticsStep(true)}
               className="px-8 py-6 text-lg font-semibold bg-primary hover:bg-primary/90"
             >
-              Continue
+              {t('welcome.continue')}
             </Button>
           </motion.div>
         </motion.div>
@@ -574,15 +776,14 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
       <AlertDialog open={showDepsAlert} onOpenChange={setShowDepsAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Install Dependencies</AlertDialogTitle>
+            <AlertDialogTitle>{t('welcome.installDependencies')}</AlertDialogTitle>
             <AlertDialogDescription>
-              You will receive administrator prompts from official Microsoft installers to install the required components. 
-              Your computer may need to restart after installation.
+              {t('welcome.youWillReceiveAdminPrompts')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleInstallDependencies}>Continue</AlertDialogAction>
+            <AlertDialogCancel>{t('welcome.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleInstallDependencies}>{t('welcome.continue')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -590,20 +791,20 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
       <AlertDialog open={showSkipAlert} onOpenChange={setShowSkipAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Skip Dependencies?</AlertDialogTitle>
+            <AlertDialogTitle>{t('welcome.skipDependencies')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to skip installing dependencies? Some games may not work properly.
+              {t('welcome.areYouSureYouWantToSkip')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('welcome.cancel')}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={async () => {
                 setShowSkipAlert(false);
                 handleExit(true);
               }}
             >
-              Continue
+              {t('welcome.continue')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -612,14 +813,14 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
       <AlertDialog open={showDepsErrorAlert} onOpenChange={setShowDepsErrorAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Installation Failed</AlertDialogTitle>
+            <AlertDialogTitle>{t('welcome.installationFailed')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Failed to install dependencies. Please try again or skip if the issue persists.
+              {t('welcome.failedToInstallDependencies')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setShowDepsErrorAlert(false)}>
-              Okay
+              {t('welcome.okay')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -628,14 +829,14 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
       <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Error Installing Dependencies</AlertDialogTitle>
+            <AlertDialogTitle>{t('welcome.errorInstallingDependencies')}</AlertDialogTitle>
             <AlertDialogDescription>
               {errorMessage}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleSkip}>Skip</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRestart}>Restart</AlertDialogAction>
+            <AlertDialogCancel onClick={handleSkip}>{t('welcome.skip')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRestart}>{t('welcome.restart')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -657,22 +858,23 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
             >
               <motion.div className="flex items-center justify-center mb-8" variants={itemVariants}>
                 <h1 className="text-5xl font-bold">
-                  <span className="bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent">
-                    Welcome to Ascendara{' '}
-                  </span>
-                  <span className="relative">
-                    <span className="animate-shimmer bg-[linear-gradient(110deg,var(--shimmer-from),45%,var(--shimmer-via),55%,var(--shimmer-to))] bg-[length:200%_100%] inline-block bg-clip-text text-transparent">
-                      v7
+                  <div className="relative inline-flex items-center">
+                    <span className="bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent">
+                      {t('welcome.welcomeToAscendara')}&nbsp;
                     </span>
-                  </span>
+                    <span className="relative">
+                      <span className="animate-shimmer bg-[linear-gradient(110deg,var(--shimmer-from),45%,var(--shimmer-via),55%,var(--shimmer-to))] bg-[length:200%_100%] inline-block bg-clip-text text-transparent">
+                        v7
+                      </span>
+                    </span>
+                  </div>
                 </h1>
               </motion.div>
-              
               <motion.p 
                 className="text-xl mb-12 max-w-2xl text-foreground/80"
                 variants={itemVariants}
               >
-                Ascendara v7 is a complete revamp of the app, bringing a complete overhaul to the user interface and experience. While still in development, Ascendara is getting closer to a stable release.
+                {t('welcome.ascendaraV7IsACompleteRevamp')}
               </motion.p>
 
               <motion.div 
@@ -689,7 +891,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                     />
                     <div className="text-base">
                       <Label htmlFor="privacy" className="inline cursor-pointer">
-                        I have read and agree to Ascendara's{' '}
+                        {t('welcome.iHaveReadAndAgreeTo')}{' '}
                       </Label>
                       <button
                         type="button"
@@ -699,7 +901,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                         }}
                         className="text-primary hover:underline inline"
                       >
-                        Privacy Policy
+                        {t('welcome.privacyPolicy')}
                       </button>
                     </div>
                   </div>
@@ -713,7 +915,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                     />
                     <div className="text-base">
                       <Label htmlFor="terms" className="inline cursor-pointer">
-                        I have read and agree to Ascendara's{' '}
+                        {t('welcome.iHaveReadAndAgreeTo')}{' '}
                       </Label>
                       <button
                         type="button"
@@ -723,7 +925,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                         }}
                         className="text-primary hover:underline inline"
                       >
-                        Terms of Service
+                        {t('welcome.termsOfService')}
                       </button>
                     </div>
                   </div>
@@ -737,9 +939,80 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                   disabled={!privacyChecked || !termsChecked}
                   className="px-8 py-6 text-lg font-semibold"
                 >
-                  Get Started
+                  {t('welcome.getStarted')}
                 </Button>
               </motion.div>
+            </motion.div>
+          )}
+
+          {step === 'language' && (
+            <motion.div
+              key="language"
+              className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative z-10 bg-gradient-to-b from-background to-background/80"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              <motion.div 
+                className="text-center mb-12"
+                variants={itemVariants}
+              >
+                <Globe2 className="w-16 h-16 mx-auto mb-6 text-primary animate-pulse" />
+                <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={currentLangIndex}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.5 }}
+                      className="text-4xl block mb-2 text-foreground/80"
+                    >
+                      {langPreferenceMessages[currentLangIndex].text}
+                    </motion.span>
+                  </AnimatePresence>
+                </h1>
+              </motion.div>
+              
+              <motion.div 
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 max-w-5xl w-full"
+                variants={itemVariants}
+              >
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <motion.button
+                    key={lang.id}
+                    onClick={() => handleLanguageSelect(lang.id)}
+                    className={`p-6 rounded-2xl transition-all duration-300 flex items-center space-x-4 ${
+                      selectedLanguage === lang.id
+                        ? 'bg-gradient-to-br from-primary/15 via-primary/10 to-transparent border-2 border-primary scale-105 shadow-lg shadow-primary/10'
+                        : 'bg-card/40 border border-primary/10 hover:border-primary/30 hover:bg-card/60 hover:scale-102'
+                    }`}
+                    whileHover={{ scale: selectedLanguage === lang.id ? 1.05 : 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="text-3xl">{lang.icon}</div>
+                    <span className="text-xl font-medium">{lang.name}</span>
+                  </motion.button>
+                ))}
+              </motion.div>
+
+              <motion.div className="flex justify-center" variants={itemVariants}>
+                <Button 
+                  size="lg"
+                  onClick={handleNext}
+                  disabled={!selectedLanguage}
+                >
+                  {t('welcome.next')}
+                </Button>
+              </motion.div>
+
+              <motion.p 
+                className="text-sm text-muted-foreground mt-6"
+                variants={itemVariants}
+              >
+                {t('welcome.youCanChangeThisLater')}
+              </motion.p>
             </motion.div>
           )}
 
@@ -752,17 +1025,13 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
               animate="visible"
               exit="exit"
             >
-              <motion.div className="flex items-center justify-center mb-8" variants={itemVariants}>
-                <h2 className="text-4xl font-bold">Choose Download Location</h2>
-              </motion.div>
-              
-              <motion.p 
-                className="text-xl mb-8 max-w-2xl text-foreground/80"
+              <motion.div 
+                className="text-center mb-8"
                 variants={itemVariants}
               >
-                Select where you want your games to be downloaded and installed.
-              </motion.p>
-
+                <h2 className="text-3xl font-bold mb-2 text-primary">{t('welcome.chooseDownloadLocation')}</h2>
+                <p className="text-lg text-muted-foreground">{t('welcome.selectWhereYouWantYourGamesToBeDownloaded')}</p>
+              </motion.div>
               <motion.div 
                 className="space-y-6 mb-12 max-w-2xl bg-card/30 p-6 rounded-lg"
                 variants={itemVariants}
@@ -772,16 +1041,14 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                     type="text"
                     value={downloadDirectory}
                     readOnly
-                    placeholder="Select a directory..."
-                    className="flex-1 px-4 py-2 rounded-lg bg-background border border-primary/20 focus:border-primary focus:outline-none"
+                    placeholder={t('welcome.selectADirectory')}
+                    className="flex-1 bg-background/50 border border-primary/10 rounded-lg px-4 py-2 text-foreground"
                   />
-                  <Button
-                    variant="outline"
-                    onClick={handleSelectDirectory}
-                  >
-                    Browse
+                  <Button onClick={handleSelectDirectory}>
+                    {t('welcome.browse')}
                   </Button>
                 </div>
+
                 {warningMessage && (
                   <p className="text-red-500 text-sm">{warningMessage}</p>
                 )}
@@ -789,11 +1056,11 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                 <div className="text-left space-y-4 mt-6">
                   <div className="flex items-start space-x-3">
                     <PackageOpen className="w-5 h-5 text-primary mt-1" />
-                    <p>This is where all your downloaded games will be stored</p>
+                    <p>{t('welcome.thisIsWhereAllYourDownloadedGamesWillBeStored')}</p>
                   </div>
                   <div className="flex items-start space-x-3">
                     <Shield className="w-5 h-5 text-primary mt-1" />
-                    <p>Make sure you have enough disk space in the selected location</p>
+                    <p>{t('welcome.makeSureYouHaveEnoughDiskSpaceInTheSelectedLocation')}</p>
                   </div>
                 </div>
               </motion.div>
@@ -803,9 +1070,9 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                   size="lg"
                   onClick={handleNext}
                   disabled={!downloadDirectory}
-                  className="px-8 py-6 text-lg font-semibold"
+                  className="px-8 py-6 text-lg font-semibold bg-primary hover:bg-primary/90"
                 >
-                  Continue
+                  {t('welcome.continue')}
                 </Button>
               </motion.div>
             </motion.div>
@@ -821,44 +1088,42 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
               exit="exit"
             >
               <motion.div className="flex items-center justify-center mb-8" variants={itemVariants}>
-                <h2 className="text-4xl font-bold">Download Games Faster</h2>
+                <h2 className="text-4xl font-bold text-primary">{t('welcome.downloadGamesFaster')}</h2>
               </motion.div>
-              
               <motion.p 
                 className="text-xl mb-8 max-w-2xl text-foreground/80"
                 variants={itemVariants}
               >
-                Get the Ascendara Download Blocker extension for Chrome or Firefox.
+                {t('welcome.getTheAscendaraDownloadBlockerExtension')}
               </motion.p>
 
               <motion.div 
                 className="space-y-6 mb-12 max-w-2xl bg-card/30 p-6 rounded-lg"
                 variants={itemVariants}
               >
-                <h3 className="text-lg font-semibold mb-4">How it works:</h3>
+                <h3 className="text-lg font-semibold mb-4">{t('welcome.howItWorks')}</h3>
                 <div className="space-y-4 text-left">
                   <div className="flex items-start space-x-3">
                     <span className="text-primary font-semibold">1.</span>
-                    <p>Click the extension icon and enable the blocker before starting a download</p>
+                    <p>{t('welcome.clickTheExtensionIcon')}</p>
                   </div>
                   <div className="flex items-start space-x-3">
                     <span className="text-primary font-semibold">2.</span>
-                    <p>When you click a download link, instead of downloading, you'll get the direct download URL</p>
+                    <p>{t('welcome.whenYouClickADownloadLink')}</p>
                   </div>
                   <div className="flex items-start space-x-3">
                     <span className="text-primary font-semibold">3.</span>
-                    <p>Copy the URL and paste it into Ascendara to start downloading your game</p>
+                    <p>{t('welcome.copyTheURLAndPasteItIntoAscendara')}</p>
                   </div>
                   <div className="flex items-start space-x-3">
                     <span className="text-primary font-semibold">4.</span>
-                    <p>Disable the blocker when you want to allow normal downloads again</p>
+                    <p>{t('welcome.disableTheBlockerWhenYouWantToAllowNormalDownloadsAgain')}</p>
                   </div>
                 </div>
 
                 <div className="mt-8 p-4 bg-primary/5 rounded-md">
                   <p className="text-sm text-foreground/70">
-                    The extension blocks unwanted downloads and shows you the direct download URL, 
-                    making it much easier to download games through Ascendara.
+                    {t('welcome.theExtensionBlocksUnwantedDownloads')}
                   </p>
                 </div>
               </motion.div>
@@ -873,17 +1138,97 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                   onClick={() => window.electron.openURL('https://ascendara.app/extension')}
                   className="px-8 py-6"
                 >
-                  Get the Extension
+                  {t('welcome.getTheExtension')}
                 </Button>
                 <Button 
                   onClick={handleNext}
                   size="lg"
                   className="px-8 py-6"
                 >
-                  Continue
+                  {t('welcome.continue')}
                 </Button>
               </motion.div>
             </motion.div>
+          )}
+
+          {step === 'theme' && (
+            <div className="h-screen bg-background relative overflow-hidden flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-background" />
+              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/10 to-transparent" />
+              
+              <motion.div
+                className="w-full max-w-4xl mx-auto px-6 relative z-10"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <motion.div 
+                  className="text-center mb-8"
+                  variants={itemVariants}
+                >
+                  <h2 className="text-3xl font-bold mb-4 text-primary">
+                    {t('welcome.chooseYourTheme')}
+                  </h2>
+                  <p className="text-lg text-muted-foreground mb-8">
+                    {t('welcome.personalizeYourExperience')}
+                  </p>
+                </motion.div>
+
+                <motion.div className="flex justify-center mb-6" variants={itemVariants}>
+                  <div className="bg-card/30 p-1 rounded-lg inline-flex">
+                    <button
+                      onClick={() => setShowingLightThemes(true)}
+                      className={`px-4 py-2 rounded-md transition-all ${
+                        showingLightThemes 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'hover:bg-primary/10'
+                      }`}
+                    >
+                      {t('welcome.lightThemes')}
+                    </button>
+                    <button
+                      onClick={() => setShowingLightThemes(false)}
+                      className={`px-4 py-2 rounded-md transition-all ${
+                        !showingLightThemes 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'hover:bg-primary/10'
+                      }`}
+                    >
+                      {t('welcome.darkThemes')}
+                    </button>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8"
+                  variants={itemVariants}
+                >
+                  {themes
+                    .filter(theme => theme.group === (showingLightThemes ? 'light' : 'dark'))
+                    .map((theme) => (
+                      <ThemeButton
+                        key={theme.id}
+                        theme={theme}
+                        currentTheme={selectedTheme}
+                        onSelect={handleThemeSelect}
+                      />
+                  ))}
+                </motion.div>
+
+                <motion.div 
+                  className="flex justify-center"
+                  variants={itemVariants}
+                >
+                  <Button
+                    size="lg"
+                    onClick={handleNext}
+                    className="px-8 py-6 text-lg font-semibold"
+                  >
+                    {t('welcome.continue')}
+                  </Button>
+                </motion.div>
+              </motion.div>
+            </div>
           )}
 
           {step === 'analytics' && (
@@ -895,16 +1240,13 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
               animate="visible"
               exit="exit"
             >
-              <motion.div className="flex items-center justify-center mb-8" variants={itemVariants}>
-                <h2 className="text-4xl font-bold">Help Improve Ascendara</h2>
-              </motion.div>
-              
-              <motion.p 
-                className="text-xl mb-8 max-w-2xl text-foreground/80"
+              <motion.div 
+                className="text-center mb-8"
                 variants={itemVariants}
               >
-                Shape the future of Ascendara by sharing anonymous usage data.
-              </motion.p>
+                <h2 className="text-3xl font-bold mb-2 text-primary">{t('welcome.analytics')}</h2>
+                <p className="text-lg text-muted-foreground">{t('welcome.analyticsDesc')}</p>
+              </motion.div>
 
               <motion.div 
                 className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-4xl w-full"
@@ -916,34 +1258,25 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                     <div className="p-2 rounded-lg bg-primary/20">
                       <Rocket className="w-6 h-6 text-primary" />
                     </div>
-                    <h3 className="text-xl font-semibold">Share & Improve</h3>
+                    <h3 className="text-xl font-semibold text-primary">{t('welcome.shareAndImprove')}</h3>
                   </div>
-                  <ul className="space-y-3 text-left mb-6">
-                    <li className="flex items-start space-x-2">
-                      <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                      <span>Help us identify and fix issues faster</span>
-                    </li>
-                    <li className="flex items-start space-x-2">
-                      <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                      <span>Influence future features and improvements</span>
-                    </li>
-                    <li className="flex items-start space-x-2">
-                      <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                      <span>Be part of making Ascendara better for everyone</span>
-                    </li>
-                  </ul>
-                  <motion.div 
-                    className="flex justify-center"
-                    variants={itemVariants}
+                  <div className="space-y-4 mb-6">
+                    {analyticsFeatures.map((feature) => (
+                      <div key={feature.title} className="flex items-start space-x-2">
+                        <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <div className="text-left">
+                          <p className="font-medium text-muted-foreground">{feature.title}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    size="lg"
+                    className="w-full bg-primary hover:bg-primary/90"
+                    onClick={() => handleAnalyticsChoice(true)}
                   >
-                    <Button
-                      size="lg"
-                      className="w-full bg-primary hover:bg-primary/90"
-                      onClick={() => handleAnalyticsChoice(true)}
-                    >
-                      Share Anonymous Data
-                    </Button>
-                  </motion.div>
+                    {t('welcome.shareAnonymousData')}
+                  </Button>
                 </div>
 
                 {/* Privacy Option */}
@@ -952,24 +1285,19 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                     <div className="p-2 rounded-lg bg-muted">
                       <Shield className="w-6 h-6 text-muted-foreground" />
                     </div>
-                    <h3 className="text-xl font-semibold text-muted-foreground">Stay Private</h3>
+                    <h3 className="text-xl font-semibold text-muted-foreground">{t('welcome.stayPrivate')}</h3>
                   </div>
                   <p className="text-muted-foreground mb-6 text-left">
-                    Opt out of sharing anonymous usage data. You can always enable this later in settings if you change your mind.
+                    {t('welcome.optOutOfSharingAnonymousUsageData')}
                   </p>
-                  <motion.div 
-                    className="flex justify-center mt-auto"
-                    variants={itemVariants}
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="w-full text-muted-foreground mt-auto"
+                    onClick={() => handleAnalyticsChoice(false)}
                   >
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="w-full text-muted-foreground"
-                      onClick={() => handleAnalyticsChoice(false)}
-                    >
-                      Continue Without Sharing
-                    </Button>
-                  </motion.div>
+                    {t('welcome.continueWithoutSharing')}
+                  </Button>
                 </div>
               </motion.div>
 
@@ -977,8 +1305,8 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                 className="text-sm text-muted-foreground max-w-2xl"
                 variants={itemVariants}
               >
-                Ascendara never collects personal information or game data. <br/>
-                All analytics are anonymous and used solely to improve Ascendara.
+                {t('welcome.ascendaraNeverCollectsPersonalInfo')} &nbsp;
+                <span className="text-primary hover:underline cursor-pointer" onClick={() => window.electron.openURL('https://ascendara.app/analytics')}>{t('common.learnMore')}</span>
               </motion.p>
             </motion.div>
           )}
@@ -993,14 +1321,13 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
               exit="exit"
             >
               <motion.div className="flex items-center justify-center mb-8" variants={itemVariants}>
-                <h2 className="text-4xl font-bold">Stay Up to Date</h2>
+                <h2 className="text-4xl font-bold text-primary">{t('welcome.stayUpToDate')}</h2>
               </motion.div>
-              
               <motion.p 
                 className="text-xl mb-8 max-w-2xl text-foreground/80"
                 variants={itemVariants}
               >
-                Choose how you want to receive updates for Ascendara.
+                {t('welcome.chooseHowYouWantToReceiveUpdates')}
               </motion.p>
 
               <motion.div 
@@ -1013,14 +1340,14 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                     <div className="p-2 rounded-lg bg-primary/20">
                       <Download className="w-6 h-6 text-primary" />
                     </div>
-                    <h3 className="text-xl font-semibold">Automatic Updates</h3>
+                    <h3 className="text-xl font-semibold text-primary">{t('welcome.automaticUpdates')}</h3>
                   </div>
                   <div className="space-y-4 mb-6">
-                    {UPDATE_FEATURES.map((feature) => (
+                    {features.map((feature) => (
                       <div key={feature.title} className="flex items-start space-x-2">
                         <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                         <div className="text-left">
-                          <p className="font-medium">{feature.title}</p>
+                          <p className="font-medium text-primary">{feature.title}</p>
                           <p className="text-sm text-foreground/70">{feature.description}</p>
                         </div>
                       </div>
@@ -1031,7 +1358,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                     className="w-full bg-primary hover:bg-primary/90"
                     onClick={() => handleUpdateChoice(true)}
                   >
-                    Enable Auto Updates
+                    {t('welcome.enableAutoUpdates')}
                   </Button>
                 </div>
 
@@ -1041,11 +1368,10 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                     <div className="p-2 rounded-lg bg-muted">
                       <Shield className="w-6 h-6 text-muted-foreground" />
                     </div>
-                    <h3 className="text-xl font-semibold text-muted-foreground">Manual Updates</h3>
+                    <h3 className="text-xl font-semibold text-muted-foreground">{t('welcome.manualUpdates')}</h3>
                   </div>
                   <p className="text-muted-foreground mb-6 text-left">
-                    Choose when to update Ascendara yourself. You'll be notified when updates are available, 
-                    but they won't install automatically.
+                    {t('welcome.chooseWhenToUpdateAscendaraYourself')}
                   </p>
                   <Button
                     variant="outline"
@@ -1053,7 +1379,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                     className="w-full text-muted-foreground mt-auto"
                     onClick={() => handleUpdateChoice(false)}
                   >
-                    Never Automatically Update
+                    {t('welcome.neverAutomaticallyUpdate')}
                   </Button>
                 </div>
               </motion.div>
@@ -1062,7 +1388,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                 className="text-sm text-muted-foreground max-w-2xl"
                 variants={itemVariants}
               >
-                You can change this setting later in your preferences.
+                {t('welcome.youCanChangeThisSettingLater')}
               </motion.p>
             </motion.div>
           )}
@@ -1077,24 +1403,22 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
               exit="exit"
             >
               <motion.div className="flex items-center justify-center mb-8" variants={itemVariants}>
-                <h2 className="text-4xl font-bold">Essential Dependencies</h2>
+                <h2 className="text-4xl font-bold text-primary">{t('welcome.essentialDependencies')}</h2>
               </motion.div>
-              
               <motion.div 
                 className="space-y-6 mb-12 max-w-2xl"
                 variants={itemVariants}
               >
                 <p className="text-xl text-foreground/80">
-                  To ensure all games run smoothly, Ascendara will help you install these essential components:
+                  {t('welcome.toEnsureAllGamesRunSmoothly')}
                 </p>
-              
-                <div className="grid grid-cols-2 gap-4 text-left">
+                <div className="grid grid-cols-2 gap-4 text-left text-muted-foreground">
                   {[
-                    { name: '.NET Framework', desc: 'Required for modern games' },
-                    { name: 'DirectX', desc: 'Graphics and multimedia' },
-                    { name: 'OpenAL', desc: 'Audio processing' },
-                    { name: 'Visual C++', desc: 'Runtime components' },
-                    { name: 'XNA Framework', desc: 'Game development framework' }
+                    { name: '.NET Framework', desc: t('welcome.requiredForModernGames') },
+                    { name: 'DirectX', desc: t('welcome.graphicsAndMultimedia') },
+                    { name: 'OpenAL', desc: t('welcome.audioProcessing') },
+                    { name: 'Visual C++', desc: t('welcome.runtimeComponents') },
+                    { name: 'XNA Framework', desc: t('welcome.gameDevelopmentFramework') }
                   ].map((dep) => (
                     <div key={dep.name} className="flex items-start space-x-3 p-4">
                       {dependencyStatus[dep.name].icon}
@@ -1118,83 +1442,84 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                   className="space-y-4 w-full max-w-md"
                   variants={itemVariants}
                 >
-                  <p className="text-lg text-foreground/80">Installing dependencies... {progress}/{totalDependencies}</p>
+                  <p className="text-lg text-foreground/80">{t('welcome.installingDependencies')} {progress}/{totalDependencies}</p>
                   <p className="text-sm text-foreground/60">
-                    Please wait and respond to any administrator prompts that appear.
-                    Do not close the application.
+                    {t('welcome.pleaseWaitAndRespondToAdminPrompts')}
                   </p>
                   <Progress value={(progress / totalDependencies) * 100} className="h-2" />
                 </motion.div>
               ) : (
                 <motion.div 
-                    className="flex justify-center space-x-4"
-                    variants={itemVariants}
+                  className="flex justify-center space-x-4"
+                  variants={itemVariants}
                 >
-                    <Button
-                        variant="outline"
-                        size="lg"
-                        onClick={() => setShowDepsAlert(true)}
-                        className="px-8 py-6"
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => setShowDepsAlert(true)}
+                    className="px-8 py-6 text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {t('welcome.installDependencies')}
+                  </Button>
+
+                  <div className="flex flex-col items-center space-y-4">
+                    <Button 
+                      onClick={() => handleExit(true)}
+                      size="lg"
+                      className="px-8 py-6"
                     >
-                        Install Dependencies
+                      <Rocket className="mr-2 h-5 w-5 text-secondary" />
+                      <span className="text-secondary"> {t('welcome.iHaveTheseTakeMeToTheTour')}</span>
+                     
                     </Button>
-                    <div className="flex flex-col items-center space-y-4">
-                        <Button 
-                            onClick={() => handleExit(true)}
-                            size="lg"
-                            className="px-8 py-6"
-                        >
-                            <Rocket className="mr-2 h-5 w-5" />
-                            I have these, I'll take a tour
-                        </Button>
-                        
-                        <button
-                            onClick={() => handleExit(false)}
-                            className="text-sm text-foreground/60 hover:text-primary transition-colors"
-                        >
-                            Skip the tour
-                        </button>
-                    </div>
+                    
+                    <button
+                      onClick={() => handleExit(false)}
+                      className="text-sm text-foreground/60 hover:text-primary transition-colors"
+                    >
+                      {t('welcome.skipTheTour')}
+                    </button>
+                  </div>
+
                 </motion.div>
               )}
             </motion.div>
           )}
           {step === 'installationComplete' && (
             <motion.div
-                key="installationComplete"
-                className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative z-10"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
+              key="installationComplete"
+              className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative z-10"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
             >
-                <motion.div className="flex items-center justify-center mb-8" variants={itemVariants}>
-                    <h2 className="text-4xl font-bold">Dependencies Installed</h2>
-                </motion.div>
-                
-                <motion.p 
-                    className="text-xl mb-8 max-w-2xl text-foreground/80"
-                    variants={itemVariants}
-                >
-                    All required dependencies have been successfully installed. Welcome to Ascendara.
-                </motion.p>
+              <motion.div className="flex items-center justify-center mb-8" variants={itemVariants}>
+                <h2 className="text-4xl font-bold text-primary">{t('welcome.dependenciesInstalled')}</h2>
+              </motion.div>
+              <motion.p 
+                className="text-xl mb-8 max-w-2xl text-foreground/80"
+                variants={itemVariants}
+              >
+                {t('welcome.allRequiredDependenciesHaveBeenInstalled')}
+              </motion.p>
 
-                <motion.div className="flex justify-center space-x-4" variants={itemVariants}>
-                    <Button 
-                        onClick={() => handleExit(true)}
-                        size="lg"
-                        className="px-8 py-6"
-                    >
-                        <Rocket className="mr-2 h-5 w-5" />
-                        Take the Tour
-                    </Button>
-                    <button
-                        onClick={() => handleExit(false)}
-                        className="text-sm text-foreground/60 hover:text-primary transition-colors"
-                    >
-                        Skip Tour
-                    </button>
-                </motion.div>
+              <motion.div className="flex justify-center space-x-4" variants={itemVariants}>
+                <Button 
+                  onClick={() => handleExit(true)}
+                  size="lg"
+                  className="px-8 py-6"
+                >
+                  <Rocket className="mr-2 h-5 w-5" />
+                  {t('welcome.takeTheTour')}
+                </Button>
+                <button
+                  onClick={() => handleExit(false)}
+                  className="text-sm text-foreground/60 hover:text-primary transition-colors"
+                >
+                  {t('welcome.skipTour')}
+                </button>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

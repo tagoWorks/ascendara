@@ -16,7 +16,7 @@ let notificationShown = false;
 let updateDownloadInProgress = false;
 let isDev = false;
 
-const CURRENT_VERSION = "7.2.2";
+const CURRENT_VERSION = "7.3.2";
 let config;
 try {
     config = require('./config.prod.js');
@@ -545,19 +545,17 @@ ipcMain.handle('get-settings', () => {
     
     // Define default settings
     const defaultSettings = {
-      seamlessDownloads: true,
+      seamlessDownloads: false,
       checkVersionOnLaunch: true,
       viewOldDownloadLinks: false,
       seeInappropriateContent: false,
       sendAnalytics: true,
       autoUpdate: true,
+      language: 'en',
       notifications: true,
       primaryGameSource: 'steamrip',
       enabledSources: {
         steamrip: true,
-      },
-      ascendaraSettings: {
-        preferredCDN: 'default',
       },
       downloadDirectory: settings.downloadDirectory || ''
     };
@@ -569,10 +567,6 @@ ipcMain.handle('get-settings', () => {
       enabledSources: {
         ...defaultSettings.enabledSources,
         ...(settings.enabledSources || {})
-      },
-      ascendaraSettings: {
-        ...defaultSettings.ascendaraSettings,
-        ...(settings.ascendaraSettings || {})
       },
       // Ensure download directory is preserved from existing settings
       downloadDirectory: settings.downloadDirectory || defaultSettings.downloadDirectory
@@ -588,7 +582,7 @@ ipcMain.handle('get-settings', () => {
     console.error('Error reading settings:', error);
     // Return default settings if there's an error
     const defaultSettings = {
-      seamlessDownloads: true,
+      seamlessDownloads: false,
       checkVersionOnLaunch: true,
       viewOldDownloadLinks: false,
       seeInappropriateContent: false,
@@ -599,13 +593,6 @@ ipcMain.handle('get-settings', () => {
       language: 'en',
       enabledSources: {
         steamrip: true,
-        steamunlocked: false,
-        fitpackgames: false,
-      },
-      ascendaraSettings: {
-        preferredCDN: 'auto',
-        preferredRegion: 'auto',
-        useP2P: true
       },
       downloadDirectory: ''
     };

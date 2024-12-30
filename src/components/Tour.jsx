@@ -3,69 +3,71 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
+import { useTranslation } from 'react-i18next';
 
-const steps = [
+const getSteps = (t) => [
   {
-    title: "Ascendara Guide",
-    content: "Let's take a quick tour of the completely redesigned interface!",
+    title: t('tour.title'),
+    content: t('tour.welcome'),
     spotlight: null
   },
   {
-    title: "Server Status",
-    content: "This green dot indicates that all systems are operational. Click it anytime to check detailed server status.",
+    title: t('tour.serverStatus.title'),
+    content: t('tour.serverStatus.content'),
     spotlight: "div[title='Server Status']",
     position: "bottom"
   },
   {
-    title: "Navigation Bar",
-    content: "This is your navigation bar, it is where you can access all main features.",
+    title: t('tour.navigationBar.title'),
+    content: t('tour.navigationBar.content'),
     spotlight: ".nav-container",
     position: "bottom"
   },
   {
-    title: "Resizing Navigation",
-    content: "Too big or too small? You can resize the navigation bar by dragging these corners!",
+    title: t('tour.resizing.title'),
+    content: t('tour.resizing.content'),
     spotlight: ".nav-container",
     position: "bottom",
     showResizeHint: true
   },
   {
-    title: "Search & Download",
-    content: "This is where you can search and download games. Browse through the massive collection and find your next favorite game.",
+    title: t('tour.searchDownload.title'),
+    content: t('tour.searchDownload.content'),
     spotlight: "a[href='/search']",
     position: "right",
     navigateTo: "/search"
   },
   {
-    title: "Game Library",
-    content: "Your downloaded games will appear here. Launch, manage and organize your collection from this tab.",
+    title: t('tour.gameLibrary.title'),
+    content: t('tour.gameLibrary.content'),
     spotlight: "a[href='/library']",
     position: "right",
     navigateTo: "/library"
   },
   {
-    title: "Downloads",
-    content: "Track your active downloads, see progress, and manage download speeds all in one place.",
+    title: t('tour.downloads.title'),
+    content: t('tour.downloads.content'),
     spotlight: "a[href='/downloads']",
     position: "right",
     navigateTo: "/downloads"
   },
   {
-    title: "Settings",
-    content: "Customize Ascendara to your liking. Change themes, download locations, and more from the settings page.",
+    title: t('tour.settings.title'),
+    content: t('tour.settings.content'),
     spotlight: "a[href='/settings']",
     position: "right",
     navigateTo: "/settings"
   },
   {
-    title: "Welcome to Ascendara",
-    content: "Thank you for downloading Ascendara! If you'd like to support development, please consider donating as it helps keep the servers running and the app updated. Ascendara was developed and is fully maintained by a <a class='text-primary hover:text-primary/80' onclick='window.electron.openURL(\"https://tago.works\")'>single developer</a>.",
+    title: t('tour.final.title'),
+    content: t('tour.final.content'),
     spotlight: null,
     showDonateButton: true
   }
 ];
 
 function Tour({ onClose }) {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [spotlightPosition, setSpotlightPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const resizeIntervalRef = useRef(null);
@@ -74,6 +76,7 @@ function Tour({ onClose }) {
   const spotlightRef = useRef(null);
   const rafRef = useRef(null);
   const navigate = useNavigate();
+  const [steps] = useState(() => getSteps(t));
 
   useEffect(() => {
     const updateSpotlight = () => {

@@ -5,6 +5,7 @@ import { Clock } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import imageCacheService from '../services/imageCacheService';
 import { useNavigate } from 'react-router-dom';
+import { sanitizeText } from '../lib/utils';
 
 // Memoized sub-components
 const useImageLoader = (imgID, onIntersect) => {
@@ -29,7 +30,7 @@ const useImageLoader = (imgID, onIntersect) => {
     );
 
     observer.observe(node);
-    return () => observer.disconnect();
+    // Cleanup will happen automatically when the ref changes
   }, [imgID, onIntersect]);
 
   useEffect(() => {
@@ -107,6 +108,7 @@ const UpdateDate = memo(({ date }) => {
 // Main component memoized
 const HomeGameCard = memo(({ game, variant = 'default' }) => {
   const navigate = useNavigate();
+  const sanitizedGameName = sanitizeText(game.game);
 
   const handleClick = useCallback(() => {
     const container = document.querySelector('.page-container');
@@ -153,7 +155,7 @@ const HomeGameCard = memo(({ game, variant = 'default' }) => {
             <GameImage imgID={game.imgID} gameName={game.game} onIntersect={handleImageLoad} />
           </div>
           <CardContent className="flex-1 p-4 flex flex-col">
-            <h3 className="font-semibold text-lg mb-2">{game.game}</h3>
+            <h3 className="font-semibold text-lg mb-2">{sanitizedGameName}</h3>
             <div className="mt-auto">
               <Categories categories={game.category} />
               <UpdateDate date={game.date} />

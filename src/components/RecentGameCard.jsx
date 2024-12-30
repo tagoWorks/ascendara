@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "./ui/card";
 import { cn } from '../lib/utils';
+import { sanitizeText } from '../lib/utils';
 import { Play } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -8,6 +9,7 @@ const RecentGameCard = ({ game, onPlay }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageData, setImageData] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const sanitizedGameName = sanitizeText(game.game || game.name);
 
   // Load game image
   useEffect(() => {
@@ -89,7 +91,7 @@ const RecentGameCard = ({ game, onPlay }) => {
             <div className="space-y-2">
               <div className="flex justify-between items-end">
                 <h3 className="font-semibold text-lg line-clamp-2">
-                  {game.game || game.name}
+                  {sanitizedGameName}
                 </h3>
                 <span className="text-sm text-white/70">
                   {getTimeSinceLastPlayed()}

@@ -4,6 +4,7 @@ import { Skeleton } from "../components/ui/skeleton";
 import HomeGameCard from '../components/HomeGameCard';
 import RecentGameCard from '../components/RecentGameCard';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   Sword,
   Flame,
@@ -22,6 +23,7 @@ const Home = memo(() => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -288,46 +290,79 @@ const Home = memo(() => {
           </div>
 
           {recentGames.length > 0 && (
-            <section className="space-y-4" data-section="recent-games">
+            <section className="space-y-8">
               <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
                 <Clock className="w-6 h-6 text-primary" />
-                Recently Played
+                {t('home.recentGames')}
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {recentGames.slice(0, 4).map((game, index) => (
-                  <RecentGameCard 
-                    key={`recent-${game.game}-${index}`} 
-                    game={game}
-                    onPlay={handlePlayGame}
-                  />
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {loading ? (
+                  Array.from({ length: 4 }).map((_, index) => (
+                    <Skeleton key={index} className="h-[240px] rounded-xl" />
+                  ))
+                ) : (
+                  recentGames.slice(0, 4).map((game, index) => (
+                    <RecentGameCard 
+                      key={`recent-${game.game}-${index}`} 
+                      game={game}
+                      onPlay={handlePlayGame}
+                    />
+                  ))
+                )}
               </div>
             </section>
           )}
 
-          <section className="space-y-4">
+          <section className="space-y-8">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Flame className="w-6 h-6 text-primary" />
-              Top Games
+              <Sword className="w-6 h-6 text-primary" />
+              {t('home.topGames')}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {topGames.map((game, index) => (
-                <div key={`top-${game.id || index}`} className="relative h-full">
-                  <div className="absolute -top-2 -left-2 w-10 h-10 bg-primary rounded-lg shadow-lg flex items-center justify-center z-10 transform -rotate-12">
-                    <span className="text-primary-foreground font-bold text-lg">
-                      #{index + 1}
-                    </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {loading ? (
+                Array.from({ length: 4 }).map((_, index) => (
+                  <Skeleton key={index} className="h-[240px] rounded-xl" />
+                ))
+              ) : (
+                topGames.map((game, index) => (
+                  <div key={`top-${game.id || index}`} className="relative h-full">
+                    <div className="absolute -top-2 -left-2 w-10 h-10 bg-primary rounded-lg shadow-lg flex items-center justify-center z-10 transform -rotate-12">
+                      <span className="text-primary-foreground font-bold text-lg">
+                        #{index + 1}
+                      </span>
+                    </div>
+                    <HomeGameCard game={game} />
                   </div>
-                  <HomeGameCard game={game} />
-                </div>
-              ))}
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="space-y-8">
+            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <Globe className="w-6 h-6 text-primary" />
+              {t('home.onlineGames')}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {loading ? (
+                Array.from({ length: 4 }).map((_, index) => (
+                  <Skeleton key={index} className="h-[240px] rounded-xl" />
+                ))
+              ) : (
+                onlineGames.map((game, index) => (
+                  <HomeGameCard 
+                    key={`online-${game.id || index}`} 
+                    game={game}
+                  />
+                ))
+              )}
             </div>
           </section>
 
           <section className="space-y-8">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <Flame className="w-6 h-6 text-primary" />
-              Popular Categories
+              {t('home.popularCategories')}
             </h2>
             <div className="space-y-8">
               {popularCategories.map(({ category, games: categoryGames }) => (
@@ -335,7 +370,7 @@ const Home = memo(() => {
                   <h3 className="text-xl font-semibold text-foreground">
                     {category}
                   </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 h-full">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 h-full">
                     {categoryGames.map((game, index) => (
                       <HomeGameCard 
                         key={`${category}-${game.id || index}`} 
@@ -348,40 +383,31 @@ const Home = memo(() => {
             </div>
           </section>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Globe className="w-6 h-6 text-primary" />
-              Online Multiplayer
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {onlineGames.map((game, index) => (
-                <div key={`online-${game.id || index}`} className="aspect-[3/4]">
-                  <HomeGameCard 
-                    game={game} 
-                    variant="compact" 
-                    className="h-full"
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="space-y-4">
+          <section className="space-y-8">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <Sword className="w-6 h-6 text-primary" />
-              Action Games
+              {t('home.actionGames')}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {actionGames.map((game, index) => (
-                <div key={`action-${game.id || index}`} className="h-full">
-                  <HomeGameCard game={game} />
-                </div>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {loading ? (
+                Array.from({ length: 4 }).map((_, index) => (
+                  <Skeleton key={index} className="h-[240px] rounded-xl" />
+                ))
+              ) : (
+                actionGames.map((game, index) => (
+                  <HomeGameCard 
+                    key={`action-${game.id || index}`} 
+                    game={game}
+                  />
+                ))
+              )}
             </div>
           </section>
 
           <div className="text-center text-muted-foreground/50 py-8">
-            That's it... go find some games
+            <p className="text-sm">
+              {t('home.footerNote')}
+            </p>
           </div>
         </div>
       </div>

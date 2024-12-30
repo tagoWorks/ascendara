@@ -10,8 +10,10 @@ import {
   AlertDialogFooter,
 } from './ui/alert-dialog';
 import { AlertTriangle } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const MenuBar = () => {
+  const { t } = useLanguage();
   const [serverStatus, setServerStatus] = useState(() => {
     // Try to load cached status from localStorage
     const cached = localStorage.getItem('serverStatus');
@@ -109,13 +111,13 @@ const MenuBar = () => {
               className="w-6 h-6 mr-2"
             />
           )}
-          <span className="text-sm font-medium">Ascendara</span>
+          <span className="text-sm font-medium">{t('app.title')}</span>
         </div>
         
         <div 
           className="ml-1.5 cursor-pointer flex items-center gap-1"
           onClick={handleStatusClick}
-          title="Server Status"
+          title={t('server-status.title')}
           style={{ WebkitAppRegion: 'no-drag' }}
         >
           <div className={`w-1.5 h-1.5 rounded-full ${
@@ -125,14 +127,12 @@ const MenuBar = () => {
           }`} />
         </div>
           {!isLatest && (
-            <>
-              <div className="flex items-center ml-2">
-                <span className="text-[10px] px-1 py-0.5 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" />
-                  OUTDATED
-                </span>
-                </div>
-            </>
+            <div className="flex items-center ml-2">
+              <span className="text-[10px] px-1 py-0.5 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {t('app.outdated')}
+              </span>
+            </div>
           )}
 
         <div className="flex-1" />
@@ -145,11 +145,11 @@ const MenuBar = () => {
               <div className={`w-2.5 h-2.5 rounded-full ${
                 serverStatus.isHealthy ? 'bg-green-500' : 'bg-red-500 animate-pulse'
               }`} />
-              System Status
+              {t('server-status.title')}
             </AlertDialogTitle>
             
             <AlertDialogDescription className="sr-only">
-              View current system status and server health information
+              {t('server-status.description')}
             </AlertDialogDescription>
             
             <div className="mt-4 space-y-4">
@@ -161,18 +161,18 @@ const MenuBar = () => {
               }`}>
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-foreground">
-                    {serverStatus.isHealthy ? 'All Systems Operational' : 'System Issues Detected'}
+                    {serverStatus.isHealthy ? t('server-status.healthy') : t('server-status.unhealthy')}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    Last checked: {formatLastChecked(serverStatus.lastChecked)}
+                    {t('server-status.last-checked')} {formatLastChecked(serverStatus.lastChecked)}
                   </span>
                 </div>
                 <p className="text-sm mt-2 text-muted-foreground">
                   {serverStatus.isHealthy 
-                    ? 'All servers are running and responding as expected.'
+                    ? t('server-status.healthy-description')
                     : (
-                      <>
-                        The following servers are currently experiencing issues:
+                      <div>
+                        {t('server-status.unhealthy-description')}
                         <ul className="mt-2 space-y-2">
                           {serverStatus.downServices?.map(service => (
                             <li key={service} className="flex items-start">
@@ -180,27 +180,27 @@ const MenuBar = () => {
                               <div>
                                 <span className="font-medium">{service === 'lfs' ? service.toUpperCase() : service.charAt(0).toUpperCase() + service.slice(1)} Server</span>
                                 <p className="text-xs text-muted-foreground">
-                                  {service === 'api' && 'Ascendara\'s main API handles game information, analytics, and reports.'}
-                                  {service === 'storage' && 'Storage service handles small background assets.'}
-                                  {service === 'lfs' && 'Large File Server handles bigger files like update files.'}
+                                  {service === 'api' && t('server-status.api-description')}
+                                  {service === 'storage' && t('server-status.storage-description')}
+                                  {service === 'lfs' && t('server-status.lfs-description')}
                                 </p>
                               </div>
                             </li>
                           ))}
                         </ul>
-                      </>
+                      </div>
                     )}
                 </p>
               </div>
 
               {/* Status Page Link */}
               <div className="flex items-center justify-between p-3 rounded-lg border bg-card/30">
-                <span className="text-sm text-muted-foreground">Need more details?</span>
+                <span className="text-sm text-muted-foreground">{t('server-status.need-more-details')}</span>
                 <button 
                   onClick={() => window.electron.openURL('https://status.ascendara.app')}
                   className="text-sm text-foreground hover:underline flex items-center gap-1" 
                 >
-                  Visit Status Page
+                  {t('server-status.visit-status-page')}
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
@@ -210,7 +210,7 @@ const MenuBar = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-card/50 hover:bg-card text-foreground border-0">
-              Close
+              {t('common.close')}
             </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -219,4 +219,4 @@ const MenuBar = () => {
   );
 };
 
-export default MenuBar; 
+export default MenuBar;
