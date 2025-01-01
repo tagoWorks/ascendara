@@ -24,6 +24,19 @@ contextBridge.exposeInMainWorld('electron', {
   addGame: (game, online, dlc, version, executable) => ipcRenderer.invoke('save-custom-game', game, online, dlc, version, executable),
   removeCustomGame: (game) => ipcRenderer.invoke('remove-game', game),
   deleteGame: (game) => ipcRenderer.invoke('delete-game', game),
+  getInstalledGames: () => ipcRenderer.invoke('get-installed-games'),
+
+  // Download Status
+  onDownloadProgress: (callback) => {
+    const listener = (event, data) => callback(data);
+    ipcRenderer.on('download-progress', listener);
+    return () => ipcRenderer.removeListener('download-progress', listener);
+  },
+  onDownloadComplete: (callback) => {
+    const listener = (event, data) => callback(data);
+    ipcRenderer.on('download-complete', listener);
+    return () => ipcRenderer.removeListener('download-complete', listener);
+  },
 
   // Game Execution
   playGame: (game, isCustom) => ipcRenderer.invoke('play-game', game, isCustom),

@@ -146,10 +146,10 @@ const Library = () => {
       });
     } catch (error) {
       console.error('Error launching game:', error);
-      await window.electron.ipcRenderer.invoke('show-message-box', {
-        type: 'error',
-        title: t('library.launchError'),
-        message: t('library.launchErrorMessage', { game: gameName })
+      setSelectedGame({
+        ...game,
+        showErrorDialog: true,
+        errorMessage: t('library.launchErrorMessage', { game: gameName })
       });
     } finally {
       setLaunchingGame(null);
@@ -260,6 +260,43 @@ const Library = () => {
             />
           ))}
         </div>
+
+        {selectedGame?.showErrorDialog && (
+          <AlertDialog open={true}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('library.launchError')}</AlertDialogTitle>
+                <AlertDialogDescription className="text-muted-foreground">
+                  {selectedGame.errorMessage}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <Button variant="outline" onClick={async () => {
+                  try {
+                    const result = await window.electron.showOpenDialog({
+                      title: t('library.selectExecutable'),
+                      filters: [{ name: t('library.executableFiles'), extensions: ['exe'] }],
+                      properties: ['openFile']
+                    });
+                    
+                    if (result?.filePaths?.[0]) {
+                      await window.electron.updateGameExecutable(selectedGame.game || selectedGame.name, result.filePaths[0]);
+                      setSelectedGame(null);
+                      handlePlayGame(selectedGame);
+                    }
+                  } catch (err) {
+                    console.error('Error updating executable:', err);
+                  }
+                }}>
+                  {t('library.chooseExecutable')}
+                </Button>
+                <Button variant="default" onClick={() => setSelectedGame(null)}>
+                  {t('common.ok')}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
 
         <AlertDialog 
           key="delete-game-dialog" 
@@ -429,33 +466,51 @@ const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpe
                   </span>
                 )}
               </div>
-              <Button 
-                className="w-full gap-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!isRunning && !isLaunching) {
-                    onPlay();
-                  }
-                }}
-                disabled={isLaunching || isRunning}
-              >
-                {isLaunching ? (
-                  <>
-                    <Progress className="w-4 h-4" value={undefined} />
-                    {t('library.launching')}
-                  </>
-                ) : isRunning ? (
-                  <>
-                    <Play className="w-4 h-4" />
-                    {t('library.running')}
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4" />
-                    {t('library.play')}
-                  </>
+              <div className="flex flex-col gap-2">
+                <Button 
+                  className="w-full gap-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isRunning && !isLaunching) {
+                      onPlay();
+                    }
+                  }}
+                  disabled={isLaunching || isRunning}
+                >
+                  {isLaunching ? (
+                    < >
+                      <Progress className="w-4 h-4" value={undefined} />
+                      {t('library.launching')}
+                    </ >
+                  ) : isRunning ? (
+                    < >
+                      <Play className="w-4 h-4" />
+                      {t('library.running')}
+                    </ >
+                  ) : (
+                    < >
+                      <Play className="w-4 h-4" />
+                      {t('library.play')}
+                    </ >
+                  )}
+                </Button>
+                {!game.isCustom && (
+                  <Button 
+                    variant="secondary"
+                    className="w-full gap-2"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const exePath = await window.electron.openFileDialog();
+                      if (exePath) {
+                        await window.electron.modifyGameExecutable(game.game || game.name, exePath);
+                      }
+                    }}
+                  >
+                    <Pencil className="w-4 h-4" />
+                    {t('library.changeExecutable')}
+                  </Button>
                 )}
-              </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -561,6 +616,7 @@ const AddGameForm = ({ onSuccess }) => {
           >
             <FolderOpen className="w-4 h-4 mr-2" />
             {formData.executable || t('library.chooseExecutableFile')}
+
           </Button>
         </div>
 
@@ -570,6 +626,7 @@ const AddGameForm = ({ onSuccess }) => {
             id="name"
             value={formData.name}
             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+
             className="bg-background border-input"
           />
         </div>
@@ -587,6 +644,7 @@ const AddGameForm = ({ onSuccess }) => {
                 hasVersion: checked,
                 version: !checked ? '' : prev.version 
               }))}
+
             />
           </div>
 
@@ -595,6 +653,7 @@ const AddGameForm = ({ onSuccess }) => {
               id="version"
               value={formData.version}
               onChange={(e) => setFormData(prev => ({ ...prev, version: e.target.value }))}
+
               placeholder={t('library.versionPlaceholder')}
               className="bg-background border-input"
             />
@@ -607,6 +666,7 @@ const AddGameForm = ({ onSuccess }) => {
             id="isOnline"
             checked={formData.isOnline}
             onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isOnline: checked }))}
+
           />
         </div>
 
@@ -616,6 +676,7 @@ const AddGameForm = ({ onSuccess }) => {
             id="hasDLC"
             checked={formData.hasDLC}
             onCheckedChange={(checked) => setFormData(prev => ({ ...prev, hasDLC: checked }))}
+
           />
         </div>
       </div>

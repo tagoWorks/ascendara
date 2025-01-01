@@ -23,8 +23,6 @@ function Layout() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      {/* Add Google Translate Element (hidden by default) */}
-      <div id="google_translate_element" className="hidden"></div>
       <MenuBar className="fixed top-0 left-0 right-0 z-50" />
       <div className="h-16" />
       <main className="flex-1 pb-24 px-4 overflow-y-auto">

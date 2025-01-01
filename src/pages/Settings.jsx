@@ -161,8 +161,6 @@ function Settings() {
   // Track if settings have been initialized
   const [isInitialized, setIsInitialized] = useState(false);
   const initialSettingsRef = useRef(null);
-
-  // Add a loading state
   const [isLoading, setIsLoading] = useState(true);
   
   // Use a ref to track if this is the first mount
@@ -344,20 +342,6 @@ function Settings() {
     dark: themes.filter(t => t.group === 'dark')
   };
 
-  // Add this function inside the Settings component, near the other handler functions
-  const handleClearCache = useCallback(async () => {
-    try {
-      const success = await window.electron.clearCache();
-      if (success) {
-        // You could add a toast notification here if you want
-      } else {
-        console.error('Failed to clear cache');
-      }
-    } catch (error) {
-      console.error('Error clearing cache:', error);
-    }
-  }, []);
-
   // Show loading state
   if (isLoading) {
     return (
@@ -392,17 +376,6 @@ function Settings() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label>{t('settings.ascendaraAnalytics')}</Label>
-                        <p className="text-sm text-muted-foreground">{t('settings.ascendaraAnalyticsDescription')}</p>
-                      </div>
-                      <Switch
-                        checked={settings.sendAnalytics}
-                        onCheckedChange={() => handleSettingChange('sendAnalytics')}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
                         <Label>{t('settings.ascendaraUpdates')}</Label>
                         <p className="text-sm text-muted-foreground">{t('settings.ascendaraUpdatesDescription')}</p>
                       </div>
@@ -411,52 +384,6 @@ function Settings() {
                         onCheckedChange={() => handleSettingChange('autoUpdate')}
                       />
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>{t('settings.matureContent')}</Label>
-                        <p className="text-sm text-muted-foreground">{t('settings.matureContentDescription')}</p>
-                      </div>
-                      <Switch
-                        checked={settings.seeInappropriateContent}
-                        onCheckedChange={() => handleSettingChange('seeInappropriateContent')}
-                      />
-                    </div>
-                    <Separator className="my-4" />
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>{t('settings.clearCache')}</Label>
-                        <p className="text-sm text-muted-foreground">{t('settings.clearCacheDescription')}</p>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={handleClearCache}
-                      >
-                        {t('settings.clearCacheButton')}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.downloads')}</h2>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="downloadPath">{t('settings.downloadLocation')}</Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          id="downloadPath"
-                          value={downloadPath}
-                          readOnly
-                          className="flex-1"
-                        />
-                        <Button className="text-secondary" onClick={handleDirectorySelect}>{t('settings.selectDirectory')}</Button>
-                      </div>
-                    </div>
-                    
-                    <Separator className="my-4" />
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
@@ -470,6 +397,53 @@ function Settings() {
                       <Switch
                         checked={settings.seamlessDownloads}
                         onCheckedChange={() => handleSettingChange('seamlessDownloads')}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label>{t('settings.matureContent')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('settings.matureContentDescription')}</p>
+                      </div>
+                      <Switch
+                        checked={settings.seeInappropriateContent}
+                        onCheckedChange={() => handleSettingChange('seeInappropriateContent')}
+                      />
+                    </div>
+                  </div>
+                  
+    
+
+                  <div className="mt-4">
+                      <Label htmlFor="downloadPath">{t('settings.downloadLocation')}</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          id="downloadPath"
+                          value={downloadPath}
+                          readOnly
+                          className="flex-1"
+                        />
+                        <Button className="text-secondary" onClick={handleDirectorySelect}>{t('settings.selectDirectory')}</Button>
+                      </div>
+                    </div>
+
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.ascendaraAnalytics')}</h2>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label>{t('settings.ascendaraToggleAnalytics')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('settings.ascendaraAnalyticsDescription')} {" "}
+                          <a className="text-primary cursor-pointer hover:underline" onClick={() => window.electron.openURL('https://ascendara.app/analytics')} target="_blank" rel="noopener noreferrer">
+                            {t('common.learnMore')}
+                          </a>
+                        </p>
+                      </div>
+                      <Switch
+                        checked={settings.sendAnalytics}
+                        onCheckedChange={() => handleSettingChange('sendAnalytics')}
                       />
                     </div>
                   </div>

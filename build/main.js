@@ -16,7 +16,7 @@ let notificationShown = false;
 let updateDownloadInProgress = false;
 let isDev = false;
 
-const CURRENT_VERSION = "7.3.2";
+const CURRENT_VERSION = "7.3.3";
 let config;
 try {
     config = require('./config.prod.js');
@@ -265,7 +265,7 @@ ipcMain.handle('download-file', async (event, link, game, online, dlc, version, 
         let spawnCommand;
 
         if (link.includes('gofile.io')) {
-          executablePath = path.join(appDirectory, '/resources/GoFileDownloader.exe');
+          executablePath = path.join(appDirectory, '/resources/AscendaraGofileHelper.exe');
           spawnCommand = ["https://" + link, game, online, dlc, version, size, gamesDirectory];
         } else {
           executablePath = path.join(appDirectory, '/resources/AscendaraDownloader.exe');
@@ -545,7 +545,7 @@ ipcMain.handle('get-settings', () => {
     
     // Define default settings
     const defaultSettings = {
-      seamlessDownloads: false,
+      seamlessDownloads: true,
       checkVersionOnLaunch: true,
       viewOldDownloadLinks: false,
       seeInappropriateContent: false,
@@ -582,7 +582,7 @@ ipcMain.handle('get-settings', () => {
     console.error('Error reading settings:', error);
     // Return default settings if there's an error
     const defaultSettings = {
-      seamlessDownloads: false,
+      seamlessDownloads: true,
       checkVersionOnLaunch: true,
       viewOldDownloadLinks: false,
       seeInappropriateContent: false,
@@ -765,7 +765,10 @@ ipcMain.handle('get-games', async () => {
           const gameInfoData = await fs.promises.readFile(gameInfoPath, 'utf8');
           return JSON.parse(gameInfoData);
         } catch (error) {
-          console.error(`Error reading game info file for ${dir}:`, error);
+          const errorKey = `${dir}_${error.code}`;
+          if (shouldLogError(errorKey)) {
+            console.error(`Error reading game info file for ${dir}:`, error);
+          }
           return null;
         }
       })
@@ -1262,6 +1265,40 @@ ipcMain.handle('close-window', () => {
   if (win) win.close();
 });
 
+const ERROR_COUNTS_FILE = path.join(app.getPath('userData'), 'error-counts.json');
+
+function getErrorCounts() {
+  try {
+    if (fs.existsSync(ERROR_COUNTS_FILE)) {
+      const data = fs.readFileSync(ERROR_COUNTS_FILE, 'utf8');
+      return new Map(Object.entries(JSON.parse(data)));
+    }
+  } catch (error) {
+    console.error('Error reading error counts:', error);
+  }
+  return new Map();
+}
+
+function saveErrorCounts(counts) {
+  try {
+    fs.writeFileSync(ERROR_COUNTS_FILE, JSON.stringify(Object.fromEntries(counts)), 'utf8');
+  } catch (error) {
+    console.error('Error saving error counts:', error);
+  }
+}
+
+function shouldLogError(errorKey) {
+  const MAX_ERROR_LOGS = 2;
+  const counts = getErrorCounts();
+  const count = counts.get(errorKey) || 0;
+  if (count < MAX_ERROR_LOGS) {
+    counts.set(errorKey, count + 1);
+    saveErrorCounts(counts);
+    return true;
+  }
+  return false;
+}
+
 function createWindow() {
   const mainWindow = new BrowserWindow({
     title: 'Ascendara',
@@ -1403,3 +1440,5 @@ ipcMain.on('settings-changed', () => {
 ipcMain.handle('is-update-downloaded', () => {
   return updateDownloaded;
 });
+
+// Track error counts globally with persistence

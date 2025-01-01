@@ -79,7 +79,6 @@ const ContextMenu = () => {
                 <TriangleAlert className="w-4 h-4 mr-2" />
                 {t('common.reportIssue')}
               </button>
-              {/* Add other menu items here */}
             </div>
           </motion.div>
         )}

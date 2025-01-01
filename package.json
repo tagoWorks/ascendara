@@ -1,6 +1,6 @@
 {
   "name": "ascendara",
-  "version": "7.3.2",
+  "version": "7.3.3",
   "main": "main.js",
   "description": "Download games effortlessly with Ascendara. Copy the link, paste it into the app, and download.",
   "scripts": {
@@ -98,7 +98,7 @@
         "to": "."
       },
       {
-        "from": "binaries/AscendaraDownloader/dist/GoFileDownloader.exe",
+        "from": "binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe",
         "to": "."
       },
       {

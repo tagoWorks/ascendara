@@ -253,7 +253,7 @@ export default function DownloadPage() {
         gameData.size
       );
       
-      // Add a 2-second delay
+      // 2-second delay
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Show success notification

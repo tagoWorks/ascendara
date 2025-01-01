@@ -180,7 +180,6 @@ const AppRoutes = () => {
     setIsInstalling(true);
     // Set isUpdating timestamp first
     await window.electron.setTimestampValue('isUpdating', true);
-    // Add a small delay to show the overlay before starting the update
     setTimeout(() => {
       setIsUpdating(true);
       window.electron.updateAscendara();
@@ -195,8 +194,6 @@ const AppRoutes = () => {
       welcomeData
     });
   }, [isLoading, shouldShowWelcome, isNewInstall, welcomeData]);
-
-  // Add debug logging for key rendering conditions
   console.log('AppRoutes render - Current state:', {
     shouldShowWelcome,
     location: location?.pathname,
@@ -353,7 +350,6 @@ const AppRoutes = () => {
   );
 };
 
-// Add error boundary around the app
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
