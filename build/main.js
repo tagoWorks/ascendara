@@ -604,24 +604,36 @@ ipcMain.handle('get-settings', () => {
 ipcMain.handle('save-settings', async (event, options, directory) => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
   try {
-    let existingSettings = {};
-    
-    // Try to read existing settings
-    if (fs.existsSync(filePath)) {
+    let settings = {};
+    try {
       const data = fs.readFileSync(filePath, 'utf8');
-      existingSettings = JSON.parse(data);
+      settings = JSON.parse(data);
+    } catch (error) {
+      // File doesn't exist or is invalid, use empty settings object
     }
 
-    // Merge new settings with existing ones
-    const mergedSettings = {
-      ...existingSettings,
-      ...options,
-      // Preserve existing download directory if none provided
-      downloadDirectory: directory || existingSettings.downloadDirectory || options.downloadDirectory
+    // Merge new options with existing settings
+    const newSettings = {
+      ...settings,
+      ...options
     };
 
-    // Save merged settings
-    fs.writeFileSync(filePath, JSON.stringify(mergedSettings, null, 2));
+    // If directory is provided, ensure it exists
+    if (directory) {
+      if (!fs.existsSync(directory)) {
+        fs.mkdirSync(directory, { recursive: true });
+      }
+      newSettings.downloadDirectory = directory;
+    }
+
+    // Write settings to file
+    fs.writeFileSync(filePath, JSON.stringify(newSettings, null, 2));
+    
+    // Notify renderer about settings change
+    BrowserWindow.getAllWindows().forEach(window => {
+      window.webContents.send('settings-changed', newSettings);
+    });
+
     return true;
   } catch (error) {
     console.error('Error saving settings:', error);
@@ -859,7 +871,7 @@ ipcMain.handle('uninstall-ascendara', async () => {
   });
 });
 
-
+// Save the custom game
 ipcMain.handle('save-custom-game', async (event, game, online, dlc, version, executable) => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
   try {
@@ -927,6 +939,7 @@ ipcMain.handle('open-directory-dialog', async (event) => {
   }
 });
 
+// Open the file dialog
 ipcMain.handle('open-file-dialog', async (event) => {
   const result = await dialog.showOpenDialog({
     properties: ['openFile',],
@@ -942,6 +955,7 @@ ipcMain.handle('open-file-dialog', async (event) => {
   }
 });
 
+// Get the download directory
 ipcMain.handle('get-download-directory', () => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
   try {
@@ -954,6 +968,7 @@ ipcMain.handle('get-download-directory', () => {
   }
 });
 
+// Set the testing games
 ipcMain.handle('set-testing-games', async (event, count) => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
   try {
@@ -1054,6 +1069,7 @@ ipcMain.handle('open-game-directory', (event, game, isCustom) => {
   }}
 });
 
+// Modify the game executable
 ipcMain.handle('modify-game-executable', (event, game, executable) => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
   try {
@@ -1072,103 +1088,108 @@ ipcMain.handle('modify-game-executable', (event, game, executable) => {
     fs.writeFileSync(gameInfoPath, JSON.stringify(gameInfo, null, 2));
   } catch (error) {
     console.error('Error reading the settings file:', error);
-  }});
+  }
+});
 
-  ipcMain.handle('play-game', (event, game, isCustom) => {
-    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-    try {
-      const data = fs.readFileSync(filePath, 'utf8');
-      const settings = JSON.parse(data);
-      if (!settings.downloadDirectory) {
-        console.error('Download directory not set');
+// Play the game
+ipcMain.handle('play-game', (event, game, isCustom) => {
+  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    const settings = JSON.parse(data);
+    if (!settings.downloadDirectory) {
+      console.error('Download directory not set');
+      return;
+    }
+    const downloadDirectory = settings.downloadDirectory;
+    let executable;
+    let gameDirectory;
+    if (!isCustom) {
+      gameDirectory = path.join(downloadDirectory, game);
+      const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
+      const gameInfoData = fs.readFileSync(gameInfoPath, 'utf8');
+      const gameInfo = JSON.parse(gameInfoData);
+      executable = gameInfo.executable;
+    } else {
+      const gamesFilePath = path.join(downloadDirectory, 'games.json');
+      const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, 'utf8'));
+      const gameInfo = gamesData.games.find((g) => g.game === game);
+      if (gameInfo) {
+        executable = gameInfo.executable;
+        gameDirectory = path.dirname(executable);
+      } else {
+        console.error(`Game not found in games.json: ${game}`);
         return;
       }
-      const downloadDirectory = settings.downloadDirectory;
-      let executable;
-      let gameDirectory;
-      if (!isCustom) {
-        gameDirectory = path.join(downloadDirectory, game);
-        const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
-        const gameInfoData = fs.readFileSync(gameInfoPath, 'utf8');
-        const gameInfo = JSON.parse(gameInfoData);
-        executable = gameInfo.executable;
-      } else {
-        const gamesFilePath = path.join(downloadDirectory, 'games.json');
-        const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, 'utf8'));
-        const gameInfo = gamesData.games.find((g) => g.game === game);
-        if (gameInfo) {
-          executable = gameInfo.executable;
-          gameDirectory = path.dirname(executable);
-        } else {
-          console.error(`Game not found in games.json: ${game}`);
-          return;
-        }
-      }
-      const executablePath = path.join(appDirectory, '/resources/AscendaraGameHandler.exe');
-      const runGame = spawn(executablePath, [executable, isCustom]);
-      runGameProcesses.set(game, runGame);
-  
-      rpc.setActivity({
-        details: 'Playing a Game',
-        state: `${game}`,
-        startTimestamp: new Date(),
-        largeImageKey: 'ascendara',
-        largeImageText: 'Ascendara',
-        buttons:[
-          {
-            label: 'Play on Ascendara',
-            url: 'https://ascendara.app/'
-          }
-        ]
-      });
-  
-      runGame.on('close', (code) => {
-        console.log(`Game process for ${game} exited with code ${code}`);
-        runGameProcesses.delete(game);
-  
-        rpc.setActivity({
-          state: 'Browsing Menus...',
-          largeImageKey: 'ascendara',
-          largeImageText: 'Ascendara',
-        });
-
-        if (!isCustom) {
-          const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
-          try {
-            const gameInfoData = fs.readFileSync(gameInfoPath, 'utf8');
-            const gameInfo = JSON.parse(gameInfoData);
-            if (gameInfo.runError) {
-              setError(gameInfo.runError);
-            }
-          } catch (error) {
-            console.error('Error reading the game info file:', error);
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Error reading the settings file:', error);
     }
-  });
+    const executablePath = path.join(appDirectory, '/resources/AscendaraGameHandler.exe');
+    const runGame = spawn(executablePath, [executable, isCustom]);
+    runGameProcesses.set(game, runGame);
   
-  ipcMain.handle('stop-game', (event, game) => {
-    const runGame = runGameProcesses.get(game);
-    if (runGame) {
-      runGame.kill();
-   
+    rpc.setActivity({
+      details: 'Playing a Game',
+      state: `${game}`,
+      startTimestamp: new Date(),
+      largeImageKey: 'ascendara',
+      largeImageText: 'Ascendara',
+      buttons:[
+        {
+          label: 'Play on Ascendara',
+          url: 'https://ascendara.app/'
+        }
+      ]
+    });
+  
+    runGame.on('close', (code) => {
+      console.log(`Game process for ${game} exited with code ${code}`);
+      runGameProcesses.delete(game);
+  
       rpc.setActivity({
         state: 'Browsing Menus...',
         largeImageKey: 'ascendara',
-        largeImageText: 'Ascendara'
+        largeImageText: 'Ascendara',
       });
 
-    }
-  });
+      if (!isCustom) {
+        const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
+        try {
+          const gameInfoData = fs.readFileSync(gameInfoPath, 'utf8');
+          const gameInfo = JSON.parse(gameInfoData);
+          if (gameInfo.runError) {
+            setError(gameInfo.runError);
+          }
+        } catch (error) {
+          console.error('Error reading the game info file:', error);
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error reading the settings file:', error);
+  }
+});
+  
+// Stop the game
+ipcMain.handle('stop-game', (event, game) => {
+  const runGame = runGameProcesses.get(game);
+  if (runGame) {
+    runGame.kill();
+   
+    rpc.setActivity({
+      state: 'Browsing Menus...',
+      largeImageKey: 'ascendara',
+      largeImageText: 'Ascendara'
+    });
 
-  ipcMain.handle('is-game-running', async (event, game) => {
+  }
+});
+
+// Check if the game is running
+ipcMain.handle('is-game-running', async (event, game) => {
   const runGame = runGameProcesses.get(game);
   return runGame ? true : false;
 });
 
+// Get the required libraries
 ipcMain.handle('required-libraries', async (event, game) => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
   try {
@@ -1188,7 +1209,7 @@ ipcMain.handle('required-libraries', async (event, game) => {
   }
 });
 
-
+// Delete the game
 ipcMain.handle('delete-game', async (event, game) => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
   try {
@@ -1212,7 +1233,7 @@ ipcMain.handle('delete-game', async (event, game) => {
   }
 });
 
-
+// Remove the game
 ipcMain.handle('remove-game', async (event, game) => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
   try {
@@ -1235,6 +1256,7 @@ ipcMain.handle('remove-game', async (event, game) => {
   }
 });
 
+// Download finished
 ipcMain.handle('download-finished', async (event, game) => {
     const meiFolders = await fs.readdir(gameDirectory);
     for (const folder of meiFolders) {
@@ -1244,11 +1266,13 @@ ipcMain.handle('download-finished', async (event, game) => {
       }
     }});
 
+// Minimize the window
 ipcMain.handle('minimize-window', () => {
   const win = BrowserWindow.getFocusedWindow();
   if (win) win.minimize();
 });
 
+// Maximize the window
 ipcMain.handle('maximize-window', () => {
   const win = BrowserWindow.getFocusedWindow();
   if (win) {
@@ -1260,6 +1284,7 @@ ipcMain.handle('maximize-window', () => {
   }
 });
 
+// Close the window
 ipcMain.handle('close-window', () => {
   const win = BrowserWindow.getFocusedWindow();
   if (win) win.close();
