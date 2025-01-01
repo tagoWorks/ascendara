@@ -7,32 +7,28 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
 *.local
 
-# Editor directories and files
-/binaries/AscendaraDownloader/build
-/binaries
-/main-build
-analytics.py
-package-lock.json
-src/services/analyticsService.js
-exports.txt
-build/icon.ico
-build/config.prod.js
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.env
-
 # Million Lint
 .million
 /src/translations/json
+/binaries/AscendaraDownloader/build
+/binaries/AscendaraGameHandler/build
+*.spec
+package-lock.json
+exports.txt
+
+# Environment
+.env
+
+# IDE
+/.vscode
+
+# OS files
+*.bat
+build/config.prod.js
+build/icon.ico

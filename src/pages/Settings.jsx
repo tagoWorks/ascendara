@@ -166,6 +166,21 @@ function Settings() {
   // Use a ref to track if this is the first mount
   const isFirstMount = useRef(true);
 
+  // Create a debounced save function to prevent too frequent saves
+  const debouncedSave = useMemo(
+    () => createDebouncedFunction((newSettings) => {
+      window.electron.saveSettings(newSettings);
+    }, 300),
+    []
+  );
+
+  // Auto-save settings whenever they change
+  useEffect(() => {
+    if (isInitialized && !isFirstMount.current) {
+      debouncedSave(settings);
+    }
+  }, [settings, isInitialized]);
+
   // Load initial settings
   useEffect(() => {
     const initializeSettings = async () => {
@@ -204,57 +219,11 @@ function Settings() {
     initializeSettings();
   }, []); // Run only once on mount
 
-  // Create debounced save function
-  const debouncedSave = useMemo(() => {
-    return createDebouncedFunction(async (settingsToSave, pathToSave) => {
-      try {
-        await window.electron.saveSettings(settingsToSave, pathToSave);
-        // Update the reference after successful save
-        initialSettingsRef.current = {
-          ...settingsToSave,
-          downloadDirectory: pathToSave
-        };
-      } catch (error) {
-        console.error('Error saving settings:', error);
-      }
-    }, 1000);
-  }, []); // Empty deps array since this should only be created once
-
-  // Save settings only when they actually change
-  useEffect(() => {
-    if (!isInitialized || !initialSettingsRef.current) return;
-
-    // Check if settings actually changed
-    const settingsWithoutDownloadDir = { ...settings };
-    delete settingsWithoutDownloadDir.downloadDirectory;
-    
-    const initialWithoutDownloadDir = { ...initialSettingsRef.current };
-    delete initialWithoutDownloadDir.downloadDirectory;
-
-    const hasSettingsChanged = JSON.stringify(settingsWithoutDownloadDir) !== JSON.stringify(initialWithoutDownloadDir);
-    const hasDownloadPathChanged = downloadPath !== initialSettingsRef.current.downloadDirectory;
-
-    if (!hasSettingsChanged && !hasDownloadPathChanged) {
-      return;
-    }
-
-    // Trigger debounced save with current settings and download path
-    debouncedSave({
-      ...settings,
-      downloadDirectory: downloadPath
-    }, downloadPath);
-
-    // Cleanup function
-    return () => {
-      debouncedSave.cancel();
-    };
-  }, [settings, downloadPath, isInitialized, debouncedSave]);
-
   const handleSettingChange = useCallback((setting) => {
     setSettings(prev => {
       const newSettings = {
         ...prev,
-        [setting]: !prev[setting]
+        ...setting
       };
       return newSettings;
     });
@@ -265,16 +234,19 @@ function Settings() {
       const directory = await window.electron.openDirectoryDialog();
       if (directory) {
         setDownloadPath(directory);
-        // Update settings with new directory
-        setSettings(prev => ({
-          ...prev,
+        // Update settings with new directory and trigger immediate save
+        const newSettings = {
+          ...settings,
           downloadDirectory: directory
-        }));
+        };
+        setSettings(newSettings);
+        // Immediately save the settings using the correct method name
+        await window.electron.saveSettings(newSettings, directory);
       }
     } catch (error) {
       console.error('Error selecting directory:', error);
     }
-  }, []);
+  }, [settings]);
 
   const handleSourceToggle = useCallback((source) => {
     setSettings(prev => {
@@ -323,6 +295,14 @@ function Settings() {
     // Use changeLanguage from the context
     changeLanguage(value);
   }, [changeLanguage]);
+
+  const handleDownloadPathChange = useCallback(async (newPath) => {
+    setDownloadPath(newPath);
+    setSettings(prev => ({
+      ...prev,
+      downloadDirectory: newPath
+    }));
+  }, []);
 
   // Theme handling
   const handleThemeChange = useCallback((newTheme) => {
@@ -381,7 +361,7 @@ function Settings() {
                       </div>
                       <Switch
                         checked={settings.autoUpdate}
-                        onCheckedChange={() => handleSettingChange('autoUpdate')}
+                        onCheckedChange={() => handleSettingChange({ autoUpdate: !settings.autoUpdate })}
                       />
                     </div>
                     
@@ -396,7 +376,7 @@ function Settings() {
                       </div>
                       <Switch
                         checked={settings.seamlessDownloads}
-                        onCheckedChange={() => handleSettingChange('seamlessDownloads')}
+                        onCheckedChange={() => handleSettingChange({ seamlessDownloads: !settings.seamlessDownloads })}
                       />
                     </div>
 
@@ -407,7 +387,7 @@ function Settings() {
                       </div>
                       <Switch
                         checked={settings.seeInappropriateContent}
-                        onCheckedChange={() => handleSettingChange('seeInappropriateContent')}
+                        onCheckedChange={() => handleSettingChange({ seeInappropriateContent: !settings.seeInappropriateContent })}
                       />
                     </div>
                   </div>
@@ -443,7 +423,7 @@ function Settings() {
                       </div>
                       <Switch
                         checked={settings.sendAnalytics}
-                        onCheckedChange={() => handleSettingChange('sendAnalytics')}
+                        onCheckedChange={() => handleSettingChange({ sendAnalytics: !settings.sendAnalytics })}
                       />
                     </div>
                   </div>
