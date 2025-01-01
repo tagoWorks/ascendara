@@ -127,7 +127,9 @@ const GameCard = memo(function GameCard({ game, compact }) {
         game.imgID,
         game.size || ''
       ).then(() => {
-        toast.success(t('download.toast.downloadStarted'));
+        setTimeout(() => {
+          toast.success(t('download.toast.downloadStarted'));
+        }, 2500);
         // Keep isStarting true until download actually begins
         window.electron.onDownloadProgress((downloadInfo) => {
           if (downloadInfo.game === game.game) {
@@ -257,19 +259,19 @@ const GameCard = memo(function GameCard({ game, compact }) {
               </Badge>
             )}
           </div>
-          <div className="text-sm space-y-1">
-            <p className="flex items-center justify-between text-foreground">
+          <div className="flex gap-4 text-sm text-muted-foreground">
+            <p>
               {t('gameCard.size')}: <span className="font-medium">{game.size}</span>
             </p>
             {game.version && (
-              <p className="flex items-center justify-between text-foreground">
+              <p>
                 {t('gameCard.version')}: <span className="font-medium">{game.version}</span>
               </p>
             )}
           </div>
         </div>
       </CardContent>
-      <CardFooter className="p-4 mt-auto">
+      <CardFooter className="flex justify-between items-center p-4">
         <Button 
           variant="secondary"
           size="sm" 

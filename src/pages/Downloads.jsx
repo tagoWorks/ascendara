@@ -85,14 +85,23 @@ const Downloads = () => {
               activeCount++;
               const speed = game.downloadingData.progressDownloadSpeeds;
               if (speed) {
-                const num = parseFloat(speed.split(' ')[0]);
-                totalSpeedNum += num;
+                const [value, unit] = speed.split(' ');
+                const num = parseFloat(value);
+                if (unit === 'KB/s') {
+                  totalSpeedNum += (num / 1024); // Convert KB/s to MB/s
+                } else if (unit === 'MB/s') {
+                  totalSpeedNum += num;
+                }
               }
             }
           });
 
           setActiveDownloads(activeCount);
-          setTotalSpeed(`${totalSpeedNum.toFixed(2)} MB/s`);
+          // Format total speed to show KB/s if less than 1 MB/s
+          const speedDisplay = totalSpeedNum < 1 
+            ? `${(totalSpeedNum * 1024).toFixed(2)} KB/s`
+            : `${totalSpeedNum.toFixed(2)} MB/s`;
+          setTotalSpeed(speedDisplay);
         }
       } catch (error) {
         console.error('Error fetching downloading games:', error);
@@ -143,14 +152,15 @@ const Downloads = () => {
   return (
     <div className="container max-w-7xl mx-auto p-4 md:p-8 min-h-screen">
       <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">{t('downloads.activeDownloads')}</h1>
+        <div className="flex items-center gap-4 mb-6">
+          <h1 className="text-3xl font-bold text-primary">{t('downloads.activeDownloads')}</h1>
+          <Separator orientation="vertical" className="h-8" />
           <p className="text-muted-foreground">
-            {activeDownloads > 0
+          {activeDownloads > 0
               ? `${activeDownloads} ${t('downloads.activeDownload')}${activeDownloads === 1 ? '' : 's'} • ${totalSpeed}`
               : t('downloads.noDownloads')}
           </p>
-        </div>
+          </div>
       </div>
 
       {showFirstTimeAlert && (
@@ -281,10 +291,10 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
           reportType: "GameDownload",
           reason: `Download Error: ${game.game}`,
           details: `Game: ${game.game}
-Version: ${game.version}
-Size: ${game.size}
-Error: ${downloadingData.message}
-Download Data: ${JSON.stringify(downloadingData, null, 2)}`,
+          Version: ${game.version}
+          Size: ${game.size}
+          Error: ${downloadingData.message}
+          Download Data: ${JSON.stringify(downloadingData, null, 2)}`,
         }),
       });
 

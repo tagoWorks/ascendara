@@ -22,7 +22,9 @@ import {
   FolderOpen,
   Pencil,
   Trash2,
-  Shield
+  Shield,
+  Gamepad2,
+  Gift
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import {
@@ -271,23 +273,26 @@ const Library = () => {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <Button variant="outline" onClick={async () => {
-                  try {
-                    const result = await window.electron.showOpenDialog({
-                      title: t('library.selectExecutable'),
-                      filters: [{ name: t('library.executableFiles'), extensions: ['exe'] }],
-                      properties: ['openFile']
-                    });
-                    
-                    if (result?.filePaths?.[0]) {
-                      await window.electron.updateGameExecutable(selectedGame.game || selectedGame.name, result.filePaths[0]);
-                      setSelectedGame(null);
-                      handlePlayGame(selectedGame);
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      const result = await window.electron.showOpenDialog({
+                        title: t('library.selectExecutable'),
+                        filters: [{ name: t('library.executableFiles'), extensions: ['exe'] }],
+                        properties: ['openFile']
+                      });
+                      
+                      if (result?.filePaths?.[0]) {
+                        await window.electron.updateGameExecutable(selectedGame.game || selectedGame.name, result.filePaths[0]);
+                        setSelectedGame(null);
+                        handlePlayGame(selectedGame);
+                      }
+                    } catch (err) {
+                      console.error('Error updating executable:', err);
                     }
-                  } catch (err) {
-                    console.error('Error updating executable:', err);
-                  }
-                }}>
+                  }}
+                >
                   {t('library.chooseExecutable')}
                 </Button>
                 <Button variant="default" onClick={() => setSelectedGame(null)}>
@@ -454,18 +459,6 @@ const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpe
             "flex flex-col justify-end p-4 text-secondary"
           )}>
             <div className="space-y-4">
-              <div className="flex gap-2">
-                {game.online && (
-                  <span className="px-2 py-1 rounded-full bg-primary/20 text-primary text-xs">
-                    {t('library.onlineFix')}
-                  </span>
-                )}
-                {game.dlc && (
-                  <span className="px-2 py-1 rounded-full bg-primary/20 text-primary text-xs">
-                    {t('library.allDLCs')}
-                  </span>
-                )}
-              </div>
               <div className="flex flex-col gap-2">
                 <Button 
                   className="w-full gap-2"
@@ -494,22 +487,6 @@ const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpe
                     </ >
                   )}
                 </Button>
-                {!game.isCustom && (
-                  <Button 
-                    variant="secondary"
-                    className="w-full gap-2"
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      const exePath = await window.electron.openFileDialog();
-                      if (exePath) {
-                        await window.electron.modifyGameExecutable(game.game || game.name, exePath);
-                      }
-                    }}
-                  >
-                    <Pencil className="w-4 h-4" />
-                    {t('library.changeExecutable')}
-                  </Button>
-                )}
               </div>
             </div>
           </div>
@@ -517,7 +494,11 @@ const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpe
       </CardContent>
       <CardFooter className="flex justify-between items-center p-4">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground truncate">{game.game}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-foreground truncate">{game.game}</h3>
+            {game.online && <Gamepad2 className="w-4 h-4 text-muted-foreground" />}
+            {game.dlc && <Gift className="w-4 h-4 text-muted-foreground" />}
+          </div>
           <p className="text-sm text-muted-foreground">{game.version || t('library.noVersion')}</p>
         </div>
         <DropdownMenu>
@@ -537,7 +518,7 @@ const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpe
             </DropdownMenuItem>
             {!game.isCustom && (
               <DropdownMenuItem onClick={async () => {
-                const exePath = await window.electron.openFileDialog();
+                const exePath = await window.electron.invoke('open-file-dialog');
                 if (exePath) {
                   await window.electron.modifyGameExecutable(game.game || game.name, exePath);
                 }
@@ -581,7 +562,7 @@ const AddGameForm = ({ onSuccess }) => {
   });
 
   const handleChooseExecutable = async () => {
-    const file = await window.electron.openFileDialog();
+    const file = await window.electron.invoke('open-file-dialog');
     if (file) {
       setFormData(prev => ({
         ...prev,

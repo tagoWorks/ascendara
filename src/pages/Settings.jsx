@@ -347,157 +347,69 @@ function Settings() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column - General Settings */}
-          <div className="lg:col-span-4 space-y-6">
-            <Card className="p-6 h-fit">
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.general')}</h2>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>{t('settings.ascendaraUpdates')}</Label>
-                        <p className="text-sm text-muted-foreground">{t('settings.ascendaraUpdatesDescription')}</p>
-                      </div>
-                      <Switch
-                        checked={settings.autoUpdate}
-                        onCheckedChange={() => handleSettingChange({ autoUpdate: !settings.autoUpdate })}
-                      />
+          {/* Left Column - Core Settings */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* General Settings Card */}
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.general')}</h2>
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>
+                        <span className="flex items-center gap-1">
+                          {t('settings.seamlessDownloads')} <Zap size={12} />
+                        </span>
+                      </Label>
+                      <p className="text-sm text-muted-foreground">{t('settings.seamlessDownloadsDescription')}</p>
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label> 
-                          <span className="flex items-center gap-1">
-                            {t('settings.seamlessDownloads')} <Zap size={12} />
-                          </span>
-                        </Label>
-                        <p className="text-sm text-muted-foreground">{t('settings.seamlessDownloadsDescription')}</p>
-                      </div>
-                      <Switch
-                        checked={settings.seamlessDownloads}
-                        onCheckedChange={() => handleSettingChange({ seamlessDownloads: !settings.seamlessDownloads })}
-                      />
-                    </div>
+                    <Switch
+                      checked={settings.seamlessDownloads}
+                      onCheckedChange={() => handleSettingChange({ seamlessDownloads: !settings.seamlessDownloads })}
+                    />
+                  </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>{t('settings.matureContent')}</Label>
-                        <p className="text-sm text-muted-foreground">{t('settings.matureContentDescription')}</p>
-                      </div>
-                      <Switch
-                        checked={settings.seeInappropriateContent}
-                        onCheckedChange={() => handleSettingChange({ seeInappropriateContent: !settings.seeInappropriateContent })}
-                      />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t('settings.ascendaraUpdates')}</Label>
+                      <p className="text-sm text-muted-foreground">{t('settings.ascendaraUpdatesDescription')}</p>
                     </div>
+                    <Switch
+                      checked={settings.autoUpdate}
+                      onCheckedChange={() => handleSettingChange({ autoUpdate: !settings.autoUpdate })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t('settings.matureContent')}</Label>
+                      <p className="text-sm text-muted-foreground">{t('settings.matureContentDescription')}</p>
+                    </div>
+                    <Switch
+                      checked={settings.seeInappropriateContent}
+                      onCheckedChange={() => handleSettingChange({ seeInappropriateContent: !settings.seeInappropriateContent })}
+                    />
                   </div>
                   
-    
-
-                  <div className="mt-4">
-                      <Label htmlFor="downloadPath">{t('settings.downloadLocation')}</Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          id="downloadPath"
-                          value={downloadPath}
-                          readOnly
-                          className="flex-1"
-                        />
-                        <Button className="text-secondary" onClick={handleDirectorySelect}>{t('settings.selectDirectory')}</Button>
-                      </div>
-                    </div>
-
-                </div>
-
-                <div>
-                  <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.ascendaraAnalytics')}</h2>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>{t('settings.ascendaraToggleAnalytics')}</Label>
-                        <p className="text-sm text-muted-foreground">{t('settings.ascendaraAnalyticsDescription')} {" "}
-                          <a className="text-primary cursor-pointer hover:underline" onClick={() => window.electron.openURL('https://ascendara.app/analytics')} target="_blank" rel="noopener noreferrer">
-                            {t('common.learnMore')}
-                          </a>
-                        </p>
-                      </div>
-                      <Switch
-                        checked={settings.sendAnalytics}
-                        onCheckedChange={() => handleSettingChange({ sendAnalytics: !settings.sendAnalytics })}
+                  <div>
+                    <Label htmlFor="downloadPath">{t('settings.downloadLocation')}</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        id="downloadPath"
+                        value={downloadPath}
+                        readOnly
+                        className="flex-1"
                       />
+                      <Button className="text-secondary" onClick={handleDirectorySelect}>
+                        {t('settings.selectDirectory')}
+                      </Button>
                     </div>
                   </div>
-                </div>
 
-                <div>
-                  <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.quickLinks')}</h2>
-                  <div className="grid gap-2">
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start text-muted-foreground hover:text-primary hover:bg-secondary"
-                      onClick={() => window.electron.openURL('https://ascendara.app/privacy')}
-                    >
-                      <span className="flex items-center gap-2">
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M9 5l7 7-7 7" />
-                        </svg>
-                        {t('settings.privacyPolicy')}
-                      </span>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start text-muted-foreground hover:text-primary hover:bg-secondary"
-                      onClick={() => window.electron.openURL('https://ascendara.app/terms')}
-                    >
-                      <span className="flex items-center gap-2">
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M9 5l7 7-7 7" />
-                        </svg>
-                        {t('settings.termsOfService')}
-                      </span>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start text-muted-foreground hover:text-primary hover:bg-secondary"
-                      onClick={() => window.electron.openURL('https://ascendara.app/dmca')}
-                    >
-                      <span className="flex items-center gap-2">
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M9 5l7 7-7 7" />
-                        </svg>
-                        {t('settings.dmca')}
-                      </span>
-                    </Button>
-                  </div>
                 </div>
               </div>
             </Card>
 
-            {/* Warning Card */}
-            <Card className="p-6 border-yellow-500/50 bg-yellow-500/5">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-yellow-500">
-                  <CircleAlert className="w-5 h-5" />
-                  <h2 className="text-lg font-semibold mb-0">{t('settings.warningTitle')}</h2>
-                </div>
-                
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {t('settings.warningDescription')}
-                </p>
-                
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {t('settings.warningSupportDevelopers')}
-                </p>
-
-                <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
-                  <span>{t('settings.warningSupportDevelopersCallToAction')}</span>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Right Column - Game Sources and Theme */}
-          <div className="lg:col-span-8 space-y-6">
             {/* Game Sources Card */}
             <Card className="p-6">
               <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.gameSources')}</h2>
@@ -554,23 +466,64 @@ function Settings() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </Card>
 
-                  <Separator />
+            {/* Theme Settings Card */}
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.theme')}</h2>
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium text-muted-foreground">{t('settings.lightThemes')}</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {groupedThemes.light.map((t) => (
+                      <ThemeButton key={t.id} theme={t} currentTheme={theme} onSelect={handleThemeChange} />
+                    ))}
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium text-muted-foreground">{t('settings.darkThemes')}</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {groupedThemes.dark.map((t) => (
+                      <ThemeButton key={t.id} theme={t} currentTheme={theme} onSelect={handleThemeChange} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
 
+          {/* Right Column - Additional Settings */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Analytics Card */}
+            <Card className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.ascendaraAnalytics')}</h2>
                   <div className="space-y-4">
-                    <h3 className="text-sm font-medium">{t('settings.ascendaraSettings')}</h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label>{t('settings.downloadServer')}</Label>
-                          <p className="text-sm text-muted-foreground">{t('settings.downloadServerDescription')}</p>
-                        </div>
-                        <Select disabled>
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder={t('settings.usEast')} />
-                          </SelectTrigger>
-                        </Select>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label>{t('settings.ascendaraToggleAnalytics')}</Label>
+                        <p className="text-sm text-muted-foreground">
+                          {t('settings.ascendaraAnalyticsDescription')} {" "}
+                          <a 
+                            className="text-primary cursor-pointer hover:underline" 
+                            onClick={() => window.electron.openURL('https://ascendara.app/analytics')} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                          >
+                            {t('common.learnMore')}
+                          </a>
+                        </p>
                       </div>
+                      <Switch
+                        checked={settings.sendAnalytics}
+                        onCheckedChange={() => handleSettingChange({ sendAnalytics: !settings.sendAnalytics })}
+                      />
                     </div>
                   </div>
                 </div>
@@ -590,7 +543,7 @@ function Settings() {
                     value={settings.language}
                     onValueChange={handleLanguageChange}
                   >
-                    <SelectTrigger className="w-full max-w-xs">
+                    <SelectTrigger className="w-full">
                       <SelectValue>
                         <div className="flex items-center gap-2">
                           <span>{languages.find(l => l.id === settings.language)?.icon}</span>
@@ -613,28 +566,67 @@ function Settings() {
               </div>
             </Card>
 
-            {/* Theme Card */}
+            {/* Quick Links Card */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.theme')}</h2>
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-muted-foreground">{t('settings.lightThemes')}</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {groupedThemes.light.map((t) => (
-                      <ThemeButton key={t.id} theme={t} currentTheme={theme} onSelect={handleThemeChange} />
-                    ))}
-                  </div>
+              <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.quickLinks')}</h2>
+              <div className="grid gap-2">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start text-muted-foreground hover:text-primary hover:bg-secondary"
+                  onClick={() => window.electron.openURL('https://ascendara.app/privacy')}
+                >
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 5l7 7-7 7" />
+                    </svg>
+                    {t('settings.privacyPolicy')}
+                  </span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start text-muted-foreground hover:text-primary hover:bg-secondary"
+                  onClick={() => window.electron.openURL('https://ascendara.app/terms')}
+                >
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 5l7 7-7 7" />
+                    </svg>
+                    {t('settings.termsOfService')}
+                  </span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start text-muted-foreground hover:text-primary hover:bg-secondary"
+                  onClick={() => window.electron.openURL('https://ascendara.app/dmca')}
+                >
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 5l7 7-7 7" />
+                    </svg>
+                    {t('settings.dmca')}
+                  </span>
+                </Button>
+              </div>
+            </Card>
+
+            {/* Warning Card */}
+            <Card className="p-6 border-yellow-500/50 bg-yellow-500/5">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-yellow-500">
+                  <CircleAlert className="w-5 h-5" />
+                  <h2 className="text-lg font-semibold mb-0">{t('settings.warningTitle')}</h2>
                 </div>
                 
-                <Separator />
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {t('settings.warningDescription')}
+                </p>
                 
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-muted-foreground">{t('settings.darkThemes')}</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {groupedThemes.dark.map((t) => (
-                      <ThemeButton key={t.id} theme={t} currentTheme={theme} onSelect={handleThemeChange} />
-                    ))}
-                  </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {t('settings.warningSupportDevelopers')}
+                </p>
+
+                <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
+                  <span>{t('settings.warningSupportDevelopersCallToAction')}</span>
                 </div>
               </div>
             </Card>

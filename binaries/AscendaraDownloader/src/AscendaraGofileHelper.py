@@ -350,28 +350,29 @@ class GofileDownloader:
                     file_path = os.path.join(root, file)
                     os.remove(file_path)
 
-        # Handle potential Gofile ID folders and game name folders
+        # Move files from gofileID/gamename structure to correct location
         contents = os.listdir(self.download_dir)
         for content in contents:
             content_path = os.path.join(self.download_dir, content)
             if os.path.isdir(content_path):
-                # Check subdirectories for game folder or files
+                # Look for game directory inside potential gofileID directory
                 subcontents = os.listdir(content_path)
-                if len(subcontents) == 1 and os.path.isdir(os.path.join(content_path, subcontents[0])):
-                    # If there's a single subdirectory, move its contents up
-                    subdir_path = os.path.join(content_path, subcontents[0])
-                    for item in os.listdir(subdir_path):
-                        src_path = os.path.join(subdir_path, item)
-                        dst_path = os.path.join(self.download_dir, item)
-                        shutil.move(src_path, dst_path)
-                    os.rmdir(subdir_path)
-                else:
-                    # Move all contents up if they're in a Gofile ID or game name folder
-                    for item in subcontents:
-                        src_path = os.path.join(content_path, item)
-                        dst_path = os.path.join(self.download_dir, item)
-                        shutil.move(src_path, dst_path)
-                os.rmdir(content_path)
+                for subcontent in subcontents:
+                    subcontent_path = os.path.join(content_path, subcontent)
+                    if os.path.isdir(subcontent_path) and subcontent.lower() == self.game.lower():
+                        # Found game directory inside gofileID, move its contents up
+                        for item in os.listdir(subcontent_path):
+                            src_path = os.path.join(subcontent_path, item)
+                            dst_path = os.path.join(self.download_dir, item)
+                            if os.path.exists(dst_path):
+                                if os.path.isdir(dst_path):
+                                    shutil.rmtree(dst_path)
+                                else:
+                                    os.remove(dst_path)
+                            shutil.move(src_path, dst_path)
+                        # Remove empty directories
+                        shutil.rmtree(content_path)
+                        break
 
         # Clean up empty directories except _CommonRedist
         for root, dirs, files in os.walk(self.download_dir, topdown=False):
