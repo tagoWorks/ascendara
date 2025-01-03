@@ -215,7 +215,7 @@ const Downloads = () => {
       <AlertDialog open={retryModalOpen} onOpenChange={setRetryModalOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('downloads.retryDownload')}</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('downloads.retryDownload')}</AlertDialogTitle>
             <AlertDialogDescription>
               {t('downloads.retryDownloadDescription')}
             </AlertDialogDescription>
@@ -290,11 +290,36 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
         body: JSON.stringify({
           reportType: "GameDownload",
           reason: `Download Error: ${game.game}`,
-          details: `Game: ${game.game}
-          Version: ${game.version}
-          Size: ${game.size}
-          Error: ${downloadingData.message}
-          Download Data: ${JSON.stringify(downloadingData, null, 2)}`,
+          details: `Error Details:
+          • Game Name: ${game.game}
+          • Game Version: ${game.version || 'N/A'}
+          • Game Size: ${game.size || 'N/A'}
+          • Error Message: ${downloadingData.message || 'Unknown error'}
+
+          Download State:
+          • Progress: ${downloadingData.progressPercent || '0'}%
+          • Download Speed: ${downloadingData.progressDownloadSpeeds || 'N/A'}
+          • Current File: ${downloadingData.progressCurrentFile || 'N/A'}
+          • Total Files: ${downloadingData.progressTotalFiles || 'N/A'}
+
+          System Info:
+          • Timestamp: ${new Date().toISOString()}
+          • Platform: ${window.electron.platform || 'Unknown'}
+          • App Version: ${window.electron.version || 'Unknown'}
+
+          Technical Details:
+          \`\`\`json
+          ${JSON.stringify({
+            downloadState: downloadingData,
+            gameMetadata: {
+              id: game.id,
+              version: game.version,
+              size: game.size,
+              downloadUrl: game.downloadUrl
+            }
+          }, null, 2)}
+          \`\`\``,
+          gameName: game.game
         }),
       });
 

@@ -3,10 +3,12 @@ import { Download } from 'lucide-react';
 import { Button } from './ui/button';
 import { Skeleton } from './ui/skeleton';
 import imageCacheService from '../services/imageCacheService';
+import { sanitizeText } from '../lib/utils';
 
 function FeaturedGameCard({ game, isActive = false }) {
   const [cachedImage, setCachedImage] = useState(null);
   const [loading, setLoading] = useState(true);
+  const sanitizedGameName = sanitizeText(game.game);
 
   useEffect(() => {
     let mounted = true;
@@ -42,7 +44,7 @@ function FeaturedGameCard({ game, isActive = false }) {
       {cachedImage && (
         <img 
           src={cachedImage}
-          alt={game.game}
+          alt={sanitizedGameName}
           className={`w-full h-full object-cover transition-opacity duration-300 ${loading ? 'opacity-0' : 'opacity-100'}`}
         />
       )}
@@ -52,7 +54,7 @@ function FeaturedGameCard({ game, isActive = false }) {
           <Download className="w-4 h-4" />
           <span>{parseInt(game.downloads || 0).toLocaleString()} downloads</span>
         </div>
-        <h1 className="text-3xl font-bold text-white mb-2">{game.game}</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">{sanitizedGameName}</h1>
         <p className="text-gray-200 mb-4 line-clamp-2 max-w-2xl">{game.description}</p>
         <div className="flex gap-2">
           <Button size="lg" onClick={() => console.log('Download:', game.game)}>

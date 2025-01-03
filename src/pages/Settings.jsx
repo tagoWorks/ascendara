@@ -433,9 +433,9 @@ function Settings() {
                         <SelectValue placeholder={t('settings.selectSource')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="steamrip">{t('settings.steamRip')}</SelectItem>
-                        <SelectItem disabled value="steamunlocked">{t('settings.steamUnlocked')}</SelectItem>
-                        <SelectItem disabled value="fitgirlrepacks">{t('settings.fitgirlRepacks')}</SelectItem>
+                        <SelectItem value="steamrip">SteamRip</SelectItem>
+                        <SelectItem disabled value="steamunlocked">SteamUnlocked</SelectItem>
+                        <SelectItem disabled value="fitgirlrepacks">FitgirlRepacks</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -446,7 +446,7 @@ function Settings() {
                     <h3 className="text-sm font-medium">{t('settings.enabledSources')}</h3>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <Label>{t('settings.steamRip')}</Label>
+                        <Label>SteamRip</Label>
                         <Switch
                           disabled
                           checked={settings.enabledSources.steamrip}
@@ -454,7 +454,7 @@ function Settings() {
                         />
                       </div>
                       <div className="flex items-center justify-between">
-                        <Label>{t('settings.steamUnlocked')}</Label>
+                        <Label>SteamUnlocked</Label>
                         <Switch
                           disabled
                           checked={settings.enabledSources.steamunlocked}
@@ -462,7 +462,7 @@ function Settings() {
                         />
                       </div>
                       <div className="flex items-center justify-between">
-                        <Label>{t('settings.fitgirlRepacks')}</Label>
+                        <Label>FitgirlRepacks</Label>
                         <Switch
                           disabled
                           checked={settings.enabledSources.fitgirlrepacks}

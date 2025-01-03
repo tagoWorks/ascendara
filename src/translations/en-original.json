@@ -51,8 +51,8 @@
       }
     },
     "app": {
-      "title": "Ascendara",
-      "outdated": "OUTDATED"
+      "outdated": "OUTDATED",
+      "downloading-update": "Downloading Update..."
     },
     "home": {
       "recentGames": "Recent Games",
@@ -242,9 +242,6 @@
       "primarySourceDescription": "Select your preferred game source",
       "selectSource": "Select source",
       "enabledSources": "Enabled Sources",
-      "steamRip": "SteamRIP",
-      "steamUnlocked": "SteamUnlocked",
-      "fitgirlRepacks": "FitGirl Repacks",
       
       "lightThemes": "Light Themes",
       "darkThemes": "Dark Themes",
@@ -280,6 +277,12 @@
       "allDlcTooltip": "Includes all downloadable content (DLC) available for this game",
       "size": "Size",
       "dmcaNotice": "DMCA Notice: Ascendara uses outsourced links and files and does not host anything on its own servers.",
+      "downloadInstructions": "Download Instructions",
+      "protectYourself": {
+        "warningTitle": "Protect yourself from fake downloads!",
+        "warning": "Do not click on any ads or deceptive download buttons. The file size should match what you see here - be suspicious of small KB-sized files.",
+        "learnHow": "How to protect yourself from fake downloads"
+      },
       "downloadOptions": {
         "downloadOptions": "Download Options",
         "downloadSource": "Download Source",
@@ -293,7 +296,6 @@
         "getExtension": "Don't have the extension? Get it for Chrome or Firefox",
         "downloading": "Downloading",
         "downloadNow": "Download Now",
-        "instructions": "Download Instructions",
         "manualInstructions": {
           "step1": "Copy and paste the link into your browser",
           "step2": "Complete the CAPTCHA and start the download",
@@ -316,6 +318,7 @@
         "selectProviderPrompt": "Please select a download provider to see the instructions."
       },
       "reportReasons": {
+        "placeholder": "Select a reason",
         "gameDetails": "Game Details Misleading",
         "filesNotDownloading": "Files Not Downloading",
         "notAGame": "This isn't a game",

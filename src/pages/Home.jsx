@@ -20,8 +20,10 @@ import recentGamesService from '../services/recentGamesService';
 
 const Home = memo(() => {
   const navigate = useNavigate();
-  const [games, setGames] = useState([]);
+  const [apiGames, setApiGames] = useState([]);
+  const [installedGames, setInstalledGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [carouselGames, setCarouselGames] = useState([]);
   const { theme } = useTheme();
   const { t } = useLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -35,8 +37,11 @@ const Home = memo(() => {
     const loadGames = async () => {
       try {
         setLoading(true);
-        const response = await gameService.getAllGames();
-        const gamesData = response.games || [];
+        const [gamesData, carouselGames] = await Promise.all([
+          gameService.getAllGames(),
+          gameService.getRandomTopGames()
+        ]);
+        const games = gamesData.games || [];
         
         // Get actually installed games from electron
         const installedGames = await window.electron.getGames();
@@ -49,24 +54,19 @@ const Home = memo(() => {
             isCustom: false
           })),
           ...(customGames || []).map(game => ({
-            name: game.game,
-            game: game.game,
-            version: game.version,
-            online: game.online,
-            dlc: game.dlc,
-            executable: game.executable,
+            ...game,
             isCustom: true
           }))
         ];
+
+        setApiGames(games);
+        setInstalledGames(actuallyInstalledGames);
         
-        // Clean up uninstalled games from recent games list using actual installation data
-        recentGamesService.cleanupUninstalledGames(actuallyInstalledGames);
+        // Set carousel games separately
+        setCarouselGames(carouselGames);
         
-        // Set all games data for other sections
-        setGames(Array.isArray(gamesData) ? gamesData : []);
       } catch (error) {
         console.error('Error loading games:', error);
-        setGames([]);
       } finally {
         setLoading(false);
       }
@@ -85,19 +85,19 @@ const Home = memo(() => {
     if (!autoPlay) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => 
-        prev === getFeaturedGames(games).length - 1 ? 0 : prev + 1
+        prev === carouselGames.length - 1 ? 0 : prev + 1
       );
     }, 5000);
     return () => clearInterval(timer);
-  }, [autoPlay, games]);
+  }, [autoPlay, carouselGames]);
 
   useEffect(() => {
     const updateRecentGames = async () => {
-      const recent = await getRecentGames(games);
+      const recent = await getRecentGames([...installedGames, ...apiGames]);
       setRecentGames(recent);
     };
     updateRecentGames();
-  }, [games]);
+  }, [installedGames, apiGames]);
 
   const handleImageIntersect = useCallback(async (imgID) => {
     if (!imgID || carouselImages[imgID]) return;
@@ -114,11 +114,6 @@ const Home = memo(() => {
       console.error('Error loading carousel image:', error);
     }
   }, [carouselImages]);
-
-  const getFeaturedGames = (games) => {
-    if (!Array.isArray(games)) return [];
-    return games.filter(game => parseInt(game.weight) > 60).slice(0, 8);
-  };
 
   const getRecentGames = async (games) => {
     const recentlyPlayed = recentGamesService.getRecentGames();
@@ -163,8 +158,9 @@ const Home = memo(() => {
 
   const getTopGames = (games) => {
     if (!Array.isArray(games)) return [];
-    return [...games]
-      .sort((a, b) => parseInt(b.weight) - parseInt(a.weight))
+    return games
+      .filter(game => parseInt(game.weight || 0) > 30)
+      .sort((a, b) => parseInt(b.weight || 0) - parseInt(a.weight || 0))
       .slice(0, 8);
   };
 
@@ -172,46 +168,71 @@ const Home = memo(() => {
     if (!Array.isArray(games)) return [];
     return games
       .filter(game => game.online)
-      .slice(0, 12);
+      .sort((a, b) => parseInt(b.weight || 0) - parseInt(a.weight || 0))
+      .slice(0, 8);
   };
 
   const getActionGames = (games) => {
     if (!Array.isArray(games)) return [];
     return games
       .filter(game => 
-        game.category.some(cat => 
+        Array.isArray(game.category) && game.category.some(cat => 
           ['Action', 'Adventure', 'Fighting', 'Shooter'].includes(cat)
         )
       )
+      .sort((a, b) => parseInt(b.weight || 0) - parseInt(a.weight || 0))
       .slice(0, 8);
   };
 
   const getPopularCategories = (games) => {
-    if (!Array.isArray(games)) return [];
-    const categoryWeights = games.reduce((acc, game) => {
-      if (!Array.isArray(game.category)) return acc;
+    if (!Array.isArray(games) || games.length === 0) {
+      console.log('No games available');
+      return [];
+    }
+    
+    const categories = new Map();
+    const gamesInCategory = new Map();
+    
+    // First, collect all categories and calculate total weight per category
+    games.forEach(game => {
+      if (!game || !Array.isArray(game.category)) {
+        return;
+      }
+      
+      const gameWeight = parseInt(game.weight || 0);
       game.category.forEach(cat => {
-        if (!acc[cat]) {
-          acc[cat] = {
-            weight: 0,
-            games: []
-          };
+        if (!cat) return; // Skip empty categories
+        
+        if (!gamesInCategory.has(cat)) {
+          gamesInCategory.set(cat, []);
+          categories.set(cat, 0);
         }
-        acc[cat].weight += parseInt(game.weight) || 0;
-        acc[cat].games.push(game);
+        gamesInCategory.get(cat).push(game);
+        categories.set(cat, categories.get(cat) + gameWeight);
       });
-      return acc;
-    }, {});
-
-    return Object.entries(categoryWeights)
-      .sort(([, a], [, b]) => b.weight - a.weight)
-      .slice(0, 4)
-      .map(([category, data]) => ({
+    });
+    
+    // Get top categories based on total weight
+    const topCategories = Array.from(categories.entries())
+      .filter(([cat]) => {
+        const categoryGames = gamesInCategory.get(cat);
+        const uniqueGames = new Set(categoryGames.map(g => g.id || g.game));
+        return uniqueGames.size >= 2;
+      })
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([category]) => ({
         category,
-        games: data.games
-          .sort((a, b) => parseInt(b.weight) - parseInt(a.weight))
+        games: gamesInCategory.get(category)
+          .filter((game, index, self) => 
+            // Remove duplicates based on game ID or name
+            index === self.findIndex(g => (g.id || g.game) === (game.id || game.game))
+          )
+          .sort((a, b) => parseInt(b.weight || 0) - parseInt(a.weight || 0))
           .slice(0, 4)
       }));
+    
+    return topCategories;
   };
 
   const handlePlayGame = async (game) => {
@@ -240,25 +261,39 @@ const Home = memo(() => {
   };
 
   const handlePrevSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev === 0 ? getFeaturedGames(games).length - 1 : prev - 1));
+    setCurrentSlide((prev) => (prev === 0 ? carouselGames.length - 1 : prev - 1));
     setAutoPlay(false);
-  }, [games]);
+  }, [carouselGames]);
 
   const handleNextSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev === getFeaturedGames(games).length - 1 ? 0 : prev + 1));
+    setCurrentSlide((prev) => (prev === carouselGames.length - 1 ? 0 : prev + 1));
     setAutoPlay(false);
-  }, [games]);
+  }, [carouselGames]);
 
   const handleCloseTour = useCallback(() => {
     setShowTour(false);
     setSearchParams({});
   }, [setSearchParams]);
 
-  const featuredGames = useMemo(() => getFeaturedGames(games), [games]);
-  const topGames = useMemo(() => getTopGames(games), [games]);
-  const onlineGames = useMemo(() => getOnlineGames(games), [games]);
-  const actionGames = useMemo(() => getActionGames(games), [games]);
-  const popularCategories = useMemo(() => getPopularCategories(games), [games]);
+  const handleCarouselGameClick = useCallback((game) => {
+    const container = document.querySelector('.page-container');
+    if (container) {
+      container.classList.add('fade-out');
+    }
+    
+    setTimeout(() => {
+      navigate('/download', { 
+        state: { 
+          gameData: game
+        }
+      });
+    }, 300);
+  }, [navigate]);
+
+  const topGames = useMemo(() => getTopGames(apiGames), [apiGames]);
+  const onlineGames = useMemo(() => getOnlineGames(apiGames), [apiGames]);
+  const actionGames = useMemo(() => getActionGames(apiGames), [apiGames]);
+  const popularCategories = useMemo(() => getPopularCategories(apiGames), [apiGames]);
 
   return loading ? (
     <div className="min-h-screen bg-background">
@@ -282,8 +317,12 @@ const Home = memo(() => {
                 className="flex transition-transform duration-500" 
                 style={{ transform: `translateX(-${currentSlide * 100}%)` }}
               >
-                {featuredGames.map((game, index) => (
-                  <div key={index} className="min-w-full">
+                {carouselGames.map((game, index) => (
+                  <div 
+                    key={index} 
+                    className="min-w-full cursor-pointer" 
+                    onClick={() => handleCarouselGameClick(game)}
+                  >
                     <div 
                       className="relative aspect-[21/9]"
                       ref={node => {
@@ -302,15 +341,19 @@ const Home = memo(() => {
                           className="w-full h-full object-cover"
                         />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">{game.game}</h2>
-                        <div className="flex gap-2 mt-4">
-                          {game.category.slice(0, 3).map((cat, idx) => (
-                            <span key={idx} className="px-3 py-1 rounded-full bg-white/10 text-white text-sm backdrop-blur-sm">
-                              {cat}
-                            </span>
-                          ))}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                        <div className="absolute bottom-0 left-0 right-0 p-6">
+                          <div className="flex items-center gap-2 text-white/80 mb-2">
+                            {game.category?.slice(0, 3).map((cat, idx) => (
+                              <span
+                                key={cat + idx}
+                                className="px-2 py-1 text-xs rounded-full bg-white/10"
+                              >
+                                {cat}
+                              </span>
+                            ))}
+                          </div>
+                          <h2 className="text-2xl font-bold text-white mb-2">{game.game}</h2>
                         </div>
                       </div>
                     </div>
@@ -331,7 +374,7 @@ const Home = memo(() => {
               <ChevronRight className="w-6 h-6" />
             </button>
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-              {featuredGames.map((_, index) => (
+              {carouselGames.map((_, index) => (
                 <button
                   key={index}
                   className={`w-2 h-2 rounded-full transition-colors ${
@@ -404,13 +447,13 @@ const Home = memo(() => {
               {t('home.popularCategories')}
             </h2>
             <div className="space-y-8">
-              {popularCategories.map(({ category, games: categoryGames }) => (
+              {popularCategories.map(({ category, games }) => (
                 <div key={category} className="space-y-4">
                   <h3 className="text-xl font-semibold text-foreground">
                     {category}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 h-full">
-                    {categoryGames.map((game, index) => (
+                    {games.map((game, index) => (
                       <HomeGameCard 
                         key={`${category}-${game.id || index}`} 
                         game={game}

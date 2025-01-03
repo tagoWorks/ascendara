@@ -326,6 +326,7 @@ const Library = () => {
               <AlertDialogFooter>
                 <Button
                   variant="outline"
+                  className="text-secondary hover:text-secondary-foreground"
                   onClick={async () => {
                     try {
                       const result = await window.electron.ipcRenderer.invoke('open-file-dialog');
@@ -362,7 +363,7 @@ const Library = () => {
                   ? t('library.removeGameFromLibrary')
                   : t('library.uninstallGame')}
               </AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogDescription className="text-muted-foreground">
                 {gameToDelete?.isCustom 
                   ? t('library.removeGameFromLibraryWarning')
                   : t('library.uninstallGameWarning')}
@@ -386,9 +387,8 @@ const Library = () => {
                     {t('common.cancel')}
                   </Button>
                   <Button
-                    variant="destructive"
                     onClick={() => handleDeleteGame(gameToDelete)}
-                    className="text-muted-foreground hover:text-foreground"
+                    className="text-secondary hover:text-secondary-foreground"
                   >
                     {gameToDelete?.isCustom ? t('library.removeGame') : t('library.uninstallGame')}
                   </Button>

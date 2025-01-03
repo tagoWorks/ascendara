@@ -9,7 +9,7 @@ import {
   AlertDialogCancel,
   AlertDialogFooter,
 } from './ui/alert-dialog';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const MenuBar = () => {
@@ -31,6 +31,7 @@ const MenuBar = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [iconData, setIconData] = useState('');
   const [isLatest, setIsLatest] = useState(true);
+  const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
 
   useEffect(() => {
     const checkLatestVersion = async () => {
@@ -38,7 +39,34 @@ const MenuBar = () => {
       setIsLatest(latest);
     };
     checkLatestVersion();
-  }, []);
+
+    let initialTimeout;
+    let interval;
+
+    // Only set up the update checking if the app is outdated
+    if (!isLatest) {
+      // Check timestamp file for downloading status
+      const checkDownloadStatus = async () => {
+        try {
+          const timestamp = await window.electron.getTimestampValue('downloadingUpdate');
+          setIsDownloadingUpdate(timestamp || false);
+        } catch (error) {
+          console.error('Failed to read timestamp file:', error);
+        }
+      };
+      
+      // Initial delay before first check
+      initialTimeout = setTimeout(checkDownloadStatus, 1000);
+      
+      // Set up interval for subsequent checks
+      interval = setInterval(checkDownloadStatus, 1000);
+    }
+    
+    return () => {
+      if (initialTimeout) clearTimeout(initialTimeout);
+      if (interval) clearInterval(interval);
+    };
+  }, [isLatest]);
 
   useEffect(() => {
     let isSubscribed = true;
@@ -111,7 +139,7 @@ const MenuBar = () => {
               className="w-6 h-6 mr-2"
             />
           )}
-          <span className="text-sm font-medium">{t('app.title')}</span>
+          <span className="text-sm font-medium">Ascendara</span>
         </div>
         
         <div 
@@ -128,10 +156,22 @@ const MenuBar = () => {
         </div>
           {!isLatest && (
             <div className="flex items-center ml-2">
-              <span className="text-[10px] px-1 py-0.5 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
-                {t('app.outdated')}
-              </span>
+              
+                {isDownloadingUpdate ? (
+                  <>
+                  <span className="text-[14px] px-1 py-0.5 rounded bg-green-500/10 text-green-500 border border-green-500/20 flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    {t('app.downloading-update')}
+                  </span>
+                  </>
+                ) : (
+                  <>
+                  <span className="text-[14px] px-1 py-0.5 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    {t('app.outdated')}
+                  </span>
+                  </>
+                )}
             </div>
           )}
 
@@ -141,7 +181,7 @@ const MenuBar = () => {
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <AlertDialogContent className="max-w-md bg-background">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-foreground">
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">
               <div className={`w-2.5 h-2.5 rounded-full ${
                 serverStatus.isHealthy ? 'bg-green-500' : 'bg-red-500 animate-pulse'
               }`} />
@@ -189,7 +229,7 @@ const MenuBar = () => {
                           ))}
                         </ul>
                       </div>
-                    )}
+                    )} 
                 </p>
               </div>
 

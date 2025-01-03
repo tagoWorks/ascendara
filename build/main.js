@@ -16,7 +16,7 @@ let notificationShown = false;
 let updateDownloadInProgress = false;
 let isDev = false;
 
-const CURRENT_VERSION = "7.3.5";
+const CURRENT_VERSION = "7.3.6";
 let config;
 try {
     config = require('./config.prod.js');
@@ -78,6 +78,15 @@ async function downloadUpdateInBackground() {
   updateDownloadInProgress = true;
 
   try {
+    // Set downloadingUpdate to true in timestamp
+    const timestampPath = path.join(os.homedir(), 'timestamp.ascendara.json');
+    let timestamp = {};
+    if (fs.existsSync(timestampPath)) {
+      timestamp = JSON.parse(fs.readFileSync(timestampPath, 'utf8'));
+    }
+    timestamp.downloadingUpdate = true;
+    fs.writeFileSync(timestampPath, JSON.stringify(timestamp, null, 2));
+
     const updateUrl = 'https://lfs.ascendara.app/AscendaraInstaller.exe?update';
     const tempDir = path.join(os.tmpdir(), 'ascendarainstaller');
     const installerPath = path.join(tempDir, 'AscendaraInstaller.exe');
@@ -95,6 +104,10 @@ async function downloadUpdateInBackground() {
     
     updateDownloaded = true;
     updateDownloadInProgress = false;
+
+    // Set downloadingUpdate to false in timestamp
+    timestamp.downloadingUpdate = false;
+    fs.writeFileSync(timestampPath, JSON.stringify(timestamp, null, 2));
 
     // Notify that update is ready
     BrowserWindow.getAllWindows().forEach(window => {

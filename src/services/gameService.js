@@ -6,6 +6,7 @@ const LAST_UPDATED_KEY = 'local_ascendara_last_updated';
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
 import { checkServerStatus } from './serverStatus';
+import imageCacheService from './imageCacheService';
 
 const gameService = {
   parseDateString(dateStr) {
@@ -196,7 +197,43 @@ const gameService = {
     }
 
     return [];
-  }
+  },
+
+  async getRandomTopGames(count = 8) {
+    try {
+      const { games } = await this.getAllGames();
+      
+      // Sort games by popularity/rating to get top games
+      const sortedGames = [...games].sort((a, b) => 
+        (b.rating || 0) - (a.rating || 0)
+      );
+      
+      // Get top 50 games
+      const topGames = sortedGames.slice(0, 50);
+      
+      // Randomly select 'count' games from top 50
+      const selectedGames = [];
+      const indices = new Set();
+      
+      while (selectedGames.length < count && indices.size < topGames.length) {
+        const randomIndex = Math.floor(Math.random() * topGames.length);
+        if (!indices.has(randomIndex)) {
+          indices.add(randomIndex);
+          const game = topGames[randomIndex];
+          // Pre-cache the game image
+          if (game.imgID) {
+            await imageCacheService.getImage(game.imgID);
+          }
+          selectedGames.push(game);
+        }
+      }
+      
+      return selectedGames;
+    } catch (error) {
+      console.error('Error in getRandomTopGames:', error);
+      return [];
+    }
+  },
 };
 
 export default gameService;

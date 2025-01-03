@@ -9,7 +9,7 @@ import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
-import { Loader2Icon, InfoIcon, CopyIcon, CheckIcon, BadgeCheckIcon } from "lucide-react";
+import { Loader, InfoIcon, CopyIcon, CheckIcon, BadgeCheckIcon, TriangleAlert, ArrowBigLeft, ExternalLink } from "lucide-react";
 import imageCacheService from '../services/imageCacheService';
 import { toast } from "sonner";
 import { useLanguage } from '../contexts/LanguageContext';
@@ -451,7 +451,7 @@ export default function DownloadPage() {
             className="w-fit"
             onClick={() => navigate(-1)}
           >
-            ← {t('common.back')}
+            <ArrowBigLeft size={16} className="mr-2 mt-0.5" /> {t('common.back')}
           </Button>
 
           {/* Game Header Section */}
@@ -476,7 +476,7 @@ export default function DownloadPage() {
                       handleSubmitReport();
                     }}>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>{t('download.reportBroken')}: {gameData.game}</AlertDialogTitle>
+                        <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('download.reportBroken')}: {gameData.game}</AlertDialogTitle>
                         <AlertDialogDescription className="space-y-4">
                           <div className="space-y-2">
                             <label className="text-sm font-medium">{t('download.reportReason')}</label>
@@ -485,7 +485,7 @@ export default function DownloadPage() {
                               onValueChange={setReportReason}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder={t('download.selectProvider')} />
+                                <SelectValue placeholder={t('download.reportReasons.placeholder')} />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="gamedetails">{t('download.reportReasons.gameDetails')}</SelectItem>
@@ -508,7 +508,8 @@ export default function DownloadPage() {
                           </div>
                         </AlertDialogDescription>
                       </AlertDialogHeader>
-                      <AlertDialogFooter className="gap-2">
+                      
+                      <AlertDialogFooter className="gap-2 mt-4">
                         <AlertDialogCancel
                           onClick={() => {
                             setReportReason("");
@@ -519,12 +520,12 @@ export default function DownloadPage() {
                         </AlertDialogCancel>
                         <Button
                           type="submit"
-                          variant="destructive"
+                          className="text-secondary"
                           disabled={isReporting}
                         >
                           {isReporting ? (
                             <>
-                              <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                              <Loader className="mr-2 h-4 w-4 animate-spin" />
                               {t('download.submitting')}
                             </>
                           ) : (
@@ -589,7 +590,7 @@ export default function DownloadPage() {
                   {t('download.dmcaNotice')}
                 </span>
               </div>
-              <span className="text-sm text-primary hover:underline">{t('common.learnMore')}</span>
+              <span className="text-sm text-primary hover:underline flex items-center gap-1">{t('common.learnMore')} <ExternalLink size={16} /></span>
             </div>
           </div>
 
@@ -745,7 +746,7 @@ export default function DownloadPage() {
                   >
                     {isStartingDownload ? (
                       <>
-                        <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
                         {t('download.downloadOptions.downloading')}
                       </>
                     ) : (
@@ -758,7 +759,21 @@ export default function DownloadPage() {
 
             {/* Right Column - Instructions */}
             <div className="space-y-3">
-              <h2 className="text-xl font-semibold">Download Instructions</h2>
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-lg font-bold text-red-700 inline-flex items-center gap-2">
+                      <TriangleAlert strokeWidth={2.3} className="text-red-400" />
+                      {t('download.protectYourself.warningTitle')}
+                    </p>
+                    <p className="mt-2 text-sm text-red-700">{t('download.protectYourself.warning')}</p>
+                    <a onClick={() => window.electron.openURL('https://ascendara.app/protect-yourself')} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block flex items-center gap-1 text-sm text-red-700 hover:text-red-900 cursor-pointer hover:underline">
+                      {t('download.protectYourself.learnHow')} <ExternalLink size={16} />
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <h2 className="text-xl font-semibold">{t('download.downloadInstructions')}</h2>
               {selectedProvider ? (
                 <div>
                   {selectedProvider === "gofile" ? (
@@ -803,14 +818,14 @@ export default function DownloadPage() {
           <AlertDialogHeader>
             {guideStep === 0 ? (
               <>
-                <AlertDialogTitle className="text-primary">{t('download.newUserGuide.title')}</AlertDialogTitle>
+                <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('download.newUserGuide.title')}</AlertDialogTitle>
                 <AlertDialogDescription>
                   {t('download.newUserGuide.description')}
                 </AlertDialogDescription>
               </>
             ) : (
               <>
-                <AlertDialogTitle className="text-primary">
+                <AlertDialogTitle className="text-2xl font-bold text-foreground">
                   {t(`download.newUserGuide.steps.${guideStep - 1}.title`)}
                 </AlertDialogTitle>
                 <AlertDialogDescription>

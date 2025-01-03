@@ -135,9 +135,9 @@ const HomeGameCard = memo(({ game, variant = 'default' }) => {
         className="h-full overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
         onClick={handleClick}
       >
-        <GameImage imgID={game.imgID} gameName={game.game} onIntersect={handleImageLoad} />
+        <GameImage imgID={game.imgID} gameName={sanitizedGameName} onIntersect={handleImageLoad} />
         <CardContent className="p-3">
-          <h3 className="font-semibold text-sm truncate">{game.game}</h3>
+          <h3 className="font-semibold text-sm truncate">{sanitizedGameName}</h3>
           <Categories categories={game.category} />
         </CardContent>
       </Card>
@@ -150,16 +150,14 @@ const HomeGameCard = memo(({ game, variant = 'default' }) => {
         className="h-full overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
         onClick={handleClick}
       >
-        <div className="flex flex-col sm:flex-row h-full">
-          <div className="sm:w-1/3">
-            <GameImage imgID={game.imgID} gameName={game.game} onIntersect={handleImageLoad} />
+        <div className="flex">
+          <div className="w-48 shrink-0">
+            <GameImage imgID={game.imgID} gameName={sanitizedGameName} onIntersect={handleImageLoad} />
           </div>
-          <CardContent className="flex-1 p-4 flex flex-col">
-            <h3 className="font-semibold text-lg mb-2">{sanitizedGameName}</h3>
-            <div className="mt-auto">
-              <Categories categories={game.category} />
-              <UpdateDate date={game.date} />
-            </div>
+          <CardContent className="p-3 flex-1">
+            <h3 className="font-semibold text-sm truncate">{sanitizedGameName}</h3>
+            <Categories categories={game.category} />
+            <UpdateDate date={game.updated} />
           </CardContent>
         </div>
       </Card>
@@ -168,16 +166,14 @@ const HomeGameCard = memo(({ game, variant = 'default' }) => {
 
   return (
     <Card 
-      className="h-full overflow-hidden hover:shadow-lg transition-shadow cursor-pointer flex flex-col"
+      className="h-full overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
       onClick={handleClick}
     >
-      <GameImage imgID={game.imgID} gameName={game.game} onIntersect={handleImageLoad} />
-      <CardContent className="p-4 flex flex-col flex-grow">
-        <h3 className="font-semibold text-lg mb-2">{game.game}</h3>
-        <div className="mt-auto">
-          <Categories categories={game.category} />
-          <UpdateDate date={game.date} />
-        </div>
+      <GameImage imgID={game.imgID} gameName={sanitizedGameName} onIntersect={handleImageLoad} />
+      <CardContent className="p-3">
+        <h3 className="font-semibold text-sm truncate">{sanitizedGameName}</h3>
+        <Categories categories={game.category} />
+        <UpdateDate date={game.updated} />
       </CardContent>
     </Card>
   );

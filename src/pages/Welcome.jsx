@@ -773,7 +773,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
       <AlertDialog open={showDepsAlert} onOpenChange={setShowDepsAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('welcome.installDependencies')}</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('welcome.installDependencies')}</AlertDialogTitle>
             <AlertDialogDescription>
               {t('welcome.youWillReceiveAdminPrompts')}
             </AlertDialogDescription>
@@ -788,7 +788,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
       <AlertDialog open={showSkipAlert} onOpenChange={setShowSkipAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('welcome.skipDependencies')}</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('welcome.skipDependencies')}</AlertDialogTitle>
             <AlertDialogDescription>
               {t('welcome.areYouSureYouWantToSkip')}
             </AlertDialogDescription>
@@ -810,7 +810,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
       <AlertDialog open={showDepsErrorAlert} onOpenChange={setShowDepsErrorAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('welcome.installationFailed')}</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('welcome.installationFailed')}</AlertDialogTitle>
             <AlertDialogDescription>
               {t('welcome.failedToInstallDependencies')}
             </AlertDialogDescription>
@@ -826,7 +826,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
       <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('welcome.errorInstallingDependencies')}</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('welcome.errorInstallingDependencies')}</AlertDialogTitle>
             <AlertDialogDescription>
               {errorMessage}
             </AlertDialogDescription>
