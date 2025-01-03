@@ -140,29 +140,62 @@ const gameService = {
   },
   
   async searchGameCovers(query) {
+    if (!query.trim()) {
+      return [];
+    }
+
     try {
+      // Make a direct API request for instant results
       const response = await fetch(`${API_URL}/json/games`);
       const data = await response.json();
       
-      if (!query.trim()) {
-        return [];
-      }
+      // Only cache if we have valid data
+      if (data?.games) {
+        // Cache in background without waiting
+        setTimeout(() => {
+          this.updateCache({ games: data.games, metadata: data.metadata });
+        }, 0);
 
-      const searchTerm = query.toLowerCase();
-      return data.games
-        .filter(game => 
-          game.game?.toLowerCase().includes(searchTerm)
-        )
-        .slice(0, 20)
-        .map(game => ({
-          id: game.game,
-          title: game.game,
-          imgID: game.imgID
-        }));
+        const searchTerm = query.toLowerCase();
+        return data.games
+          .filter(game => 
+            game.game?.toLowerCase().includes(searchTerm)
+          )
+          .slice(0, 20)
+          .map(game => ({
+            id: game.game,
+            title: game.game,
+            imgID: game.imgID
+          }));
+      }
     } catch (error) {
       console.error('Error searching game covers:', error);
-      return [];
     }
+
+    // Try using cached data as fallback
+    try {
+      const cachedData = localStorage.getItem(CACHE_KEY);
+      if (cachedData) {
+        const { games } = JSON.parse(cachedData);
+        if (games) {
+          const searchTerm = query.toLowerCase();
+          return games
+            .filter(game => 
+              game.game?.toLowerCase().includes(searchTerm)
+            )
+            .slice(0, 20)
+            .map(game => ({
+              id: game.game,
+              title: game.game,
+              imgID: game.imgID
+            }));
+        }
+      }
+    } catch (cacheError) {
+      console.error('Error using cached data:', cacheError);
+    }
+
+    return [];
   }
 };
 

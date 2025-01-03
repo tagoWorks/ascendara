@@ -186,10 +186,21 @@ const deleteGameDirectory = async (game) => {
   const downloadDirectory = settings.downloadDirectory;
   const gameDirectory = path.join(downloadDirectory, game);
   try {
-    await fs.promises.rm(gameDirectory, { recursive: true, force: true });
-    console.log('Game directory and files deleted');
+    // First ensure all file handles are closed by attempting to read the directory
+    const files = await fs.promises.readdir(gameDirectory, { withFileTypes: true });
+    
+    // Delete all contents first
+    for (const file of files) {
+      const fullPath = path.join(gameDirectory, file.name);
+      await fs.promises.rm(fullPath, { recursive: true, force: true });
+    }
+    
+    // Then remove the empty directory itself
+    await fs.promises.rmdir(gameDirectory);
+    console.log('Game directory and files deleted successfully');
   } catch (error) {
     console.error('Error deleting the game directory:', error);
+    throw error; // Propagate the error to handle it in the caller
   }
 };
 
@@ -598,13 +609,11 @@ ipcMain.handle('get-settings', () => {
     // Define default settings
     const defaultSettings = {
       seamlessDownloads: true,
-      checkVersionOnLaunch: true,
       viewOldDownloadLinks: false,
       seeInappropriateContent: false,
       sendAnalytics: true,
       autoUpdate: true,
       language: 'en',
-      notifications: true,
       primaryGameSource: 'steamrip',
       enabledSources: {
         steamrip: true,
@@ -635,12 +644,10 @@ ipcMain.handle('get-settings', () => {
     // Return default settings if there's an error
     const defaultSettings = {
       seamlessDownloads: true,
-      checkVersionOnLaunch: true,
       viewOldDownloadLinks: false,
       seeInappropriateContent: false,
       sendAnalytics: true,
       autoUpdate: true,
-      notifications: true,
       primaryGameSource: 'steamrip',
       language: 'en',
       enabledSources: {
@@ -924,7 +931,7 @@ ipcMain.handle('uninstall-ascendara', async () => {
 });
 
 // Save the custom game
-ipcMain.handle('save-custom-game', async (event, game, online, dlc, version, executable) => {
+ipcMain.handle('save-custom-game', async (event, game, online, dlc, version, executable, imgID) => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
   try {
     const data = fs.readFileSync(filePath, 'utf8');
@@ -935,6 +942,33 @@ ipcMain.handle('save-custom-game', async (event, game, online, dlc, version, exe
     }
     const downloadDirectory = settings.downloadDirectory;
     const gamesFilePath = path.join(downloadDirectory, 'games.json');
+    const gameDirectory = path.join(downloadDirectory, game);
+
+    // Create game directory if it doesn't exist
+    if (!fs.existsSync(gameDirectory)) {
+      fs.mkdirSync(gameDirectory, { recursive: true });
+    }
+
+    // Download and save the cover image if imgID is provided
+    if (imgID) {
+      const imageLink = `https://api.ascendara.app/image/${imgID}`;
+      try {
+        const response = await axios({
+          url: imageLink,
+          method: 'GET',
+          responseType: 'arraybuffer'
+        });
+        const imageBuffer = Buffer.from(response.data);
+        const mimeType = response.headers['content-type'];
+        const extension = getExtensionFromMimeType(mimeType);
+        const downloadPath = path.join(gameDirectory, `header.ascendara${extension}`);
+        await fs.promises.writeFile(downloadPath, imageBuffer);
+        console.log('Cover image downloaded successfully');
+      } catch (error) {
+        console.error('Error downloading cover image:', error);
+      }
+    }
+
     try {
       await fs.promises.access(gamesFilePath, fs.constants.F_OK);
     } catch (error) {

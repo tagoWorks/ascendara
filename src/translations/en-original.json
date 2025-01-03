@@ -179,6 +179,7 @@
       "errorHelp": "The download issue should already be reported. If the issue persists, please join our Discord server for support.",
       "alreadyReported": "Already Reported",
       "extracting": "Extracting game files...",
+      "extractingDescription": "Extracting game files may take up to 30 minutes depending on the file size.",
       "updating": "Updating game...",
       "firstTimeDownload": {
         "title": "First Time Download",
@@ -299,18 +300,18 @@
           "step3": "Stop the download once it starts in your browser",
           "step4": "Hit CTRL+J to open your downloads",
           "step5": "Copy the link that the browser started downloading",
-          "step6": "Paste the DDL above and click Download Now"
+          "step6": "Paste the DDL in the input box and click Download Now"
         },
         "blockerInstructions": {
           "step1": "Open the link in your browser and enable the extension",
           "step2": "Complete the CAPTCHA and start the download",
           "step3": "The extension will automatically stop and capture the direct download link",
-          "step4": "Paste the DDL above and click Download Now"
+          "step4": "Paste the DDL in the input box and click Download Now"
         },
         "gofileInstructions": {
           "thanks": "Thanks to ltsdw on GitHub",
           "description": "Unlike other providers that require a CAPTCHA verification, GoFile allows direct downloads through their API without such interruptions.",
-          "action": "Simply click on Download to start downloading this game."
+          "action": "Simply click on Download Now to start downloading this game."
         },
         "selectProviderPrompt": "Please select a download provider to see the instructions."
       },

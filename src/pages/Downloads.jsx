@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import {
-  Loader2,
+  Loader,
   StopCircle,
   FolderOpen,
   MoreVertical,
@@ -342,7 +342,7 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               {isStopping ? 
-                <Loader2 className="h-4 w-4 animate-spin" /> :
+                <Loader className="h-4 w-4 animate-spin" /> :
                 <MoreVertical className="h-4 w-4" />
               }
             </Button>
@@ -395,7 +395,7 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                   >
                     {isReporting ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
                         {t('common.reporting')}
                       </>
                     ) : wasReported ? (
@@ -451,17 +451,17 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
               <div className="space-y-2 mt-2">
                 <div className="relative overflow-hidden">
                   <Progress value={undefined} />
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent" 
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/30 to-transparent" 
                        style={{ 
-                         animation: 'shimmer 2s infinite',
-                         maskImage: 'linear-gradient(to right, transparent, black, transparent)',
-                         WebkitMaskImage: 'linear-gradient(to right, transparent, black, transparent)'
+                         animation: 'shimmer 1.5s ease-in-out infinite',
+                         maskImage: 'linear-gradient(to right, transparent 20%, black 50%, transparent 80%)',
+                         WebkitMaskImage: 'linear-gradient(to right, transparent 20%, black 50%, transparent 80%)'
                        }} 
                   />
                 </div>
-                <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground mt-1">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>{isExtracting ? t('downloads.extracting') : t('downloads.updating')}</span>
+                  <div className="flex flex-col items-center justify-center space-x-2 text-sm text-muted-foreground mt-1">
+                  <span className="text-lg font-semibold flex items-center gap-2"><Loader className="h-4 w-4 animate-spin" /> {isExtracting ? t('downloads.extracting') : null}</span>
+                  <span className="text-xs">{isExtracting ? t('downloads.extractingDescription') : null}</span>
                 </div>
               </div>
             )}

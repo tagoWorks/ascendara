@@ -2,7 +2,7 @@ import React, { useState, memo, useCallback, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardFooter } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
-import { Download, Gift, Gamepad2, Zap, Loader2 } from 'lucide-react';
+import { Download, Gift, Gamepad2, Zap, Loader } from 'lucide-react';
 import { AspectRatio } from "../components/ui/aspect-ratio";
 import { Skeleton } from "../components/ui/skeleton";
 import { useNavigate } from 'react-router-dom';
@@ -280,7 +280,7 @@ const GameCard = memo(function GameCard({ game, compact }) {
           disabled={isInstalled || isStarting}
         >
           {isStarting ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            <Loader className="w-4 h-4 mr-2 animate-spin" />
           ) : isInstalled ? (
             <Gamepad2 className="w-4 h-4 mr-2" />
           ) : Object.keys(game.download_links || {}).includes('gofile') && seamlessDownloads ? (

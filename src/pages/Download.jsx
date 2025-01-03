@@ -235,23 +235,40 @@ export default function DownloadPage() {
     if (showNoDownloadPath) {
       return;
     }
-
+  
     if (selectedProvider !== 'gofile' && !isValidLink) {
       return;
     }
-
+  
     setIsStartingDownload(true);
     try {
       const sanitizedGameName = sanitizeText(gameData.game);
-      await window.electron.downloadFile(
-        sanitizeText(inputLink),
-        sanitizedGameName,
-        gameData.online,
-        gameData.dlc,
-        gameData.version,
-        gameData.imgID,
-        gameData.size
-      );
+      
+      if (selectedProvider === 'gofile') {
+        const downloadUrl = downloadLinks[selectedProvider][0].startsWith('//')
+          ? `https:${downloadLinks[selectedProvider][0]}`
+          : downloadLinks[selectedProvider][0];
+          
+          await window.electron.downloadFile(
+            sanitizeText(downloadUrl),
+            sanitizedGameName,
+            gameData.online,
+            gameData.dlc,
+            gameData.version,
+            gameData.imgID,
+            gameData.size
+          );
+      } else {
+        await window.electron.downloadFile(
+          sanitizeText(inputLink),
+          sanitizedGameName,
+          gameData.online,
+          gameData.dlc,
+          gameData.version,
+          gameData.imgID,
+          gameData.size
+        );
+      }
       
       // 2-second delay
       await new Promise(resolve => setTimeout(resolve, 2000));

@@ -13,7 +13,7 @@ import {
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
-import { Loader2 } from "lucide-react";
+import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
 const ReportIssue = ({ isOpen, onClose }) => {
@@ -148,7 +148,7 @@ const ReportIssue = ({ isOpen, onClose }) => {
           >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader className="mr-2 h-4 w-4 animate-spin" />
                 {t('common.reportDialog.submitting')}
               </>
             ) : (

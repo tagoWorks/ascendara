@@ -25,7 +25,7 @@ contextBridge.exposeInMainWorld('electron', {
   // Game Management
   getGames: () => ipcRenderer.invoke('get-games'),
   getCustomGames: () => ipcRenderer.invoke('get-custom-games'),
-  addGame: (game, online, dlc, version, executable) => ipcRenderer.invoke('save-custom-game', game, online, dlc, version, executable),
+  addGame: (game, online, dlc, version, executable, imgID) => ipcRenderer.invoke('save-custom-game', game, online, dlc, version, executable, imgID),
   removeCustomGame: (game) => ipcRenderer.invoke('remove-game', game),
   deleteGame: (game) => ipcRenderer.invoke('delete-game', game),
   getInstalledGames: () => ipcRenderer.invoke('get-installed-games'),

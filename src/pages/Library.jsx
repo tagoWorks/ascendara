@@ -657,7 +657,8 @@ const AddGameForm = ({ onSuccess }) => {
       formData.isOnline,
       formData.hasDLC,
       formData.version,
-      formData.executable
+      formData.executable,
+      coverSearch.selectedCover?.imgID // Pass the selected cover's imgID
     );
     onSuccess();
   };
@@ -686,7 +687,7 @@ const AddGameForm = ({ onSuccess }) => {
             value={formData.name}
             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
 
-            className="bg-background border-input"
+            className="bg-background border-input text-foreground"
           />
         </div>
 
@@ -714,7 +715,7 @@ const AddGameForm = ({ onSuccess }) => {
               onChange={(e) => setFormData(prev => ({ ...prev, version: e.target.value }))}
 
               placeholder={t('library.versionPlaceholder')}
-              className="bg-background border-input"
+              className="bg-background border-input text-foreground"
             />
           )}
         </div>
@@ -748,11 +749,30 @@ const AddGameForm = ({ onSuccess }) => {
               <Input
                 id="coverSearch"
                 value={coverSearch.query}
-                onChange={(e) => {
-                  setCoverSearch(prev => ({ ...prev, query: e.target.value }));
-                  handleCoverSearch(e.target.value);
+                onChange={async (e) => {
+                  const query = e.target.value;
+                  setCoverSearch(prev => ({ ...prev, query }));
+                  
+                  if (!query.trim()) {
+                    setCoverSearch(prev => ({ ...prev, results: [], isLoading: false }));
+                    return;
+                  }
+                  
+                  setCoverSearch(prev => ({ ...prev, isLoading: true }));
+                  try {
+                    const results = await gameService.searchGameCovers(query);
+                    setCoverSearch(prev => ({ 
+                      ...prev, 
+                      results: results.slice(0, 9),
+                      isLoading: false 
+                    }));
+                  } catch (error) {
+                    console.error('Error searching covers:', error);
+                    setCoverSearch(prev => ({ ...prev, isLoading: false }));
+                    toast.error(t('library.coverSearchError'));
+                  }
                 }}
-                className="pl-8 bg-background border-input"
+                className="pl-8 bg-background border-input text-foreground"
                 placeholder={t('library.searchGameCover')}
               />
             </div>
@@ -816,7 +836,7 @@ const AddGameForm = ({ onSuccess }) => {
         <Button
           onClick={handleSubmit}
           disabled={!formData.executable || !formData.name}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          className="bg-primary text-secondary hover:bg-primary/90"
         >
           {t('library.addGame')}
         </Button>

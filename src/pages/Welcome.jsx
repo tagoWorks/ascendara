@@ -56,7 +56,7 @@ const themes = [
   // Light themes
   { id: 'light', name: 'Arctic Sky', group: 'light' },
   { id: 'blue', name: 'Ocean Blue', group: 'light' },
-  { id: 'purple', name: 'Royal Purple', group: 'light' },
+  { id: 'purple', name: 'Ascendara Purple', group: 'light' },
   { id: 'emerald', name: 'Emerald', group: 'light' },
   { id: 'rose', name: 'Rose', group: 'light' },
   { id: 'amber', name: 'Amber Sand', group: 'light' },
@@ -460,12 +460,10 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
       try {
         const options = {
           seamlessDownloads: true,
-          checkVersionOnLaunch: true,
           viewOldDownloadLinks: false,
           seeInappropriateContent: false,
           sendAnalytics: true,
           autoUpdate: true,
-          notifications: true,
           primaryGameSource: 'steamrip',
           enabledSources: {
             steamrip: true,
@@ -573,9 +571,8 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
   };
 
   const handleThemeSelect = (themeId) => {
-    setSelectedTheme(themeId);
     setTheme(themeId);
-    localStorage.setItem('ascendara-theme', themeId);
+    window.electron.modifySetting('theme', themeId);
   };
 
   if (isV7Welcome) {

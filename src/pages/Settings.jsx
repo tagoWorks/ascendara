@@ -14,7 +14,7 @@ const themes = [
   // Light themes
   { id: 'light', name: 'Arctic Sky', group: 'light' },
   { id: 'blue', name: 'Ocean Blue', group: 'light' },
-  { id: 'purple', name: 'Royal Purple', group: 'light' },
+  { id: 'purple', name: 'Ascendara Purple', group: 'light' },
   { id: 'emerald', name: 'Emerald', group: 'light' },
   { id: 'rose', name: 'Rose', group: 'light' },
   { id: 'amber', name: 'Amber Sand', group: 'light' },
@@ -143,14 +143,13 @@ function Settings() {
   const [version, setVersion] = useState('');
   const [settings, setSettings] = useState({
     seamlessDownloads: true,
-    checkVersionOnLaunch: true,
     viewOldDownloadLinks: false,
     seeInappropriateContent: false,
     sendAnalytics: true,
     autoUpdate: true,
-    notifications: true,
     primaryGameSource: 'steamrip',
     language: 'en',
+    theme: 'purple',
     enabledSources: {
       steamrip: true,
       steamunlocked: false,
@@ -316,6 +315,12 @@ function Settings() {
       setTheme(savedTheme);
     }
   }, [setTheme]);
+
+  useEffect(() => {
+    if (theme && isInitialized) {
+      handleSettingChange({ theme });
+    }
+  }, [theme, isInitialized]);
 
   const groupedThemes = {
     light: themes.filter(t => t.group === 'light'),
