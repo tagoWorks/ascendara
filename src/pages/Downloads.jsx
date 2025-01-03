@@ -112,7 +112,7 @@ const Downloads = () => {
     // Increase polling interval to reduce frequency of checks
     const intervalId = setInterval(fetchDownloadingGames, 2000);
     return () => clearInterval(intervalId);
-  }, [downloadingGames]); // Add downloadingGames as dependency to properly track changes
+  }, [downloadingGames]);
 
   useEffect(() => {
     if (downloadingGames.length === 0) {

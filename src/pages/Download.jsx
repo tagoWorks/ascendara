@@ -34,7 +34,7 @@ const isValidURL = (url, provider) => {
       pattern = /^https:\/\/(spyderrock\.com\/[a-zA-Z0-9]+-[\w\s.-]+\.rar)$/i;
       break;
     case 'buzzheavier':
-      pattern = /^https:\/\/dl\.buzzheavier\.com\/\d+(?:\?.*?)?$/i;
+      pattern = /^https:\/\/buzzheavier\.com\/dl\/[A-Za-z0-9_-]+(?:\?.*)?$/i;
       break;
     case 'gofile':
       pattern = /^https:\/\/store\d*\.gofile\.io\/download\/web\/[a-f0-9-]+\/[\w\s\.-]+\.(?:zip|rar|7z)$/i;
@@ -54,7 +54,7 @@ const isValidURL = (url, provider) => {
   return containsProviderName;
 };
 
-const VERIFIED_PROVIDERS = ['megadb', 'gofile', 'datanodes'];
+const VERIFIED_PROVIDERS = ['megadb', 'gofile', 'datanodes', 'buzzheavier'];
 
 const sanitizeGameName = (name) => {
   if (!name) return '';
@@ -520,9 +520,11 @@ export default function DownloadPage() {
                 </AlertDialog>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded">
-                  {gameData.version}
-                </span>
+                {gameData.version && (
+                  <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded">
+                    {gameData.version}
+                  </span>
+                )}
                 {gameData.online && (
                   <TooltipProvider>
                     <Tooltip>

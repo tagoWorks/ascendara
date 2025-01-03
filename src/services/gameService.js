@@ -133,7 +133,37 @@ const gameService = {
       Array.isArray(game.category) && 
       game.category.includes(category)
     );
+  },
+  
+  getImageUrl(imgID) {
+    return `${API_URL}/image/${imgID}`;
+  },
+  
+  async searchGameCovers(query) {
+    try {
+      const response = await fetch(`${API_URL}/json/games`);
+      const data = await response.json();
+      
+      if (!query.trim()) {
+        return [];
+      }
+
+      const searchTerm = query.toLowerCase();
+      return data.games
+        .filter(game => 
+          game.game?.toLowerCase().includes(searchTerm)
+        )
+        .slice(0, 20)
+        .map(game => ({
+          id: game.game,
+          title: game.game,
+          imgID: game.imgID
+        }));
+    } catch (error) {
+      console.error('Error searching game covers:', error);
+      return [];
+    }
   }
 };
 
-export default gameService; 
+export default gameService;

@@ -140,7 +140,19 @@ def download_file(link, game, online, dlc, version, size, download_dir):
             if content_type and 'text/html' in content_type:
                 raise Exception("Content-Type was text/html. Link most likely expired.")
 
-            archive_ext = link.split('.')[-1]
+            # Default to .rar if we can't determine the extension
+            archive_ext = "rar"
+            content_disposition = response.headers.get('Content-Disposition')
+            if content_disposition and 'filename=' in content_disposition:
+                filename = content_disposition.split('filename=')[-1].strip('"\'')
+                if '.' in filename:
+                    archive_ext = filename.split('.')[-1].lower()
+            elif '.' in link:
+                # Try to get extension from URL as fallback
+                possible_ext = link.split('?')[0].split('.')[-1].lower()
+                if possible_ext in ['rar', 'zip']:
+                    archive_ext = possible_ext
+
             archive_file_path = os.path.join(download_path, f"{game}.{archive_ext}")
             total_size = int(response.headers.get('content-length', 0) or 0)
             block_size = 1024 * 1024

@@ -24,7 +24,8 @@ import {
   Trash2,
   Shield,
   Gamepad2,
-  Gift
+  Gift,
+  Search as SearchIcon
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import {
@@ -40,6 +41,9 @@ import { Separator } from "../components/ui/separator";
 import { Progress } from "../components/ui/progress";
 import recentGamesService from '../services/recentGamesService';
 import imageCacheService from '../services/imageCacheService';
+import gameService from '../services/gameService';
+import fs from 'fs';
+import { toast } from 'sonner';
 
 const Library = () => {
   const [games, setGames] = useState([]);
@@ -51,6 +55,10 @@ const Library = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isUninstalling, setIsUninstalling] = useState(false);
   const [launchingGame, setLaunchingGame] = useState(null);
+  const [coverSearchQuery, setCoverSearchQuery] = useState("");
+  const [coverSearchResults, setCoverSearchResults] = useState([]);
+  const [isCoverSearchLoading, setIsCoverSearchLoading] = useState(false);
+  const [selectedGameImage, setSelectedGameImage] = useState(null);
   const { t } = useLanguage();
 
   const loadGames = async () => {
@@ -192,6 +200,46 @@ const Library = () => {
     return gameId === selectedId;
   };
 
+  const searchGameCovers = async (query) => {
+    if (!query.trim()) {
+      setCoverSearchResults([]);
+      return;
+    }
+    
+    setIsCoverSearchLoading(true);
+    try {
+      const results = await gameService.searchGameCovers(query);
+      setCoverSearchResults(results);
+    } catch (error) {
+      console.error('Error searching game covers:', error);
+      setCoverSearchResults([]);
+    } finally {
+      setIsCoverSearchLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      searchGameCovers(coverSearchQuery);
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [coverSearchQuery]);
+
+  const downloadGameImage = async (imgID, gameName) => {
+    try {
+      const imageBase64 = await window.electron.ipcRenderer.downloadGameCover(imgID, gameName);
+      if (imageBase64) {
+        const imageUrl = `data:image/jpeg;base64,${imageBase64}`;
+        setSelectedGameImage(imageUrl);
+        toast.success(t('library.imageSaved'));
+      }
+    } catch (error) {
+      console.error('Error downloading game image:', error);
+      toast.error(t('library.errorSavingImage'));
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -233,19 +281,22 @@ const Library = () => {
             <AlertDialogTrigger asChild>
               <AddGameCard />
             </AlertDialogTrigger>
-            <AlertDialogContent className="sm:max-w-[425px] bg-background border-border">
+            <AlertDialogContent className="sm:max-w-[425px] max-h-[80vh] overflow-y-auto bg-background border-border">
               <AlertDialogHeader className="space-y-2">
                 <AlertDialogTitle className="text-2xl font-bold text-foreground">
                   {t('library.addGame')}
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-muted-foreground">
-                  {t('library.addGameDescription')}
+                  {t('library.addGameDescription2')}
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AddGameForm onSuccess={() => {
-                setIsAddGameOpen(false);
-                loadGames();
-              }} />
+              <div className="space-y-6 py-4">
+                <AddGameForm onSuccess={() => {
+                  setIsAddGameOpen(false);
+                  setSelectedGameImage(null);
+                  loadGames();
+                }} />
+              </div>
             </AlertDialogContent>
           </AlertDialog>
 
@@ -277,11 +328,7 @@ const Library = () => {
                   variant="outline"
                   onClick={async () => {
                     try {
-                      const result = await window.electron.showOpenDialog({
-                        title: t('library.selectExecutable'),
-                        filters: [{ name: t('library.executableFiles'), extensions: ['exe'] }],
-                        properties: ['openFile']
-                      });
+                      const result = await window.electron.ipcRenderer.invoke('open-file-dialog');
                       
                       if (result?.filePaths?.[0]) {
                         await window.electron.updateGameExecutable(selectedGame.game || selectedGame.name, result.filePaths[0]);
@@ -310,10 +357,14 @@ const Library = () => {
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('library.uninstallGame')}</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogTitle className="text-2xl font-bold text-foreground">
                 {gameToDelete?.isCustom 
                   ? t('library.removeGameFromLibrary')
+                  : t('library.uninstallGame')}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {gameToDelete?.isCustom 
+                  ? t('library.removeGameFromLibraryWarning')
                   : t('library.uninstallGameWarning')}
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -368,7 +419,7 @@ const AddGameCard = React.forwardRef((props, ref) => {
         </div>
         <h3 className="mt-4 font-semibold text-lg">{t('library.addGame')}</h3>
         <p className="text-sm text-center mt-2">
-          {t('library.addGameDescription')}
+          {t('library.addGameDescription1')}
         </p>
       </CardContent>
     </Card>
@@ -518,7 +569,7 @@ const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpe
             </DropdownMenuItem>
             {!game.isCustom && (
               <DropdownMenuItem onClick={async () => {
-                const exePath = await window.electron.invoke('open-file-dialog');
+                const exePath = await window.electron.ipcRenderer.invoke('open-file-dialog');
                 if (exePath) {
                   await window.electron.modifyGameExecutable(game.game || game.name, exePath);
                 }
@@ -560,9 +611,36 @@ const AddGameForm = ({ onSuccess }) => {
     isOnline: false,
     hasDLC: false
   });
+  const [coverSearch, setCoverSearch] = useState({
+    query: '',
+    isLoading: false,
+    results: [],
+    selectedCover: null
+  });
+
+  const handleCoverSearch = async (query) => {
+    if (!query.trim()) {
+      setCoverSearch(prev => ({ ...prev, results: [] }));
+      return;
+    }
+    
+    setCoverSearch(prev => ({ ...prev, isLoading: true }));
+    try {
+      const results = await gameService.searchGameCovers(query);
+      setCoverSearch(prev => ({ 
+        ...prev, 
+        results: results.slice(0, 9), // Limit to 9 results for better UI
+        isLoading: false 
+      }));
+    } catch (error) {
+      console.error('Error searching covers:', error);
+      setCoverSearch(prev => ({ ...prev, isLoading: false }));
+      toast.error(t('library.coverSearchError'));
+    }
+  };
 
   const handleChooseExecutable = async () => {
-    const file = await window.electron.invoke('open-file-dialog');
+    const file = await window.electron.ipcRenderer.invoke('open-file-dialog');
     if (file) {
       setFormData(prev => ({
         ...prev,
@@ -660,6 +738,71 @@ const AddGameForm = ({ onSuccess }) => {
 
           />
         </div>
+
+        
+        {/* Game Cover Search Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-grow">
+              <SearchIcon className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="coverSearch"
+                value={coverSearch.query}
+                onChange={(e) => {
+                  setCoverSearch(prev => ({ ...prev, query: e.target.value }));
+                  handleCoverSearch(e.target.value);
+                }}
+                className="pl-8 bg-background border-input"
+                placeholder={t('library.searchGameCover')}
+              />
+            </div>
+          </div>
+
+          {/* Cover Search Results */}
+          {coverSearch.isLoading ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : coverSearch.results.length > 0 && (
+            <div className="grid grid-cols-3 gap-4">
+              {coverSearch.results.map((cover, index) => (
+                <div 
+                  key={index}
+                  onClick={() => setCoverSearch(prev => ({ ...prev, selectedCover: cover }))}
+                  className={cn(
+                    "relative aspect-video cursor-pointer overflow-hidden rounded-lg border-2 transition-all",
+                    coverSearch.selectedCover === cover 
+                      ? "border-primary shadow-lg" 
+                      : "border-transparent hover:border-primary/50"
+                  )}
+                >
+                  <img
+                    src={gameService.getImageUrl(cover.imgID)}
+                    alt={cover.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <p className="text-white text-sm text-center px-2">{cover.title}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Selected Cover Preview */}
+          {coverSearch.selectedCover && (
+            <div className="mt-4 flex justify-center">
+              <div className="relative aspect-video w-64 rounded-lg overflow-hidden border-2 border-primary">
+                <img
+                  src={gameService.getImageUrl(coverSearch.selectedCover.imgID)}
+                  alt={coverSearch.selectedCover.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
       </div>
 
       <AlertDialogFooter className="flex justify-end gap-2">

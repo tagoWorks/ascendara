@@ -16,7 +16,7 @@ let notificationShown = false;
 let updateDownloadInProgress = false;
 let isDev = false;
 
-const CURRENT_VERSION = "7.3.4";
+const CURRENT_VERSION = "7.3.5";
 let config;
 try {
     config = require('./config.prod.js');
@@ -383,6 +383,8 @@ ipcMain.handle('retry-extract', async (event, game, online, dlc, version) => {
           itemName
         ]);
 
+        downloadProcesses.set(game, downloadProcess);
+
         downloadProcess.stdout.on('data', (data) => {
           console.log(`stdout: ${data}`);
         });
@@ -414,6 +416,56 @@ ipcMain.handle('retry-download', async (event, link, game, online, dlc, version)
 
 })
 
+// Download game cover
+ipcMain.handle('download-game-cover', async (event, { imgID, gameName }) => {
+  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    const settings = JSON.parse(data);
+    if (!settings.downloadDirectory) {
+      throw new Error('Download directory not set');
+    }
+
+    const gameDirectory = path.join(settings.downloadDirectory, gameName);
+    if (!fs.existsSync(gameDirectory)) {
+      fs.mkdirSync(gameDirectory, { recursive: true });
+    }
+
+    const imageUrl = `https://api.ascendara.app/image/${imgID}`;
+    const response = await axios({
+      url: imageUrl,
+      method: 'GET',
+      responseType: 'arraybuffer'
+    });
+
+    const imagePath = path.join(gameDirectory, 'header.ascendara.jpg');
+    fs.writeFileSync(imagePath, Buffer.from(response.data));
+
+    // Update games.json with the new image path
+    const gamesJsonPath = path.join(settings.downloadDirectory, 'games.json');
+    let gamesData = { games: [] };
+    
+    try {
+      const existingData = fs.readFileSync(gamesJsonPath, 'utf8');
+      gamesData = JSON.parse(existingData);
+    } catch (error) {
+      // File doesn't exist or is invalid, use default empty object
+    }
+    
+    // Update the image path if the game exists
+    const gameIndex = gamesData.games.findIndex(g => g.game === gameName);
+    if (gameIndex >= 0) {
+      gamesData.games[gameIndex].imgPath = imagePath;
+      fs.writeFileSync(gamesJsonPath, JSON.stringify(gamesData, null, 2));
+    }
+
+    // Return the image as base64 for preview
+    return Buffer.from(response.data).toString('base64');
+  } catch (error) {
+    console.error('Error downloading game cover:', error);
+    throw error;
+  }
+});
 
 ipcMain.handle('is-new', () => {
   const filePath = TIMESTAMP_FILE;
@@ -1101,17 +1153,16 @@ ipcMain.handle('play-game', (event, game, isCustom) => {
       console.error('Download directory not set');
       return;
     }
-    const downloadDirectory = settings.downloadDirectory;
     let executable;
     let gameDirectory;
     if (!isCustom) {
-      gameDirectory = path.join(downloadDirectory, game);
+      gameDirectory = path.join(settings.downloadDirectory, game);
       const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
       const gameInfoData = fs.readFileSync(gameInfoPath, 'utf8');
       const gameInfo = JSON.parse(gameInfoData);
       executable = gameInfo.executable;
     } else {
-      const gamesFilePath = path.join(downloadDirectory, 'games.json');
+      const gamesFilePath = path.join(settings.downloadDirectory, 'games.json');
       const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, 'utf8'));
       const gameInfo = gamesData.games.find((g) => g.game === game);
       if (gameInfo) {
@@ -1455,7 +1506,6 @@ ipcMain.handle('get-platform', () => {
     return process.platform
 })
 
-// Add the settings change event emitter
 ipcMain.on('settings-changed', () => {
     BrowserWindow.getAllWindows().forEach(window => {
         window.webContents.send('settings-updated')
@@ -1466,4 +1516,46 @@ ipcMain.handle('is-update-downloaded', () => {
   return updateDownloaded;
 });
 
-// Track error counts globally with persistence
+ipcMain.handle('save-game-image', async (event, gameName, imageBase64) => {
+  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    const settings = JSON.parse(data);
+    if (!settings.downloadDirectory) {
+      console.error('Download directory not set');
+      return false;
+    }
+
+    const gameDirectory = path.join(settings.downloadDirectory, gameName);
+    if (!fs.existsSync(gameDirectory)) {
+      fs.mkdirSync(gameDirectory, { recursive: true });
+    }
+    const imagePath = path.join(gameDirectory, 'header.ascendara.jpg');
+    const imageBuffer = Buffer.from(imageBase64, 'base64');
+    fs.writeFileSync(imagePath, imageBuffer);
+    
+    return true;
+  } catch (error) {
+    console.error('Error saving game image:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('read-file', async (event, filePath) => {
+  try {
+    return fs.readFileSync(filePath, 'utf8');
+  } catch (error) {
+    console.error('Error reading file:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('write-file', async (event, filePath, content) => {
+  try {
+    fs.writeFileSync(filePath, content);
+    return true;
+  } catch (error) {
+    console.error('Error writing file:', error);
+    throw error;
+  }
+});

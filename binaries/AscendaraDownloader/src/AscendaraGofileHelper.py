@@ -49,8 +49,8 @@ def handleerror(game_info, game_info_path, e):
 
 class GofileDownloader:
     def __init__(self, game, online, dlc, version, size, download_dir, max_workers=5):
-        self._max_retries = 3  # Add retry count
-        self._download_timeout = 30  # Add download timeout
+        self._max_retries = 3
+        self._download_timeout = 30 
         self._token = self._getToken()
         self._max_workers = max_workers
         self._lock = Lock()

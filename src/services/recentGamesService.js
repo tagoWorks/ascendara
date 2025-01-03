@@ -33,6 +33,25 @@ class RecentGamesService {
       return [];
     }
   }
+
+  // Clean up uninstalled games from the recent games list
+  cleanupUninstalledGames(installedGames) {
+    try {
+      const recentGames = this.getRecentGames();
+      const cleanedGames = recentGames.filter(recentGame => 
+        installedGames.some(g => g.game === recentGame.game)
+      );
+      
+      if (cleanedGames.length !== recentGames.length) {
+        localStorage.setItem(RECENT_GAMES_KEY, JSON.stringify(cleanedGames));
+      }
+      
+      return cleanedGames;
+    } catch (error) {
+      console.error('Error cleaning up uninstalled games:', error);
+      return [];
+    }
+  }
 }
 
 export default new RecentGamesService();

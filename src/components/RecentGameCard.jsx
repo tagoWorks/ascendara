@@ -82,10 +82,17 @@ const RecentGameCard = ({ game, onPlay }) => {
               <Button
                 size="icon"
                 variant="secondary"
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm"
+                className={cn(
+                  "w-10 h-10 rounded-full backdrop-blur-sm",
+                  isRunning 
+                    ? "bg-white/5 hover:bg-white/5 cursor-not-allowed" 
+                    : "bg-white/10 hover:bg-white/20"
+                )}
                 onClick={handlePlay}
+                disabled={isRunning}
+                title={isRunning ? "Game is running" : "Play game"}
               >
-                <Play className="w-5 h-5" />
+                <Play className={cn("w-5 h-5", isRunning && "opacity-50")} />
               </Button>
             </div>
             <div className="space-y-2">

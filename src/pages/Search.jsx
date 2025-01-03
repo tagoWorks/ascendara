@@ -193,9 +193,18 @@ const Search = memo(() => {
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>{t('search.indexedInformation')}</AlertDialogTitle>
+                    <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('search.indexedInformation')}</AlertDialogTitle>
                     <div className="space-y-2 mt-4 text-sm text-muted-foreground">
-                      <p>{t('search.indexedInformationDescription')}</p>
+                      <p>
+                        {t('search.indexedInformationDescription')}{" "}
+                        <a
+                          onClick={() => window.electron.openURL('https://ascendara.app/dmca')}
+                          className="text-primary hover:underline cursor-pointer"
+                        >
+                          {t('common.learnMore')}
+                        </a>
+                      </p>
+                     
                       <Separator className="bg-border/50" />
                       <p>{t('search.totalGames')}: {apiMetadata.games.toLocaleString()}</p>
                       <p>{t('search.source')}: {apiMetadata.source}</p>

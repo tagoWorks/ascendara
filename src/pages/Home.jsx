@@ -29,6 +29,7 @@ const Home = memo(() => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showTour, setShowTour] = useState(false);
   const [carouselImages, setCarouselImages] = useState({});
+  const [recentGames, setRecentGames] = useState([]);
 
   useEffect(() => {
     const loadGames = async () => {
@@ -36,6 +37,32 @@ const Home = memo(() => {
         setLoading(true);
         const response = await gameService.getAllGames();
         const gamesData = response.games || [];
+        
+        // Get actually installed games from electron
+        const installedGames = await window.electron.getGames();
+        const customGames = await window.electron.getCustomGames();
+        
+        // Combine installed and custom games
+        const actuallyInstalledGames = [
+          ...(installedGames || []).map(game => ({
+            ...game,
+            isCustom: false
+          })),
+          ...(customGames || []).map(game => ({
+            name: game.game,
+            game: game.game,
+            version: game.version,
+            online: game.online,
+            dlc: game.dlc,
+            executable: game.executable,
+            isCustom: true
+          }))
+        ];
+        
+        // Clean up uninstalled games from recent games list using actual installation data
+        recentGamesService.cleanupUninstalledGames(actuallyInstalledGames);
+        
+        // Set all games data for other sections
         setGames(Array.isArray(gamesData) ? gamesData : []);
       } catch (error) {
         console.error('Error loading games:', error);
@@ -64,6 +91,14 @@ const Home = memo(() => {
     return () => clearInterval(timer);
   }, [autoPlay, games]);
 
+  useEffect(() => {
+    const updateRecentGames = async () => {
+      const recent = await getRecentGames(games);
+      setRecentGames(recent);
+    };
+    updateRecentGames();
+  }, [games]);
+
   const handleImageIntersect = useCallback(async (imgID) => {
     if (!imgID || carouselImages[imgID]) return;
     
@@ -85,22 +120,45 @@ const Home = memo(() => {
     return games.filter(game => parseInt(game.weight) > 60).slice(0, 8);
   };
 
-  const getRecentGames = (games) => {
+  const getRecentGames = async (games) => {
     const recentlyPlayed = recentGamesService.getRecentGames();
     
-    // If games array is not available yet, return just the cached data
-    if (!Array.isArray(games) || games.length === 0) {
-      return recentlyPlayed;
+    try {
+      // Get actually installed games from electron
+      const installedGames = await window.electron.getGames();
+      const customGames = await window.electron.getCustomGames();
+      
+      // Combine installed and custom games
+      const actuallyInstalledGames = [
+        ...(installedGames || []).map(game => ({
+          ...game,
+          isCustom: false
+        })),
+        ...(customGames || []).map(game => ({
+          name: game.game,
+          game: game.game,
+          version: game.version,
+          online: game.online,
+          dlc: game.dlc,
+          executable: game.executable,
+          isCustom: true
+        }))
+      ];
+      
+      // Filter out games that are no longer installed and merge with full game details
+      return recentlyPlayed
+        .filter(recentGame => actuallyInstalledGames.some(g => g.game === recentGame.game))
+        .map(recentGame => {
+          const gameDetails = games.find(g => g.game === recentGame.game) || actuallyInstalledGames.find(g => g.game === recentGame.game);
+          return {
+            ...gameDetails,
+            lastPlayed: recentGame.lastPlayed
+          };
+        });
+    } catch (error) {
+      console.error('Error getting installed games:', error);
+      return [];
     }
-    
-    // Once games are loaded, merge with full game details
-    return recentlyPlayed.map(recentGame => {
-      const gameDetails = games.find(g => g.game === recentGame.game) || recentGame;
-      return {
-        ...gameDetails,
-        lastPlayed: recentGame.lastPlayed
-      };
-    });
   };
 
   const getTopGames = (games) => {
@@ -197,7 +255,6 @@ const Home = memo(() => {
   }, [setSearchParams]);
 
   const featuredGames = useMemo(() => getFeaturedGames(games), [games]);
-  const recentGames = useMemo(() => getRecentGames(games), [games]);
   const topGames = useMemo(() => getTopGames(games), [games]);
   const onlineGames = useMemo(() => getOnlineGames(games), [games]);
   const actionGames = useMemo(() => getActionGames(games), [games]);
@@ -296,19 +353,13 @@ const Home = memo(() => {
                 {t('home.recentGames')}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {loading ? (
-                  Array.from({ length: 4 }).map((_, index) => (
-                    <Skeleton key={index} className="h-[240px] rounded-xl" />
-                  ))
-                ) : (
-                  recentGames.slice(0, 4).map((game, index) => (
-                    <RecentGameCard 
-                      key={`recent-${game.game}-${index}`} 
-                      game={game}
-                      onPlay={handlePlayGame}
-                    />
-                  ))
-                )}
+                {recentGames.map((game, index) => (
+                  <RecentGameCard 
+                    key={`recent-${game.game}-${index}`} 
+                    game={game}
+                    onPlay={handlePlayGame}
+                  />
+                ))}
               </div>
             </section>
           )}
@@ -319,22 +370,16 @@ const Home = memo(() => {
               {t('home.topGames')}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {loading ? (
-                Array.from({ length: 4 }).map((_, index) => (
-                  <Skeleton key={index} className="h-[240px] rounded-xl" />
-                ))
-              ) : (
-                topGames.map((game, index) => (
-                  <div key={`top-${game.id || index}`} className="relative h-full">
-                    <div className="absolute -top-2 -left-2 w-10 h-10 bg-primary rounded-lg shadow-lg flex items-center justify-center z-10 transform -rotate-12">
-                      <span className="text-primary-foreground font-bold text-lg">
-                        #{index + 1}
-                      </span>
-                    </div>
-                    <HomeGameCard game={game} />
+              {topGames.map((game, index) => (
+                <div key={`top-${game.id || index}`} className="relative h-full">
+                  <div className="absolute -top-2 -left-2 w-10 h-10 bg-primary rounded-lg shadow-lg flex items-center justify-center z-10 transform -rotate-12">
+                    <span className="text-primary-foreground font-bold text-lg">
+                      #{index + 1}
+                    </span>
                   </div>
-                ))
-              )}
+                  <HomeGameCard game={game} />
+                </div>
+              ))}
             </div>
           </section>
 
@@ -344,18 +389,12 @@ const Home = memo(() => {
               {t('home.onlineGames')}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {loading ? (
-                Array.from({ length: 4 }).map((_, index) => (
-                  <Skeleton key={index} className="h-[240px] rounded-xl" />
-                ))
-              ) : (
-                onlineGames.map((game, index) => (
-                  <HomeGameCard 
-                    key={`online-${game.id || index}`} 
-                    game={game}
-                  />
-                ))
-              )}
+              {onlineGames.map((game, index) => (
+                <HomeGameCard 
+                  key={`online-${game.id || index}`} 
+                  game={game}
+                />
+              ))}
             </div>
           </section>
 
@@ -389,18 +428,12 @@ const Home = memo(() => {
               {t('home.actionGames')}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {loading ? (
-                Array.from({ length: 4 }).map((_, index) => (
-                  <Skeleton key={index} className="h-[240px] rounded-xl" />
-                ))
-              ) : (
-                actionGames.map((game, index) => (
-                  <HomeGameCard 
-                    key={`action-${game.id || index}`} 
-                    game={game}
-                  />
-                ))
-              )}
+              {actionGames.map((game, index) => (
+                <HomeGameCard 
+                  key={`action-${game.id || index}`} 
+                  game={game}
+                />
+              ))}
             </div>
           </section>
 

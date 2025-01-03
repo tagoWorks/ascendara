@@ -111,8 +111,8 @@ const ReportIssue = ({ isOpen, onClose }) => {
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent className="sm:max-w-[425px]">
         <AlertDialogHeader>
-          <AlertDialogTitle>{t('common.reportDialog.title')}</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('common.reportDialog.title')}</AlertDialogTitle>
+          <AlertDialogDescription className="text-muted-foreground">
             {t('common.reportDialog.description')}
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -144,7 +144,7 @@ const ReportIssue = ({ isOpen, onClose }) => {
           <AlertDialogAction
             onClick={handleSubmit}
             disabled={isLoading}
-            className="bg-primary hover:bg-primary/90"
+            className="bg-primary hover:bg-primary/90 text-secondary"
           >
             {isLoading ? (
               <>

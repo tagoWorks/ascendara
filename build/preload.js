@@ -9,6 +9,10 @@ contextBridge.exposeInMainWorld('electron', {
     on: (channel, func) => ipcRenderer.on(channel, (event, ...args) => func(event, ...args)),
     off: (channel, func) => ipcRenderer.off(channel, func),
     invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+    saveGameImage: (gameName, imageBase64) => ipcRenderer.invoke('save-game-image', gameName, imageBase64),
+    readFile: (path) => ipcRenderer.invoke('read-file', path),
+    writeFile: (path, content) => ipcRenderer.invoke('write-file', path, content),
+    downloadGameCover: (imgID, gameName) => ipcRenderer.invoke('download-game-cover', { imgID, gameName }),
   },
 
   // Settings and Configuration
