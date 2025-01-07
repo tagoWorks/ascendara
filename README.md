@@ -52,7 +52,7 @@ Downloads Page
 # Development Roadmap
 
 ### Ascendara App
-- [x] Auto create shortcuts
+- [ ] Auto create shortcuts
 - [ ] Be able to run scripts optionally instead of execute game file
 - [x] Add news section
 - [x] Make game searches less harsh
