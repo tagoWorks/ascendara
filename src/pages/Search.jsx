@@ -48,50 +48,49 @@ const Search = memo(() => {
   const [apiMetadata, setApiMetadata] = useState(null);
   const { t } = useLanguage();
 
-  useEffect(() => {
-    const loadGames = async () => {
-      setLoading(true);
-      try {
-        // Use cache if available
-        if (gamesCache) {
-          setGames(gamesCache);
-          setLoading(false);
-          return;
-        }
-        
-        const response = await gameService.getAllGames();
-        const gamesData = response.data?.games || response.games || response;
-        const metadata = response.data?.metadata || response.metadata;
-        
-        setGames(gamesData);
-        setApiMetadata(metadata);
-        gamesCache = gamesData;
-      } catch (error) {
-        console.error('Error loading games:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadGames();
-  }, []);
-
   const refreshGames = async () => {
     setIsRefreshing(true);
     try {
-      const response = await gameService.getAllGames();
-      const gamesData = response.data?.games || response.games || response;
-      const metadata = response.data?.metadata || response.metadata;
+      // Use cache if available and not refreshing
+      if (gamesCache && !isRefreshing) {
+        setGames(gamesCache);
+        return;
+      }
       
-      setGames(gamesData);
-      setApiMetadata(metadata);
-      gamesCache = gamesData;
+      const response = await gameService.getAllGames();
+      setGames(response.games);
+      setApiMetadata(response.metadata);
+      // Update cache
+      gamesCache = response.games;
     } catch (error) {
       console.error('Error refreshing games:', error);
     } finally {
       setIsRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    setLoading(true);
+    refreshGames().finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    gameService.getAllGames()
+      .then(response => {
+        if (response.data) {
+          setGames(response.data.games || []);
+          setApiMetadata(response.data.metadata);
+        } else if (response.games) {
+          setGames(response.games);
+          setApiMetadata(response.metadata);
+        } else {
+          setGames(response);
+          setApiMetadata(null);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {

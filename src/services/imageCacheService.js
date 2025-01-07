@@ -2,8 +2,6 @@ class ImageCacheService {
   constructor() {
     this.cache = new Map();
     this.inProgress = new Map();
-    this.maxCacheSize = 400; // Maximum number of items in cache
-    this.maxImageSize = 1024 * 1024; // 1MB max per image
     this.loadCacheFromStorage();
   }
 
@@ -13,70 +11,48 @@ class ImageCacheService {
       const storedCache = localStorage.getItem('imageCache');
       if (storedCache) {
         const parsedCache = JSON.parse(storedCache);
-        // Only load images that aren't too large
         Object.entries(parsedCache).forEach(([key, value]) => {
-          if (this.getBase64Size(value) <= this.maxImageSize) {
-            this.cache.set(key, value);
-          }
+          this.cache.set(key, value);
         });
-        this.pruneCache();
       }
     } catch (error) {
       console.error('Error loading cache from storage:', error);
     }
   }
 
-  // Save cache to localStorage with debouncing
-  saveCacheToStorage = (() => {
-    let timeoutId;
-    return () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        try {
-          const cacheObject = Object.fromEntries(this.cache);
-          localStorage.setItem('imageCache', JSON.stringify(cacheObject));
-        } catch (error) {
-          console.error('Error saving cache to storage:', error);
-          // If localStorage is full, clear half of the cache
-          if (error.name === 'QuotaExceededError') {
-            this.pruneCache(Math.floor(this.cache.size / 2));
-          }
-        }
-      }, 1000); // Wait 1 second after last change before saving
-    };
-  })();
-
-  getBase64Size(base64String) {
-    const padding = (base64String.endsWith('==') ? 2 : (base64String.endsWith('=') ? 1 : 0));
-    return (base64String.length * 3 / 4) - padding;
+  // Save cache to localStorage
+  saveCacheToStorage() {
+    try {
+      const cacheObject = Object.fromEntries(this.cache);
+      localStorage.setItem('imageCache', JSON.stringify(cacheObject));
+    } catch (error) {
+      console.error('Error saving cache to storage:', error);
+    }
   }
 
   async getImage(imgID) {
+    // Skip if no imgID provided
     if (!imgID) return null;
 
+    // Return cached image if available
     if (this.cache.has(imgID)) {
-      // Move accessed item to end of Map to implement LRU
-      const value = this.cache.get(imgID);
-      this.cache.delete(imgID);
-      this.cache.set(imgID, value);
-      return value;
+      return this.cache.get(imgID);
     }
 
+    // Return in-progress request if exists
     if (this.inProgress.has(imgID)) {
       return this.inProgress.get(imgID);
     }
 
+    // Create new request
     const promise = this.fetchAndCacheImage(imgID);
     this.inProgress.set(imgID, promise);
 
     try {
       const result = await promise;
-      if (result && this.getBase64Size(result) <= this.maxImageSize) {
+      if (result) {
         this.cache.set(imgID, result);
-        if (this.cache.size > this.maxCacheSize) {
-          this.pruneCache();
-        }
-        this.saveCacheToStorage();
+        this.saveCacheToStorage(); // Save to localStorage after caching new image
       }
       return result;
     } finally {
@@ -120,15 +96,16 @@ class ImageCacheService {
     });
   }
 
-  pruneCache(maxSize = this.maxCacheSize) {
-    // Remove oldest entries (beginning of Map) until we're under maxSize
-    const entriesToRemove = this.cache.size - maxSize;
-    if (entriesToRemove <= 0) return;
+  pruneCache(maxSize = 400) { 
+    if (this.cache.size <= maxSize) return;
+
+    const entries = Array.from(this.cache.entries());
+    const entriesToRemove = entries.slice(0, entries.length - maxSize);
     
-    const keys = Array.from(this.cache.keys());
-    for (let i = 0; i < entriesToRemove; i++) {
-      this.cache.delete(keys[i]);
-    }
+    entriesToRemove.forEach(([key]) => {
+      this.cache.delete(key);
+    });
+
     this.saveCacheToStorage();
   }
 }

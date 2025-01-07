@@ -3,8 +3,6 @@ import json
 import sys
 import time
 import shutil
-import logging
-import subprocess
 from tempfile import NamedTemporaryFile
 import requests
 from concurrent.futures import ThreadPoolExecutor
@@ -12,25 +10,9 @@ from threading import Lock
 from hashlib import sha256
 from argparse import ArgumentParser, ArgumentTypeError
 from unrar import rarfile
-import traceback
 
 NEW_LINE = "\n" if sys.platform != "Windows" else "\r\n"
-IS_DEV = False  # Development mode flag
-
-def launch_crash_reporter(error_code, error_message):
-    try:
-        crash_reporter_path = os.path.join('./AscendaraCrashReporter.exe')
-        if os.path.exists(crash_reporter_path):
-            # Use subprocess.Popen for better process control
-            subprocess.Popen(
-                [crash_reporter_path, "gofilehelper", str(error_code), error_message],
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
-            )
-        else:
-            logging.error(f"Crash reporter not found at: {crash_reporter_path}")
-    except Exception as e:
-        logging.error(f"Failed to launch crash reporter: {e}")
-        logging.debug(f"Error details: {traceback.format_exc()}")
+IS_DEV = True  # Development mode flag
 
 def safe_write_json(filepath, data):
     temp_dir = os.path.dirname(filepath)
@@ -67,93 +49,74 @@ def handleerror(game_info, game_info_path, e):
 
 class GofileDownloader:
     def __init__(self, game, online, dlc, version, size, download_dir, max_workers=5):
-        try:
-            self._max_retries = 3
-            self._download_timeout = 30 
-            self._token = self._getToken()
-            self._max_workers = max_workers
-            self._lock = Lock()
-            self.game = game
-            self.online = online
-            self.dlc = dlc
-            self.version = version
-            self.size = size
-            # Remove k9bsbM from path if present
-            if "k9bsbM" in download_dir:
-                download_dir = download_dir.replace(os.path.join("k9bsbM", game), "").replace("k9bsbM", "")
-            self.download_dir = os.path.join(download_dir, game)
-            os.makedirs(self.download_dir, exist_ok=True)
-            self.game_info_path = os.path.join(self.download_dir, f"{game}.ascendara.json")
-            self.game_info = {
-                "game": game,
-                "online": online,
-                "dlc": dlc,
-                "version": version if version else "",
-                "size": size,
-                "executable": os.path.join(self.download_dir, f"{game}.exe"),
-                "isRunning": False,
-                "downloadingData": {
-                    "downloading": False,
-                    "extracting": False,
-                    "updating": False,
-                    "progressCompleted": "0.00",
-                    "progressDownloadSpeeds": "0.00 KB/s",
-                    "timeUntilComplete": "0s"
-                }
+        self._max_retries = 3
+        self._download_timeout = 30 
+        self._token = self._getToken()
+        self._max_workers = max_workers
+        self._lock = Lock()
+        self.game = game
+        self.online = online
+        self.dlc = dlc
+        self.version = version
+        self.size = size
+        # Remove k9bsbM from path if present
+        if "k9bsbM" in download_dir:
+            download_dir = download_dir.replace(os.path.join("k9bsbM", game), "").replace("k9bsbM", "")
+        self.download_dir = os.path.join(download_dir, game)
+        os.makedirs(self.download_dir, exist_ok=True)
+        self.game_info_path = os.path.join(self.download_dir, f"{game}.ascendara.json")
+        self.game_info = {
+            "game": game,
+            "online": online,
+            "dlc": dlc,
+            "version": version if version else "",
+            "size": size,
+            "executable": os.path.join(self.download_dir, f"{game}.exe"),
+            "isRunning": False,
+            "downloadingData": {
+                "downloading": False,
+                "extracting": False,
+                "updating": False,
+                "progressCompleted": "0.00",
+                "progressDownloadSpeeds": "0.00 KB/s",
+                "timeUntilComplete": "0s"
             }
-            safe_write_json(self.game_info_path, self.game_info)
-        except Exception as e:
-            error_msg = f"Failed to initialize GoFile downloader: {str(e)}"
-            logging.error(error_msg)
-            launch_crash_reporter(1200, str(e))
-            raise
+        }
+        safe_write_json(self.game_info_path, self.game_info)
 
     @staticmethod
     def _getToken():
-        try:
-            response = requests.get('https://api.gofile.io/createAccount')
-            if response.status_code == 200:
-                return response.json()['data']['token']
-            else:
-                error_msg = f"Failed to get GoFile token. Status code: {response.status_code}"
-                logging.error(error_msg)
-                launch_crash_reporter(1203, error_msg)
-                raise Exception(error_msg)
-        except Exception as e:
-            error_msg = f"Failed to authenticate with GoFile: {str(e)}"
-            logging.error(error_msg)
-            launch_crash_reporter(1203, str(e))
-            raise
+        user_agent = os.getenv("GF_USERAGENT", "Mozilla/5.0")
+        headers = {
+            "User-Agent": user_agent,
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept": "*/*",
+            "Connection": "keep-alive",
+        }
+        create_account_response = requests.post("https://api.gofile.io/accounts", headers=headers).json()
+        if create_account_response["status"] != "ok":
+            raise Exception("Account creation failed!")
+        return create_account_response["data"]["token"]
 
     def download_from_gofile(self, url, password=None):
-        try:
-            content_id = url.split('/')[-1]
-            self.game_info['downloadingData']['downloading'] = True
-            safe_write_json(self.game_info_path, self.game_info)
-            
-            files_info = self._parseLinksRecursively(content_id, password)
-            
-            if not files_info:
-                print(f"No files found for download from {url}")
-                return
+        # Fix URL if it starts with //
+        if url.startswith("//"):
+            url = "https:" + url
+        
+        content_id = url.split("/")[-1]
+        _password = sha256(password.encode()).hexdigest() if password else None
 
-            with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
-                for item in files_info.values():
-                    executor.submit(self._downloadContent, item)
+        files_info = self._parseLinksRecursively(content_id, _password)
+        
+        if not files_info:
+            print(f"No files found for download from {url}")
+            return
 
-            self.game_info['downloadingData']['downloading'] = False
-            self.game_info['downloadingData']['extracting'] = True
-            safe_write_json(self.game_info_path, self.game_info)
-            
-            self._extract_files()
-            
-            self.game_info['downloadingData']['extracting'] = False
-            safe_write_json(self.game_info_path, self.game_info)
-        except Exception as e:
-            error_msg = f"Failed to download from GoFile: {str(e)}"
-            logging.error(error_msg)
-            launch_crash_reporter(1202, str(e))
-            raise
+        with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
+            for item in files_info.values():
+                executor.submit(self._downloadContent, item)
+
+        self._extract_files()
 
     def _parseLinksRecursively(self, content_id, password, current_path=""):
         url = f"https://api.gofile.io/contents/{content_id}?wt=4fd6sg89d7s6&cache=true"
@@ -435,51 +398,33 @@ def parse_boolean(value):
         raise ArgumentTypeError(f"Invalid boolean value: {value}")
 
 def main():
-    try:
-        if len(sys.argv) < 2:
-            error_msg = "No arguments provided. Required: url game online dlc version size download_dir [--password password]"
-            print(error_msg)
-            launch_crash_reporter(1200, error_msg)
-            sys.exit(1)
-
-        if IS_DEV:
-            open_console()
+    if IS_DEV:
+        open_console()
         
-        parser = ArgumentParser(description="Download files from Gofile, extract them, and manage game info.")
-        parser.add_argument("url", help="Gofile URL to download from")
-        parser.add_argument("game", help="Name of the game")
-        parser.add_argument("online", type=parse_boolean, help="Is the game online (true/false)?")
-        parser.add_argument("dlc", type=parse_boolean, help="Is DLC included (true/false)?")
-        parser.add_argument("version", help="Version of the game")
-        parser.add_argument("size", help="Size of the file in (ex: 12 GB, 439 MB)")
-        parser.add_argument("download_dir", help="Directory to save the downloaded files")
-        parser.add_argument("--password", help="Password for protected content", default=None)
+    parser = ArgumentParser(description="Download files from Gofile, extract them, and manage game info.")
+    parser.add_argument("url", help="Gofile URL to download from")
+    parser.add_argument("game", help="Name of the game")
+    parser.add_argument("online", type=parse_boolean, help="Is the game online (true/false)?")
+    parser.add_argument("dlc", type=parse_boolean, help="Is DLC included (true/false)?")
+    parser.add_argument("version", help="Version of the game")
+    parser.add_argument("size", help="Size of the file in (ex: 12 GB, 439 MB)")
+    parser.add_argument("download_dir", help="Directory to save the downloaded files")
+    parser.add_argument("--password", help="Password for protected content", default=None)
 
-        try:
-            args = parser.parse_args()
-        except Exception as e:
-            error_msg = f"Invalid arguments: {str(e)}"
-            print(error_msg)
-            launch_crash_reporter(1200, str(e))
-            sys.exit(1)
+    args = parser.parse_args()
 
-        try:
-            downloader = GofileDownloader(args.game, args.online, args.dlc, args.version, args.size, args.download_dir)
-            downloader.download_from_gofile(args.url, args.password)
-        except Exception as e:
-            error_msg = f"Download failed: {str(e)}"
-            print(error_msg)
-            launch_crash_reporter(1200, str(e))
-            sys.exit(1)
-    
+    try:
+        downloader = GofileDownloader(args.game, args.online, args.dlc, args.version, args.size, args.download_dir)
+        downloader.download_from_gofile(args.url, args.password)
+    except Exception as e:
+        handleerror(downloader.game_info, downloader.game_info_path, e)
+        print(f"An error occurred: {str(e)}")
         if IS_DEV:
             input("\nPress Enter to exit...")
-
-    except Exception as e:
-        error_msg = f"An unexpected error occurred: {str(e)}"
-        print(error_msg)
-        launch_crash_reporter(1200, str(e))
         sys.exit(1)
+    
+    if IS_DEV:
+        input("\nPress Enter to exit...")
 
 if __name__ == "__main__":
     main()
