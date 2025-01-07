@@ -7,6 +7,11 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Ascendara tools
+/binaries/AscendaraDownloader/build
+/binaries/AscendaraCrashReporter/build
+/binaries/AscendaraGameHandler/build
+
 # Dependencies
 node_modules
 dist
@@ -16,8 +21,6 @@ dist-ssr
 # Million Lint
 .million
 /src/translations/json
-/binaries/AscendaraDownloader/build
-/binaries/AscendaraGameHandler/build
 *.spec
 package-lock.json
 exports.txt

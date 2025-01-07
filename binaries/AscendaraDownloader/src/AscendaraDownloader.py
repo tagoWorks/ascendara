@@ -5,12 +5,115 @@ import shutil
 import string
 import sys
 import time
+import logging
+import subprocess
 from tempfile import NamedTemporaryFile
 import requests
 from unrar import rarfile
 from requests.adapters import HTTPAdapter
 from urllib3.poolmanager import PoolManager
 import argparse
+from datetime import datetime
+import traceback
+
+def launch_crash_reporter(error_code, error_message):
+    try:
+        crash_reporter_path = os.path.join('./AscendaraCrashReporter.exe')
+        if os.path.exists(crash_reporter_path):
+            # Use subprocess.Popen for better process control
+            subprocess.Popen(
+                [crash_reporter_path, "maindownloader", str(error_code), error_message],
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+            )
+        else:
+            logging.error(f"Crash reporter not found at: {crash_reporter_path}")
+    except Exception as e:
+        logging.error(f"Failed to launch crash reporter: {e}")
+        logging.debug(f"Error details: {traceback.format_exc()}")
+
+def safe_write_json(filepath, data):
+    try:
+        temp_dir = os.path.dirname(filepath)
+        temp_file_path = None
+        with NamedTemporaryFile('w', delete=False, dir=temp_dir) as temp_file:
+            json.dump(data, temp_file, indent=4)
+            temp_file_path = temp_file.name
+        retry_attempts = 3
+        for attempt in range(retry_attempts):
+            try:
+                os.replace(temp_file_path, filepath)
+                break
+            except PermissionError as e:
+                if attempt < retry_attempts - 1:
+                    time.sleep(1)
+                else:
+                    raise e
+    except Exception as e:
+        error_msg = f"Failed to write JSON file {filepath}: {str(e)}"
+        logging.error(error_msg)
+        launch_crash_reporter(1306, str(e))
+        raise
+
+def read_json_file(filepath):
+    try:
+        with open(filepath, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        error_msg = f"Failed to read JSON file {filepath}: {str(e)}"
+        logging.error(error_msg)
+        launch_crash_reporter(1306, str(e))
+        raise
+
+def update_game_info(game_info_path, updates):
+    try:
+        if os.path.exists(game_info_path):
+            game_info = read_json_file(game_info_path)
+            game_info.update(updates)
+            safe_write_json(game_info_path, game_info)
+    except Exception as e:
+        error_msg = f"Failed to update game info: {str(e)}"
+        logging.error(error_msg)
+        launch_crash_reporter(1307, str(e))
+        raise
+
+def launch_gofile_helper(game, online, dlc, version, size, url, download_dir, password=None):
+    try:
+        helper_path = os.path.join(os.path.dirname(__file__), 'AscendaraGofileHelper.exe')
+        if not os.path.exists(helper_path):
+            error_msg = f"GoFile helper not found at: {helper_path}"
+            logging.error(error_msg)
+            launch_crash_reporter(1308, error_msg)
+            return False
+
+        args = [
+            helper_path,
+            url,
+            game,
+            str(online).lower(),
+            str(dlc).lower(),
+            version or "",
+            size,
+            download_dir
+        ]
+        
+        if password:
+            args.extend(["--password", password])
+
+        process = subprocess.Popen(args, creationflags=subprocess.CREATE_NO_WINDOW)
+        return_code = process.wait()
+        
+        if return_code != 0:
+            error_msg = f"GoFile helper process failed with return code: {return_code}"
+            logging.error(error_msg)
+            launch_crash_reporter(1308, error_msg)
+            return False
+            
+        return True
+    except Exception as e:
+        error_msg = f"Failed to launch GoFile helper: {str(e)}"
+        logging.error(error_msg)
+        launch_crash_reporter(1308, str(e))
+        raise
 
 def resource_path(relative_path):
     try:
@@ -64,27 +167,6 @@ def retryfolder(game, online, dlc, version, size, download_dir, newfolder):
     del game_info["downloadingData"]
     shutil.rmtree(tempdownloading, ignore_errors=True)
     safe_write_json(game_info_path, game_info)
-
-def safe_write_json(filepath, data):
-    temp_dir = os.path.dirname(filepath)
-    temp_file_path = None
-    try:
-        with NamedTemporaryFile('w', delete=False, dir=temp_dir) as temp_file:
-            json.dump(data, temp_file, indent=4)
-            temp_file_path = temp_file.name
-        retry_attempts = 3
-        for attempt in range(retry_attempts):
-            try:
-                os.replace(temp_file_path, filepath)
-                break
-            except PermissionError as e:
-                if attempt < retry_attempts - 1:
-                    time.sleep(1)
-                else:
-                    raise e
-    finally:
-        if temp_file_path and os.path.exists(temp_file_path):
-            os.remove(temp_file_path)
 
 def handleerror(game_info, game_info_path, e):
     game_info['online'] = ""
@@ -253,18 +335,43 @@ def parse_boolean(value):
         raise argparse.ArgumentTypeError(f"Invalid boolean value: {value}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Download and manage game files.")
-    parser.add_argument("link", help="URL of the file to download")
-    parser.add_argument("game", help="Name of the game")
-    parser.add_argument("online", type=parse_boolean, help="Is the game online (true/false)?")
-    parser.add_argument("dlc", type=parse_boolean, help="Is DLC included (true/false)?")
-    parser.add_argument("version", help="Version of the game")
-    parser.add_argument("size", help="Size of the file in (ex: 12 GB, 439 MB)")
-    parser.add_argument("download_dir", help="Directory to save the downloaded files")
+    try:
+        if len(sys.argv) < 2:
+            error_msg = "No arguments provided. Required: link game online dlc version size download_dir"
+            print(error_msg)
+            launch_crash_reporter(1300, error_msg)
+            sys.exit(1)
 
-    args = parser.parse_args()
+        parser = argparse.ArgumentParser(description="Download and manage game files.")
+        parser.add_argument("link", help="URL of the file to download")
+        parser.add_argument("game", help="Name of the game")
+        parser.add_argument("online", type=parse_boolean, help="Is the game online (true/false)?")
+        parser.add_argument("dlc", type=parse_boolean, help="Is DLC included (true/false)?")
+        parser.add_argument("version", help="Version of the game")
+        parser.add_argument("size", help="Size of the file in (ex: 12 GB, 439 MB)")
+        parser.add_argument("download_dir", help="Directory to save the downloaded files")
 
-    download_file(args.link, args.game, args.online, args.dlc, args.version, args.size, args.download_dir)
+        try:
+            args = parser.parse_args()
+        except Exception as e:
+            error_msg = f"Invalid arguments: {str(e)}"
+            print(error_msg)
+            launch_crash_reporter(1300, error_msg)
+            sys.exit(1)
+
+        try:
+            download_file(args.link, args.game, args.online, args.dlc, args.version, args.size, args.download_dir)
+        except Exception as e:
+            error_msg = f"Download failed: {str(e)}"
+            print(error_msg)
+            launch_crash_reporter(1300, error_msg)
+            sys.exit(1)
+
+    except Exception as e:
+        error_msg = f"An unexpected error occurred: {str(e)}"
+        print(error_msg)
+        launch_crash_reporter(1300, error_msg)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
