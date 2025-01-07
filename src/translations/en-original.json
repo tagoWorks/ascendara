@@ -52,7 +52,20 @@
     },
     "app": {
       "outdated": "OUTDATED",
-      "downloading-update": "Downloading Update..."
+      "downloading-update": "Downloading Update...",
+      "toasts": {
+        "outOfDate": "Ascendara is out of date",
+        "outOfDateDesc": "Please download the latest version from the official website",
+        "updateNow": "Update Now", 
+        "updateReady": "Ascendara is ready to update",
+        "updateReadyDesc": "Ascendara downloaded the update and is ready to install and restart now",
+        "installAndRestart": "Install & Restart"
+      },
+      "crashScreen": {
+        "title": "Oh no...",
+        "description": "Ascendara did not like what just happened. No worries, if you have analytics enabled this error has been tracked and we'll get this fixed.",
+        "reload": "Reload Ascendara"
+      }
     },
     "home": {
       "recentGames": "Recent Games",
@@ -87,7 +100,7 @@
       "clearFilters": "Clear Filters",
       "applyFilters": "Apply Filters",
       "indexedInformation": "Indexed Information",
-      "indexedInformationDescription": "Ascendara uses a custom developed database to store game links and information, which is updated monthly. No game files are ever stored on our servers.",
+      "indexedInformationDescription": "Ascendara uses a custom developed database to store game links and information, which is updated monthly. No game files are ever stored on Ascendara servers.",
       "totalGames": "Total Games",
       "source": "Source",
       "lastUpdated": "Last Updated",
@@ -105,6 +118,7 @@
     "library": {
       "installedGames": "Your Library",
       "noGamesMessage": "No games in your library yet",
+      "cannotRunDev": "Cannot run games in developer mode",
       "game": "game",
       "inYourLibrary": "in your library",
       "searchLibrary": "Search library...",
@@ -112,6 +126,9 @@
       "addGameDescription1": "Add your own game to your library.",
       "addGameDescription2": "Add a game to your library to easily launch it from Ascendara. No files will be modified when adding a game.",
       "gameExecutable": "Game Executable",
+      "createShortcut": "Create Desktop Shortcut",
+      "shortcutCreated": "Shortcut created",
+      "shortcutError": "Error creating shortcut. Maybe the executable path doesn't exist?",
       "chooseExecutableFile": "Choose executable file...",
       "gameName": "Game Name",
       "version": "Version",
@@ -141,7 +158,12 @@
       "gameLocation": "Game Location",
       "browse": "Browse",
       "editGame": "Edit Game",
-      "gameOptions": "Game Options"
+      "gameOptions": "Game Options",
+      "recentGames": "Recent Games",
+      "noGames": "No games found",
+      "noGamesDesc": "You haven't installed any games yet",
+      "alreadyRunning": "{{game}} is already running",
+      "executableNotFound": "Game executable not found"
     },
     "downloads": {
       "noDownloads": "No active downloads",
@@ -173,10 +195,10 @@
       "warning": "Warning",
       "error": "Error",
       "errorReported": "Issue Reported Successfully",
-      "errorReportedDescription": "Thank you for helping improve Ascendara. Our team will investigate this issue.",
+      "errorReportedDescription": "Thank you for helping improve Ascendara. Ascendara developer team will investigate this issue.",
       "downloadError": "Download Error",
       "genericError": "An unknown error occurred",
-      "errorHelp": "The download issue should already be reported. If the issue persists, please join our Discord server for support.",
+      "errorHelp": "The download issue should already be reported. If the issue persists, please join the tagoWorks Discord server for support.",
       "alreadyReported": "Already Reported",
       "extracting": "Extracting game files...",
       "extractingDescription": "Extracting game files may take up to 30 minutes depending on the file size.",
@@ -214,7 +236,10 @@
       "visit-status-page": "Visit Status Page",
       "api-description": "Ascendara's main API handles game information, analytics, and reports.",
       "storage-description": "Storage service handles small background assets.",
-      "lfs-description": "Large File Server handles bigger files like update files."
+      "lfs-description": "Large File Server handles bigger files like update files.",
+      "offline": "No Internet Connection",
+      "no-internet": "You are currently offline.",
+      "check-connection": "Check your internet connection and restart Ascendara."
     },
     "settings": {
       "title": "Settings",
@@ -235,6 +260,9 @@
       "ascendaraUpdates": "Automatic Updates",
       "ascendaraUpdatesDescription": "Automatically download new versions of Ascendara and ask you to install them when ready",
       
+      "autoCreateShortcuts": "Automatically Create Shortcuts",
+      "autoCreateShortcutsDescription": "Automatically create shortcuts on desktop for games that run successfully for the first time",
+
       "matureContent": "Mature Content",
       "matureContentDescription": "Allow games with mature themes to appear in search results",
       

@@ -9,7 +9,7 @@ import {
   AlertDialogCancel,
   AlertDialogFooter,
 } from './ui/alert-dialog';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2, WifiOff } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const MenuBar = () => {
@@ -24,6 +24,7 @@ const MenuBar = () => {
     // Default status if no valid cache exists
     return { 
       isHealthy: true,
+      isOffline: false,
       lastChecked: null,
       downServices: []
     };
@@ -77,6 +78,7 @@ const MenuBar = () => {
         if (isSubscribed) {
           const newStatus = {
             isHealthy: status.isHealthy,
+            isOffline: status.isOffline,
             lastChecked: new Date().toISOString(),
             downServices: status.downServices
           };
@@ -148,33 +150,35 @@ const MenuBar = () => {
           title={t('server-status.title')}
           style={{ WebkitAppRegion: 'no-drag' }}
         >
-          <div className={`w-1.5 h-1.5 rounded-full ${
-            serverStatus.isHealthy 
-              ? 'bg-green-500 hover:bg-green-600' 
-              : 'bg-red-500 animate-pulse hover:bg-red-600'
-          }`} />
-        </div>
-          {!isLatest && (
-            <div className="flex items-center ml-2">
-              
-                {isDownloadingUpdate ? (
-                  <>
-                  <span className="text-[14px] px-1 py-0.5 rounded bg-green-500/10 text-green-500 border border-green-500/20 flex items-center gap-1">
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    {t('app.downloading-update')}
-                  </span>
-                  </>
-                ) : (
-                  <>
-                  <span className="text-[14px] px-1 py-0.5 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" />
-                    {t('app.outdated')}
-                  </span>
-                  </>
-                )}
-            </div>
+          {serverStatus.isOffline ? (
+            <WifiOff className="w-4 h-4 text-red-500" />
+          ) : (
+            <div className={`w-1.5 h-1.5 rounded-full ${
+              serverStatus.isHealthy 
+                ? 'bg-green-500 hover:bg-green-600' 
+                : 'bg-red-500 animate-pulse hover:bg-red-600'
+            }`} />
           )}
-
+        </div>
+        {!isLatest && (
+          <div className="flex items-center ml-2">
+            {isDownloadingUpdate ? (
+              <>
+              <span className="text-[14px] px-1 py-0.5 rounded bg-green-500/10 text-green-500 border border-green-500/20 flex items-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                {t('app.downloading-update')}
+              </span>
+              </>
+            ) : (
+              <>
+              <span className="text-[14px] px-1 py-0.5 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {t('app.outdated')}
+              </span>
+              </>
+            )}
+          </div>
+        )}
         <div className="flex-1" />
       </div>
 
@@ -182,10 +186,7 @@ const MenuBar = () => {
         <AlertDialogContent className="max-w-md bg-background">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-2xl font-bold text-foreground">
-              <div className={`w-2.5 h-2.5 rounded-full ${
-                serverStatus.isHealthy ? 'bg-green-500' : 'bg-red-500 animate-pulse'
-              }`} />
-              {t('server-status.title')}
+              {serverStatus.isOffline ? t('server-status.offline') : t('server-status.title')}
             </AlertDialogTitle>
             
             <AlertDialogDescription className="sr-only">
@@ -194,45 +195,56 @@ const MenuBar = () => {
             
             <div className="mt-4 space-y-4">
               {/* Status Card */}
-              <div className={`p-4 rounded-lg border ${
-                serverStatus.isHealthy 
-                  ? 'bg-green-500/5 border-green-500/20' 
-                  : 'bg-red-500/5 border-red-500/20'
-              }`}>
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-foreground">
-                    {serverStatus.isHealthy ? t('server-status.healthy') : t('server-status.unhealthy')}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {t('server-status.last-checked')} {formatLastChecked(serverStatus.lastChecked)}
-                  </span>
+              {serverStatus.isOffline ? (
+                <div className="p-4 rounded-lg border bg-red-500/5 border-red-500/20">
+                  <div className="flex items-center gap-3">
+                    <WifiOff className="w-8 h-8 text-red-500" />
+                    <div>
+                      <h3 className="font-semibold text-foreground">{t('server-status.no-internet')}</h3>
+                      <p className="text-sm text-muted-foreground">{t('server-status.check-connection')}</p>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm mt-2 text-muted-foreground">
-                  {serverStatus.isHealthy 
-                    ? t('server-status.healthy-description')
-                    : (
-                      <div>
-                        {t('server-status.unhealthy-description')}
-                        <ul className="mt-2 space-y-2">
-                          {serverStatus.downServices?.map(service => (
-                            <li key={service} className="flex items-start">
-                              <span className="w-2.5 h-2.5 mt-1.5 rounded-full bg-red-500 mr-2" />
-                              <div>
-                                <span className="font-medium">{service === 'lfs' ? service.toUpperCase() : service.charAt(0).toUpperCase() + service.slice(1)} Server</span>
-                                <p className="text-xs text-muted-foreground">
-                                  {service === 'api' && t('server-status.api-description')}
-                                  {service === 'storage' && t('server-status.storage-description')}
-                                  {service === 'lfs' && t('server-status.lfs-description')}
-                                </p>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )} 
-                </p>
-              </div>
-
+              ) : (
+                <div className={`p-4 rounded-lg border ${
+                  serverStatus.isHealthy 
+                    ? 'bg-green-500/5 border-green-500/20' 
+                    : 'bg-red-500/5 border-red-500/20'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-foreground">
+                      {serverStatus.isHealthy ? t('server-status.healthy') : t('server-status.unhealthy')}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {t('server-status.last-checked')} {formatLastChecked(serverStatus.lastChecked)}
+                    </span>
+                  </div>
+                  <p className="text-sm mt-2 text-muted-foreground">
+                    {serverStatus.isHealthy 
+                      ? t('server-status.healthy-description')
+                      : (
+                        <div>
+                          {t('server-status.unhealthy-description')}
+                          <ul className="mt-2 space-y-2">
+                            {serverStatus.downServices?.map(service => (
+                              <li key={service} className="flex items-start">
+                                <span className="w-2.5 h-2.5 mt-1.5 rounded-full bg-red-500 mr-2" />
+                                <div>
+                                  <span className="font-medium">{service === 'lfs' ? service.toUpperCase() : service.charAt(0).toUpperCase() + service.slice(1)} Server</span>
+                                  <p className="text-xs text-muted-foreground">
+                                    {service === 'api' && t('server-status.api-description')}
+                                    {service === 'storage' && t('server-status.storage-description')}
+                                    {service === 'lfs' && t('server-status.lfs-description')}
+                                  </p>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )} 
+                  </p>
+                </div>
+              )}
               {/* Status Page Link */}
               <div className="flex items-center justify-between p-3 rounded-lg border bg-card/30">
                 <span className="text-sm text-muted-foreground">{t('server-status.need-more-details')}</span>

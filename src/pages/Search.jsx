@@ -20,6 +20,9 @@ import gameService from '../services/gameService';
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../components/ui/alert-dialog";
 
+// Module-level cache that persists during runtime
+let gamesCache = null;
+
 const Search = memo(() => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,9 +51,17 @@ const Search = memo(() => {
   const refreshGames = async () => {
     setIsRefreshing(true);
     try {
+      // Use cache if available and not refreshing
+      if (gamesCache && !isRefreshing) {
+        setGames(gamesCache);
+        return;
+      }
+      
       const response = await gameService.getAllGames();
-      setGames(Array.isArray(response.games) ? response.games : []);
-      setApiMetadata(response.metadata || null);
+      setGames(response.games);
+      setApiMetadata(response.metadata);
+      // Update cache
+      gamesCache = response.games;
     } catch (error) {
       console.error('Error refreshing games:', error);
     } finally {
@@ -197,6 +208,7 @@ const Search = memo(() => {
                     <div className="space-y-2 mt-4 text-sm text-muted-foreground">
                       <p>
                         {t('search.indexedInformationDescription')}{" "}
+
                         <a
                           onClick={() => window.electron.openURL('https://ascendara.app/dmca')}
                           className="text-primary hover:underline cursor-pointer"
@@ -204,7 +216,7 @@ const Search = memo(() => {
                           {t('common.learnMore')}
                         </a>
                       </p>
-                     
+
                       <Separator className="bg-border/50" />
                       <p>{t('search.totalGames')}: {apiMetadata.games.toLocaleString()}</p>
                       <p>{t('search.source')}: {apiMetadata.source}</p>

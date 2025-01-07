@@ -140,7 +140,7 @@ const ReportIssue = ({ isOpen, onClose }) => {
         </div>
 
         <AlertDialogFooter>
-          <AlertDialogCancel>{t('common.reportDialog.cancel')}</AlertDialogCancel>
+          <AlertDialogCancel className="text-muted-foreground bg-secondary" onClick={onClose}>{t('common.reportDialog.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleSubmit}
             disabled={isLoading}

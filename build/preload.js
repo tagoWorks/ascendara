@@ -78,6 +78,8 @@ contextBridge.exposeInMainWorld('electron', {
   modifyGameExecutable: (game, executable) => ipcRenderer.invoke('modify-game-executable', game, executable),
   getAssetPath: (filename) => ipcRenderer.invoke('get-asset-path', filename),
   getAnalyticsKey: () => ipcRenderer.invoke('get-analytics-key'),
+  isDev: () => ipcRenderer.invoke('is-dev'),
+  checkFileExists: (filePath) => ipcRenderer.invoke('check-file-exists', filePath),
 
   // Welcome flow functions
   isNew: () => ipcRenderer.invoke('is-new'),

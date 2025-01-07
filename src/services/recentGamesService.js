@@ -52,6 +52,44 @@ class RecentGamesService {
       return [];
     }
   }
+
+  checkGameStatus(game) {
+    try {
+      const recentGames = this.getRecentGames();
+      const gameData = recentGames.find(g => g.game === game.game);
+      
+      if (!gameData) return { isRunning: false };
+      
+      return {
+        isRunning: gameData.isRunning === true,
+        hasError: Boolean(gameData.hasError)
+      };
+    } catch (error) {
+      console.error('Error checking game status:', error);
+      return { isRunning: false, hasError: true };
+    }
+  }
+
+  updateGameStatus(gameName, status) {
+    try {
+      const recentGames = this.getRecentGames();
+      const gameIndex = recentGames.findIndex(g => g.game === gameName);
+      
+      if (gameIndex === -1) return;
+
+      recentGames[gameIndex] = {
+        ...recentGames[gameIndex],
+        ...status,
+        lastUpdated: new Date().toISOString()
+      };
+
+      localStorage.setItem(RECENT_GAMES_KEY, JSON.stringify(recentGames));
+      return recentGames;
+    } catch (error) {
+      console.error('Error updating game status:', error);
+      return null;
+    }
+  }
 }
 
 export default new RecentGamesService();

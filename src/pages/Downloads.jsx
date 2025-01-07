@@ -228,8 +228,8 @@ const Downloads = () => {
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRetryConfirm}>
+            <AlertDialogCancel className="text-muted-foreground bg-secondary" onClick={() => setRetryModalOpen(false)}>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction className="bg-primary text-secondary" onClick={handleRetryConfirm}>
               {t('common.retry')}
             </AlertDialogAction>
           </AlertDialogFooter>

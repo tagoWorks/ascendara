@@ -852,10 +852,10 @@ export default function DownloadPage() {
             )}
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="text-muted-foreground" onClick={handleCloseGuide}>
+            <AlertDialogCancel className="text-muted-foreground bg-secondary" onClick={handleCloseGuide}>
               {guideStep === 0 ? t('download.newUserGuide.noThanks') : t('download.newUserGuide.close')}
             </AlertDialogCancel>
-            <Button onClick={guideStep === 0 ? handleStartGuide : handleNextStep}>
+            <Button variant="outline" onClick={guideStep === 0 ? handleStartGuide : handleNextStep}>
               {guideStep === 0 ? t('download.newUserGuide.startGuide') : 
                guideStep === guideSteps.length ? t('download.newUserGuide.finish') : 
                guideStep === 1 ? t('download.newUserGuide.installed') :

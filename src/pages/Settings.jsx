@@ -144,6 +144,7 @@ function Settings() {
   const [settings, setSettings] = useState({
     seamlessDownloads: true,
     viewOldDownloadLinks: false,
+    autoCreateShortcuts: true,
     seeInappropriateContent: false,
     sendAnalytics: true,
     autoUpdate: true,
@@ -327,6 +328,17 @@ function Settings() {
     dark: themes.filter(t => t.group === 'dark')
   };
 
+  const [isDev, setIsDev] = useState(false);
+
+  // Check if in development mode
+  useEffect(() => {
+    const checkDevMode = async () => {
+      const isDevMode = await window.electron.isDev();
+      setIsDev(isDevMode);
+    };
+    checkDevMode();
+  }, []);
+
   // Show loading state
   if (isLoading) {
     return (
@@ -371,6 +383,17 @@ function Settings() {
                     <Switch
                       checked={settings.seamlessDownloads}
                       onCheckedChange={() => handleSettingChange({ seamlessDownloads: !settings.seamlessDownloads })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t('settings.autoCreateShortcuts')}</Label>
+                      <p className="text-sm text-muted-foreground">{t('settings.autoCreateShortcutsDescription')}</p>
+                    </div>
+                    <Switch
+                      checked={settings.autoCreateShortcuts}
+                      onCheckedChange={() => handleSettingChange({ autoCreateShortcuts: !settings.autoCreateShortcuts })}
                     />
                   </div>
 
@@ -570,6 +593,43 @@ function Settings() {
                 </div>
               </div>
             </Card>
+
+            {/* Developer Settings Card - Only shown in development mode */}
+            {isDev && (
+              <Card className="p-6">
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-semibold mb-4 text-primary flex items-center gap-2">
+                      <CircleAlert size={20} />
+                      Developer Tools
+                    </h2>
+                    <div className="space-y-4">
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        onClick={() => window.electron.clearCache()}
+                      >
+                        Clear Cache
+                      </Button>
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        onClick={() => window.electron.openGameDirectory('local')}
+                      >
+                        Open Local Directory
+                      </Button>
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        onClick={() => window.electron.openDevTools()}
+                      >
+                        Open DevTools
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
 
             {/* Quick Links Card */}
             <Card className="p-6">

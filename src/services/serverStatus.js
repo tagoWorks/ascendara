@@ -22,8 +22,32 @@ const checkEndpoint = async (url) => {
   }
 };
 
+const checkInternetConnectivity = async () => {
+  try {
+    // Try to fetch a reliable external resource
+    const response = await window.electron.request('https://www.google.com/', {
+      method: 'HEAD',
+      timeout: 5000
+    });
+    return response.ok;
+  } catch (error) {
+    console.warn('Internet connectivity check failed:', error);
+    return false;
+  }
+};
+
 export const checkServerStatus = async () => {
   try {
+    // First check internet connectivity
+    const isOnline = await checkInternetConnectivity();
+    if (!isOnline) {
+      return {
+        isHealthy: false,
+        downServices: ['internet'],
+        isOffline: true
+      };
+    }
+
     const results = await Promise.all(
       Object.entries(ENDPOINTS).map(async ([key, url]) => {
         const isUp = await checkEndpoint(url);
@@ -33,13 +57,15 @@ export const checkServerStatus = async () => {
 
     return {
       isHealthy: results.every(result => result.isUp),
-      downServices: results.filter(result => !result.isUp).map(service => service.service)
+      downServices: results.filter(result => !result.isUp).map(service => service.service),
+      isOffline: false
     };
   } catch (error) {
     console.error('Error checking server status:', error);
     return {
       isHealthy: false,
-      downServices: ['Unknown error occurred']
+      downServices: ['Unknown error occurred'],
+      isOffline: false
     };
   }
-}; 
+};

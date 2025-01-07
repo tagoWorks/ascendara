@@ -14,13 +14,31 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from './contexts/ThemeContext';
 import './Index.css';
 import { Toaster, toast } from 'sonner';
+import { Loader } from 'lucide-react';
 import UpdateOverlay from './components/UpdateOverlay';
 import { analytics } from './services/analyticsService'
-import { chaoticOrbit } from 'ldrs'
 import ContextMenu from './components/ContextMenu';
 import './components/ContextMenu.css';
+import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import enTranslations from './translations/en-original.json';
 
-chaoticOrbit.register()
+// Initialize i18n
+i18n
+  .use(initReactI18next)
+  .init({
+    resources: {
+      en: {
+        translation: enTranslations
+      }
+    },
+    lng: 'en',
+    fallbackLng: 'en',
+    interpolation: {
+      escapeValue: false
+    }
+  });
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -34,6 +52,7 @@ const ScrollToTop = () => {
 };
 
 const AppRoutes = () => {
+  const { t, i18n } = useTranslation();
   const [shouldShowWelcome, setShouldShowWelcome] = useState(null);
   const [isNewInstall, setIsNewInstall] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -212,10 +231,10 @@ const AppRoutes = () => {
         
         if (!isLatest && !settings.autoUpdate && !hasShownUpdateNotification.current) {
           hasShownUpdateNotification.current = true;
-          toast('Ascendara is out of date', {
-            description: 'Please download the latest version from the official website',
+          toast(t('app.toasts.outOfDate'), {
+            description: t('app.toasts.outOfDateDesc'),
             action: {
-              label: 'Update Now',
+              label: t('app.toasts.updateNow'),
               onClick: () => window.electron.openURL('https://ascendara.app/')
             },
             duration: 10000,
@@ -231,10 +250,10 @@ const AppRoutes = () => {
       if (!isSubscribed || hasShownUpdateReadyNotification.current) return;
       
       hasShownUpdateReadyNotification.current = true;
-      toast('Ascendara is ready to update', {
-        description: 'Ascendara downloaded the update and is ready to install and restart now',
+      toast(t('app.toasts.updateReady'), {
+        description: t('app.toasts.updateReadyDesc'),
         action: {
-          label: 'Install & Restart',
+          label: t('app.toasts.installAndRestart'),
           onClick: handleInstallAndRestart
         },
         duration: Infinity,
@@ -284,18 +303,16 @@ const AppRoutes = () => {
         )}
         {isInstalling && <UpdateOverlay />}
         {isUpdating && (
-          <>
-            <motion.div 
-              className="loading-text"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              Finishing up... Please don't close Ascendara
-            </motion.div>
-            <br />
-            <l-chaotic-orbit />
-          </>
+          <><motion.div 
+            className="loading-text"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            Finishing up... Please don't close Ascendara
+          </motion.div>
+          <br />
+          <Loader /></>
         )}
       </motion.div>
     );
@@ -387,15 +404,15 @@ class ErrorBoundary extends React.Component {
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
           <div className="max-w-md w-full space-y-4 text-center">
-            <h2 className="text-2xl font-bold text-destructive">Oh no...</h2>
+            <h2 className="text-2xl font-bold text-destructive">{i18n.t('app.crashScreen.title')}</h2>
             <p className="text-muted-foreground">
-              Ascendara did not like what just happened. No worries, if you have analytics enabled this error has been tracked and we'll get this fixed.
+              {i18n.t('app.crashScreen.description')}
             </p>
             <button
               onClick={() => window.location.reload()}
               className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 text-secondary-foreground"
             >
-              Reload Ascendara
+              {i18n.t('app.crashScreen.reload')}
             </button>
           </div>
         </div>

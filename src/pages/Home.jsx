@@ -18,6 +18,10 @@ import Tour from '../components/Tour';
 import imageCacheService from '../services/imageCacheService';
 import recentGamesService from '../services/recentGamesService';
 
+// Module-level caches that persist during runtime
+let gamesCache = null;
+let carouselGamesCache = null;
+
 const Home = memo(() => {
   const navigate = useNavigate();
   const [apiGames, setApiGames] = useState([]);
@@ -37,11 +41,42 @@ const Home = memo(() => {
     const loadGames = async () => {
       try {
         setLoading(true);
+
+        // Use cache if available
+        if (gamesCache && carouselGamesCache) {
+          setApiGames(gamesCache);
+          setCarouselGames(carouselGamesCache);
+          
+          // Still need to get installed games as they might have changed
+          const installedGames = await window.electron.getGames();
+          const customGames = await window.electron.getCustomGames();
+          
+          const actuallyInstalledGames = [
+            ...(installedGames || []).map(game => ({
+              ...game,
+              isCustom: false
+            })),
+            ...(customGames || []).map(game => ({
+              ...game,
+              isCustom: true
+            }))
+          ];
+
+          setInstalledGames(actuallyInstalledGames);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch fresh data if no cache
         const [gamesData, carouselGames] = await Promise.all([
           gameService.getAllGames(),
           gameService.getRandomTopGames()
         ]);
         const games = gamesData.games || [];
+        
+        // Update caches
+        gamesCache = games;
+        carouselGamesCache = carouselGames;
         
         // Get actually installed games from electron
         const installedGames = await window.electron.getGames();
@@ -61,8 +96,6 @@ const Home = memo(() => {
 
         setApiGames(games);
         setInstalledGames(actuallyInstalledGames);
-        
-        // Set carousel games separately
         setCarouselGames(carouselGames);
         
       } catch (error) {

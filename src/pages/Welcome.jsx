@@ -460,6 +460,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
       try {
         const options = {
           seamlessDownloads: true,
+          autoCreateShortcuts: true,
           viewOldDownloadLinks: false,
           seeInappropriateContent: false,
           sendAnalytics: true,
@@ -469,11 +470,6 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
             steamrip: true,
             steamunlocked: false,
             fitpackgames: false,
-          },
-          ascendaraSettings: {
-            preferredCDN: 'auto',
-            preferredRegion: 'auto',
-            useP2P: true
           }
         };
 
