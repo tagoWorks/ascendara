@@ -59,10 +59,16 @@ def execute(game_path, is_custom_game, is_shortcut=False):
     if not is_custom_game:
         game_dir, exe_name = os.path.split(game_path)
         exe_path = os.path.join(game_dir, exe_name)
-        # Get the game's main directory (parent of version directory)
-        main_game_dir = os.path.dirname(game_dir)
-        game_name = os.path.basename(main_game_dir)  # This gets the base game name without version
-        json_file_path = os.path.join(main_game_dir, f"{game_name}.ascendara.json")
+        
+        # Try the current directory first
+        game_name = os.path.basename(game_dir)
+        json_file_path = os.path.join(game_dir, f"{game_name}.ascendara.json")
+        
+        # If not found, try one level up (for versioned games)
+        if not os.path.exists(json_file_path):
+            parent_dir = os.path.dirname(game_dir)
+            parent_name = os.path.basename(parent_dir)
+            json_file_path = os.path.join(parent_dir, f"{parent_name}.ascendara.json")
     else:
         exe_path = game_path
         user_data_dir = os.path.join(os.environ['APPDATA'], 'ascendara')

@@ -16,7 +16,7 @@ let notificationShown = false;
 let updateDownloadInProgress = false;
 let isDev = false;
 
-const CURRENT_VERSION = "7.4.6";
+const CURRENT_VERSION = "7.4.7";
 let config;
 try {
     config = require('./config.prod.js');
