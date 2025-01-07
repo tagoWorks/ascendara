@@ -32,3 +32,4 @@ exports.txt
 *.bat
 build/config.prod.js
 build/icon.ico
+/binaries/AscendaraCrashReporter/build

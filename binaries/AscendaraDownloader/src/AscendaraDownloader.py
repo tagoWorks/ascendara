@@ -4,6 +4,7 @@ import ssl
 import shutil
 import string
 import sys
+import atexit
 import time
 from tempfile import NamedTemporaryFile
 import requests
@@ -11,6 +12,20 @@ from unrar import rarfile
 from requests.adapters import HTTPAdapter
 from urllib3.poolmanager import PoolManager
 import argparse
+
+def launch_crash_reporter(error_code, error_message):
+    try:
+        crash_reporter_path = os.path.join('./AscendaraCrashReporter.exe')
+        if os.path.exists(crash_reporter_path):
+            # Use subprocess.Popen for better process control
+            subprocess.Popen(
+                [crash_reporter_path, "maindownloader", str(error_code), error_message],
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+            )
+        else:
+            logging.error(f"Crash reporter not found at: {crash_reporter_path}")
+    except Exception as e:
+        logging.error(f"Failed to launch crash reporter: {e}")
 
 def resource_path(relative_path):
     try:
@@ -259,12 +274,15 @@ def main():
     parser.add_argument("online", type=parse_boolean, help="Is the game online (true/false)?")
     parser.add_argument("dlc", type=parse_boolean, help="Is DLC included (true/false)?")
     parser.add_argument("version", help="Version of the game")
-    parser.add_argument("size", help="Size of the file in (ex: 12 GB, 439 MB)")
+    parser.add_argument("size", help="Size of the file (ex: 12 GB, 439 MB)")
     parser.add_argument("download_dir", help="Directory to save the downloaded files")
 
-    args = parser.parse_args()
-
-    download_file(args.link, args.game, args.online, args.dlc, args.version, args.size, args.download_dir)
+    try:
+        args = parser.parse_args()
+        download_file(args.link, args.game, args.online, args.dlc, args.version, args.size, args.download_dir)
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        atexit.register(launch_crash_reporter, 1, str(e))
 
 if __name__ == "__main__":
     main()

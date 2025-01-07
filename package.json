@@ -104,6 +104,10 @@
       {
         "from": "binaries/AscendaraGameHandler/dist/AscendaraGameHandler.exe",
         "to": "."
+      },
+      {
+        "from": "binaries/AscendaraCrashReporter/dist/AscendaraCrashReporter.exe",
+        "to": "."
       }
     ],
     "extraMetadata": {

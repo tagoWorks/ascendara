@@ -5,11 +5,27 @@ import sys
 import time
 import psutil
 import logging
+import argparse
+import atexit
 from pypresence import Presence
 import asyncio
 from datetime import datetime
 
 CLIENT_ID = '1277379302945718356'
+
+def launch_crash_reporter(error_code, error_message):
+    try:
+        crash_reporter_path = os.path.join('./AscendaraCrashReporter.exe')
+        if os.path.exists(crash_reporter_path):
+            # Use subprocess.Popen for better process control
+            subprocess.Popen(
+                [crash_reporter_path, "maindownloader", str(error_code), error_message],
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+            )
+        else:
+            logging.error(f"Crash reporter not found at: {crash_reporter_path}")
+    except Exception as e:
+        logging.error(f"Failed to launch crash reporter: {e}")
 
 def setup_discord_rpc():
     try:
@@ -174,12 +190,25 @@ def execute(game_path, is_custom_game, is_shortcut=False):
         time.sleep(1)  # Check more frequently
 
 if __name__ == "__main__":
-    _, game_path, is_custom_game_str, *args = sys.argv
+    # The script is called with: [script] [game_path] [is_custom_game] [--shortcut]
+    # Skip the first argument (script name)
+    args = sys.argv[1:]
+    
+    if len(args) < 2:
+        print("Error: Not enough arguments")
+        print("Usage: AscendaraGameHandler.exe [game_path] [is_custom_game] [--shortcut]")
+        sys.exit(1)
+        
+    game_path = args[0]
+    is_custom_game = args[1].lower() == 'true'
     is_shortcut = "--shortcut" in args
 
     # Configure logging
     log_file = os.path.join(os.path.dirname(__file__), 'gamehandler.log')
     logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    is_custom_game = is_custom_game_str.lower() == 'true'
-    execute(game_path, is_custom_game, is_shortcut)
+    try:
+        execute(game_path, is_custom_game, is_shortcut)
+    except Exception as e:
+        logging.error(f"Failed to execute game: {e}")
+        atexit.register(launch_crash_reporter, 1, str(e))

@@ -374,7 +374,7 @@ ipcMain.handle('check-retry-extract', async (event, game) => {
     return;
   }
 });
-  
+
 
 
 ipcMain.handle('retry-extract', async (event, game, online, dlc, version) => { 
@@ -1885,4 +1885,33 @@ ipcMain.handle('check-file-exists', async (event, execPath) => {
     console.error('Error checking executable:', error);
     return false;
   }
+});
+
+function launchCrashReporter(errorCode, errorMessage) {
+  try {
+    const crashReporterPath = path.join('.', 'AscendaraCrashReporter.exe');
+    if (fs.existsSync(crashReporterPath)) {
+      spawn(
+        crashReporterPath,
+        ["mainapp", errorCode.toString(), errorMessage],
+        { detached: true, stdio: 'ignore' }
+      ).unref();
+    } else {
+      console.error(`Crash reporter not found at: ${crashReporterPath}`);
+    }
+  } catch (error) {
+    console.error('Failed to launch crash reporter:', error);
+  }
+}
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  launchCrashReporter(1000, error.message || 'Unknown error occurred');
+  app.quit();
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  launchCrashReporter(1002, reason?.message || 'Unhandled promise rejection');
+  app.quit();
 });

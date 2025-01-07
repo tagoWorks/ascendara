@@ -5,6 +5,7 @@ import time
 import shutil
 from tempfile import NamedTemporaryFile
 import requests
+import atexit
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 from hashlib import sha256
@@ -12,7 +13,21 @@ from argparse import ArgumentParser, ArgumentTypeError
 from unrar import rarfile
 
 NEW_LINE = "\n" if sys.platform != "Windows" else "\r\n"
-IS_DEV = True  # Development mode flag
+IS_DEV = False  # Development mode flag
+
+def launch_crash_reporter(error_code, error_message):
+    try:
+        crash_reporter_path = os.path.join('./AscendaraCrashReporter.exe')
+        if os.path.exists(crash_reporter_path):
+            # Use subprocess.Popen for better process control
+            subprocess.Popen(
+                [crash_reporter_path, "maindownloader", str(error_code), error_message],
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+            )
+        else:
+            logging.error(f"Crash reporter not found at: {crash_reporter_path}")
+    except Exception as e:
+        logging.error(f"Failed to launch crash reporter: {e}")
 
 def safe_write_json(filepath, data):
     temp_dir = os.path.dirname(filepath)
@@ -398,33 +413,40 @@ def parse_boolean(value):
         raise ArgumentTypeError(f"Invalid boolean value: {value}")
 
 def main():
-    if IS_DEV:
-        open_console()
-        
-    parser = ArgumentParser(description="Download files from Gofile, extract them, and manage game info.")
-    parser.add_argument("url", help="Gofile URL to download from")
-    parser.add_argument("game", help="Name of the game")
-    parser.add_argument("online", type=parse_boolean, help="Is the game online (true/false)?")
-    parser.add_argument("dlc", type=parse_boolean, help="Is DLC included (true/false)?")
-    parser.add_argument("version", help="Version of the game")
-    parser.add_argument("size", help="Size of the file in (ex: 12 GB, 439 MB)")
-    parser.add_argument("download_dir", help="Directory to save the downloaded files")
-    parser.add_argument("--password", help="Password for protected content", default=None)
-
-    args = parser.parse_args()
-
     try:
-        downloader = GofileDownloader(args.game, args.online, args.dlc, args.version, args.size, args.download_dir)
-        downloader.download_from_gofile(args.url, args.password)
+        if IS_DEV:
+            open_console()
+            
+        parser = ArgumentParser(description="Download files from Gofile, extract them, and manage game info.")
+        parser.add_argument("url", help="Gofile URL to download from")
+        parser.add_argument("game", help="Name of the game")
+        parser.add_argument("online", type=parse_boolean, help="Is the game online (true/false)?")
+        parser.add_argument("dlc", type=parse_boolean, help="Is DLC included (true/false)?")
+        parser.add_argument("version", help="Version of the game")
+        parser.add_argument("size", help="Size of the file in (ex: 12 GB, 439 MB)")
+        parser.add_argument("download_dir", help="Directory to save the downloaded files")
+        parser.add_argument("--password", help="Password for protected content", default=None)
+
+        args = parser.parse_args()
+
+        try:
+            downloader = GofileDownloader(args.game, args.online, args.dlc, args.version, args.size, args.download_dir)
+            downloader.download_from_gofile(args.url, args.password)
+        except Exception as e:
+            handleerror(downloader.game_info, downloader.game_info_path, e)
+            print(f"An error occurred: {str(e)}")
+            if IS_DEV:
+                input("\nPress Enter to exit...")
+            sys.exit(1)
+        
+        if IS_DEV:
+            input("\nPress Enter to exit...")
+
     except Exception as e:
-        handleerror(downloader.game_info, downloader.game_info_path, e)
+        atexit.register(launch_crash_reporter, 1, str(e))
         print(f"An error occurred: {str(e)}")
         if IS_DEV:
             input("\nPress Enter to exit...")
-        sys.exit(1)
-    
-    if IS_DEV:
-        input("\nPress Enter to exit...")
 
 if __name__ == "__main__":
     main()
