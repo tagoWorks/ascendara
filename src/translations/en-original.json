@@ -53,6 +53,11 @@
     "app": {
       "outdated": "OUTDATED",
       "downloading-update": "Downloading Update...",
+      "loading" : {
+        "finishingUpdate": "Finishing up... Please don't close Ascendara",
+        "installingUpdate": "Installing Update",
+        "ascendaraWillRestart": "Ascendara will restart automatically"
+      },
       "toasts": {
         "outOfDate": "Ascendara is out of date",
         "outOfDateDesc": "Please download the latest version from the official website",

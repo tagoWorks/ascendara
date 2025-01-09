@@ -16,7 +16,7 @@ let notificationShown = false;
 let updateDownloadInProgress = false;
 let isDev = false;
 
-const CURRENT_VERSION = "7.4.7";
+const CURRENT_VERSION = "7.4.8";
 let config;
 try {
     config = require('./config.prod.js');
@@ -174,22 +174,45 @@ ipcMain.handle('get-version', async () => {
 });
 
 ipcMain.handle('stop-download', async (event, game) => {
-  console.log(`Stopping download: ${game}`);
   try {
     const downloadProcess = downloadProcesses.get(game);
     if (downloadProcess) {
-      const processName = 'AscendaraDownloader.exe';
-      const killProcess = spawn('taskkill', ['/f', '/im', processName]);
-      killProcess.on('close', (code) => {
-        console.log(`Process ${processName} exited with code ${code}`);
-        deleteGameDirectory(game);
-      });
-    } else {
-      console.log(`Download process for ${game} not found`);
-      deleteGameDirectory(game);
+      // First try graceful termination
+      downloadProcess.kill();
+      
+      // Give it a moment to terminate gracefully
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Force kill if still running
+      try {
+        process.kill(downloadProcess.pid, 'SIGKILL');
+      } catch (killError) {
+        // Process may already be terminated, ignore error
+      }
+      
+      downloadProcesses.delete(game);
+      
+      // Clean up any temporary download files
+      const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+      const data = fs.readFileSync(filePath, 'utf8');
+      const settings = JSON.parse(data);
+      
+      if (settings.downloadDirectory) {
+        const gameDir = path.join(settings.downloadDirectory, game);
+        try {
+          await fs.promises.rm(gameDir, { recursive: true, force: true });
+        } catch (rmError) {
+          console.error('Error removing game directory:', rmError);
+          // Continue even if directory removal fails
+        }
+      }
+      
+      return true;
     }
+    return false;
   } catch (error) {
-    console.error('Error stopping download or deleting directory:', error);
+    console.error('Error stopping download:', error);
+    // Don't throw, just return false to indicate failure
     return false;
   }
 });
@@ -636,9 +659,12 @@ ipcMain.handle('get-settings', () => {
       seamlessDownloads: true,
       viewOldDownloadLinks: false,
       seeInappropriateContent: false,
+      autoCreateShortcuts: true,
       sendAnalytics: true,
       autoUpdate: true,
+      threadCount: 4,
       language: 'en',
+      theme: 'purple',
       primaryGameSource: 'steamrip',
       enabledSources: {
         steamrip: true,

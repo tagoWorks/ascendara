@@ -11,23 +11,28 @@ from threading import Lock
 from hashlib import sha256
 from argparse import ArgumentParser, ArgumentTypeError
 from unrar import rarfile
+import logging
 
 NEW_LINE = "\n" if sys.platform != "Windows" else "\r\n"
 IS_DEV = False  # Development mode flag
 
-def launch_crash_reporter(error_code, error_message):
+def _launch_crash_reporter_on_exit(error_code, error_message):
     try:
         crash_reporter_path = os.path.join('./AscendaraCrashReporter.exe')
         if os.path.exists(crash_reporter_path):
-            # Use subprocess.Popen for better process control
-            subprocess.Popen(
-                [crash_reporter_path, "maindownloader", str(error_code), error_message],
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
-            )
+            # Use cmd.exe with START to hide console
+            cmd = f'cmd.exe /c START /B "" "{crash_reporter_path}" maindownloader {error_code} "{error_message}"'
+            os.system(cmd)
         else:
             logging.error(f"Crash reporter not found at: {crash_reporter_path}")
     except Exception as e:
         logging.error(f"Failed to launch crash reporter: {e}")
+
+def launch_crash_reporter(error_code, error_message):
+    # Only register once
+    if not hasattr(launch_crash_reporter, "_registered"):
+        atexit.register(_launch_crash_reporter_on_exit, error_code, error_message)
+        launch_crash_reporter._registered = True
 
 def safe_write_json(filepath, data):
     temp_dir = os.path.dirname(filepath)
@@ -63,11 +68,23 @@ def handleerror(game_info, game_info_path, e):
     safe_write_json(game_info_path, game_info)
 
 class GofileDownloader:
-    def __init__(self, game, online, dlc, version, size, download_dir, max_workers=5):
+    def __init__(self, game, online, dlc, version, size, download_dir):
         self._max_retries = 3
         self._download_timeout = 30 
         self._token = self._getToken()
-        self._max_workers = max_workers
+        
+        # Read thread count from settings
+        try:
+            settings_path = os.path.join(os.getenv('APPDATA'), 'ascendara', 'ascendarasettings.json')
+            if os.path.exists(settings_path):
+                with open(settings_path, 'r') as f:
+                    settings = json.load(f)
+                    self._max_workers = settings.get('threadCount', 32)
+            else:
+                self._max_workers = 32
+        except Exception:
+            self._max_workers = 32
+            
         self._lock = Lock()
         self.game = game
         self.online = online
@@ -232,22 +249,22 @@ class GofileDownloader:
                     with open(tmp_file, "ab") as handler:
                         start_time = time.time()
                         downloaded_size = part_size
-                        
+                         
                         for chunk in response.iter_content(chunk_size=chunk_size):
                             if not chunk:  # Keep-alive new chunks
                                 continue
-                                
+                                 
                             handler.write(chunk)
                             downloaded_size += len(chunk)
                             progress = (downloaded_size / total_size) * 100
-                            
+                             
                             # Calculate speed using total time elapsed
                             elapsed_time = time.time() - start_time
                             if elapsed_time > 0:
                                 download_speed = downloaded_size / elapsed_time
                                 remaining_size = total_size - downloaded_size
                                 eta_seconds = remaining_size / download_speed if download_speed > 0 else 0
-                                
+                                 
                                 self._update_progress(file_info['filename'], progress, download_speed, eta_seconds)
 
                         # Verify file size after download
@@ -434,7 +451,7 @@ def main():
             downloader.download_from_gofile(args.url, args.password)
         except Exception as e:
             handleerror(downloader.game_info, downloader.game_info_path, e)
-            print(f"An error occurred: {str(e)}")
+            launch_crash_reporter(1, str(e))
             if IS_DEV:
                 input("\nPress Enter to exit...")
             sys.exit(1)
@@ -443,10 +460,11 @@ def main():
             input("\nPress Enter to exit...")
 
     except Exception as e:
-        atexit.register(launch_crash_reporter, 1, str(e))
+        launch_crash_reporter(1, str(e))
         print(f"An error occurred: {str(e)}")
         if IS_DEV:
             input("\nPress Enter to exit...")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

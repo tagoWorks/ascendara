@@ -6,26 +6,34 @@ import string
 import sys
 import atexit
 import time
+import threading
+from queue import Queue
+from concurrent.futures import ThreadPoolExecutor
 from tempfile import NamedTemporaryFile
 import requests
 from unrar import rarfile
 from requests.adapters import HTTPAdapter
 from urllib3.poolmanager import PoolManager
 import argparse
+import logging
 
-def launch_crash_reporter(error_code, error_message):
+def _launch_crash_reporter_on_exit(error_code, error_message):
     try:
         crash_reporter_path = os.path.join('./AscendaraCrashReporter.exe')
         if os.path.exists(crash_reporter_path):
-            # Use subprocess.Popen for better process control
-            subprocess.Popen(
-                [crash_reporter_path, "maindownloader", str(error_code), error_message],
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
-            )
+            # Use cmd.exe with START to hide console
+            cmd = f'cmd.exe /c START /B "" "{crash_reporter_path}" maindownloader {error_code} "{error_message}"'
+            os.system(cmd)
         else:
             logging.error(f"Crash reporter not found at: {crash_reporter_path}")
     except Exception as e:
         logging.error(f"Failed to launch crash reporter: {e}")
+
+def launch_crash_reporter(error_code, error_message):
+    # Only register once
+    if not hasattr(launch_crash_reporter, "_registered"):
+        atexit.register(_launch_crash_reporter_on_exit, error_code, error_message)
+        launch_crash_reporter._registered = True
 
 def resource_path(relative_path):
     try:
@@ -120,6 +128,56 @@ class SSLContextAdapter(HTTPAdapter):
         kwargs['ssl_context'] = context 
         return super().init_poolmanager(*args, **kwargs)
 
+class DownloadChunk:
+    def __init__(self, start, end, url):
+        self.start = start
+        self.end = end
+        self.url = url
+        self.data = b""
+        self.downloaded = 0
+
+class DownloadManager:
+    def __init__(self, url, total_size, num_threads=None):
+        self.url = url
+        self.total_size = total_size
+        
+        # Read thread count from settings
+        try:
+            settings_path = os.path.join(os.getenv('APPDATA'), 'ascendara', 'ascendarasettings.json')
+            if os.path.exists(settings_path):
+                with open(settings_path, 'r') as f:
+                    settings = json.load(f)
+                    self.num_threads = settings.get('threadCount', 4)
+            else:
+                self.num_threads = 4
+        except Exception:
+            self.num_threads = 4
+            
+        self.chunks = []
+        self.downloaded_size = 0
+        self.lock = threading.Lock()
+        
+    def split_chunks(self):
+        chunk_size = self.total_size // self.num_threads
+        for i in range(self.num_threads):
+            start = i * chunk_size
+            end = start + chunk_size - 1 if i < self.num_threads - 1 else self.total_size - 1
+            self.chunks.append(DownloadChunk(start, end, self.url))
+            
+    def download_chunk(self, chunk, session, callback=None):
+        headers = {'Range': f'bytes={chunk.start}-{chunk.end}'}
+        response = session.get(chunk.url, headers=headers, stream=True)
+        
+        for data in response.iter_content(chunk_size=1024*1024):
+            if not data:
+                break
+            chunk.data += data
+            chunk.downloaded += len(data)
+            with self.lock:
+                self.downloaded_size += len(data)
+                if callback:
+                    callback(len(data))
+
 def download_file(link, game, online, dlc, version, size, download_dir):
     game = sanitize_folder_name(game)
     download_path = os.path.join(download_dir, game)
@@ -149,13 +207,18 @@ def download_file(link, game, online, dlc, version, size, download_dir):
         session = requests.Session()
         session.mount('https://', SSLContextAdapter())
         try:
-            response = session.get(link, stream=True, timeout=(10, 30))
+            # Get file info first
+            response = session.head(link, timeout=(10, 30))
             response.raise_for_status()
             content_type = response.headers.get('Content-Type')
             if content_type and 'text/html' in content_type:
                 raise Exception("Content-Type was text/html. Link most likely expired.")
 
-            # Default to .rar if we can't determine the extension
+            total_size = int(response.headers.get('content-length', 0) or 0)
+            if total_size == 0:
+                raise Exception("Could not determine file size")
+
+            # Determine file extension
             archive_ext = "rar"
             content_disposition = response.headers.get('Content-Disposition')
             if content_disposition and 'filename=' in content_disposition:
@@ -163,57 +226,70 @@ def download_file(link, game, online, dlc, version, size, download_dir):
                 if '.' in filename:
                     archive_ext = filename.split('.')[-1].lower()
             elif '.' in link:
-                # Try to get extension from URL as fallback
                 possible_ext = link.split('?')[0].split('.')[-1].lower()
                 if possible_ext in ['rar', 'zip']:
                     archive_ext = possible_ext
 
             archive_file_path = os.path.join(download_path, f"{game}.{archive_ext}")
-            total_size = int(response.headers.get('content-length', 0) or 0)
-            block_size = 1024 * 1024
-            downloaded_size = 0
+            
+            # Initialize download manager
+            manager = DownloadManager(link, total_size)
+            
             game_info["downloadingData"]["downloading"] = True
             start_time = time.time()
-
             safe_write_json(game_info_path, game_info)
 
-            with open(archive_file_path, "wb") as file:
-                for data in response.iter_content(block_size):
-                    if not data:
-                        break
-                    file.write(data)
-                    downloaded_size += len(data)
-                    progress = downloaded_size / total_size if total_size > 0 else 0
-                    game_info["downloadingData"]["progressCompleted"] = f"{progress * 100:.2f}"
+            def update_progress(bytes_downloaded):
+                nonlocal start_time
+                progress = manager.downloaded_size / total_size if total_size > 0 else 0
+                game_info["downloadingData"]["progressCompleted"] = f"{progress * 100:.2f}"
 
-                    elapsed_time = time.time() - start_time
-                    download_speed = downloaded_size / elapsed_time if elapsed_time > 0 else 0
+                elapsed_time = time.time() - start_time
+                download_speed = manager.downloaded_size / elapsed_time if elapsed_time > 0 else 0
 
-                    if download_speed < 1024:
-                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed:.2f} B/s"
-                    elif download_speed < 1024 * 1024:
-                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed / 1024:.2f} KB/s"
+                if download_speed < 1024:
+                    game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed:.2f} B/s"
+                elif download_speed < 1024 * 1024:
+                    game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed / 1024:.2f} KB/s"
+                else:
+                    game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed / (1024 * 1024):.2f} MB/s"
+
+                remaining_size = total_size - manager.downloaded_size
+                if download_speed > 0:
+                    time_until_complete = remaining_size / download_speed
+                    minutes, seconds = divmod(time_until_complete, 60)
+                    hours, minutes = divmod(minutes, 60)
+                    if hours > 0:
+                        game_info["downloadingData"]["timeUntilComplete"] = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
                     else:
-                        game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed / (1024 * 1024):.2f} MB/s"
+                        game_info["downloadingData"]["timeUntilComplete"] = f"{int(minutes)}m {int(seconds)}s"
+                else:
+                    game_info["downloadingData"]["timeUntilComplete"] = "Calculating..."
 
-                    remaining_size = total_size - downloaded_size
-                    if download_speed > 0:
-                        time_until_complete = remaining_size / download_speed
-                        minutes, seconds = divmod(time_until_complete, 60)
-                        hours, minutes = divmod(minutes, 60)
-                        if hours > 0:
-                            game_info["downloadingData"]["timeUntilComplete"] = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
-                        else:
-                            game_info["downloadingData"]["timeUntilComplete"] = f"{int(minutes)}m {int(seconds)}s"
-                    else:
-                        game_info["downloadingData"]["timeUntilComplete"] = "Calculating..."
+                safe_write_json(game_info_path, game_info)
 
-                    safe_write_json(game_info_path, game_info)
+            # Download chunks in parallel
+            manager.split_chunks()
+            with ThreadPoolExecutor(max_workers=manager.num_threads) as executor:
+                futures = []
+                for chunk in manager.chunks:
+                    future = executor.submit(manager.download_chunk, chunk, session, update_progress)
+                    futures.append(future)
+                
+                # Wait for all downloads to complete
+                for future in futures:
+                    future.result()
+
+            # Write the complete file
+            with open(archive_file_path, "wb") as f:
+                for chunk in manager.chunks:
+                    f.write(chunk.data)
 
             game_info["downloadingData"]["downloading"] = False
             game_info["downloadingData"]["extracting"] = True
             safe_write_json(game_info_path, game_info)
             return archive_file_path, archive_ext
+
         except Exception as e:
             handleerror(game_info, game_info_path, e)
             raise e
@@ -278,11 +354,22 @@ def main():
     parser.add_argument("download_dir", help="Directory to save the downloaded files")
 
     try:
+        if len(sys.argv) == 1:  # No arguments provided
+            launch_crash_reporter(1, "No arguments provided. Please provide all required arguments.")
+            parser.print_help()
+            sys.exit(1)
+            
         args = parser.parse_args()
         download_file(args.link, args.game, args.online, args.dlc, args.version, args.size, args.download_dir)
+    except (argparse.ArgumentError, SystemExit) as e:
+        error_msg = "Invalid or missing arguments. Please provide all required arguments."
+        launch_crash_reporter(1, error_msg)
+        parser.print_help()
+        sys.exit(1)
     except Exception as e:
         print(f"Error: {str(e)}")
-        atexit.register(launch_crash_reporter, 1, str(e))
+        launch_crash_reporter(1, str(e))
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

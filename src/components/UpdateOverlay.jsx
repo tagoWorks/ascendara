@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
+import { Loader } from 'lucide-react';
 
 const UpdateOverlay = () => {
   const { theme } = useTheme();
@@ -30,12 +31,12 @@ const UpdateOverlay = () => {
         transition={{ delay: 0.2 }}
         className="flex flex-col items-center"
       >
-        <div className="w-16 h-16 mb-4 border-4 border-t-blue-500 border-r-blue-500 border-b-transparent border-l-transparent rounded-full animate-spin" />
+        <Loader className="animate-spin text-primary" />
         <h2 className={`text-2xl font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-          Installing Update
+          {t('app.loading.installingUpdate')}
         </h2>
         <p className={`text-base ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-          Ascendara will restart automatically
+          {t('app.loading.ascendaraWillRestart')}
         </p>
       </motion.div>
     </motion.div>

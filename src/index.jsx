@@ -309,10 +309,10 @@ const AppRoutes = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            Finishing up... Please don't close Ascendara
+            {t('app.loading.finishingUpdate')}
           </motion.div>
           <br />
-          <Loader /></>
+          <Loader className="animate-spin" /></>
         )}
       </motion.div>
     );

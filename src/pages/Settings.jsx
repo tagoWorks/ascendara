@@ -142,19 +142,19 @@ function Settings() {
   const [downloadPath, setDownloadPath] = useState('');
   const [version, setVersion] = useState('');
   const [settings, setSettings] = useState({
+    downloadDirectory: '',
     seamlessDownloads: true,
     viewOldDownloadLinks: false,
-    autoCreateShortcuts: true,
     seeInappropriateContent: false,
+    autoCreateShortcuts: true,
     sendAnalytics: true,
     autoUpdate: true,
     primaryGameSource: 'steamrip',
     language: 'en',
     theme: 'purple',
+    threadCount: 4,
     enabledSources: {
       steamrip: true,
-      steamunlocked: false,
-      fitgirlrepacks: false,
     }
   });
   
@@ -368,7 +368,7 @@ function Settings() {
           <div className="lg:col-span-8 space-y-6">
             {/* General Settings Card */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.general')}</h2>
+              <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.general.title')}</h2>
               <div className="space-y-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -432,6 +432,56 @@ function Settings() {
                         {t('settings.selectDirectory')}
                       </Button>
                     </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <Label>{t('settings.general.downloadThreads')}</Label>
+                    <Select
+                      value={settings.threadCount === 0 ? 'custom' : (settings.threadCount || 4).toString()}
+                      onValueChange={(value) => {
+                        const threadCount = value === 'custom' ? 0 : parseInt(value);
+                        setSettings(prev => ({
+                          ...prev,
+                          threadCount: threadCount
+                        }));
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2">{t('settings.general.downloadThreadsPresets.low')}</SelectItem>
+                        <SelectItem value="4">{t('settings.general.downloadThreadsPresets.normal')}</SelectItem>
+                        <SelectItem value="8">{t('settings.general.downloadThreadsPresets.high')}</SelectItem>
+                        <SelectItem value="16">{t('settings.general.downloadThreadsPresets.veryHigh')}</SelectItem>
+                        <SelectItem value="32">{t('settings.general.downloadThreadsPresets.extreme')}</SelectItem>
+                        <SelectItem value="custom">{t('settings.general.downloadThreadsPresets.custom')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    {/* Custom thread count input */}
+                    {settings.threadCount === 0 && (
+                      <div className="mt-4">
+                        <Label>{t('settings.general.customThreadCount')}</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="32"
+                          value={4}
+                          onChange={(e) => {
+                            const value = Math.max(1, Math.min(32, parseInt(e.target.value) || 1));
+                            setSettings(prev => ({
+                              ...prev,
+                              threadCount: value
+                            }));
+                          }}
+                          className="mt-1"
+                        />
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {t('settings.general.customThreadCountDesc')}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                 </div>
