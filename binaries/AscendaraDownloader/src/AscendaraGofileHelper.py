@@ -3,11 +3,12 @@ import json
 import sys
 import time
 import shutil
+import signal
 from tempfile import NamedTemporaryFile
 import requests
 import atexit
 from concurrent.futures import ThreadPoolExecutor
-from threading import Lock
+from threading import Lock, Event
 from hashlib import sha256
 from argparse import ArgumentParser, ArgumentTypeError
 from unrar import rarfile
@@ -15,6 +16,14 @@ import logging
 
 NEW_LINE = "\n" if sys.platform != "Windows" else "\r\n"
 IS_DEV = False  # Development mode flag
+stop_event = Event()
+
+def signal_handler(signum, frame):
+    print("\nReceived stop signal. Stopping downloads gracefully...")
+    stop_event.set()
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 def _launch_crash_reporter_on_exit(error_code, error_message):
     try:
@@ -115,6 +124,7 @@ class GofileDownloader:
             }
         }
         safe_write_json(self.game_info_path, self.game_info)
+        self._stop_event = stop_event
 
     @staticmethod
     def _getToken():
@@ -251,6 +261,13 @@ class GofileDownloader:
                         downloaded_size = part_size
                          
                         for chunk in response.iter_content(chunk_size=chunk_size):
+                            if self._stop_event.is_set():
+                                print(f"\nStopping download of {file_info['filename']}")
+                                handler.close()
+                                if os.path.exists(tmp_file):
+                                    os.remove(tmp_file)
+                                return
+                                
                             if not chunk:  # Keep-alive new chunks
                                 continue
                                  
@@ -266,6 +283,13 @@ class GofileDownloader:
                                 eta_seconds = remaining_size / download_speed if download_speed > 0 else 0
                                  
                                 self._update_progress(file_info['filename'], progress, download_speed, eta_seconds)
+
+                        # Check if stopped before finalizing
+                        if self._stop_event.is_set():
+                            handler.close()
+                            if os.path.exists(tmp_file):
+                                os.remove(tmp_file)
+                            return
 
                         # Verify file size after download
                         final_size = handler.tell() + part_size

@@ -51,6 +51,7 @@ app.whenReady().then(async () => {
   }
 });
 async function checkVersionAndUpdate() {
+  if (isDev) return false;
   try {
     const response = await axios.get('https://api.ascendara.app/');
     const latest_version = response.data.appVer;
@@ -177,15 +178,15 @@ ipcMain.handle('stop-download', async (event, game) => {
   try {
     const downloadProcess = downloadProcesses.get(game);
     if (downloadProcess) {
-      // First try graceful termination
-      downloadProcess.kill();
+      // On Windows, send SIGTERM first
+      downloadProcess.kill('SIGTERM');
       
       // Give it a moment to terminate gracefully
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Force kill if still running
       try {
-        process.kill(downloadProcess.pid, 'SIGKILL');
+        downloadProcess.kill('SIGKILL');
       } catch (killError) {
         // Process may already be terminated, ignore error
       }

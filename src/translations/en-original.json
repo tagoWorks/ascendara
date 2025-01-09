@@ -262,6 +262,18 @@
       "downloadLocation": "Download Location",
       "selectDirectory": "Select Directory",
       
+      "downloadThreads": "Download Performance",
+      "downloadThreadsPresets": {
+        "low": "Low (2 threads) - Minimal CPU usage",
+        "normal": "Normal (4 threads) - Balanced performance",
+        "high": "High (8 threads) - For better CPUs",
+        "veryHigh": "Very High (16 threads) - For high-end PCs",
+        "extreme": "Extreme (32 threads) - For enthusiast systems",
+        "custom": "Custom"
+      },
+      "customThreadCount": "Custom Thread Count",
+      "customThreadCountDesc": "Higher values may improve download speed but require more CPU power and memory. Maximum: 32 threads",
+      
       "ascendaraUpdates": "Automatic Updates",
       "ascendaraUpdatesDescription": "Automatically download new versions of Ascendara and ask you to install them when ready",
       

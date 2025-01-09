@@ -12,7 +12,15 @@ class ImageCacheService {
       if (storedCache) {
         const parsedCache = JSON.parse(storedCache);
         Object.entries(parsedCache).forEach(([key, value]) => {
-          this.cache.set(key, value);
+          if (typeof value === 'object' && value.data) {
+            this.cache.set(key, value);
+          } else {
+            // Migrate old cache format to new format with timestamp
+            this.cache.set(key, {
+              data: value,
+              timestamp: Date.now()
+            });
+          }
         });
       }
     } catch (error) {
@@ -34,14 +42,22 @@ class ImageCacheService {
     // Skip if no imgID provided
     if (!imgID) return null;
 
-    // Return cached image if available
+    // Check if we have a cached version and if it's still fresh
     if (this.cache.has(imgID)) {
-      return this.cache.get(imgID);
+      const cachedImage = this.cache.get(imgID);
+      const isFresh = this.isCacheFresh(cachedImage.timestamp);
+      
+      if (isFresh) {
+        return cachedImage.data;
+      } else {
+        // Clear stale cache
+        this.clearCache(imgID);
+      }
     }
 
     // Return in-progress request if exists
     if (this.inProgress.has(imgID)) {
-      return this.inProgress.get(imgID);
+      return (await this.inProgress.get(imgID)).data;
     }
 
     // Create new request
@@ -51,8 +67,11 @@ class ImageCacheService {
     try {
       const result = await promise;
       if (result) {
-        this.cache.set(imgID, result);
-        this.saveCacheToStorage(); // Save to localStorage after caching new image
+        this.cache.set(imgID, {
+          data: result,
+          timestamp: Date.now()
+        });
+        this.saveCacheToStorage();
       }
       return result;
     } finally {
@@ -60,9 +79,19 @@ class ImageCacheService {
     }
   }
 
+  isCacheFresh(timestamp) {
+    const maxAge = 5 * 60 * 1000; // 5 minutes cache lifetime
+    return Date.now() - timestamp < maxAge;
+  }
+
   async fetchAndCacheImage(imgID) {
     try {
-      const response = await fetch(`https://api.ascendara.app/image/${imgID}`);
+      const response = await fetch(`https://api.ascendara.app/image/${imgID}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       
       const blob = await response.blob();

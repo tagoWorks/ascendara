@@ -19,16 +19,21 @@ import {
 import gameService from '../services/gameService';
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../components/ui/alert-dialog";
+import { useNavigate } from 'react-router-dom';
+import imageCacheService from '../services/imageCacheService';
 
-// Module-level cache that persists during runtime
-let gamesCache = null;
+// Module-level cache with timestamp
+let gamesCache = {
+  data: null,
+  timestamp: null,
+  expiryTime: 5 * 60 * 1000 // 5 minutes
+};
 
 const Search = memo(() => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('weight');
   const [sortOrder, setSortOrder] = useState('desc');
   const [showDLC, setShowDLC] = useState(false);
@@ -47,49 +52,53 @@ const Search = memo(() => {
   const gamesPerLoad = useWindowSize();
   const [apiMetadata, setApiMetadata] = useState(null);
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
-  const refreshGames = async () => {
+  const isCacheValid = useCallback(() => {
+    return gamesCache.data && 
+           gamesCache.timestamp && 
+           (Date.now() - gamesCache.timestamp) < gamesCache.expiryTime;
+  }, []);
+
+  const refreshGames = useCallback(async (forceRefresh = false) => {
+    if (!forceRefresh && isCacheValid()) {
+      setGames(gamesCache.data.games);
+      setApiMetadata(gamesCache.data.metadata);
+      return;
+    }
+
     setIsRefreshing(true);
     try {
-      // Use cache if available and not refreshing
-      if (gamesCache && !isRefreshing) {
-        setGames(gamesCache);
-        return;
-      }
-      
       const response = await gameService.getAllGames();
-      setGames(response.games);
-      setApiMetadata(response.metadata);
-      // Update cache
-      gamesCache = response.games;
+      const gameData = {
+        games: response.games,
+        metadata: response.metadata
+      };
+      
+      // Update cache with timestamp
+      gamesCache = {
+        data: gameData,
+        timestamp: Date.now(),
+        expiryTime: 5 * 60 * 1000
+      };
+      
+      setGames(gameData.games);
+      setApiMetadata(gameData.metadata);
     } catch (error) {
       console.error('Error refreshing games:', error);
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [isCacheValid]);
 
   useEffect(() => {
     setLoading(true);
     refreshGames().finally(() => setLoading(false));
-  }, []);
+  }, [refreshGames]);
 
   useEffect(() => {
     setLoading(true);
-    gameService.getAllGames()
-      .then(response => {
-        if (response.data) {
-          setGames(response.data.games || []);
-          setApiMetadata(response.data.metadata);
-        } else if (response.games) {
-          setGames(response.games);
-          setApiMetadata(response.metadata);
-        } else {
-          setGames(response);
-          setApiMetadata(null);
-        }
-      })
-      .finally(() => setLoading(false));
+    refreshGames(true).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -115,7 +124,7 @@ const Search = memo(() => {
   }, []);
 
   const filteredGames = useMemo(() => {
-    let result = [...games];
+    let result = games;
     
     if (!settings.seeInappropriateContent) {
       result = result.filter(game => !game.category?.includes('Nudity'));
@@ -145,14 +154,21 @@ const Search = memo(() => {
       result = result.filter(game => game.online);
     }
 
-    switch (sortBy) {
-      case 'weight':
-        return result.sort((a, b) => sortOrder === 'asc' ? parseInt(a.weight) - parseInt(b.weight) : parseInt(b.weight) - parseInt(a.weight));
-      case 'name':
-        return result.sort((a, b) => sortOrder === 'asc' ? a.game.localeCompare(b.game) : b.game.localeCompare(a.game));
-      default:
-        return result;
+    // Only sort if we have a valid sort criteria
+    if (sortBy && sortOrder) {
+      const sortMultiplier = sortOrder === 'asc' ? 1 : -1;
+      result = [...result].sort((a, b) => {
+        if (sortBy === 'weight') {
+          return sortMultiplier * (parseInt(a.weight) - parseInt(b.weight));
+        }
+        if (sortBy === 'name') {
+          return sortMultiplier * a.game.localeCompare(b.game);
+        }
+        return 0;
+      });
     }
+
+    return result;
   }, [games, searchQuery, selectedCategories, sortBy, sortOrder, showDLC, showOnline, settings.seeInappropriateContent]);
 
   useEffect(() => {
@@ -191,6 +207,31 @@ const Search = memo(() => {
     return () => observer.disconnect();
   }, [loadMore]);
 
+  const handleDownload = async (game) => {
+    try {
+      // Get the cached image first
+      const cachedImage = await imageCacheService.getImage(game.imgID);
+      
+      // Navigate to download page with both game data and cached image
+      navigate('/download', {
+        state: {
+          gameData: {
+            ...game,
+            cachedHeaderImage: cachedImage // Include the cached header image
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error preparing download:', error);
+      // Still navigate but without cached image
+      navigate('/download', {
+        state: {
+          gameData: game
+        }
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col bg-background">
       <div className="flex-1 p-8 pb-24">
@@ -225,7 +266,7 @@ const Search = memo(() => {
                       <div className="pt-2">
                         <Button
                           variant="outline"
-                          onClick={refreshGames}
+                          onClick={() => refreshGames(true)}
                           disabled={isRefreshing}
                           className="w-full flex items-center justify-center gap-2"
                         >
@@ -370,7 +411,8 @@ const Search = memo(() => {
                   {displayedGames.map((game) => (
                     <GameCard 
                       key={game.imgID || game.id || `${game.game}-${game.version}`} 
-                      game={game} 
+                      game={game}
+                      onDownload={() => handleDownload(game)}
                     />
                   ))}
                 </div>
