@@ -14,9 +14,9 @@ let is_latest = true;
 let updateDownloaded = false;
 let notificationShown = false;
 let updateDownloadInProgress = false;
-let isDev = false;
+let isDev = true;
 
-const CURRENT_VERSION = "7.4.8";
+const CURRENT_VERSION = "7.4.9";
 let config;
 try {
     config = require('./config.prod.js');
@@ -170,9 +170,7 @@ ipcMain.handle('stop-all-downloads', async () => {
   runGameProcesses.clear();
 });
 
-ipcMain.handle('get-version', async () => {
-  return CURRENT_VERSION;
-});
+ipcMain.handle('get-version', () => app.getVersion());
 
 ipcMain.handle('stop-download', async (event, game) => {
   try {
@@ -598,7 +596,7 @@ ipcMain.handle('has-launched', (event) => {
 });
 
 ipcMain.handle('get-analytics-key', () => {
-  return analyticsAPI;
+    return analyticsAPI;
 });
 
 ipcMain.handle('set-timestamp-value', async (event, key, value) => {
@@ -1680,9 +1678,7 @@ ipcMain.handle('get-drive-space', async (event, directory) => {
     }
 });
 
-ipcMain.handle('get-platform', () => {
-    return process.platform
-})
+ipcMain.handle('get-platform', () => process.platform);
 
 ipcMain.on('settings-changed', () => {
     BrowserWindow.getAllWindows().forEach(window => {

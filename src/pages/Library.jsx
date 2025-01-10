@@ -29,7 +29,8 @@ import {
   Search as SearchIcon,
   Loader,
   StopCircle,
-  AlertTriangle
+  AlertTriangle,
+  Heart
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import {
@@ -66,8 +67,25 @@ const Library = () => {
   const [errorGame, setErrorGame] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [favorites, setFavorites] = useState(() => {
+    const savedFavorites = localStorage.getItem('game-favorites');
+    return savedFavorites ? JSON.parse(savedFavorites) : [];
+  });
   const errorTimeoutRef = useRef(null);
   const { t } = useLanguage();
+
+  useEffect(() => {
+    localStorage.setItem('game-favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
+  const toggleFavorite = (gameName) => {
+    setFavorites(prev => {
+      const newFavorites = prev.includes(gameName)
+        ? prev.filter(name => name !== gameName)
+        : [...prev, gameName];
+      return newFavorites;
+    });
+  };
 
   const loadGames = async () => {
     try {
@@ -158,11 +176,25 @@ const Library = () => {
   }, [coverSearchQuery]);
 
   // Filter games based on search query
-  const filteredGames = games.filter(game => {
-    const searchTerm = searchQuery.toLowerCase();
-    const gameName = (game.game || game.name || '').toLowerCase();
-    return gameName.includes(searchTerm);
-  });
+  const filteredGames = games
+    .slice()
+    .sort((a, b) => {
+      const aName = a.game || a.name;
+      const bName = b.game || b.name;
+      const aFavorite = favorites.includes(aName);
+      const bFavorite = favorites.includes(bName);
+      
+      // If both are favorites or both are not favorites, sort alphabetically
+      if (aFavorite === bFavorite) {
+        return aName.localeCompare(bName);
+      }
+      // If a is favorite and b is not, a comes first
+      return aFavorite ? -1 : 1;
+    })
+    .filter(game => {
+      const searchLower = searchQuery.toLowerCase();
+      return (game.game || game.name).toLowerCase().includes(searchLower);
+    });
 
   const handlePlayGame = async (game) => {
     const gameName = game.game || game.name;
@@ -357,16 +389,19 @@ const Library = () => {
           </AlertDialog>
 
           {filteredGames.map((game) => (
-            <InstalledGameCard 
-              key={game.game || game.name}
-              game={game}
-              onPlay={() => handlePlayGame(game)}
-              onDelete={() => setGameToDelete(game)}
-              onSelect={() => setSelectedGame(game)}
-              isSelected={isGameSelected(game, selectedGame)}
-              onOpenDirectory={() => handleOpenDirectory(game)}
-              isLaunching={launchingGame === (game.game || game.name)}
-            />
+            <div key={game.game || game.name}>
+              <InstalledGameCard
+                game={game}
+                onPlay={() => handlePlayGame(game)}
+                onDelete={() => setGameToDelete(game)}
+                onSelect={() => setSelectedGame(game)}
+                isSelected={isGameSelected(game, selectedGame)}
+                onOpenDirectory={() => handleOpenDirectory(game)}
+                isLaunching={launchingGame === (game.game || game.name)}
+                favorites={favorites}
+                onToggleFavorite={toggleFavorite}
+              />
+            </div>
           ))}
         </div>
 
@@ -449,12 +484,23 @@ const AddGameCard = React.forwardRef((props, ref) => {
 
 AddGameCard.displayName = "AddGameCard";
 
-const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpenDirectory, isLaunching }) => {
+const InstalledGameCard = ({ 
+  game, 
+  onPlay, 
+  onDelete, 
+  onSelect, 
+  isSelected, 
+  onOpenDirectory, 
+  isLaunching,
+  favorites,
+  onToggleFavorite 
+}) => {
   const { t } = useLanguage();
   const [isRunning, setIsRunning] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [imageData, setImageData] = useState(null);
   const [executableExists, setExecutableExists] = useState(null);
+  const isFavorite = favorites.includes(game.game || game.name);
 
   useEffect(() => {
     const checkExecutable = async () => {
@@ -548,6 +594,22 @@ const InstalledGameCard = ({ game, onPlay, onDelete, onSelect, isSelected, onOpe
             "opacity-0 group-hover:opacity-100 transition-opacity",
             "flex flex-col justify-end p-4 text-secondary"
           )}>
+            <div className="absolute top-4 right-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:text-primary hover:bg-white/20"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(game.game || game.name);
+                }}
+              >
+                <Heart className={cn(
+                  "w-6 h-6",
+                  isFavorite ? "fill-primary text-primary" : "fill-none text-white"
+                )} />
+              </Button>
+            </div>
             <div className="space-y-4">
               <div className="flex flex-col gap-2">
                 <Button 

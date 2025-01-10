@@ -163,6 +163,8 @@ contextBridge.exposeInMainWorld('electron', {
   isUpdateDownloaded: () => ipcRenderer.invoke('is-update-downloaded'),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   platform: ipcRenderer.invoke('get-platform'),
+  getPlatform: () => process.platform,
+  getAppVersion: () => ipcRenderer.invoke('get-version'),
   onSettingsChanged: (callback) => {
     ipcRenderer.on('settings-updated', callback);
     return () => {
