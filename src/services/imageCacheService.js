@@ -204,13 +204,37 @@ class ImageCacheService {
     }
   }
 
-  async fetchAndCacheImage(imgID) {
+  async fetchAndCacheImage(imgID, retryCount = 0) {
+    const maxRetries = 3;
+    const backoffMs = Math.min(1000 * Math.pow(2, retryCount), 5000); // Exponential backoff capped at 5 seconds
+
     try {
       const response = await fetch(`https://api.ascendara.app/image/${imgID}`);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      return await response.blob();
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      if (!blob || blob.size === 0) {
+        throw new Error('Retrieved blob is empty or invalid');
+      }
+      
+      return blob;
     } catch (error) {
-      console.error(`Error fetching image ${imgID}:`, error);
+      console.error(`Error fetching image ${imgID} (attempt ${retryCount + 1}/${maxRetries + 1}):`, error);
+      
+      // For network errors or server errors, retry with backoff
+      if (retryCount < maxRetries && 
+          (error instanceof TypeError || // Network errors
+           (error.message && error.message.includes('HTTP error')))) { // Server errors
+        
+        await new Promise(resolve => setTimeout(resolve, backoffMs));
+        return this.fetchAndCacheImage(imgID, retryCount + 1);
+      }
+      
+      // If all retries failed or other error type, return null
+      console.error(`All attempts to fetch image ${imgID} failed:`, error);
       return null;
     }
   }

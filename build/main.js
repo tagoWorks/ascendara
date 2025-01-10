@@ -14,7 +14,7 @@ let is_latest = true;
 let updateDownloaded = false;
 let notificationShown = false;
 let updateDownloadInProgress = false;
-let isDev = true;
+let isDev = false;
 
 const CURRENT_VERSION = "7.4.9";
 let config;
