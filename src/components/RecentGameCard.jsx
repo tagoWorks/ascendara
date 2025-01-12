@@ -69,7 +69,7 @@ const RecentGameCard = ({ game, onPlay }) => {
       <CardContent className="p-0">
         <div className="aspect-[4/3] relative">
           <img 
-            src={imageData || '/game-placeholder.png'} 
+            src={imageData || '/no-image.png'} 
             alt={game.game || game.name}
             className="w-full h-full object-cover"
           />

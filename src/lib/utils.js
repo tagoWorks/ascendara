@@ -11,6 +11,7 @@ export function sanitizeText(text) {
   return text
     .replace(/ŌĆÖ/g, "'") // Replace the specific quote character
     .replace(/ŌĆō/g, "-") // Replace the specific dash character
+    .replace(/├Č/g, "ö") // Replace the specific space character
     .replace(/[\u2018\u2019]/g, "'") // Smart quotes (single)
     .replace(/[\u201C\u201D]/g, '"') // Smart quotes (double)
     .replace(/[\u2013\u2014]/g, '-') // En dash and em dash

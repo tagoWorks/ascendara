@@ -1,3 +1,25 @@
+//=============================================================================
+// Ascendara Preload Script
+//=============================================================================
+// This script acts as a secure bridge between Electron's main and renderer processes.
+// It exposes specific main process functionality to the renderer process through
+// contextBridge, ensuring safe IPC (Inter-Process Communication).
+//
+// Note: This file is crucial for security as it controls what main process
+// functionality is available to the frontend.
+//
+// Learn more about Developing Ascendara at https://ascendara.app/docs/developer/overview
+//=============================================================================
+
+
+
+
+
+
+
+
+
+
 const { contextBridge, ipcRenderer } = require('electron');
 const https = require('https');
 
@@ -8,6 +30,7 @@ contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
     on: (channel, func) => ipcRenderer.on(channel, (event, ...args) => func(event, ...args)),
     off: (channel, func) => ipcRenderer.off(channel, func),
+    removeListener: (channel, func) => ipcRenderer.removeListener(channel, func),
     invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
     saveGameImage: (gameName, imageBase64) => ipcRenderer.invoke('save-game-image', gameName, imageBase64),
     readFile: (path) => ipcRenderer.invoke('read-file', path),
@@ -70,6 +93,7 @@ contextBridge.exposeInMainWorld('electron', {
   // Miscellaneous
   createTimestamp: () => ipcRenderer.invoke('create-timestamp'),
   isLatest: () => ipcRenderer.invoke('is-latest'),
+  isDownloaderRunning: () => ipcRenderer.invoke('is-downloader-running'),
   updateAscendara: () => ipcRenderer.invoke('update-ascendara'),
   uninstallAscendara: () => ipcRenderer.invoke('uninstall-ascendara'),
   openURL: (url) => ipcRenderer.invoke('open-url', url),

@@ -242,7 +242,18 @@ const Downloads = () => {
 const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
   const [isReporting, setIsReporting] = useState(false);
   const { t } = useLanguage();
-  
+
+  useEffect(() => {
+    const styleSheet = document.styleSheets[0];
+    const keyframes = `
+      @keyframes shimmer {
+        0% { transform: translateX(-100%) }
+        100% { transform: translateX(100%) }
+      }
+    `;
+    styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
+  }, []);
+
   const { downloadingData } = game;
   const isDownloading = downloadingData?.downloading;
   const isExtracting = downloadingData?.extracting;
@@ -478,7 +489,8 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                   <Progress value={undefined} />
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/30 to-transparent" 
                        style={{ 
-                         animation: 'shimmer 1.5s ease-in-out infinite',
+                         animation: 'shimmer 2s linear infinite',
+                         transform: 'translateX(-100%)',
                          maskImage: 'linear-gradient(to right, transparent 20%, black 50%, transparent 80%)',
                          WebkitMaskImage: 'linear-gradient(to right, transparent 20%, black 50%, transparent 80%)'
                        }} 

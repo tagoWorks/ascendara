@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogCancel } from "../components/ui/alert-dialog";
@@ -54,12 +54,10 @@ const isValidURL = (url, provider) => {
   return containsProviderName;
 };
 
-const VERIFIED_PROVIDERS = ['megadb', 'gofile', 'datanodes', 'buzzheavier'];
+const VERIFIED_PROVIDERS = ['megadb', 'gofile', 'datanodes', 'buzzheavier', 'qiwi']; 
 
 const sanitizeGameName = (name) => {
-  if (!name) return '';
-  // Replace special dash character with standard hyphen
-  return name.replace(/[–—]/g, '-');
+  return sanitizeText(name); 
 };
 
 export default function DownloadPage() {
@@ -67,6 +65,8 @@ export default function DownloadPage() {
   const navigate = useNavigate();
   const { gameData } = state || {};
   const { t } = useLanguage();
+  
+  // All state declarations first
   const [selectedProvider, setSelectedProvider] = useState("");
   const [inputLink, setInputLink] = useState("");
   const [isStartingDownload, setIsStartingDownload] = useState(false);
@@ -81,7 +81,133 @@ export default function DownloadPage() {
   const [showNewUserGuide, setShowNewUserGuide] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
   const [guideImages, setGuideImages] = useState({});
-  const [settings, setSettings] = useState({ downloadBlocker: false });
+  const [isDev, setIsDev] = useState(false);
+  const [settings, setSettings] = useState({ downloadHandler: false });
+
+  useEffect(() => {
+    const checkDevMode = async () => {
+      const isDevMode = await window.electron.isDev();
+      setIsDev(isDevMode);
+    };
+    checkDevMode();
+  }, []);
+
+  // Then handleDownload
+  const handleDownload = useCallback(async (directUrl = null) => {
+    if (isDev) {
+      toast.error(t('download.toast.cannotDownloadDev'));
+      return;
+    }
+    
+    if (showNoDownloadPath) {
+      return;
+    }
+  
+    if (!gameData) {
+      console.error('No game data available');
+      toast.error(t('download.toast.noGameData'));
+      return;
+    }
+  
+    if (selectedProvider !== 'gofile' && !isValidLink && !directUrl) {
+      return;
+    }
+  
+    if (!isDev) {
+      if (isStartingDownload) {
+        console.log('Download already in progress, skipping');
+        return;
+      }
+
+      setIsStartingDownload(true);
+      try {
+        const sanitizedGameName = sanitizeText(gameData.game);
+        const urlToUse = directUrl || inputLink;
+        
+        console.log('Starting download with URL:', urlToUse);
+        await window.electron.downloadFile(
+          urlToUse,
+          sanitizedGameName,
+          gameData.online,
+          gameData.dlc,
+          gameData.version,
+          gameData.imgID,
+          gameData.size
+        );
+        
+        toast.success(t('download.toast.downloadStarted'));
+        
+        // Add a delay before navigation to ensure the download has started
+        // and the toast is visible
+        setTimeout(() => {
+          setIsStartingDownload(false);
+          navigate('/downloads');
+        }, 1000);
+      } catch (error) {
+        console.error('Download failed:', error);
+        toast.error(t('download.toast.downloadFailed'));
+        setIsStartingDownload(false);
+      }
+    } else {
+      toast.error(t('download.toast.cannotDownloadDev'));
+    }
+  }, [showNoDownloadPath, gameData, selectedProvider, isValidLink, inputLink, navigate, t, isDev, isStartingDownload]);
+
+  useEffect(() => {
+    const checkDevMode = async () => {
+      const isDevMode = await window.electron.isDev();
+      setIsDev(isDevMode);
+    };
+    checkDevMode();
+    
+    let lastUrl = null;
+  
+    const handleProtocolUrl = async (event, url) => {
+      if (!url || url === lastUrl) return;
+      console.log('1. Protocol handler received URL:', url);
+      lastUrl = url;
+      
+      // Strip protocol and clean up URL, handling both http and https
+      let downloadUrl = url
+        .replace('ascendara://https//', 'https://')
+        .replace('ascendara://http//', 'http://');
+        
+      // If it still has ascendara:// prefix, try to fix malformed URLs
+      if (downloadUrl.startsWith('ascendara://')) {
+        downloadUrl = downloadUrl
+          .replace('ascendara://', '')
+          .replace(/^http\/\//, 'http://')
+          .replace(/^https\/\//, 'https://');
+      }
+
+      console.log('2. After stripping protocol:', downloadUrl);
+      
+      if (!downloadUrl || downloadUrl.trim() === '') {
+        console.log('Download URL is empty after processing');
+        return;
+      }
+      
+      // Ensure URL has proper protocol
+      if (!downloadUrl.startsWith('http://') && !downloadUrl.startsWith('https://')) {
+        downloadUrl = 'https://' + downloadUrl;
+      }
+      
+      console.log('3. Final URL to download:', downloadUrl);
+      
+      // Only trigger the download directly without updating UI state
+      handleDownload(downloadUrl);
+      
+      // Reset lastUrl after a delay
+      setTimeout(() => {
+        lastUrl = null;
+      }, 5000);
+    };
+  
+    window.electron.ipcRenderer.on('protocol-download-url', handleProtocolUrl);
+    return () => {
+      window.electron.ipcRenderer.removeListener('protocol-download-url', handleProtocolUrl);
+    };
+  }, [handleDownload]);
 
   useEffect(() => {
     const loadFileFromPath = async (path) => {
@@ -123,7 +249,7 @@ export default function DownloadPage() {
     };
     loadSettings();
   }, []);
-
+  
   const guideSteps = [
     {
       title: t('download.newUserGuide.steps.0.title'),
@@ -171,7 +297,7 @@ export default function DownloadPage() {
     if (guideStep < guideSteps.length) {
       setGuideStep(guideStep + 1);
     } else {
-      const newSettings = { ...settings, downloadBlocker: true };
+      const newSettings = { ...settings, downloadHandler: true };
       window.electron.saveSettings(newSettings)
         .then(() => {
           setSettings(newSettings);
@@ -220,69 +346,27 @@ export default function DownloadPage() {
       console.error('Error getting settings:', error);
     }
   };
-
   const handleInputChange = (e) => {
     const newLink = e.target.value;
     setInputLink(newLink);
+    
     if (newLink.trim() === '') {
       setIsValidLink(true);
       return;
     }
-    setIsValidLink(isValidURL(newLink, selectedProvider));
-  };
-
-  const handleDownload = async () => {
-    if (showNoDownloadPath) {
-      return;
-    }
   
-    if (selectedProvider !== 'gofile' && !isValidLink) {
-      return;
-    }
-  
-    setIsStartingDownload(true);
-    try {
-      const sanitizedGameName = sanitizeText(gameData.game);
-      
-      if (selectedProvider === 'gofile') {
-        const downloadUrl = downloadLinks[selectedProvider][0].startsWith('//')
-          ? `https:${downloadLinks[selectedProvider][0]}`
-          : downloadLinks[selectedProvider][0];
-          
-          await window.electron.downloadFile(
-            sanitizeText(downloadUrl),
-            sanitizedGameName,
-            gameData.online,
-            gameData.dlc,
-            gameData.version,
-            gameData.imgID,
-            gameData.size
-          );
-      } else {
-        await window.electron.downloadFile(
-          sanitizeText(inputLink),
-          sanitizedGameName,
-          gameData.online,
-          gameData.dlc,
-          gameData.version,
-          gameData.imgID,
-          gameData.size
-        );
+    // Try to detect provider from URL if none selected
+    if (!selectedProvider) {
+      for (const provider of VERIFIED_PROVIDERS) {
+        if (isValidURL(newLink, provider)) {
+          setSelectedProvider(provider);
+          setIsValidLink(true);
+          return;
+        }
       }
-      
-      // 2-second delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Show success notification
-      toast.success(t('download.toast.downloadStarted'));
-      
-      // Redirect to downloads page
-      navigate('/downloads');
-    } catch (error) {
-      console.error('Download failed:', error);
-      toast.error(t('download.toast.downloadFailed'));
-      setIsStartingDownload(false);
     }
+  
+    setIsValidLink(isValidURL(newLink, selectedProvider));
   };
 
   useEffect(() => {
@@ -442,7 +526,7 @@ export default function DownloadPage() {
   }
 
   return (
-    <div className="container max-w-7xl mx-auto flex flex-col p-4 min-h-screen pt-24 fade-in">
+    <div className="container max-w-7xl mx-auto flex flex-col p-4 min-h-screen pt-24 fade-in" style={{ transform: 'scale(0.95)', transformOrigin: 'top center' }}>
       <div className="w-full max-w-6xl">
         <div className="flex flex-col gap-4">
           {/* Back Button */}
@@ -695,7 +779,7 @@ export default function DownloadPage() {
                         </div>
                       </div>
 
-                      {selectedProvider !== "gofile" && (
+                      {!useAscendara && selectedProvider !== 'gofile' && (
                         <div>
                           <Input
                             placeholder={t('download.downloadOptions.pasteLink')}
@@ -717,15 +801,15 @@ export default function DownloadPage() {
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
                         <Switch
-                          id="ascendara-blocker"
+                          id="ascendara-handler"
                           checked={useAscendara}
                           onCheckedChange={(checked) => {
                             setUseAscendara(checked);
                             localStorage.setItem('useAscendara', JSON.stringify(checked));
                           }}
                         />
-                        <Label htmlFor="ascendara-blocker" className="text-sm">
-                          {t('download.downloadOptions.ascendaraBlocker')}
+                        <Label htmlFor="ascendara-handler" className="text-sm">
+                          {t('download.downloadOptions.ascendaraHandler')}
                         </Label>
                       </div>
                       {!useAscendara && (
@@ -738,14 +822,27 @@ export default function DownloadPage() {
                       )}
                     </div>
                   )}
-
-                  <Button
-                    onClick={handleDownload}
-                    disabled={isStartingDownload || !selectedProvider || (selectedProvider !== 'gofile' && (!inputLink || !isValidLink))}
-                    className="w-full text-secondary"
-                  >
-                    {isStartingDownload ? (
-                      <>
+                  
+                  {selectedProvider && useAscendara && selectedProvider !== 'gofile' && (
+                    <div className="flex items-center justify-center space-x-2 py-2 text-muted-foreground">
+                      <Loader className="h-4 w-4 animate-spin" />
+                      <span className="text-sm">
+                        {isStartingDownload 
+                          ? t('download.downloadOptions.startingDownload')
+                          : t('download.downloadOptions.waitingForBrowser')
+                        }
+                      </span>
+                    </div>
+                  )}
+                  
+                  {(!useAscendara || selectedProvider === 'gofile') && (
+                    <Button
+                      onClick={() => handleDownload()}
+                      disabled={isStartingDownload || !selectedProvider || (selectedProvider !== 'gofile' && (!inputLink || !isValidLink))}
+                      className="w-full text-secondary"
+                    >
+                      {isStartingDownload ? (
+                        <>
                         <Loader className="mr-2 h-4 w-4 animate-spin" />
                         {t('download.downloadOptions.downloading')}
                       </>
@@ -753,13 +850,14 @@ export default function DownloadPage() {
                       t('download.downloadOptions.downloadNow')
                     )}
                   </Button>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Right Column - Instructions */}
             <div className="space-y-3">
-              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
                 <div className="flex">
                   <div className="ml-3">
                     <p className="text-lg font-bold text-red-700 inline-flex items-center gap-2">
@@ -786,10 +884,9 @@ export default function DownloadPage() {
                     <div>
                       {useAscendara ? (
                         <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                          <li>{t('download.downloadOptions.blockerInstructions.step1')}</li>
-                          <li>{t('download.downloadOptions.blockerInstructions.step2')}</li>
-                          <li>{t('download.downloadOptions.blockerInstructions.step3')}</li>
-                          <li>{t('download.downloadOptions.blockerInstructions.step4')}</li>
+                          <li>{t('download.downloadOptions.handlerInstructions.step1')}</li>
+                          <li>{t('download.downloadOptions.handlerInstructions.step2')}</li>
+                          <li>{t('download.downloadOptions.handlerInstructions.step3')}</li>
                         </ol>
                       ) : (
                         <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
@@ -859,7 +956,7 @@ export default function DownloadPage() {
               {guideStep === 0 ? t('download.newUserGuide.startGuide') : 
                guideStep === guideSteps.length ? t('download.newUserGuide.finish') : 
                guideStep === 1 ? t('download.newUserGuide.installed') :
-               guideStep === 2 ? t('download.newUserGuide.blockerEnabled') :
+               guideStep === 2 ? t('download.newUserGuide.handlerEnabled') :
                t('download.newUserGuide.nextStep')}
             </Button>
           </AlertDialogFooter>

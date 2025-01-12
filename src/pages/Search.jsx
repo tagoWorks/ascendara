@@ -232,6 +232,27 @@ const Search = memo(() => {
     }
   };
 
+  const handleRefreshIndex = async () => {
+    setIsRefreshing(true);
+    
+    try {
+      // Quick check of just the Last-Modified header
+      const lastModified = await gameService.checkMetadataUpdate();
+      
+      if (lastModified) {
+        // If we got a Last-Modified header, fetch fresh data
+        const freshData = await gameService.getAllGames();
+        setGames(freshData.games);
+      }
+    } catch (error) {
+      console.error('Error checking for updates:', error);
+    } finally {
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 500);
+    }
+  };
+
   return (
     <div className="flex flex-col bg-background">
       <div className="flex-1 p-8 pb-24">
@@ -266,17 +287,11 @@ const Search = memo(() => {
                       <div className="pt-2">
                         <Button
                           variant="outline"
-                          onClick={() => refreshGames(true)}
+                          onClick={handleRefreshIndex}
                           disabled={isRefreshing}
                           className="w-full flex items-center justify-center gap-2"
                         >
-                          <svg
-                            className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <RefreshCw />
-                          </svg>
+                          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                           {isRefreshing ? t('search.refreshingIndex') : t('search.refreshIndex')}
                         </Button>
                       </div>
@@ -393,6 +408,11 @@ const Search = memo(() => {
                   </div>
                 </SheetContent>
               </Sheet>
+              {isRefreshing && (
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                </div>
+              )}
             </div>
 
             {loading ? (

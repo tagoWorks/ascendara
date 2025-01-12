@@ -52,6 +52,7 @@
     },
     "app": {
       "outdated": "OUTDATED",
+      "runningInDev": "DEVELOPMENT MODE",
       "downloading-update": "Downloading Update...",
       "loading" : {
         "finishingUpdate": "Finishing up... Please don't close Ascendara",
@@ -64,7 +65,10 @@
         "updateNow": "Update Now", 
         "updateReady": "Ascendara is ready to update",
         "updateReadyDesc": "Ascendara downloaded the update and is ready to install and restart now",
-        "installAndRestart": "Install & Restart"
+        "installAndRestart": "Install & Restart",
+        "justUpdated": "Update Complete",
+        "justUpdatedDesc": "You've just updated to {{version}}",
+        "viewChangelog": "View Changelog"
       },
       "crashScreen": {
         "title": "Oh no...",
@@ -265,12 +269,13 @@
       "downloadThreads": "Download Performance",
       "downloadThreadsPresets": {
         "low": "Low (2 threads) - Minimal CPU usage",
-        "normal": "Normal (4 threads) - Balanced performance",
-        "high": "High (8 threads) - For better CPUs",
-        "veryHigh": "Very High (16 threads) - For high-end PCs",
-        "extreme": "Extreme (32 threads) - For enthusiast systems",
-        "custom": "Custom"
+        "normal": "Normal (4 threads) - Recommended for most users",
+        "high": "High (8 threads) - Better performance",
+        "veryHigh": "Very High (12 threads) - For fast connections",
+        "extreme": "Extreme (16 threads) - Use with caution"
       },
+      "highThreadWarning": "High thread counts may cause download issues. Consider using 4-8 threads for better reliability.",
+      "downloaderRunningWarning": "You cannot change this setting while a download is in progress",
       "customThreadCount": "Custom Thread Count",
       "customThreadCountDesc": "Higher values may improve download speed but require more CPU power and memory. Maximum: 32 threads",
       
@@ -337,7 +342,9 @@
         "openInBrowser": "Open in Browser",
         "pasteLink": "Paste your direct download link (DDL) here",
         "invalidLink": "Please enter a valid download link for",
-        "ascendaraBlocker": "Ascendara Download Blocker",
+        "ascendaraHandler": "Ascendara Download Handler",
+        "waitingForBrowser": "Waiting for your browser to send the download...",
+        "startingDownload": "Starting download...",
         "getExtension": "Don't have the extension? Get it for Chrome or Firefox",
         "downloading": "Downloading",
         "downloadNow": "Download Now",
@@ -349,11 +356,10 @@
           "step5": "Copy the link that the browser started downloading",
           "step6": "Paste the DDL in the input box and click Download Now"
         },
-        "blockerInstructions": {
+        "handlerInstructions": {
           "step1": "Open the link in your browser and enable the extension",
           "step2": "Complete the CAPTCHA and start the download",
-          "step3": "The extension will automatically stop and capture the direct download link",
-          "step4": "Paste the DDL in the input box and click Download Now"
+          "step3": "The extension will automatically stop the download and start it for you in Ascendara"
         },
         "gofileInstructions": {
           "thanks": "Thanks to ltsdw on GitHub",
@@ -381,37 +387,26 @@
         "close": "Close",
         "finish": "Finish",
         "installed": "I installed it →",
-        "blockerEnabled": "Blocker is Enabled →",
+        "handlerEnabled": "Handler is Enabled →",
         "nextStep": "Next Step →",
         "steps": [
           {
-            "title": "Step 1: The Ascendara Download Blocker",
-            "description": "The Ascendara Download Blocker is a Chrome extension that helps you catch the direct download link (DDL) for a game."
+            "title": "Step 1: The Ascendara Download Handler",
+            "description": "The Ascendara Download Handler will automatically stop the download in your browser and start it for you in Ascendara."
           },
           {
-            "title": "Step 2: Enable the Blocker",
-            "description": "Make sure the Ascendara Download Blocker toggle is enabled before proceeding."
+            "title": "Step 2: Enable the Handler",
+            "description": "Make sure the Ascendara Download Handler toggle is enabled before proceeding."
           },
           {
             "title": "Step 3: Start the download",
             "description": "Complete the CAPTCHA, and start the download."
-          },
-          {
-            "title": "Step 4: Copy the Link",
-            "description": "Copy the direct download link and paste it into Ascendara."
-          },
-          {
-            "title": "Step 5: Start the download",
-            "description": "Start the download by clicking the Download Now button."
-          },
-          {
-            "title": "View your downloads",
-            "description": "Go to the downloads page to view your downloading game."
           }
         ]
       },
       "toast": {
         "downloadStarted": "Download started successfully",
+        "cannotDownloadDev": "Cannot download games in development mode",
         "downloadFailed": "Failed to start download",
         "reportSubmitted": "Report submitted successfully",
         "reportFailed": "Failed to submit report"
@@ -446,8 +441,8 @@
       "downloadLocation": "Choose Download Location",
       "downloadLocationDesc": "Select where you want your games to be downloaded",
       "browseLocation": "Browse Location",
-      "extension": "Get the Download Blocker Extension",
-      "extensionDesc": "Get the Ascendara Download Blocker extension for Chrome or Firefox",
+      "extension": "Get the Download Handler Extension",
+      "extensionDesc": "Get the Ascendara Download Handler extension for Chrome or Firefox",
       "analytics": "Help Improve Ascendara",
       "analyticsDesc": "Share anonymous usage data to help improve your experience",
       "autoUpdate": "Stay Updated",
@@ -505,13 +500,12 @@
       "thisIsWhereAllYourDownloadedGamesWillBeStored": "This is where all your downloaded games will be stored",
       "makeSureYouHaveEnoughDiskSpace": "Make sure you have enough disk space in the selected location",
       "downloadGamesFaster": "Download Games Faster",
-      "getTheAscendaraDownloadBlockerExtension": "Get the Ascendara Download Blocker extension for Chrome or Firefox.",
+      "getTheAscendaraDownloadHandlerExtension": "Get the Ascendara Download Handler extension for Chrome or Firefox.",
       "howItWorks": "How it works:",
-      "clickTheExtensionIcon": "Click the extension icon and enable the blocker before starting a download",
-      "whenYouClickADownloadLink": "When you click a download link, instead of downloading, you'll get the direct download URL",
-      "copyTheURLAndPasteItIntoAscendara": "Copy the URL and paste it into Ascendara to start downloading your game",
-      "disableTheBlockerWhenYouWantToAllowNormalDownloadsAgain": "Disable the blocker when you want to allow normal downloads again",
-      "theExtensionBlocksUnwantedDownloads": "The extension blocks unwanted downloads and shows you the direct download URL, making it much easier to download games through Ascendara.",
+      "clickTheExtensionIcon": "Click the extension icon and enable the handler when you install it",
+      "whenYouClickADownloadLink": "When you start a download from a known provider, the extension will automatically stop the download in your browser and start it for you in Ascendara",
+      "startTheDownload": "You sit back and relax while your game downloads and extracts in the background",
+      "theExtensionBlocksKnownProviders": "The extension listens for downloads from known providers and stops them before they start in your browser, then sending it to Ascendara to download",
       "getTheExtension": "Get the Extension",
       "helpImproveAscendara": "Help Improve Ascendara",
       "shapeTheFutureOfAscendara": "Shape the future of Ascendara by sharing anonymous usage data.",

@@ -7,36 +7,51 @@ class ImageCacheService {
     this.dbName = 'imageCache';
     this.storeName = 'images';
     this.blobUrls = new Map(); // Track active blob URLs
-    this.initializeDB();
+    this.dbInitialized = false;
+    this.dbInitPromise = this.initializeDB();
+    
+    // Add rate limiting
+    this.maxConcurrentRequests = 6;
+    this.requestQueue = [];
+    this.activeRequests = 0;
   }
 
   async initializeDB() {
+    if (this.dbInitialized) return;
+
     try {
-      const request = indexedDB.open(this.dbName, 1);
-      
-      request.onerror = (event) => {
-        console.error('IndexedDB error:', event.target.error);
-      };
+      await new Promise((resolve, reject) => {
+        const request = indexedDB.open(this.dbName, 1);
+        
+        request.onerror = (event) => {
+          console.error('IndexedDB error:', event.target.error);
+          reject(event.target.error);
+        };
 
-      request.onupgradeneeded = (event) => {
-        const db = event.target.result;
-        if (!db.objectStoreNames.contains(this.storeName)) {
-          const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
-          store.createIndex('timestamp', 'timestamp', { unique: false });
-        }
-      };
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains(this.storeName)) {
+            const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
+            store.createIndex('timestamp', 'timestamp', { unique: false });
+          }
+        };
 
-      request.onsuccess = (event) => {
-        this.db = event.target.result;
-        this.cleanupOldCache();
-      };
+        request.onsuccess = (event) => {
+          this.db = event.target.result;
+          this.dbInitialized = true;
+          resolve();
+        };
+      });
+
+      await this.cleanupOldCache();
     } catch (error) {
       console.error('Failed to initialize IndexedDB:', error);
+      this.dbInitialized = false;
     }
   }
 
   async cleanupOldCache() {
-    if (!this.db) return;
+    if (!this.dbInitialized) return;
 
     try {
       const transaction = this.db.transaction([this.storeName], 'readwrite');
@@ -60,7 +75,7 @@ class ImageCacheService {
   }
 
   async getFromIndexedDB(imgID) {
-    if (!this.db) return null;
+    if (!this.dbInitialized) return null;
 
     return new Promise((resolve) => {
       try {
@@ -89,7 +104,7 @@ class ImageCacheService {
   }
 
   async saveToIndexedDB(imgID, blob) {
-    if (!this.db) return;
+    if (!this.dbInitialized) return;
 
     try {
       const transaction = this.db.transaction([this.storeName], 'readwrite');
@@ -132,11 +147,12 @@ class ImageCacheService {
     return url;
   }
 
-  async getImage(imgID, retryCount = 0) {
-    if (!imgID) return null;
-    const maxRetries = 3;
-
+  async getImage(imgID) {
     try {
+      if (!this.dbInitialized) {
+        await this.dbInitPromise;
+      }
+
       // Check memory cache first
       if (this.memoryCache.has(imgID)) {
         const cached = this.memoryCache.get(imgID);
@@ -171,7 +187,13 @@ class ImageCacheService {
         return this.inProgress.get(imgID);
       }
 
+      // Queue the request if we're at max concurrent requests
+      if (this.activeRequests >= this.maxConcurrentRequests) {
+        await new Promise(resolve => this.requestQueue.push(resolve));
+      }
+
       // Create new request
+      this.activeRequests++;
       const promise = this.fetchAndCacheImage(imgID);
       this.inProgress.set(imgID, promise);
 
@@ -190,53 +212,78 @@ class ImageCacheService {
         return null;
       } finally {
         this.inProgress.delete(imgID);
+        this.activeRequests--;
+        
+        // Process next queued request if any
+        if (this.requestQueue.length > 0) {
+          const next = this.requestQueue.shift();
+          next();
+        }
       }
     } catch (error) {
-      console.error(`Error in getImage for ${imgID}:`, error);
-      
-      // Retry logic for failed requests
-      if (retryCount < maxRetries) {
-        console.log(`Retrying image ${imgID}, attempt ${retryCount + 1}`);
-        return this.getImage(imgID, retryCount + 1);
+      if (this.inProgress.has(imgID)) {
+        this.inProgress.delete(imgID);
       }
+      this.activeRequests--;
       
+      // Process next queued request if any
+      if (this.requestQueue.length > 0) {
+        const next = this.requestQueue.shift();
+        next();
+      }
       return null;
     }
   }
 
-  async fetchAndCacheImage(imgID, retryCount = 0) {
+  async fetchAndCacheImage(imgID) {
     const maxRetries = 3;
-    const backoffMs = Math.min(1000 * Math.pow(2, retryCount), 5000); // Exponential backoff capped at 5 seconds
+    const timeout = 15000; // Increased timeout to 15 seconds
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    try {
-      const response = await fetch(`https://api.ascendara.app/image/${imgID}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const blob = await response.blob();
-      if (!blob || blob.size === 0) {
-        throw new Error('Retrieved blob is empty or invalid');
-      }
-      
-      return blob;
-    } catch (error) {
-      console.error(`Error fetching image ${imgID} (attempt ${retryCount + 1}/${maxRetries + 1}):`, error);
-      
-      // For network errors or server errors, retry with backoff
-      if (retryCount < maxRetries && 
-          (error instanceof TypeError || // Network errors
-           (error.message && error.message.includes('HTTP error')))) { // Server errors
+        try {
+          const response = await fetch(`https://api.ascendara.app/image/${imgID}`, {
+            signal: controller.signal
+          });
+          
+          if (!response.ok) {
+            console.error(`Failed to fetch image ${imgID}: ${response.status} ${response.statusText}`);
+            if (attempt < maxRetries - 1) continue;
+            return null;
+          }
+          
+          const blob = await response.blob();
+          if (!blob || blob.size === 0) {
+            console.error(`Received empty blob for image ${imgID}`);
+            if (attempt < maxRetries - 1) continue;
+            return null;
+          }
+          
+          return blob;
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      } catch (error) {
+        console.error(`Error fetching image ${imgID} (attempt ${attempt + 1}/${maxRetries}):`, error.message);
         
-        await new Promise(resolve => setTimeout(resolve, backoffMs));
-        return this.fetchAndCacheImage(imgID, retryCount + 1);
+        // Clean up any existing blob URLs
+        if (this.blobUrls.has(imgID)) {
+          URL.revokeObjectURL(this.blobUrls.get(imgID));
+          this.blobUrls.delete(imgID);
+        }
+        
+        // If it's not the last attempt and it's not an abort error, continue to next retry
+        if (attempt < maxRetries - 1 && error.name !== 'AbortError') {
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1))); // Exponential backoff
+          continue;
+        }
+        return null;
       }
-      
-      // If all retries failed or other error type, return null
-      console.error(`All attempts to fetch image ${imgID} failed:`, error);
-      return null;
     }
+    return null;
   }
 
   clearCache() {

@@ -47,6 +47,7 @@ const GameCard = memo(function GameCard({ game, compact }) {
   const [seamlessDownloads, setSeamlessDownloads] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isDev, setIsDev] = useState(false);
   const { t } = useLanguage();
 
   if (!game) {
@@ -62,6 +63,11 @@ const GameCard = memo(function GameCard({ game, compact }) {
   useEffect(() => {
     window.electron.getSettings().then(settings => {
       setSeamlessDownloads(settings.seamlessDownloads ?? true);
+    });
+
+    // Check if in dev mode
+    window.electron.isDev().then(isDev => {
+      setIsDev(isDev);
     });
 
     // Check if game is installed
@@ -103,6 +109,11 @@ const GameCard = memo(function GameCard({ game, compact }) {
     const hasGoFile = providers.includes('gofile');
     
     if (hasGoFile && seamlessDownloads) {
+      if (isDev) {
+        toast.error(t('download.toast.cannotDownloadDev'));
+        return;
+      }
+      
       setIsStarting(true);
       
       // Get first valid gofile link

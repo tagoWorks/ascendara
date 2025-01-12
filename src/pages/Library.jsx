@@ -59,6 +59,7 @@ const Library = () => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isUninstalling, setIsUninstalling] = useState(false);
+  const [uninstallingGame, setUninstallingGame] = useState(null);
   const [launchingGame, setLaunchingGame] = useState(null);
   const [coverSearchQuery, setCoverSearchQuery] = useState("");
   const [coverSearchResults, setCoverSearchResults] = useState([]);
@@ -77,6 +78,18 @@ const Library = () => {
   useEffect(() => {
     localStorage.setItem('game-favorites', JSON.stringify(favorites));
   }, [favorites]);
+
+  useEffect(() => {
+    // Add keyframes to document
+    const styleSheet = document.styleSheets[0];
+    const keyframes = `
+      @keyframes shimmer {
+        0% { transform: translateX(-100%) }
+        100% { transform: translateX(100%) }
+      }
+    `;
+    styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
+  }, []);
 
   const toggleFavorite = (gameName) => {
     setFavorites(prev => {
@@ -248,15 +261,18 @@ const Library = () => {
         await window.electron.ipcRenderer.invoke('remove-custom-game', game.game || game.name);
       } else {
         setIsUninstalling(true);
+        setUninstallingGame(game.game || game.name);
         await window.electron.ipcRenderer.invoke('delete-game', game.game || game.name);
       }
       setGames(games.filter(g => (g.game || g.name) !== (game.game || game.name)));
       setGameToDelete(null);
       setIsUninstalling(false);
+      setUninstallingGame(null);
     } catch (error) {
       console.error('Error deleting game:', error);
       setError('Failed to delete game');
       setIsUninstalling(false);
+      setUninstallingGame(null);
     }
   };
 
@@ -398,6 +414,7 @@ const Library = () => {
                 isSelected={isGameSelected(game, selectedGame)}
                 onOpenDirectory={() => handleOpenDirectory(game)}
                 isLaunching={launchingGame === (game.game || game.name)}
+                isUninstalling={uninstallingGame === (game.game || game.name)}
                 favorites={favorites}
                 onToggleFavorite={toggleFavorite}
               />
@@ -492,6 +509,7 @@ const InstalledGameCard = ({
   isSelected, 
   onOpenDirectory, 
   isLaunching,
+  isUninstalling,
   favorites,
   onToggleFavorite 
 }) => {
@@ -585,10 +603,33 @@ const InstalledGameCard = ({
       <CardContent className="p-0">
         <div className="aspect-[4/3] relative">
           <img 
-            src={imageData || '/game-placeholder.png'} 
+            src={imageData || '/no-image.png'} 
             alt={game.game || game.name}
             className="w-full h-full object-cover"
           />
+          {isUninstalling && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <div className="w-full max-w-[200px] space-y-2 px-4">
+                <div className="relative overflow-hidden">
+                  <Progress value={undefined} />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/30 to-transparent" 
+                       style={{ 
+                         animation: 'shimmer 2s linear infinite',
+                         transform: 'translateX(-100%)',
+                         maskImage: 'linear-gradient(to right, transparent 20%, black 50%, transparent 80%)',
+                         WebkitMaskImage: 'linear-gradient(to right, transparent 20%, black 50%, transparent 80%)'
+                       }} 
+                  />
+                </div>
+                <div className="text-center text-sm font-medium text-white">
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader className="h-4 w-4 animate-spin" />
+                    {t('library.uninstalling')}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
           <div className={cn(
             "absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent",
             "opacity-0 group-hover:opacity-100 transition-opacity",

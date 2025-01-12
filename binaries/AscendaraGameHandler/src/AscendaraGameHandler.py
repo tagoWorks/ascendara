@@ -1,3 +1,20 @@
+# ==============================================================================
+# Ascendara Game Handler
+# ==============================================================================
+# Game process manager for the Ascendara Game Launcher. Handles game execution,
+# process monitoring, and Discord Rich Presence integration.
+# Read more about the Game Handler here:
+# https://ascendara.app/docs/developer/game-handler
+
+
+
+
+
+
+
+
+
+
 import json
 import os
 import subprocess

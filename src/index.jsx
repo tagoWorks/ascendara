@@ -126,6 +126,39 @@ const AppRoutes = () => {
       console.log('Starting app initialization...');
 
       try {
+        // Check if we're forcing a loading screen from settings
+        const forceLoading = localStorage.getItem('forceLoading');
+        if (forceLoading) {
+          localStorage.removeItem('forceLoading');
+          await ensureMinLoadingTime();
+          setIsLoading(false);
+          return;
+        }
+
+        // Check if we're forcing the installing screen from settings
+        const forceInstalling = localStorage.getItem('forceInstalling');
+        if (forceInstalling) {
+          localStorage.removeItem('forceInstalling');
+          setIsInstalling(true);
+          setTimeout(() => {
+            setIsInstalling(false);
+            window.location.reload();
+          }, 2000);
+          return;
+        }
+
+        // Check if we're finishing up from settings
+        const finishingUp = localStorage.getItem('finishingUp');
+        if (finishingUp) {
+          localStorage.removeItem('finishingUp');
+          setTimeout(async () => {
+            await window.electron.setTimestampValue('isUpdating', false);
+            setIsUpdating(false);
+            window.location.reload();
+          }, 2000);
+          return;
+        }
+
         // Check if we're finishing up an update
         const isUpdatingValue = await window.electron.getTimestampValue('isUpdating');
         setIsUpdating(isUpdatingValue);
@@ -145,6 +178,16 @@ const AppRoutes = () => {
               setShouldShowWelcome(!isV7);
               setWelcomeData({ isNew: false, isV7 });
             }
+            const version = await window.electron.getVersion();
+            toast(t('app.toasts.justUpdated'), {
+              description: t('app.toasts.justUpdatedDesc', { version }),
+              action: {
+                label: t('app.toasts.viewChangelog'),
+                onClick: () => window.electron.openURL('https://ascendara.app/changelog')
+              },
+              duration: 10000,
+              id: 'update-completed'
+            });
           }, 2000);
           return;
         }
@@ -404,7 +447,7 @@ class ErrorBoundary extends React.Component {
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
           <div className="max-w-md w-full space-y-4 text-center">
-            <h2 className="text-2xl font-bold text-destructive">{i18n.t('app.crashScreen.title')}</h2>
+            <h2 className="text-2xl font-bold text-primary">{i18n.t('app.crashScreen.title')}</h2>
             <p className="text-muted-foreground">
               {i18n.t('app.crashScreen.description')}
             </p>

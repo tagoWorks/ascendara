@@ -8,7 +8,7 @@ import { Label } from '../components/ui/label';
 import { Card } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { CircleAlert, Languages, Zap } from "lucide-react";
+import { CircleAlert, Languages, Zap, Loader, Hand } from "lucide-react";
 
 const themes = [
   // Light themes
@@ -141,6 +141,7 @@ function Settings() {
   const { language, changeLanguage, t } = useLanguage();
   const [downloadPath, setDownloadPath] = useState('');
   const [version, setVersion] = useState('');
+  const [isDownloaderRunning, setIsDownloaderRunning] = useState(false);
   const [settings, setSettings] = useState({
     downloadDirectory: '',
     seamlessDownloads: true,
@@ -173,6 +174,35 @@ function Settings() {
     }, 300),
     []
   );
+
+  useEffect(() => {
+    const checkDownloaderStatus = async () => {
+      try {
+        const games = await window.electron.getGames();
+        const hasDownloadingGames = games.some(game => {
+          const { downloadingData } = game;
+          return downloadingData && (
+            downloadingData.downloading ||
+            downloadingData.extracting ||
+            downloadingData.updating ||
+            downloadingData.error
+          );
+        });
+        setIsDownloaderRunning(hasDownloadingGames);
+      } catch (error) {
+        console.error('Error checking downloading games:', error);
+      }
+    };
+
+    // Check immediately
+    checkDownloaderStatus();
+
+    // Then check every second
+    const interval = setInterval(checkDownloaderStatus, 1000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
+  }, []);
 
   // Auto-save settings whenever they change
   useEffect(() => {
@@ -339,6 +369,47 @@ function Settings() {
     checkDevMode();
   }, []);
 
+  const [currentScreen, setCurrentScreen] = useState('none');
+  const [isTriggering, setIsTriggering] = useState(false);
+
+  // Function to trigger selected screen
+  const triggerScreen = async () => {
+    setIsTriggering(true);
+    try {
+      switch (currentScreen) {
+        case 'updating':
+          // Set installing flag to show UpdateOverlay
+          localStorage.setItem('forceInstalling', 'true');
+          window.location.reload();
+          break;
+          
+        case 'loading':
+          // Set loading state and reload
+          localStorage.setItem('forceLoading', 'true');
+          window.location.reload();
+          break;
+          
+        case 'crashscreen':
+          // Simulate a crash by throwing an error
+          throw new Error('Intentional crash for testing');
+          
+        case 'finishingup':
+          // Set the updating timestamp to show finishing up screen
+          await window.electron.setTimestampValue('isUpdating', true);
+          window.location.reload();
+          break;
+      }
+    } catch (error) {
+      console.error('Error triggering screen:', error);
+      if (currentScreen === 'crashscreen') {
+        // For crash screen, we want to propagate the error
+        throw error;
+      }
+    } finally {
+      setIsTriggering(false);
+    }
+  };
+
   // Show loading state
   if (isLoading) {
     return (
@@ -358,7 +429,7 @@ function Settings() {
           <h1 className="text-3xl font-bold text-primary">{t('settings.title')}</h1>
           <Separator orientation="vertical" className="h-8" />
           <p className="text-muted-foreground">{t('settings.configure')}</p>
-          <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
+          <div onClick={() => window.electron.openURL('https://ascendara.app/changelog')} className="ml-auto flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
             <span>Version {version}</span>
           </div>
         </div>
@@ -436,7 +507,16 @@ function Settings() {
 
                   <div className="mb-6">
                     <Label>{t('settings.downloadThreads')}</Label>
+                    {isDownloaderRunning && (
+                      <div className="mt-2 flex items-center gap-2 text-red-600 dark:text-red-500">
+                        <CircleAlert size={14} />
+                        <p className="text-sm">
+                          {t('settings.downloaderRunningWarning')}
+                        </p>
+                      </div>
+                    )}
                     <Select
+                      disabled={isDownloaderRunning}
                       value={settings.threadCount === 0 ? 'custom' : (settings.threadCount || 4).toString()}
                       onValueChange={(value) => {
                         const threadCount = value === 'custom' ? 0 : parseInt(value);
@@ -453,9 +533,8 @@ function Settings() {
                         <SelectItem value="2">{t('settings.downloadThreadsPresets.low')}</SelectItem>
                         <SelectItem value="4">{t('settings.downloadThreadsPresets.normal')}</SelectItem>
                         <SelectItem value="8">{t('settings.downloadThreadsPresets.high')}</SelectItem>
-                        <SelectItem value="16">{t('settings.downloadThreadsPresets.veryHigh')}</SelectItem>
-                        <SelectItem value="32">{t('settings.downloadThreadsPresets.extreme')}</SelectItem>
-                        <SelectItem value="custom">{t('settings.downloadThreadsPresets.custom')}</SelectItem>
+                        <SelectItem value="12">{t('settings.downloadThreadsPresets.veryHigh')}</SelectItem>
+                        <SelectItem value="16">{t('settings.downloadThreadsPresets.extreme')}</SelectItem>
                       </SelectContent>
                     </Select>
                     
@@ -479,6 +558,14 @@ function Settings() {
                         />
                         <p className="text-sm text-muted-foreground mt-1">
                           {t('settings.customThreadCountDesc')}
+                        </p>
+                      </div>
+                    )}
+                    {settings.threadCount > 8 && (
+                      <div className="mt-2 flex items-center gap-2 text-yellow-600 dark:text-yellow-500">
+                        <CircleAlert size={14} />
+                        <p className="text-sm">
+                          {t('settings.highThreadWarning', 'High thread counts may cause download issues. Use with caution.')}
                         </p>
                       </div>
                     )}
@@ -668,13 +755,40 @@ function Settings() {
                       >
                         Open Local Directory
                       </Button>
-                      <Button
-                        className="w-full"
-                        variant="outline"
-                        onClick={() => window.electron.openDevTools()}
-                      >
-                        Open DevTools
-                      </Button>
+                    </div>
+                    <div className="flex flex-col space-y-2">
+                      <Label>Screen Trigger</Label>
+                      <div className="flex gap-2">
+                        <Select 
+                          value={currentScreen} 
+                          onValueChange={(value) => setCurrentScreen(value)}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Select Screen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            <SelectItem value="updating">Updating</SelectItem>
+                            <SelectItem value="loading">Loading</SelectItem>
+                            <SelectItem value="crashscreen">Crash Screen</SelectItem>
+                            <SelectItem value="finishingup">Finishing Up</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button 
+                          onClick={triggerScreen}
+                          disabled={currentScreen === 'none' || isTriggering}
+                          variant="secondary"
+                        >
+                          {isTriggering ? (
+                            <div className="flex items-center gap-2">
+                              <Loader className="h-4 w-4 animate-spin" />
+                              Triggering...
+                            </div>
+                          ) : (
+                            'Trigger Screen'
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -728,7 +842,7 @@ function Settings() {
             <Card className="p-6 border-yellow-500/50 bg-yellow-500/5">
               <div className="space-y-4">
                 <div className="flex items-center gap-3 text-yellow-500">
-                  <CircleAlert className="w-5 h-5" />
+                  <Hand className="w-5 h-5" />
                   <h2 className="text-lg font-semibold mb-0">{t('settings.warningTitle')}</h2>
                 </div>
                 

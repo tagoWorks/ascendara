@@ -1,3 +1,20 @@
+# ==============================================================================
+# Ascendara GoFile Helper
+# ==============================================================================
+# Specialized downloader component for handling GoFile.io downloads in Ascendara.
+# Manages authentication, file downloads, and extraction with multi-threading
+# support. Read more about the GoFile Helper Tool here:
+# https://ascendara.app/docs/developer/gofile-helper
+
+
+
+
+
+
+
+
+
+
 import os
 import json
 import sys
@@ -95,6 +112,10 @@ class GofileDownloader:
             self._max_workers = 32
             
         self._lock = Lock()
+        self._last_progress = 0
+        self._last_speed = 0
+        self._speed_samples = []
+        self._MAX_SPEED_SAMPLES = 5  # Use last 5 samples for moving average
         self.game = game
         self.online = online
         self.dlc = dlc
@@ -333,8 +354,22 @@ class GofileDownloader:
 
     def _update_progress(self, filename, progress, rate, eta_seconds=0, done=False):
         with self._lock:
-            self.game_info["downloadingData"]["downloading"] = not done
-            self.game_info["downloadingData"]["progressCompleted"] = f"{progress:.2f}"
+            # Ensure progress never goes backwards
+            if progress >= self._last_progress or done:
+                self._last_progress = progress
+                self.game_info["downloadingData"]["downloading"] = not done
+                self.game_info["downloadingData"]["progressCompleted"] = f"{progress:.2f}"
+            
+            # Use moving average for download speed to prevent wild fluctuations
+            self._speed_samples.append(rate)
+            if len(self._speed_samples) > self._MAX_SPEED_SAMPLES:
+                self._speed_samples.pop(0)
+            avg_rate = sum(self._speed_samples) / len(self._speed_samples)
+            
+            # Prevent speed from dropping too drastically
+            if avg_rate < self._last_speed * 0.5 and self._last_speed > 0:
+                avg_rate = self._last_speed * 0.5
+            self._last_speed = avg_rate
             
             # Format speed with consistent decimal places and thresholds
             def format_speed(rate):
@@ -349,34 +384,44 @@ class GofileDownloader:
                 else:
                     return f"{(rate / (1024 * 1024 * 1024)):.2f} GB/s"
             
-            self.game_info["downloadingData"]["progressDownloadSpeeds"] = format_speed(rate)
+            self.game_info["downloadingData"]["progressDownloadSpeeds"] = format_speed(avg_rate)
             
-            # Format ETA with improved granularity
+            # Calculate ETA based on smoothed speed
             if done:
                 eta = "0s"
-            elif eta_seconds <= 0:
+            elif avg_rate <= 0:
                 eta = "calculating..."
-            elif eta_seconds < 60:
-                eta = f"{int(eta_seconds)}s"
-            elif eta_seconds < 3600:
-                minutes = int(eta_seconds / 60)
-                seconds = int(eta_seconds % 60)
-                eta = f"{minutes}m {seconds}s"
-            elif eta_seconds < 86400:
-                hours = int(eta_seconds / 3600)
-                minutes = int((eta_seconds % 3600) / 60)
-                eta = f"{hours}h {minutes}m"
             else:
-                days = int(eta_seconds / 86400)
-                hours = int((eta_seconds % 86400) / 3600)
-                eta = f"{days}d {hours}h"
+                # Recalculate ETA using smoothed speed
+                remaining_progress = 100 - progress
+                total_size = self.size * 1024 * 1024  # Convert MB to bytes
+                remaining_bytes = (remaining_progress / 100.0) * total_size
+                eta_seconds = remaining_bytes / avg_rate
+                
+                # Cap maximum ETA at 24 hours
+                eta_seconds = min(eta_seconds, 86400)
+                
+                if eta_seconds < 60:
+                    eta = f"{int(eta_seconds)}s"
+                elif eta_seconds < 3600:
+                    minutes = int(eta_seconds / 60)
+                    seconds = int(eta_seconds % 60)
+                    eta = f"{minutes}m {seconds}s"
+                elif eta_seconds < 86400:
+                    hours = int(eta_seconds / 3600)
+                    minutes = int((eta_seconds % 3600) / 60)
+                    eta = f"{hours}h {minutes}m"
+                else:
+                    days = int(eta_seconds / 86400)
+                    hours = int((eta_seconds % 86400) / 3600)
+                    eta = f"{days}d {hours}h"
             
             self.game_info["downloadingData"]["timeUntilComplete"] = eta
             
             if done:
                 print(f"\rDownloading {filename}: 100% Complete!{NEW_LINE}")
             else:
-                print(f"\rDownloading {filename}: {progress:.1f}% {format_speed(rate)} ETA: {eta}", end="")
+                print(f"\rDownloading {filename}: {progress:.1f}% {format_speed(avg_rate)} ETA: {eta}", end="")
             
             safe_write_json(self.game_info_path, self.game_info)
 

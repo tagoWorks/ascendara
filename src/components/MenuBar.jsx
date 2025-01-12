@@ -9,7 +9,7 @@ import {
   AlertDialogCancel,
   AlertDialogFooter,
 } from './ui/alert-dialog';
-import { AlertTriangle, Loader2, WifiOff } from 'lucide-react';
+import { AlertTriangle, Loader2, WifiOff, Hammer } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const MenuBar = () => {
@@ -33,6 +33,16 @@ const MenuBar = () => {
   const [iconData, setIconData] = useState('');
   const [isLatest, setIsLatest] = useState(true);
   const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
+  const [isDev, setIsDev] = useState(false);
+
+  // Check for dev mode
+  useEffect(() => {
+    const checkDevMode = async () => {
+      const isDevMode = await window.electron.isDev();
+      setIsDev(isDevMode);
+    };
+    checkDevMode();
+  }, []);
 
   useEffect(() => {
     const checkLatestVersion = async () => {
@@ -160,8 +170,16 @@ const MenuBar = () => {
             }`} />
           )}
         </div>
+        
+        {isDev && (
+              <span className="text-[14px] ml-2 px-1 py-0.5 rounded bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center gap-1">
+                <Hammer className="w-3 h-3" />
+                {t('app.runningInDev')}
+              </span>
+            )}
+            
         {!isLatest && (
-          <div className="flex items-center ml-2">
+          <div className="flex items-center ml-2 gap-2">
             {isDownloadingUpdate ? (
               <>
               <span className="text-[14px] px-1 py-0.5 rounded bg-green-500/10 text-green-500 border border-green-500/20 flex items-center gap-1">

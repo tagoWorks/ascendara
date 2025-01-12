@@ -1,3 +1,32 @@
+/**
+ * Ascendara - Copy, Paste Play.
+ * =====================================
+ * 
+ * This is the main process file for the Ascendara Game Launcher, built with Electron.
+ * It handles core functionality including:
+ * 
+ * - Application lifecycle management
+ * - Game installation and launching
+ * - Discord Rich Presence integration
+ * - Auto-updates and version management
+ * - IPC (Inter-Process Communication) between main and renderer processes
+ * - File system operations and game directory management
+ * - Error handling and crash reporting
+ * - Protocol handling for custom URL schemes
+ * 
+ *  Start development by first setting the isDev variable to true, then run `npm run start`.
+ *  Build the app from source to an executable by running `npm run dist`.
+ *  Note: This will run the execute.py script to build the the index files, then build the app.
+ * 
+ *  Learn more about developing Ascendara at https://ascendara.app/docs/developer/overview
+ * 
+ **/
+
+
+let isDev = false;
+
+
+const CURRENT_VERSION = "7.5.0";
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { Client } = require('discord-rpc');
 const disk = require('diskusage');
@@ -8,16 +37,15 @@ const fs = require('fs-extra');
 const os = require('os')
 const { spawn } = require('child_process');
 require("dotenv").config()
+
 let rpc;
 let has_launched = false;
 let is_latest = true;
 let updateDownloaded = false;
 let notificationShown = false;
 let updateDownloadInProgress = false;
-let isDev = false;
-
-const CURRENT_VERSION = "7.4.9";
 let config;
+
 try {
     config = require('./config.prod.js');
 } catch (e) {
@@ -51,7 +79,9 @@ app.whenReady().then(async () => {
   }
 });
 async function checkVersionAndUpdate() {
-  if (isDev) return false;
+  if (isDev) {
+    return true;
+  }
   try {
     const response = await axios.get('https://api.ascendara.app/');
     const latest_version = response.data.appVer;
@@ -135,6 +165,8 @@ const TIMESTAMP_FILE = path.join(os.homedir(), 'timestamp.ascendara.json');
   electronDl = await import('electron-dl');
 })();
 const downloadProcesses = new Map();
+const goFileProcesses = new Map();
+const retryDownloadProcesses = new Map();
 const runGameProcesses = new Map();
 const appDirectory = path.join(path.dirname(app.getPath('exe')));
 console.log(appDirectory)
@@ -158,6 +190,7 @@ ipcMain.handle('open-url', async (event, url) => {
 // Stop all active downloads
 ipcMain.handle('stop-all-downloads', async () => {
   console.log('Stopping all downloads');
+  // Stop main downloads
   for (const [game, downloadProcess] of downloadProcesses) {
     const processName = 'AscendaraDownloader.exe';
     const killProcess = spawn('taskkill', ['/f', '/im', processName]);
@@ -166,11 +199,51 @@ ipcMain.handle('stop-all-downloads', async () => {
       deleteGameDirectory(game);
     });
   }
+  // Stop GoFile downloads
+  for (const [game, downloadProcess] of goFileProcesses) {
+    const processName = 'AscendaraGofileHelper.exe';
+    const killProcess = spawn('taskkill', ['/f', '/im', processName]);
+    killProcess.on('close', (code) => {
+      console.log(`Process ${processName} exited with code ${code}`);
+      deleteGameDirectory(game);
+    });
+  }
+  // Stop retry downloads
+  for (const [game, downloadProcess] of retryDownloadProcesses) {
+    const processName = downloadProcess.spawnfile.includes('GofileHelper') ? 'AscendaraGofileHelper.exe' : 'AscendaraDownloader.exe';
+    const killProcess = spawn('taskkill', ['/f', '/im', processName]);
+    killProcess.on('close', (code) => {
+      console.log(`Process ${processName} exited with code ${code}`);
+      deleteGameDirectory(game);
+    });
+  }
   downloadProcesses.clear();
-  runGameProcesses.clear();
+  goFileProcesses.clear();
+  retryDownloadProcesses.clear();
 });
 
-ipcMain.handle('get-version', () => app.getVersion());
+ipcMain.handle('get-version', () => CURRENT_VERSION);
+
+// Check if any game is downloading
+ipcMain.handle('is-downloader-running', async () => {
+  try {
+    // Get settings to find download directory
+    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+    const data = fs.readFileSync(filePath, 'utf8');
+    const settings = JSON.parse(data);
+    if (!settings.downloadDirectory) return false;
+
+    // Read games data
+    const gamesFilePath = path.join(settings.downloadDirectory, 'games.json');
+    const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, 'utf8'));
+    
+    // Simply check if any game has downloadingData key
+    return Object.values(gamesData).some(game => game.downloadingData);
+  } catch (error) {
+    console.error('Error checking downloader status:', error);
+    return false;
+  }
+});
 
 ipcMain.handle('stop-download', async (event, game) => {
   try {
@@ -326,7 +399,11 @@ ipcMain.handle('download-file', async (event, link, game, online, dlc, version, 
         }
         const gameDownloadProcess = spawn(executablePath, spawnCommand);
 
-        downloadProcesses.set(game, gameDownloadProcess);
+        if (link.includes('gofile.io')) {
+          goFileProcesses.set(game, gameDownloadProcess);
+        } else {
+          downloadProcesses.set(game, gameDownloadProcess);
+        }
 
         gameDownloadProcess.stdout.on('data', (data) => {
           console.log(`stdout: ${data}`);
@@ -469,10 +546,50 @@ ipcMain.handle('is-dev', () => {
 
 // Retry the game download
 ipcMain.handle('retry-download', async (event, link, game, online, dlc, version) => {
+  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    const settings = JSON.parse(data);
+    if (!settings.downloadDirectory) {
+      console.error('Download directory not set');
+      return;
+    }
+    const gamesDirectory = settings.downloadDirectory;
+    const gameDirectory = path.join(gamesDirectory, game);
 
+    let executablePath;
+    let spawnCommand;
 
+    if (link.includes('gofile.io')) {
+      executablePath = path.join(appDirectory, '/resources/AscendaraGofileHelper.exe');
+      spawnCommand = ["https://" + link, game, online, dlc, version, '0', gamesDirectory];
+    } else {
+      executablePath = path.join(appDirectory, '/resources/AscendaraDownloader.exe');
+      spawnCommand = [link, game, online, dlc, version, '0', gamesDirectory];
+    }
 
-})
+    const downloadProcess = spawn(executablePath, spawnCommand);
+    retryDownloadProcesses.set(game, downloadProcess);
+
+    downloadProcess.stdout.on('data', (data) => {
+      console.log(`stdout: ${data}`);
+    });
+
+    downloadProcess.stderr.on('data', (data) => {
+      console.error(`stderr: ${data}`);
+    });
+
+    downloadProcess.on('close', (code) => {
+      console.log(`Download process exited with code ${code}`);
+      retryDownloadProcesses.delete(game);
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Error retrying download:', error);
+    return false;
+  }
+});
 
 // Download game cover
 ipcMain.handle('download-game-cover', async (event, { imgID, gameName }) => {
@@ -628,10 +745,12 @@ ipcMain.handle('get-timestamp-value', async (event, key) => {
 });
 
 ipcMain.handle('is-latest', async () => {
-  try {
+  try {    
+    if (isDev) {
+      return true;
+    }
     const response = await axios.get('https://api.ascendara.app/');
     const latest_version = response.data.appVer;
-    
     is_latest = latest_version === CURRENT_VERSION;
     console.log(`Version check: Current=${CURRENT_VERSION}, Latest=${latest_version}, Is Latest=${is_latest}`);
     
@@ -1429,7 +1548,7 @@ ipcMain.handle('delete-game', async (event, game) => {
   try {
     if (game === "local") {
       const timestampFilePath = path.join(app.getPath('home'), 'timestamp.ascendara.json');
-      fs.rmSync(timestampFilePath, { force: true });
+      fs.unlinkSync(timestampFilePath);
       return;
     }
 
@@ -1638,7 +1757,7 @@ ipcMain.handle('get-asset-path', (event, filename) => {
 
 ipcMain.handle('clear-cache', async () => {
   try {
-    const mainWindow = BrowserWindow.getFocusedWindow();
+    const mainWindow = BrowserWindow.getAllWindows()[0];
     if (mainWindow) {
       // Clear all browser data including cache, cookies, storage etc.
       await mainWindow.webContents.session.clearStorageData({
@@ -1872,20 +1991,6 @@ ipcMain.handle('create-game-shortcut', async (event, game) => {
   return await createGameShortcut(game);
 });
 
-// Handle game launch from shortcut
-if (process.argv.includes('--play-game')) {
-  const gameIndex = process.argv.indexOf('--play-game');
-  if (gameIndex !== -1 && process.argv[gameIndex + 1]) {
-    const gameName = process.argv[gameIndex + 1];
-    app.on('ready', async () => {
-      await createWindow();
-      window.webContents.on('did-finish-load', () => {
-        window.webContents.send('launch-game-from-shortcut', gameName);
-      });
-    });
-  }
-}
-
 ipcMain.handle('check-file-exists', async (event, execPath) => {
   try {
     const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
@@ -1937,4 +2042,102 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   launchCrashReporter(1002, reason?.message || 'Unhandled promise rejection');
   app.quit();
+});
+
+// Handle the protocol URL
+let lastHandledUrl = null;
+let lastHandleTime = 0;
+const URL_DEBOUNCE_TIME = 2000; // 2 seconds
+
+function handleProtocolUrl(url) {
+  if (!url) return;
+  
+  // Ensure proper URL format
+  const cleanUrl = url.trim();
+  if (!cleanUrl.startsWith('ascendara://')) return;
+
+  // Debounce handling of the same URL
+  const currentTime = Date.now();
+  if (cleanUrl === lastHandledUrl && (currentTime - lastHandleTime) < URL_DEBOUNCE_TIME) {
+    console.log('Skipping duplicate URL within debounce time:', cleanUrl);
+    return;
+  }
+
+  // Get the main window
+  const mainWindow = BrowserWindow.getAllWindows()[0];
+  if (!mainWindow) return;
+
+  // Show window if minimized
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.focus();
+
+  try {
+    // Update last handled URL info
+    lastHandledUrl = cleanUrl;
+    lastHandleTime = currentTime;
+
+    // Just pass the URL directly, let renderer handle it
+    console.log('Sending URL to renderer:', cleanUrl);
+    mainWindow.webContents.send('protocol-download-url', cleanUrl);
+  } catch (error) {
+    console.error('Error handling protocol URL:', error);
+  }
+}
+
+// Handle URLs in Windows
+if (process.platform === 'win32') {
+  const gotTheLock = app.requestSingleInstanceLock();
+  
+  if (!gotTheLock) {
+    app.quit();
+  } else {
+    app.on('second-instance', (event, commandLine) => {
+      // Someone tried to run a second instance, we should focus our window.
+      const mainWindow = BrowserWindow.getAllWindows()[0];
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.focus();
+
+        // Handle protocol URL from second instance
+        const protocolUrl = commandLine.find(arg => arg.startsWith('ascendara://'));
+        if (protocolUrl) {
+          handleProtocolUrl(protocolUrl);
+        }
+      }
+    });
+
+    // Handle protocol URL from first instance
+    const protocolUrl = process.argv.find(arg => arg.startsWith('ascendara://'));
+    if (protocolUrl) {
+      app.whenReady().then(() => {
+        handleProtocolUrl(protocolUrl);
+      });
+    }
+  }
+}
+
+// Register protocol handler
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient('ascendara', process.execPath, [path.resolve(process.argv[1])]);
+  }
+} else {
+  app.setAsDefaultProtocolClient('ascendara');
+}
+
+// Register protocol handler for development mode
+if (isDev) {
+  app.setAsDefaultProtocolClient('ascendara', process.execPath, [path.resolve(process.argv[1])]);
+}
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
 });

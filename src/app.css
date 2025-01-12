@@ -223,12 +223,3 @@ h1, h2 {
   --loading-bg: rgb(var(--color-card));
   --loading-border: rgb(var(--color-border));
 }
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}

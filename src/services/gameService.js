@@ -278,6 +278,22 @@ const gameService = {
 
     return [];
   },
+
+  async checkMetadataUpdate() {
+    try {
+      const response = await fetch(`${API_URL}/json/games`, {
+        method: 'HEAD'  // Only get headers to check Last-Modified
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const lastModified = response.headers.get('Last-Modified');
+      return lastModified || null;
+    } catch (error) {
+      console.error('Error checking metadata:', error);
+      return null;
+    }
+  },
 };
 
 export default gameService;
