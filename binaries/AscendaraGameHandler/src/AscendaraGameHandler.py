@@ -217,7 +217,7 @@ if __name__ == "__main__":
         sys.exit(1)
         
     game_path = args[0]
-    is_custom_game = args[1].lower() == 'true'
+    is_custom_game = args[1] == '1' or args[1].lower() == 'true'
     is_shortcut = "--shortcut" in args
 
     # Configure logging

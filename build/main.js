@@ -1962,7 +1962,7 @@ async function createGameShortcut(game) {
       $WScriptShell = New-Object -ComObject WScript.Shell
       $Shortcut = $WScriptShell.CreateShortcut("${shortcutPath}")
       $Shortcut.TargetPath = "${handlerPath}"
-      $Shortcut.Arguments = '"${exePath}" "${isCustom}" "--shortcut"'
+      $Shortcut.Arguments = '"${exePath}" ${isCustom ? 1 : 0} "--shortcut"'
       $Shortcut.WorkingDirectory = "${path.dirname(handlerPath)}"
       $Shortcut.IconLocation = "${exePath},0"
       $Shortcut.Save()

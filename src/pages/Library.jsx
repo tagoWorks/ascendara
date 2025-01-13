@@ -130,7 +130,8 @@ const Library = () => {
           online: game.online,
           dlc: game.dlc,
           executable: game.executable,
-          isCustom: true
+          isCustom: true,
+          custom: true
         }))
       ];
 
