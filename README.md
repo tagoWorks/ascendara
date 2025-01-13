@@ -31,8 +31,8 @@ Downloads Page
 ![(downloads)](./readme/downloads.png)
 
 
-# Building the app from source [(view wiki)](https://github.com/tagoWorks/ascendara/wiki/Running-as-a-Developer)
-### Make sure you have all the dependencies required to build the app from source. [View requirements here](https://github.com/tagoWorks/ascendara/wiki/Running-as-a-Developer#install-the-prerequisites-onto-your-computer)
+# Building the app from source [(view wiki)](https://ascendara.app/docs/developer/build-from-source)
+### Make sure you have all the dependencies required to build the app from source. [View requirements here](https://ascendara.app/docs/developer/build-from-source#prerequisites)
 
 1. Clone the repository
     ```sh
