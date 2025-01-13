@@ -1331,13 +1331,7 @@ ipcMain.handle('play-game', async (event, game, isCustom = false) => {
 
       const gameInfoData = fs.readFileSync(gameInfoPath, 'utf8');
       const gameInfo = JSON.parse(gameInfoData);
-      
-      // Check if it's the first time running this game
-      if (!gameInfo.hasBeenLaunched && settings.autoCreateShortcuts) {
-        // await createGameShortcut(game);
-        // gameInfo.hasBeenLaunched = true;
-        // fs.writeFileSync(gameInfoPath, JSON.stringify(gameInfo, null, 2));
-      }
+
       
       if (!gameInfo.executable) {
         throw new Error('Executable path not found in game info');
@@ -1350,7 +1344,7 @@ ipcMain.handle('play-game', async (event, game, isCustom = false) => {
         executable = path.join(gameDirectory, gameInfo.executable);
       }
     } else {
-      const gamesPath = path.join(app.getPath('userData'), 'games.json');
+      const gamesPath = path.join(settings.downloadDirectory, 'games.json');
       if (!fs.existsSync(gamesPath)) {
         throw new Error('Custom games file not found');
       }

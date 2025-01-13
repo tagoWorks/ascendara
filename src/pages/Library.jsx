@@ -385,7 +385,7 @@ const Library = () => {
             <AlertDialogTrigger asChild>
               <AddGameCard />
             </AlertDialogTrigger>
-            <AlertDialogContent className="sm:max-w-[425px] max-h-[80vh] overflow-y-auto bg-background border-border">
+            <AlertDialogContent className="sm:max-w-[425px] bg-background border-border">
               <AlertDialogHeader className="space-y-2">
                 <AlertDialogTitle className="text-2xl font-bold text-foreground">
                   {t('library.addGame')}
@@ -394,7 +394,7 @@ const Library = () => {
                   {t('library.addGameDescription2')}
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <div className="space-y-6 py-4">
+              <div className="py-4 max-h-[60vh] overflow-y-auto">
                 <AddGameForm onSuccess={() => {
                   setIsAddGameOpen(false);
                   setSelectedGameImage(null);
@@ -774,7 +774,7 @@ const AddGameForm = ({ onSuccess }) => {
   
   // Add debounce timer ref
   const searchDebounceRef = useRef(null);
-  const minSearchLength = 2; // Only search if query is at least 2 characters
+  const minSearchLength = 2;
 
   const handleCoverSearch = async (query) => {
     // Update query immediately for UI responsiveness
@@ -841,12 +841,13 @@ const AddGameForm = ({ onSuccess }) => {
           <Button 
             type="button" 
             variant="outline" 
-            className="w-full justify-start text-left text-primary font-normal bg-background hover:bg-accent"
+            className="w-full justify-start text-left text-primary font-normal bg-background hover:bg-accent truncate"
             onClick={handleChooseExecutable}
           >
-            <FolderOpen className="w-4 h-4 mr-2" />
-            {formData.executable || t('library.chooseExecutableFile')}
-
+            <FolderOpen className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span className="truncate">
+              {formData.executable || t('library.chooseExecutableFile')}
+            </span>
           </Button>
         </div>
 
