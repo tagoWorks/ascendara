@@ -1,4 +1,5 @@
 /**
+ * =====================================
  * Ascendara - Copy, Paste Play.
  * =====================================
  * 
@@ -26,7 +27,11 @@
 let isDev = false;
 
 
-const CURRENT_VERSION = "7.5.0";
+
+
+
+
+const CURRENT_VERSION = "7.5.1";
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { Client } = require('discord-rpc');
 const disk = require('diskusage');
@@ -38,12 +43,12 @@ const os = require('os')
 const { spawn } = require('child_process');
 require("dotenv").config()
 
-let rpc;
 let has_launched = false;
 let is_latest = true;
 let updateDownloaded = false;
 let notificationShown = false;
 let updateDownloadInProgress = false;
+let rpc;
 let config;
 
 try {
@@ -700,6 +705,11 @@ ipcMain.handle('has-launched', (event) => {
     return false;
   } else {
     has_launched = true;
+    return true;
+  }
+});
+
+ipcMain.handle('delete-installer', () => {
     // check ascnedarainstaller tempfile and delete if exists
     const filePath = path.join(app.getPath('temp'), 'ascendarainstaller.exe');
     try {
@@ -708,8 +718,6 @@ ipcMain.handle('has-launched', (event) => {
     catch (error) {
       console.error(error);
     }
-    return true;
-  }
 });
 
 ipcMain.handle('get-analytics-key', () => {
@@ -1172,10 +1180,17 @@ ipcMain.handle('get-custom-games', () => {
     }
     const downloadDirectory = settings.downloadDirectory;
     const gamesFilePath = path.join(downloadDirectory, 'games.json');
-    const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, 'utf8'));
-    return gamesData.games;
-  }
-  catch (error) {
+    try {
+      const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, 'utf8'));
+      return gamesData.games;
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        return [];
+      } else {
+        throw error;
+      }
+    }
+  } catch (error) {
     console.error('Error reading the settings file:', error);
     return [];
   }

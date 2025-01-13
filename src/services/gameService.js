@@ -225,45 +225,32 @@ const gameService = {
       return [];
     }
 
-    try {
-      // Make a direct API request for instant results
-      const response = await fetch(`${API_URL}/json/games`);
-      const data = await response.json();
-      
-      // Only cache if we have valid data
-      if (data?.games) {
-        // Cache in background without waiting
-        setTimeout(() => {
-          this.updateCache({ games: data.games, metadata: data.metadata });
-        }, 0);
-
-        const searchTerm = query.toLowerCase();
-        return data.games
-          .filter(game => 
-            game.game?.toLowerCase().includes(searchTerm)
-          )
-          .slice(0, 20)
-          .map(game => ({
-            id: game.game,
-            title: game.game,
-            imgID: game.imgID
-          }));
-      }
-    } catch (error) {
-      console.error('Error searching game covers:', error);
+    const searchTerm = query.toLowerCase();
+    
+    // First try memory cache
+    if (memoryCache.games) {
+      return memoryCache.games
+        .filter(game => game.game?.toLowerCase().includes(searchTerm))
+        .slice(0, 20)
+        .map(game => ({
+          id: game.game,
+          title: game.game,
+          imgID: game.imgID
+        }));
     }
 
-    // Try using cached data as fallback
+    // Then try localStorage cache
     try {
       const cachedData = localStorage.getItem(CACHE_KEY);
       if (cachedData) {
         const { games } = JSON.parse(cachedData);
-        if (games) {
-          const searchTerm = query.toLowerCase();
+        if (games?.length) {
+          // Update memory cache for future searches
+          memoryCache.games = games;
+          memoryCache.timestamp = Date.now();
+          
           return games
-            .filter(game => 
-              game.game?.toLowerCase().includes(searchTerm)
-            )
+            .filter(game => game.game?.toLowerCase().includes(searchTerm))
             .slice(0, 20)
             .map(game => ({
               id: game.game,
@@ -274,6 +261,32 @@ const gameService = {
       }
     } catch (cacheError) {
       console.error('Error using cached data:', cacheError);
+    }
+
+    // Only if no cache is available, make an API request
+    try {
+      const response = await fetch(`${API_URL}/json/games`);
+      const data = await response.json();
+      
+      if (data?.games?.length) {
+        // Update caches in background
+        setTimeout(() => {
+          memoryCache.games = data.games;
+          memoryCache.timestamp = Date.now();
+          this.updateCache({ games: data.games, metadata: data.metadata });
+        }, 0);
+
+        return data.games
+          .filter(game => game.game?.toLowerCase().includes(searchTerm))
+          .slice(0, 20)
+          .map(game => ({
+            id: game.game,
+            title: game.game,
+            imgID: game.imgID
+          }));
+      }
+    } catch (error) {
+      console.error('Error searching game covers:', error);
     }
 
     return [];

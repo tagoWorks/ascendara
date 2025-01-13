@@ -153,6 +153,7 @@ const AppRoutes = () => {
           localStorage.removeItem('finishingUp');
           setTimeout(async () => {
             await window.electron.setTimestampValue('isUpdating', false);
+            await window.electron.deleteInstaller();
             setIsUpdating(false);
             window.location.reload();
           }, 2000);

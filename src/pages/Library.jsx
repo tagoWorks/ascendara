@@ -171,8 +171,8 @@ const Library = () => {
 
     return () => {
       // Clean up event listeners
-      window.electron.ipcRenderer.off('game-launch-error', handleGameLaunchError);
-      window.electron.ipcRenderer.off('game-launch-success', handleGameLaunchSuccess);
+      window.electron.ipcRenderer.removeListener('game-launch-error', handleGameLaunchError);
+      window.electron.ipcRenderer.removeListener('game-launch-success', handleGameLaunchSuccess);
       if (errorTimeoutRef.current) {
         clearTimeout(errorTimeoutRef.current);
       }
@@ -213,7 +213,7 @@ const Library = () => {
     const gameName = game.game || game.name;
     setLaunchingGame(gameName);
     // Check if window.electron.isDev is true. Cannot run in developer mode
-    if (await window.electron.isDev()) {
+    if (await window.electron.ipcRenderer.invoke('is-dev')) {
       toast.error(t('library.cannotRunDev'))
       setLaunchingGame(null);
       return;
@@ -258,7 +258,7 @@ const Library = () => {
   const handleDeleteGame = async (game) => {
     try {
       if (game.isCustom) {
-        await window.electron.ipcRenderer.invoke('remove-custom-game', game.game || game.name);
+        await window.electron.ipcRenderer.invoke('remove-game', game.game || game.name);
       } else {
         setIsUninstalling(true);
         setUninstallingGame(game.game || game.name);
@@ -525,7 +525,7 @@ const InstalledGameCard = ({
       if (game.executable) {
         try {
           const execPath = game.isCustom ? game.executable : `${game.game}/${game.executable}`;
-          const exists = await window.electron.checkFileExists(execPath);
+          const exists = await window.electron.ipcRenderer.invoke('check-file-exists', execPath);
           setExecutableExists(exists);
         } catch (error) {
           console.error('Error checking executable:', error);
@@ -771,26 +771,42 @@ const AddGameForm = ({ onSuccess }) => {
     results: [],
     selectedCover: null
   });
+  
+  // Add debounce timer ref
+  const searchDebounceRef = useRef(null);
+  const minSearchLength = 2; // Only search if query is at least 2 characters
 
   const handleCoverSearch = async (query) => {
-    if (!query.trim()) {
-      setCoverSearch(prev => ({ ...prev, results: [] }));
+    // Update query immediately for UI responsiveness
+    setCoverSearch(prev => ({ ...prev, query }));
+    
+    // Clear previous timer
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    // Don't search if query is too short
+    if (!query.trim() || query.length < minSearchLength) {
+      setCoverSearch(prev => ({ ...prev, results: [], isLoading: false }));
       return;
     }
-    
-    setCoverSearch(prev => ({ ...prev, isLoading: true }));
-    try {
-      const results = await gameService.searchGameCovers(query);
-      setCoverSearch(prev => ({ 
-        ...prev, 
-        results: results.slice(0, 9), // Limit to 9 results for better UI
-        isLoading: false 
-      }));
-    } catch (error) {
-      console.error('Error searching covers:', error);
-      setCoverSearch(prev => ({ ...prev, isLoading: false }));
-      toast.error(t('library.coverSearchError'));
-    }
+
+    // Set up new debounce timer
+    searchDebounceRef.current = setTimeout(async () => {
+      setCoverSearch(prev => ({ ...prev, isLoading: true }));
+      try {
+        const results = await gameService.searchGameCovers(query);
+        setCoverSearch(prev => ({ 
+          ...prev, 
+          results: results.slice(0, 9),
+          isLoading: false 
+        }));
+      } catch (error) {
+        console.error('Error searching covers:', error);
+        setCoverSearch(prev => ({ ...prev, isLoading: false }));
+        toast.error(t('library.coverSearchError'));
+      }
+    }, 300); // 300ms debounce
   };
 
   const handleChooseExecutable = async () => {
@@ -806,7 +822,7 @@ const AddGameForm = ({ onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await window.electron.ipcRenderer.invoke('add-game', 
+    await window.electron.ipcRenderer.invoke('save-custom-game', 
       formData.name,
       formData.isOnline,
       formData.hasDLC,
@@ -903,41 +919,24 @@ const AddGameForm = ({ onSuccess }) => {
               <Input
                 id="coverSearch"
                 value={coverSearch.query}
-                onChange={async (e) => {
-                  const query = e.target.value;
-                  setCoverSearch(prev => ({ ...prev, query }));
-                  
-                  if (!query.trim()) {
-                    setCoverSearch(prev => ({ ...prev, results: [], isLoading: false }));
-                    return;
-                  }
-                  
-                  setCoverSearch(prev => ({ ...prev, isLoading: true }));
-                  try {
-                    const results = await gameService.searchGameCovers(query);
-                    setCoverSearch(prev => ({ 
-                      ...prev, 
-                      results: results.slice(0, 9),
-                      isLoading: false 
-                    }));
-                  } catch (error) {
-                    console.error('Error searching covers:', error);
-                    setCoverSearch(prev => ({ ...prev, isLoading: false }));
-                    toast.error(t('library.coverSearchError'));
-                  }
-                }}
+                onChange={(e) => handleCoverSearch(e.target.value)}
                 className="pl-8 bg-background border-input text-foreground"
                 placeholder={t('library.searchGameCover')}
+                minLength={minSearchLength}
               />
             </div>
           </div>
 
           {/* Cover Search Results */}
-          {coverSearch.isLoading ? (
+          {coverSearch.query.length < minSearchLength ? (
+            <div className="text-center text-sm text-muted-foreground py-2">
+              {t('library.enterMoreChars', { count: minSearchLength })}
+            </div>
+          ) : coverSearch.isLoading ? (
             <div className="flex justify-center py-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          ) : coverSearch.results.length > 0 && (
+          ) : coverSearch.results.length > 0 ? (
             <div className="grid grid-cols-3 gap-4">
               {coverSearch.results.map((cover, index) => (
                 <div 
@@ -960,6 +959,10 @@ const AddGameForm = ({ onSuccess }) => {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : (
+            <div className="text-center text-sm text-muted-foreground py-2">
+              {t('library.noResultsFound')}
             </div>
           )}
 

@@ -9,7 +9,6 @@
 // functionality is available to the frontend.
 //
 // Learn more about Developing Ascendara at https://ascendara.app/docs/developer/overview
-//=============================================================================
 
 
 
@@ -94,6 +93,7 @@ contextBridge.exposeInMainWorld('electron', {
   createTimestamp: () => ipcRenderer.invoke('create-timestamp'),
   isLatest: () => ipcRenderer.invoke('is-latest'),
   isDownloaderRunning: () => ipcRenderer.invoke('is-downloader-running'),
+  deleteInstaller: () => ipcRenderer.invoke('delete-installer'),
   updateAscendara: () => ipcRenderer.invoke('update-ascendara'),
   uninstallAscendara: () => ipcRenderer.invoke('uninstall-ascendara'),
   openURL: (url) => ipcRenderer.invoke('open-url', url),

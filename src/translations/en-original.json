@@ -142,6 +142,8 @@
       "gameName": "Game Name",
       "version": "Version",
       "versionPlaceholder": "e.g., 1.0.0",
+      "enterMoreChars": "Image results will appear here as you type",
+      "noResultsFound": "No results found. Be precise with your search.",
       "searchGameCover": "Search Ascendara for an image cover",
       "hasOnlineFix": "Has Online Fix",
       "includesAllDLCs": "Includes All DLCs",
@@ -391,16 +393,32 @@
         "nextStep": "Next Step →",
         "steps": [
           {
-            "title": "Step 1: The Ascendara Download Handler",
-            "description": "The Ascendara Download Handler will automatically stop the download in your browser and start it for you in Ascendara."
+            "title": "The Ascendara Download Handler",
+            "description": "The Ascendara Download Handler will automatically stop the download in your browser and start it for you in Ascendara. If you don't have it, close the guide and click the \"Don't have the extension? Get it for Chrome or Firefox\" button to download it."
           },
           {
-            "title": "Step 2: Enable the Handler",
-            "description": "Make sure the Ascendara Download Handler toggle is enabled before proceeding."
+            "title": "Step 1: Enable the Handler",
+            "description": "After installing the extension, click the extension icon to enable the handler."
           },
           {
-            "title": "Step 3: Start the download",
+            "title": "The Download Handler",
+            "description": "The extension can stay on as it will only send known providers to Ascendara."
+          },
+          {
+            "title": "Step 2: Start the download",
             "description": "Complete the CAPTCHA, and start the download."
+          },
+          {
+            "title": "Step 3: Using the Extension",
+            "description": "Once the download tries to start, you will see a popup asking to open Ascendara. Toggle the always allow button to allow the extension to always send known providers to Ascendara."
+          },
+          {
+            "title": "Step 4: Downloading",
+            "description": "Click the button to Open Ascendara."
+          },
+          {
+            "title": "That's it!",
+            "description": "Your download will automatically start in Ascendara. If you're not brought to the download page, navigate to it."
           }
         ]
       },

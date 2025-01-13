@@ -225,10 +225,11 @@ export default function DownloadPage() {
     };
 
     const guideImagePaths = [
-      '/guide/guide-toggle.png',
+      '/guide/guide-off.png',
+      '/guide/guide-on.png',
       '/guide/guide-start.png',
-      '/guide/guide-copy.png',
-      '/guide/guide-download.png',
+      '/guide/guide-alwaysopen.png',
+      '/guide/guide-open.png',
       '/guide/guide-downloads.png'
     ];
 
@@ -265,26 +266,31 @@ export default function DownloadPage() {
     {
       title: t('download.newUserGuide.steps.1.title'),
       description: t('download.newUserGuide.steps.1.description'),
-      image: guideImages['/guide/guide-toggle.png']
+      image: guideImages['/guide/guide-off.png']
     },
     {
       title: t('download.newUserGuide.steps.2.title'),
       description: t('download.newUserGuide.steps.2.description'),
-      image: guideImages['/guide/guide-start.png']
+      image: guideImages['/guide/guide-on.png']
     },
     {
       title: t('download.newUserGuide.steps.3.title'),
       description: t('download.newUserGuide.steps.3.description'),
-      image: guideImages['/guide/guide-copy.png']
+      image: guideImages['/guide/guide-start.png']
     },
     {
       title: t('download.newUserGuide.steps.4.title'),
       description: t('download.newUserGuide.steps.4.description'),
-      image: guideImages['/guide/guide-download.png']
+      image: guideImages['/guide/guide-alwaysopen.png']
     },
     {
       title: t('download.newUserGuide.steps.5.title'),
       description: t('download.newUserGuide.steps.5.description'),
+      image: guideImages['/guide/guide-open.png']
+    },
+    {
+      title: t('download.newUserGuide.steps.6.title'),
+      description: t('download.newUserGuide.steps.6.description'),
       image: guideImages['/guide/guide-downloads.png']
     }
   ];

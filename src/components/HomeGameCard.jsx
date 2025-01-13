@@ -12,6 +12,8 @@ const useImageLoader = (imgID, onIntersect) => {
   const [isVisible, setIsVisible] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageSrc, setImageSrc] = useState(null);
+  const [loadAttempts, setLoadAttempts] = useState(0);
+  const maxAttempts = 3;
 
   const observerRef = useCallback(node => {
     if (!node) return;
@@ -26,52 +28,104 @@ const useImageLoader = (imgID, onIntersect) => {
           }
         });
       },
-      { rootMargin: '50px' }
+      { rootMargin: '100px' } // Increased margin to start loading earlier
     );
 
     observer.observe(node);
-    // Cleanup will happen automatically when the ref changes
   }, [imgID, onIntersect]);
 
   useEffect(() => {
     let mounted = true;
+    let retryTimeout;
 
     const loadImage = async () => {
-      if (!isVisible || !imgID) return;
+      if (!isVisible || !imgID || loadAttempts >= maxAttempts) return;
       
       try {
+        console.log(`[HomeGameCard] Loading image ${imgID} (attempt ${loadAttempts + 1}/${maxAttempts})`);
         const src = await imageCacheService.getImage(imgID);
-        if (mounted && src) {
+        
+        if (!mounted) return;
+        
+        if (src) {
           setImageSrc(src);
+          console.log(`[HomeGameCard] Successfully loaded image ${imgID}`);
+        } else {
+          console.warn(`[HomeGameCard] Failed to load image ${imgID}, will retry...`);
+          // Retry after a delay if we still have attempts left
+          if (loadAttempts < maxAttempts - 1) {
+            retryTimeout = setTimeout(() => {
+              if (mounted) {
+                setLoadAttempts(prev => prev + 1);
+              }
+            }, 2000 * (loadAttempts + 1)); // Exponential backoff
+          }
         }
       } catch (error) {
-        console.error('Error loading image:', error);
+        console.error(`[HomeGameCard] Error loading image ${imgID}:`, error);
+        if (loadAttempts < maxAttempts - 1) {
+          retryTimeout = setTimeout(() => {
+            if (mounted) {
+              setLoadAttempts(prev => prev + 1);
+            }
+          }, 2000 * (loadAttempts + 1));
+        }
       }
     };
 
     loadImage();
-    return () => { mounted = false; };
-  }, [imgID, isVisible]);
+
+    return () => {
+      mounted = false;
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+    };
+  }, [imgID, isVisible, loadAttempts]);
 
   return { observerRef, isVisible, imageLoaded, setImageLoaded, imageSrc };
 };
 
 const GameImage = memo(({ imgID, gameName, onIntersect }) => {
   const { observerRef, isVisible, imageLoaded, setImageLoaded, imageSrc } = useImageLoader(imgID, onIntersect);
+  const [error, setError] = useState(false);
+
+  // Reset error state when imgID changes
+  useEffect(() => {
+    setError(false);
+  }, [imgID]);
+
+  const handleImageError = useCallback(() => {
+    console.error(`[HomeGameCard] Failed to load image for ${gameName} (${imgID})`);
+    setError(true);
+    setImageLoaded(false);
+  }, [imgID, gameName]);
+
+  const handleImageLoad = useCallback(() => {
+    console.log(`[HomeGameCard] Successfully loaded image for ${gameName} (${imgID})`);
+    setImageLoaded(true);
+    setError(false);
+  }, [imgID, gameName]);
 
   return (
     <div className="relative group" ref={observerRef}>
       <AspectRatio ratio={16/9}>
-        {(!imageLoaded || !imageSrc) && (
-          <Skeleton className="absolute inset-0 w-full h-full bg-muted" />
+        {(!imageLoaded || !imageSrc) && !error && (
+          <Skeleton className="absolute inset-0 w-full h-full bg-muted animate-pulse" />
         )}
-        {isVisible && imageSrc && (
+        {error && (
+          <div className="absolute inset-0 w-full h-full bg-muted flex items-center justify-center">
+            <span className="text-sm text-muted-foreground">Failed to load image</span>
+          </div>
+        )}
+        {isVisible && imageSrc && !error && (
           <img
             src={imageSrc}
             alt={gameName}
             className="w-full h-full object-cover rounded-t-lg transition-opacity duration-200"
             style={{ opacity: imageLoaded ? 1 : 0 }}
-            onLoad={() => setImageLoaded(true)}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
           />
         )}
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity" />
