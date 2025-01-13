@@ -522,9 +522,9 @@ const InstalledGameCard = ({
 
   useEffect(() => {
     const checkExecutable = async () => {
-      if (game.executable) {
+      if (game.executable && !game.isCustom) {  
         try {
-          const execPath = game.isCustom ? game.executable : `${game.game}/${game.executable}`;
+          const execPath = `${game.game}/${game.executable}`;
           const exists = await window.electron.ipcRenderer.invoke('check-file-exists', execPath);
           setExecutableExists(exists);
         } catch (error) {

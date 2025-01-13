@@ -1356,7 +1356,7 @@ ipcMain.handle('play-game', async (event, game, isCustom = false) => {
       }
 
       const gamesData = JSON.parse(fs.readFileSync(gamesPath, 'utf8'));
-      const gameInfo = gamesData[game];
+      const gameInfo = gamesData.games.find((g) => g.game === game);
 
       if (!gameInfo || !gameInfo.executable) {
         throw new Error(`Game not found in games.json: ${game}`);
