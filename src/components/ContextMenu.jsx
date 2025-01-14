@@ -41,18 +41,26 @@ const ContextMenu = () => {
   };
 
   useEffect(() => {
-    document.addEventListener('contextmenu', handleContextMenu);
-    document.addEventListener('click', handleClickOutside);
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') setIsVisible(false);
-    });
-
-    return () => {
-      document.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('click', handleClickOutside);
-      document.removeEventListener('keydown', (e) => {
+    // Only attach listeners if we haven't already
+    if (!window.__contextMenuListenersAttached) {
+      document.addEventListener('contextmenu', handleContextMenu);
+      document.addEventListener('click', handleClickOutside);
+      document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') setIsVisible(false);
       });
+      window.__contextMenuListenersAttached = true;
+    }
+
+    return () => {
+      // Only remove listeners if we're the last instance
+      if (window.__contextMenuListenersAttached) {
+        document.removeEventListener('contextmenu', handleContextMenu);
+        document.removeEventListener('click', handleClickOutside);
+        document.removeEventListener('keydown', (e) => {
+          if (e.key === 'Escape') setIsVisible(false);
+        });
+        window.__contextMenuListenersAttached = false;
+      }
     };
   }, []);
 

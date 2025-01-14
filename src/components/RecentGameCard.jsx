@@ -4,27 +4,37 @@ import { cn } from '../lib/utils';
 import { sanitizeText } from '../lib/utils';
 import { Play } from 'lucide-react';
 import { Button } from './ui/button';
+import { AspectRatio } from './ui/aspect-ratio';
+import { Skeleton } from './ui/skeleton';
 
 const RecentGameCard = ({ game, onPlay }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [imageData, setImageData] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [imageData, setImageData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const sanitizedGameName = sanitizeText(game.game || game.name);
 
   // Load game image
   useEffect(() => {
+    let isMounted = true;
+
     const loadGameImage = async () => {
       try {
         const imageBase64 = await window.electron.getGameImage(game.game || game.name);
-        if (imageBase64) {
+        if (imageBase64 && isMounted) {
           setImageData(`data:image/jpeg;base64,${imageBase64}`);
         }
       } catch (error) {
         console.error('Error loading game image:', error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadGameImage();
+    return () => { isMounted = false; };
   }, [game]);
 
   // Check if game is running
@@ -53,82 +63,82 @@ const RecentGameCard = ({ game, onPlay }) => {
       return `${diffInHours}h ago`;
     } else {
       const diffInDays = Math.floor(diffInHours / 24);
-      return `${diffInDays}d ago`;
+      if (diffInDays === 1) {
+        return 'Yesterday';
+      } else {
+        return `${diffInDays}d ago`;
+      }
     }
   };
 
   return (
-    <Card 
+    <Card
       className={cn(
-        "group relative overflow-hidden transition-all duration-200",
-        "hover:shadow-lg hover:-translate-y-1"
+        'group relative overflow-hidden transition-all duration-300',
+        'hover:shadow-lg cursor-pointer',
+        isRunning && 'ring-2 ring-primary'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <CardContent className="p-0">
-        <div className="aspect-[4/3] relative">
-          <img 
-            src={imageData || '/no-image.png'} 
-            alt={game.game || game.name}
-            className="w-full h-full object-cover"
-          />
-          <div className={cn(
-            "absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent",
-            "opacity-0 group-hover:opacity-100 transition-opacity",
-            "flex flex-col justify-between p-4 text-white"
-          )}>
-            <div className="flex justify-end">
-              <Button
-                size="icon"
-                variant="secondary"
+        <AspectRatio ratio={16/9}>
+          <div className="w-full h-full relative">
+            {loading && (
+              <Skeleton className="w-full h-full absolute inset-0" />
+            )}
+            {!loading && imageData && (
+              <img
+                src={imageData}
+                alt={sanitizedGameName}
                 className={cn(
-                  "w-10 h-10 rounded-full backdrop-blur-sm",
-                  isRunning 
-                    ? "bg-white/5 hover:bg-white/5 cursor-not-allowed" 
-                    : "bg-white/10 hover:bg-white/20"
+                  'w-full h-full object-cover transition-transform duration-300',
+                  isHovered && 'scale-110'
                 )}
-                onClick={handlePlay}
-                disabled={isRunning}
-                title={isRunning ? "Game is running" : "Play game"}
-              >
-                <Play className={cn("w-5 h-5", isRunning && "opacity-50")} />
-              </Button>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-end">
-                <h3 className="font-semibold text-lg line-clamp-2">
-                  {sanitizedGameName}
-                </h3>
-                <span className="text-sm text-white/70">
-                  {getTimeSinceLastPlayed()}
-                </span>
-              </div>
-              {game.version && (
-                <p className="text-sm text-white/70">
-                  v{game.version}
-                </p>
+              />
+            )}
+            <div 
+              className={cn(
+                'absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent',
+                'transition-opacity duration-300',
+                isHovered ? 'opacity-100' : 'opacity-80'
               )}
-              <div className="flex gap-2">
-                {game.online && (
-                  <span className="px-2 py-1 rounded-full bg-primary/20 text-primary text-xs backdrop-blur-sm">
-                    Online Fix
-                  </span>
-                )}
-                {game.dlc && (
-                  <span className="px-2 py-1 rounded-full bg-primary/20 text-primary text-xs backdrop-blur-sm">
-                    DLC
-                  </span>
-                )}
-                {isRunning && (
-                  <span className="px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs backdrop-blur-sm">
-                    Running
-                  </span>
-                )}
+            >
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h3 className={cn(
+                      'text-lg font-semibold text-white line-clamp-1',
+                      'transition-transform duration-300',
+                      isHovered ? 'translate-x-2' : 'translate-x-0'
+                    )}>
+                      {sanitizedGameName}
+                    </h3>
+                    <p className={cn(
+                      'text-sm text-white/80',
+                      'transition-transform duration-300',
+                      isHovered ? 'translate-x-2' : 'translate-x-0'
+                    )}>
+                      {getTimeSinceLastPlayed()}
+                    </p>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className={cn(
+                      'text-white hover:text-primary hover:bg-white/20',
+                      'transition-transform duration-300',
+                      isHovered ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'
+                    )}
+                    onClick={handlePlay}
+                  >
+                    <Play className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </AspectRatio>
       </CardContent>
     </Card>
   );

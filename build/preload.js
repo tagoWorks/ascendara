@@ -41,8 +41,10 @@ contextBridge.exposeInMainWorld('electron', {
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (options, directory) => ipcRenderer.invoke('save-settings', options, directory),
   getAnalyticsKey: () => ipcRenderer.invoke('get-analytics-key'),
+  getImageKey: () => ipcRenderer.invoke('get-image-key'),
   getVersion: () => ipcRenderer.invoke('get-version'),
   hasLaunched: () => ipcRenderer.invoke('has-launched'),
+  imageSecret: () => ipcRenderer.invoke('get-image-key'),
 
   // Game Management
   getGames: () => ipcRenderer.invoke('get-games'),

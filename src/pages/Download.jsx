@@ -547,7 +547,7 @@ export default function DownloadPage() {
           {/* Game Header Section */}
           <div className="flex items-start gap-4">
             <img 
-              src={cachedImage || `https://api.ascendara.app/image/${gameData.imgID}`}
+              src={cachedImage || `https://api.ascendara.app/v2/image/${gameData.imgID}`}
               alt={gameData.game}
               className="w-48 h-28 object-cover rounded-lg"
             />

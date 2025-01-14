@@ -31,7 +31,7 @@ let isDev = false;
 
 
 
-const CURRENT_VERSION = "7.5.1";
+const CURRENT_VERSION = "7.5.2";
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { Client } = require('discord-rpc');
 const disk = require('diskusage');
@@ -58,6 +58,7 @@ try {
 }
 const APIKEY = process.env.AUTHORIZATION || config.AUTHORIZATION;
 const analyticsAPI = process.env.ASCENDARA_API_KEY || config.ASCENDARA_API_KEY;
+const imageKey = process.env.IMAGE_KEY || config.IMAGE_KEY;
 const clientId = process.env.DISCKEY || config.DISCKEY;
 
 // Initialize Discord RPC
@@ -374,7 +375,7 @@ ipcMain.handle('download-file', async (event, link, game, online, dlc, version, 
       fs.mkdirSync(gameDirectory, { recursive: true });
     }
 
-    const imageLink = `https://api.ascendara.app/image/${imgID}`;
+    const imageLink = `https://api.ascendara.app/v2/image/${imgID}`;
     axios({
       url: imageLink,
       method: 'GET',
@@ -611,7 +612,7 @@ ipcMain.handle('download-game-cover', async (event, { imgID, gameName }) => {
       fs.mkdirSync(gameDirectory, { recursive: true });
     }
 
-    const imageUrl = `https://api.ascendara.app/image/${imgID}`;
+    const imageUrl = `https://api.ascendara.app/v2/image/${imgID}`;
     const response = await axios({
       url: imageUrl,
       method: 'GET',
@@ -722,6 +723,10 @@ ipcMain.handle('delete-installer', () => {
 
 ipcMain.handle('get-analytics-key', () => {
     return analyticsAPI;
+});
+
+ipcMain.handle('get-image-key', () => {
+    return imageKey;
 });
 
 ipcMain.handle('set-timestamp-value', async (event, key, value) => {
@@ -1129,7 +1134,7 @@ ipcMain.handle('save-custom-game', async (event, game, online, dlc, version, exe
 
     // Download and save the cover image if imgID is provided
     if (imgID) {
-      const imageLink = `https://api.ascendara.app/image/${imgID}`;
+      const imageLink = `https://api.ascendara.app/v2/image/${imgID}`;
       try {
         const response = await axios({
           url: imageLink,

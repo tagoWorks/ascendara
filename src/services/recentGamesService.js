@@ -18,6 +18,7 @@ class RecentGamesService {
       
       // Remove the game if it already exists to avoid duplicates
       const filteredGames = recentGames.filter(g => g.game !== game.game);
+      
       const updatedGames = [
         {
           ...game,

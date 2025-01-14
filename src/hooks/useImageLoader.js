@@ -11,22 +11,28 @@ export function useImageLoader(imgID) {
 
   useEffect(() => {
     let mounted = true;
-    
+
     const loadImage = async () => {
       if (!imgID) {
-        setState(prev => ({ ...prev, loading: false }));
+        if (mounted) {
+          setState({
+            cachedImage: null,
+            loading: false,
+            error: null
+          });
+        }
         return;
       }
 
       try {
-        setState(prev => ({ ...prev, loading: true }));
+        setState(prev => ({ ...prev, loading: true, error: null }));
         const cached = await imageCacheService.getImage(imgID);
         
         if (mounted) {
           setState({
             cachedImage: cached,
             loading: false,
-            error: null
+            error: cached ? null : 'Failed to load image'
           });
         }
       } catch (error) {
@@ -34,14 +40,17 @@ export function useImageLoader(imgID) {
           setState({
             cachedImage: null,
             loading: false,
-            error: error.message
+            error: error.message || 'Failed to load image'
           });
         }
       }
     };
 
     loadImage();
-    return () => { mounted = false; };
+
+    return () => {
+      mounted = false;
+    };
   }, [imgID]);
 
   return state;
