@@ -489,6 +489,41 @@ export default function DownloadPage() {
       });
 
       if (!reportResponse.ok) {
+        // If token is expired or invalid, try once more with a new token
+        if (reportResponse.status === 401) {
+          const newTokenResponse = await fetch("https://api.ascendara.app/auth/token", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          
+          if (!newTokenResponse.ok) {
+            throw new Error("Failed to obtain new token");
+          }
+          
+          const { token: newAuthToken } = await newTokenResponse.json();
+          
+          const retryResponse = await fetch("https://api.ascendara.app/app/report", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${newAuthToken}`,
+            },
+            body: JSON.stringify({
+              reportType: "GameBrowsing",
+              reason: reportReason,
+              details: reportDetails,
+              gameName: gameData.game,
+            }),
+          });
+          
+          if (retryResponse.ok) {
+            toast.success(t('download.toast.reportSubmitted'));
+            setReportReason("");
+            setReportDetails("");
+            return;
+          }
+        }
         throw new Error("Failed to submit report");
       }
 

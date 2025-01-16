@@ -74,11 +74,14 @@ const ReportIssue = ({ isOpen, onClose }) => {
 
     const promise = new Promise(async (resolve, reject) => {
       try {
+        // Get a fresh token for each request to ensure timestamp validity
+        const freshToken = await getToken();
+        
         const response = await fetch("https://api.ascendara.app/app/report/feature", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
+            Authorization: `Bearer ${freshToken}`,
           },
           body: JSON.stringify({
             reportType: "AscendaraApp",
@@ -90,6 +93,27 @@ const ReportIssue = ({ isOpen, onClose }) => {
         if (response.ok) {
           resolve();
         } else {
+          // If token is expired or invalid, try once more with a new token
+          if (response.status === 401) {
+            const newToken = await getToken();
+            const retryResponse = await fetch("https://api.ascendara.app/app/report/feature", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${newToken}`,
+              },
+              body: JSON.stringify({
+                reportType: "AscendaraApp",
+                reason: reportReason,
+                details: details,
+              }),
+            });
+            
+            if (retryResponse.ok) {
+              resolve();
+              return;
+            }
+          }
           reject(new Error("Failed to submit report"));
         }
       } catch (error) {

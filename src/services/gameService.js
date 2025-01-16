@@ -104,50 +104,6 @@ const gameService = {
       }));
     }
 
-    // Queue preloading with controlled concurrency
-    if (data.games) {
-      const preloadImages = async (games, concurrency = 3) => {
-        const preloadQueue = games.filter(game => game.imgID).map(game => game.imgID);
-        const inProgress = new Set();
-        
-        while (preloadQueue.length > 0 || inProgress.size > 0) {
-          // Fill up to concurrency
-          while (inProgress.size < concurrency && preloadQueue.length > 0) {
-            const imgID = preloadQueue.shift();
-            if (!imgID) continue;
-            
-            // Start preloading and track progress
-            inProgress.add(imgID);
-            imageCacheService.getImage(imgID)
-              .then(() => {
-                inProgress.delete(imgID);
-              })
-              .catch(err => {
-                console.warn('Error preloading image:', err);
-                inProgress.delete(imgID);
-              });
-          }
-          
-          // Wait a bit before next batch
-          if (inProgress.size >= concurrency || preloadQueue.length > 0) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-        }
-      };
-
-      // Preload first 20 games
-      setTimeout(() => {
-        preloadImages(data.games.slice(0, 20));
-      }, 1000);
-
-      // Preload the rest in background with delay
-      if (data.games.length > 20) {
-        setTimeout(() => {
-          preloadImages(data.games.slice(20));
-        }, 5000);
-      }
-    }
-
     return {
       games: data.games,
       metadata: {
