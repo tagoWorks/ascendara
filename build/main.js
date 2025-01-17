@@ -130,7 +130,20 @@ async function downloadUpdateInBackground() {
     timestamp.downloadingUpdate = true;
     fs.writeFileSync(timestampPath, JSON.stringify(timestamp, null, 2));
 
-    const updateUrl = 'https://lfs.ascendara.app/AscendaraInstaller.exe?update';
+    // Custom headers for app identification
+    const headers = {
+      'X-Ascendara-Client': 'app',
+      'X-Ascendara-Version': CURRENT_VERSION
+    };
+
+    // First get a download token
+    const tokenResponse = await axios.get('https://lfs.ascendara.app/generate-download-token', { headers });
+    if (tokenResponse.status !== 200) {
+      throw new Error('Failed to get download token');
+    }
+    const downloadToken = tokenResponse.data.token;
+
+    const updateUrl = `https://lfs.ascendara.app/AscendaraInstaller.exe?update&token=${downloadToken}`;
     const tempDir = path.join(os.tmpdir(), 'ascendarainstaller');
     const installerPath = path.join(tempDir, 'AscendaraInstaller.exe');
 
@@ -140,7 +153,8 @@ async function downloadUpdateInBackground() {
     const response = await axios({
       url: updateUrl,
       method: 'GET',
-      responseType: 'arraybuffer'
+      responseType: 'arraybuffer',
+      headers
     });
 
     fs.writeFileSync(installerPath, Buffer.from(response.data));
@@ -159,6 +173,11 @@ async function downloadUpdateInBackground() {
   } catch (error) {
     console.error('Error downloading update:', error);
     updateDownloadInProgress = false;
+    
+    // Notify about the error
+    BrowserWindow.getAllWindows().forEach(window => {
+      window.webContents.send('update-error', error.message);
+    });
   }
 }
 
@@ -297,30 +316,34 @@ ipcMain.handle('stop-download', async (event, game) => {
 
 const deleteGameDirectory = async (game) => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-  const data = fs.readFileSync(filePath, 'utf8');
-  const settings = JSON.parse(data);
-  if (!settings.downloadDirectory) {
-    console.error('Download directory not set');
-    return;
-  }
-  const downloadDirectory = settings.downloadDirectory;
-  const gameDirectory = path.join(downloadDirectory, game);
   try {
-    // First ensure all file handles are closed by attempting to read the directory
-    const files = await fs.promises.readdir(gameDirectory, { withFileTypes: true });
-    
-    // Delete all contents first
-    for (const file of files) {
-      const fullPath = path.join(gameDirectory, file.name);
-      await fs.promises.rm(fullPath, { recursive: true, force: true });
+    const data = fs.readFileSync(filePath, 'utf8');
+    const settings = JSON.parse(data);
+    if (!settings.downloadDirectory) {
+      console.error('Download directory not set');
+      return;
     }
-    
-    // Then remove the empty directory itself
-    await fs.promises.rmdir(gameDirectory);
-    console.log('Game directory and files deleted successfully');
+    const downloadDirectory = settings.downloadDirectory;
+    const gameDirectory = path.join(downloadDirectory, game);
+    try {
+      // First ensure all file handles are closed by attempting to read the directory
+      const files = await fs.promises.readdir(gameDirectory, { withFileTypes: true });
+      
+      // Delete all contents first
+      for (const file of files) {
+        const fullPath = path.join(gameDirectory, file.name);
+        await fs.promises.rm(fullPath, { recursive: true, force: true });
+      }
+      
+      // Then remove the empty directory itself
+      await fs.promises.rmdir(gameDirectory);
+      console.log('Game directory and files deleted successfully');
+    } catch (error) {
+      console.error('Error deleting the game directory:', error);
+      throw error; // Propagate the error to handle it in the caller
+    }
   } catch (error) {
-    console.error('Error deleting the game directory:', error);
-    throw error; // Propagate the error to handle it in the caller
+    console.error('Error reading the settings file:', error);
   }
 };
 
@@ -1049,16 +1072,26 @@ ipcMain.handle('update-ascendara', async () => {
   if (is_latest) return;
   
   if (!updateDownloaded) {
-    if (downloadUpdatePromise) {
-      await downloadUpdatePromise;
-    } else {
-      await downloadUpdateInBackground();
+    try {
+      if (downloadUpdatePromise) {
+        await downloadUpdatePromise;
+      } else {
+        await downloadUpdateInBackground();
+      }
+    } catch (error) {
+      console.error('Error during update download:', error);
+      return;
     }
   }
   
   if (updateDownloaded) {
     const tempDir = path.join(os.tmpdir(), 'ascendarainstaller');
     const installerPath = path.join(tempDir, 'AscendaraInstaller.exe');
+    
+    if (!fs.existsSync(installerPath)) {
+      console.error('Installer not found at:', installerPath);
+      return;
+    }
     
     const installerProcess = spawn(installerPath, [], { 
       detached: true, 

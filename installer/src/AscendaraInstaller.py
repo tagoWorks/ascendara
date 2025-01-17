@@ -390,6 +390,11 @@ class AscendaraInstaller(ctk.CTk):
         self.log_update_after_id = self.after(100, self.update_log_display)
 
     def download_file(self, url, local_filename):
+        headers = {
+            'X-Ascendara-Client': 'installer',
+            'X-Ascendara-Version': version
+        }
+        
         try:
             logging.info(f"Starting download from {url}")
             
@@ -401,8 +406,8 @@ class AscendaraInstaller(ctk.CTk):
             logging.info(f"File size: {total_size / (1024*1024):.1f}MB")
             
             # Download with single request
-            with requests.get(url, stream=True) as response:
-                response.raise_for_status()
+            with requests.get(url, stream=True, headers=headers) as r:
+                r.raise_for_status()
                 
                 # Create and open output file
                 with open(local_filename, 'wb') as f:
@@ -410,7 +415,7 @@ class AscendaraInstaller(ctk.CTk):
                     downloaded = 0
                     last_percent = -1
                     
-                    for chunk in response.iter_content(chunk_size=chunk_size):
+                    for chunk in r.iter_content(chunk_size=chunk_size):
                         if chunk:
                             f.write(chunk)
                             downloaded += len(chunk)
@@ -467,8 +472,19 @@ class AscendaraInstaller(ctk.CTk):
         
         def installation_process():
             try:
-                # Download URL (replace with actual URL)
-                url = "https://lfs.ascendara.app/AscendaraInstaller.exe"
+                # First get a download token
+                headers = {
+                    'X-Ascendara-Client': 'installer',
+                    'X-Ascendara-Version': version
+                }
+                token_response = requests.get("https://lfs.ascendara.app/generate-download-token", headers=headers)
+                if token_response.status_code != 200:
+                    raise Exception("Failed to get download token")
+                
+                download_token = token_response.json()['token']
+                
+                # Download URL with token
+                url = f"https://lfs.ascendara.app/AscendaraInstaller.exe?token={download_token}"
                 download_path = tempfile.gettempdir() + "/AscendaraInstaller.exe"
                 
                 # Download the file and wait for completion
@@ -503,7 +519,7 @@ class AscendaraInstaller(ctk.CTk):
                         break
                     # Check status every 100ms
                     self.after(100)
-                
+            
             except Exception as e:
                 error_msg = str(e)
                 logging.error(f"Installation error: {error_msg}")
@@ -511,7 +527,7 @@ class AscendaraInstaller(ctk.CTk):
                 self.install_button.configure(state="normal")
                 # Hide progress bar on error
                 self.progress_bar.place_forget()
-        
+    
         thread = threading.Thread(target=installation_process)
         thread.daemon = True
         thread.start()
