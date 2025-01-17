@@ -20,25 +20,8 @@ import { analytics } from './services/analyticsService'
 import ContextMenu from './components/ContextMenu';
 import './components/ContextMenu.css';
 import { useTranslation } from 'react-i18next';
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import i18n from './i18n';
 import enTranslations from './translations/en-original.json';
-
-// Initialize i18n
-i18n
-  .use(initReactI18next)
-  .init({
-    resources: {
-      en: {
-        translation: enTranslations
-      }
-    },
-    lng: 'en',
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false
-    }
-  });
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();

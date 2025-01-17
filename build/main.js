@@ -31,7 +31,7 @@ let isDev = false;
 
 
 
-const CURRENT_VERSION = "7.5.3";
+const CURRENT_VERSION = "7.5.4";
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { Client } = require('discord-rpc');
 const disk = require('diskusage');
@@ -853,28 +853,18 @@ ipcMain.handle('save-settings', async (event, options, directory) => {
       // File doesn't exist or is invalid, use empty settings object
     }
 
-    // Merge new options with existing settings
-    const newSettings = {
-      ...settings,
-      ...options
-    };
-
-    // If directory is provided, ensure it exists
+    // Ensure language is saved as a string
+    if (options && typeof options.language === 'object') {
+      options.language = String(options.language);
+    }
+    
+    // If directory is provided, update the download directory
     if (directory) {
-      if (!fs.existsSync(directory)) {
-        fs.mkdirSync(directory, { recursive: true });
-      }
-      newSettings.downloadDirectory = directory;
+      options.downloadDirectory = directory;
     }
 
-    // Write settings to file
-    fs.writeFileSync(filePath, JSON.stringify(newSettings, null, 2));
-    
-    // Notify renderer about settings change
-    BrowserWindow.getAllWindows().forEach(window => {
-      window.webContents.send('settings-changed', newSettings);
-    });
-
+    fs.writeFileSync(filePath, JSON.stringify(options, null, 2));
+    event.sender.send('settings-changed', options);
     return true;
   } catch (error) {
     console.error('Error saving settings:', error);
@@ -897,7 +887,7 @@ ipcMain.handle('install-dependencies', async (event) => {
             fs.mkdirSync(tempDir);
         }
 
-        const zipUrl = 'https://storage.ascendara.app/files/deps.zip';
+        const zipUrl = 'https://cdn.ascendara.app/files/deps.zip';
         const zipPath = path.join(tempDir, 'deps.zip');
         const res = await fetch(zipUrl);
         const arrayBuffer = await res.arrayBuffer();
@@ -2107,7 +2097,7 @@ if (process.platform === 'win32') {
   } else {
     app.on('second-instance', (event, commandLine) => {
       // Someone tried to run a second instance, we should focus our window.
-      const mainWindow = BrowserWindow.getAllWindows()[0];
+      const mainWindow = BrowserWindow.getFocusedWindow();
       if (mainWindow) {
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.focus();

@@ -39,7 +39,7 @@ export const getClosestSupportedLanguage = (lang) => {
   return match || 'en';
 };
 
-// Initialize i18next with local translations
+// Initialize i18next with all translations
 i18n
   .use(initReactI18next)
   .init({
@@ -54,34 +54,27 @@ i18n
       ru: { translation: ru },
       'zh-CN': { translation: zhCN }
     },
-    lng: getClosestSupportedLanguage(navigator.language),
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false
     },
     react: {
-      useSuspense: false // This helps prevent loading flickers
+      useSuspense: false // Disable suspense to prevent loading issues
     }
   });
 
-// Function to load a language asynchronously
+// Export loadLanguageAsync for dynamic language loading
 export const loadLanguageAsync = async (language) => {
-  try {
-    const targetLang = getClosestSupportedLanguage(language);
-    if (!targetLang) {
-      console.warn(`Language ${language} is not supported`);
-      return false;
-    }
+  if (!isSupportedLanguage(language)) {
+    console.warn(`Language ${language} is not supported`);
+    return false;
+  }
 
-    // Change the language
-    await i18n.changeLanguage(targetLang);
-    
-    // Update HTML lang attribute
-    document.documentElement.lang = targetLang;
-    
+  try {
+    await i18n.changeLanguage(language);
     return true;
   } catch (error) {
-    console.error(`Failed to load language ${language}:`, error);
+    console.error(`Error loading language ${language}:`, error);
     return false;
   }
 };

@@ -315,24 +315,18 @@ function Settings() {
   }, []);
 
   const handleLanguageChange = useCallback((value) => {
+    // Ensure value is a string
+    const languageValue = String(value);
     setSettings(prev => {
       const newSettings = {
         ...prev,
-        language: value
+        language: languageValue
       };
       return newSettings;
     });
     // Use changeLanguage from the context
-    changeLanguage(value);
+    changeLanguage(languageValue);
   }, [changeLanguage]);
-
-  const handleDownloadPathChange = useCallback(async (newPath) => {
-    setDownloadPath(newPath);
-    setSettings(prev => ({
-      ...prev,
-      downloadDirectory: newPath
-    }));
-  }, []);
 
   // Theme handling
   const handleThemeChange = useCallback((newTheme) => {
@@ -727,6 +721,9 @@ function Settings() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-sm text-muted-foreground">
+                    {t('settings.languageSetNote')}
+                  </p>
                 </div>
               </div>
             </Card>

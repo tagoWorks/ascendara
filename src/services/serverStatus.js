@@ -1,6 +1,6 @@
 const ENDPOINTS = {
   api: 'https://api.ascendara.app/health',
-  storage: 'https://storage.ascendara.app/health',
+  storage: 'https://cdn.ascendara.app/health',
   lfs: 'https://lfs.ascendara.app/health'
 };
 

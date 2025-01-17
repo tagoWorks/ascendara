@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo, useMemo } from 'react';
+import React, { useState, useEffect, memo, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -30,7 +30,9 @@ import {
   AlertDialogTitle,
 } from "../components/ui/alert-dialog";
 import { useLanguage } from '../contexts/LanguageContext';
+import { languages } from '../i18n';
 import { useTheme } from '../contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 const executableToLabelMap = {
   'dotNetFx40_Full_x86_x64.exe': t => '.NET Framework 4.0',
@@ -40,17 +42,26 @@ const executableToLabelMap = {
   'xnafx40_redist.msi': t => 'XNA Framework',
 };
 
-const SUPPORTED_LANGUAGES = [
-  { id: 'en', name: 'English', icon: '🇺🇸' },
-  { id: 'es', name: 'Español', icon: '🇪🇸' },
-  { id: 'zh-CN', name: '中文', icon: '🇨🇳' },
-  { id: 'ar', name: 'العربية', icon: '🇸🇦' },
-  { id: 'hi', name: 'हिन्दी', icon: '🇮🇳' },
-  { id: 'bn', name: 'বাংলা', icon: '🇧🇩' },
-  { id: 'pt', name: 'Português', icon: '🇵🇹' },
-  { id: 'ru', name: 'Русский', icon: '🇷🇺' },
-  { id: 'ja', name: '日本語', icon: '🇯🇵' },
-];
+const SUPPORTED_LANGUAGES = Object.entries(languages).map(([id, { name, nativeName }]) => ({
+  id,
+  name: nativeName,
+  icon: getLanguageFlag(id)
+}));
+
+function getLanguageFlag(langId) {
+  const flagMap = {
+    'en': '🇺🇸',
+    'es': '🇪🇸',
+    'zh-CN': '🇨🇳',
+    'ar': '🇸🇦',
+    'hi': '🇮🇳',
+    'bn': '🇧🇩',
+    'pt': '🇵🇹',
+    'ru': '🇷🇺',
+    'ja': '🇯🇵'
+  };
+  return flagMap[langId] || '🌐';
+}
 
 const themes = [
   // Light themes
@@ -186,13 +197,13 @@ function ThemeButton({ theme, currentTheme, onSelect }) {
   );
 }
 
-const Welcome = memo(({ welcomeData, onComplete }) => {
-  const { t, changeLanguage, language } = useLanguage();
+const Welcome = ({ welcomeData, onComplete }) => {
+  const { t } = useTranslation();
+  const { language, changeLanguage } = useLanguage();
   const { setTheme } = useTheme();
   const [isV7Welcome, setIsV7Welcome] = useState(false);
   const [step, setStep] = useState('language');
-  const [selectedLanguage, setSelectedLanguage] = useState(language);
-  const [selectedTheme, setSelectedTheme] = useState('light');
+  const [selectedTheme, setSelectedTheme] = useState('purple');
   const [showingLightThemes, setShowingLightThemes] = useState(true);
   const [privacyChecked, setPrivacyChecked] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
@@ -218,6 +229,22 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
   const [isExiting, setIsExiting] = useState(false);
   const [showAnalyticsStep, setShowAnalyticsStep] = useState(false);
   const [autoUpdate, setAutoUpdate] = useState(true);
+  const [settings, setSettings] = useState({
+    downloadDirectory: '',
+    seamlessDownloads: true,
+    viewOldDownloadLinks: false,
+    seeInappropriateContent: false,
+    autoCreateShortcuts: true,
+    sendAnalytics: true,
+    autoUpdate: true,
+    primaryGameSource: 'steamrip',
+    language: 'en',
+    theme: 'purple',
+    threadCount: 4,
+    enabledSources: {
+      steamrip: true,
+    }
+  });
   const [currentLangIndex, setCurrentLangIndex] = useState(0);
 
   const features = useMemo(() => [
@@ -456,24 +483,17 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
         setWarningMessage('');
       }
 
-      // Save settings with the directory - simplified version
       try {
-        const options = {
-          seamlessDownloads: true,
-          autoCreateShortcuts: true,
-          viewOldDownloadLinks: false,
-          seeInappropriateContent: false,
-          sendAnalytics: true,
-          autoUpdate: true,
-          primaryGameSource: 'steamrip',
-          enabledSources: {
-            steamrip: true,
-            steamunlocked: false,
-            fitpackgames: false,
-          }
+        // Get current settings first
+        const currentSettings = await window.electron.getSettings();
+        
+        // Update only the download directory while preserving others
+        const updatedSettings = {
+          ...currentSettings,
+          downloadDirectory: directory
         };
-
-        const result = await window.electron.saveSettings(options, directory);
+        
+        const result = await window.electron.saveSettings(updatedSettings, directory);
         
         if (!result) {
           console.error('Failed to save settings');
@@ -560,15 +580,41 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
     }
   };
 
-  const handleLanguageSelect = async (langId) => {
-    setSelectedLanguage(langId);
-    await changeLanguage(langId);
-    handleNext();
-  };
+  const handleLanguageSelect = useCallback(async (value) => {
+    try {
+      changeLanguage(value);
+      
+      // Get current settings first
+      const currentSettings = await window.electron.getSettings();
+      const updatedSettings = {
+        ...currentSettings,
+        language: value
+      };
+      
+      await window.electron.saveSettings(updatedSettings);
+      setSettings(updatedSettings);
+    } catch (error) {
+      console.error('Error saving language preference:', error);
+    }
+  }, [changeLanguage]);
 
-  const handleThemeSelect = (themeId) => {
-    setTheme(themeId);
-    window.electron.modifySetting('theme', themeId);
+  const handleThemeSelect = async (themeId) => {
+    try {
+      setTheme(themeId);
+      setSelectedTheme(themeId);
+      
+      // Get current settings first
+      const currentSettings = await window.electron.getSettings();
+      const updatedSettings = {
+        ...currentSettings,
+        theme: themeId
+      };
+      
+      await window.electron.saveSettings(updatedSettings);
+      setSettings(updatedSettings);
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+    }
   };
 
   if (isV7Welcome) {
@@ -977,11 +1023,11 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                     key={lang.id}
                     onClick={() => handleLanguageSelect(lang.id)}
                     className={`p-6 rounded-2xl transition-all duration-300 flex items-center space-x-4 ${
-                      selectedLanguage === lang.id
+                      language === lang.id
                         ? 'bg-gradient-to-br from-primary/15 via-primary/10 to-transparent border-2 border-primary scale-105 shadow-lg shadow-primary/10'
                         : 'bg-card/40 border border-primary/10 hover:border-primary/30 hover:bg-card/60 hover:scale-102'
                     }`}
-                    whileHover={{ scale: selectedLanguage === lang.id ? 1.05 : 1.02 }}
+                    whileHover={{ scale: language === lang.id ? 1.05 : 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <div className="text-3xl">{lang.icon}</div>
@@ -994,7 +1040,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                 <Button 
                   size="lg"
                   onClick={handleNext}
-                  disabled={!selectedLanguage}
+                  disabled={!language}
                 >
                   {t('welcome.next')}
                 </Button>
@@ -1087,7 +1133,7 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                 className="text-xl mb-8 max-w-2xl text-foreground/80"
                 variants={itemVariants}
               >
-                {t('welcome.getTheAscendaraDownloadBlockerExtension')}
+                {t('welcome.getTheAscendaraDownloadHandlerExtension')}
               </motion.p>
 
               <motion.div 
@@ -1106,17 +1152,13 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
                   </div>
                   <div className="flex items-start space-x-3">
                     <span className="text-primary font-semibold">3.</span>
-                    <p>{t('welcome.copyTheURLAndPasteItIntoAscendara')}</p>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <span className="text-primary font-semibold">4.</span>
-                    <p>{t('welcome.disableTheBlockerWhenYouWantToAllowNormalDownloadsAgain')}</p>
+                    <p>{t('welcome.startTheDownload')}</p>
                   </div>
                 </div>
 
                 <div className="mt-8 p-4 bg-primary/5 rounded-md">
                   <p className="text-sm text-foreground/70">
-                    {t('welcome.theExtensionBlocksUnwantedDownloads')}
+                    {t('welcome.theExtensionBlocksKnownProviders')}
                   </p>
                 </div>
               </motion.div>
@@ -1519,6 +1561,6 @@ const Welcome = memo(({ welcomeData, onComplete }) => {
       </div>
     </div>
   );
-});
+};
 
 export default Welcome; 

@@ -18,14 +18,32 @@ export function LanguageProvider({ children }) {
           const targetLang = getClosestSupportedLanguage(settings.language);
           const success = await loadLanguageAsync(targetLang);
           if (success) {
+            // First change i18n's language
+            await i18n.changeLanguage(targetLang);
+            // Then update our state
             setLanguage(targetLang);
           } else {
             console.warn(`Failed to load language ${targetLang}, falling back to English`);
+            await i18n.changeLanguage('en');
+            setLanguage('en');
+          }
+        } else {
+          // No language in settings, initialize with browser language
+          const browserLang = getClosestSupportedLanguage(navigator.language);
+          const success = await loadLanguageAsync(browserLang);
+          if (success) {
+            await i18n.changeLanguage(browserLang);
+            setLanguage(browserLang);
+          } else {
+            await i18n.changeLanguage('en');
             setLanguage('en');
           }
         }
       } catch (error) {
         console.error('Error loading language from settings:', error);
+        // Fall back to English on error
+        await i18n.changeLanguage('en');
+        setLanguage('en');
       }
     };
     initLanguage();
@@ -52,6 +70,9 @@ export function LanguageProvider({ children }) {
     try {
       const success = await loadLanguageAsync(newLanguage);
       if (success) {
+        // Change i18n's language
+        await i18n.changeLanguage(newLanguage);
+        
         // Save to electron settings
         const settings = await window.electron.getSettings();
         await window.electron.saveSettings({
@@ -65,6 +86,7 @@ export function LanguageProvider({ children }) {
       console.error('Error updating language:', error);
       // Revert to previous language on error
       setLanguage(prevLang => {
+        i18n.changeLanguage(prevLang);
         loadLanguageAsync(prevLang);
         return prevLang;
       });
