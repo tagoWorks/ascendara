@@ -5,12 +5,13 @@ import subprocess
 import os
 import logging
 import datetime
+import tempfile
 from pathlib import Path
 from PIL import Image, ImageTk
 from io import BytesIO, StringIO
 import time
 
-version = "0.1.0"
+version = "0.2.0"
 
 # Configure logging
 log_stream = StringIO()
@@ -271,7 +272,7 @@ class AscendaraInstaller(ctk.CTk):
         if response.status_code == 200:
             data = response.json()
             appVer = data["appVer"]
-            responseText = f"Install version {appVer} of Ascendara onto your computer"
+            responseText = f"Install Ascendara version {appVer} onto your computer.\nThis should take less than 3 minutes."
         else:
             responseText = "Install the latest version of Ascendara onto your computer"
         
@@ -279,10 +280,10 @@ class AscendaraInstaller(ctk.CTk):
         self.subtitle = ctk.CTkLabel(
             self.inner_content_frame,
             text=responseText,
-            font=ctk.CTkFont(family="Segoe UI", size=24),
+            font=ctk.CTkFont(family="Segoe UI", size=20),
             text_color="#581c87"
         )
-        self.subtitle.place(relx=0.5, rely=0.5, anchor="center")
+        self.subtitle.place(relx=0.5, rely=0.52, anchor="center")
 
         # Create a frame for the button to add a subtle shadow effect
         self.button_frame = ctk.CTkFrame(
@@ -364,12 +365,12 @@ class AscendaraInstaller(ctk.CTk):
             # Create new log window
             self.log_window = LogWindow()
             self.log_window.focus()
-            self.log_button.configure(text="Hide Logs")
+            self.log_button.configure(text="Close Console")
         else:
             # Close existing window with fade
             self.log_window.close()
             self.log_window = None
-            self.log_button.configure(text="Show Logs")
+            self.log_button.configure(text="Open Console")
     
     def update_log_display(self):
         if self.log_window is not None and self.log_window.winfo_exists():
@@ -468,7 +469,7 @@ class AscendaraInstaller(ctk.CTk):
             try:
                 # Download URL (replace with actual URL)
                 url = "https://lfs.ascendara.app/AscendaraInstaller.exe"
-                download_path = Path.home() / "Downloads" / "ascendarainstaller.exe"
+                download_path = tempfile.gettempdir() + "/AscendaraInstaller.exe"
                 
                 # Download the file and wait for completion
                 local_file = self.download_file(url, str(download_path))
