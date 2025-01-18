@@ -31,7 +31,7 @@ let isDev = false;
 
 
 
-const CURRENT_VERSION = "7.5.4";
+const CURRENT_VERSION = "7.5.5";
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { Client } = require('discord-rpc');
 const disk = require('diskusage');
@@ -2130,7 +2130,7 @@ if (process.platform === 'win32') {
   } else {
     app.on('second-instance', (event, commandLine) => {
       // Someone tried to run a second instance, we should focus our window.
-      const mainWindow = BrowserWindow.getFocusedWindow();
+      const mainWindow = BrowserWindow.getAllWindows()[0];  // <-- Use same method as handleProtocolUrl
       if (mainWindow) {
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.focus();
@@ -2153,28 +2153,13 @@ if (process.platform === 'win32') {
   }
 }
 
-// Register protocol handler
-if (process.defaultApp) {
-  if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient('ascendara', process.execPath, [path.resolve(process.argv[1])]);
-  }
+// Remove the development mode registration and consolidate into one
+if (process.defaultApp || isDev) {
+  app.setAsDefaultProtocolClient('ascendara', process.execPath, [path.resolve(process.argv[1])]);
 } else {
   app.setAsDefaultProtocolClient('ascendara');
 }
-
 // Register protocol handler for development mode
 if (isDev) {
   app.setAsDefaultProtocolClient('ascendara', process.execPath, [path.resolve(process.argv[1])]);
 }
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-});

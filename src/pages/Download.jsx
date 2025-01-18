@@ -195,6 +195,13 @@ export default function DownloadPage() {
       console.log('3. Final URL to download:', downloadUrl);
       
       // Only trigger the download directly without updating UI state
+      if (isDev) {
+        toast.error(t('download.toast.cannotDownloadDev'));
+        console.error('Couldn\'t start the download because the app is running in development mode. Removing listener...');
+        window.electron.ipcRenderer.removeListener('protocol-download-url', handleProtocolUrl);
+        navigate('/');
+        return;
+      }
       handleDownload(downloadUrl);
       
       // Reset lastUrl after a delay
