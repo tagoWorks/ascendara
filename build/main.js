@@ -31,7 +31,7 @@ let isDev = false;
 
 
 
-const CURRENT_VERSION = "7.5.5";
+const CURRENT_VERSION = "7.5.6";
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { Client } = require('discord-rpc');
 const disk = require('diskusage');
@@ -270,6 +270,43 @@ ipcMain.handle('is-downloader-running', async () => {
   }
 });
 
+ipcMain.handle('delete-game-directory', async (event, game) => {
+  try {
+    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+    try {
+      const data = fs.readFileSync(filePath, 'utf8');
+      const settings = JSON.parse(data);
+      if (!settings.downloadDirectory) {
+        console.error('Download directory not set');
+        return;
+      }
+      const downloadDirectory = settings.downloadDirectory;
+      const gameDirectory = path.join(downloadDirectory, game);
+      try {
+        // First ensure all file handles are closed by attempting to read the directory
+        const files = await fs.promises.readdir(gameDirectory, { withFileTypes: true });
+        
+        // Delete all contents first
+        for (const file of files) {
+          const fullPath = path.join(gameDirectory, file.name);
+          await fs.promises.rm(fullPath, { recursive: true, force: true });
+        }
+        
+        // Then remove the empty directory itself
+        await fs.promises.rmdir(gameDirectory);
+        console.log('Game directory and files deleted successfully');
+      } catch (error) {
+        console.error('Error deleting the game directory:', error);
+        throw error; // Propagate the error to handle it in the caller
+      }
+    } catch (error) {
+      console.error('Error reading the settings file:', error);
+    }
+  } catch (error) {
+    console.error('Error deleting the game directory:', error);
+  }
+});   
+
 ipcMain.handle('stop-download', async (event, game) => {
   try {
     const downloadProcess = downloadProcesses.get(game);
@@ -419,10 +456,14 @@ ipcMain.handle('download-file', async (event, link, game, online, dlc, version, 
         let spawnCommand;
 
         if (link.includes('gofile.io')) {
-          executablePath = path.join(appDirectory, '/resources/AscendaraGofileHelper.exe');
+          executablePath = isDev 
+            ? path.join('./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe')
+            : path.join(appDirectory, '/resources/AscendaraGofileHelper.exe');
           spawnCommand = ["https://" + link, game, online, dlc, version, size, gamesDirectory];
         } else {
-          executablePath = path.join(appDirectory, '/resources/AscendaraDownloader.exe');
+          executablePath = isDev
+            ? path.join('./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe')
+            : path.join(appDirectory, '/resources/AscendaraDownloader.exe');
           spawnCommand = [link, game, online, dlc, version, size, gamesDirectory];
           console.log(spawnCommand)
         }
@@ -529,7 +570,9 @@ ipcMain.handle('retry-extract', async (event, game, online, dlc, version) => {
       
       selectedPaths.forEach((selectedPath) => {
         const itemName = path.basename(selectedPath);
-        const executablePath = path.join(appDirectory, '/resources/AscendaraDownloader.exe');
+        const executablePath = isDev
+          ? path.join('./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe')
+          : path.join(appDirectory, '/resources/AscendaraDownloader.exe');
         console.log(`Calling ${executablePath} with arguments: ${selectedPath}, ${game}, ${online}, ${dlc}, ${version}, ${gameDirectory}, ${itemName}`);
         const downloadProcess = spawn(executablePath, [
           "retryfolder", 
@@ -590,10 +633,14 @@ ipcMain.handle('retry-download', async (event, link, game, online, dlc, version)
     let spawnCommand;
 
     if (link.includes('gofile.io')) {
-      executablePath = path.join(appDirectory, '/resources/AscendaraGofileHelper.exe');
+      executablePath = isDev 
+        ? path.join(appDirectory, '/binaries/AscendaraGofileHelper/dist/AscendaraGofileHelper.exe')
+        : path.join(appDirectory, '/resources/AscendaraGofileHelper.exe');
       spawnCommand = ["https://" + link, game, online, dlc, version, '0', gamesDirectory];
     } else {
-      executablePath = path.join(appDirectory, '/resources/AscendaraDownloader.exe');
+      executablePath = isDev
+        ? path.join(appDirectory, '/binaries/AscendaraDownloader/dist/AscendaraDownloader.exe')
+        : path.join(appDirectory, '/resources/AscendaraDownloader.exe');
       spawnCommand = [link, game, online, dlc, version, '0', gamesDirectory];
     }
 
@@ -1398,10 +1445,12 @@ ipcMain.handle('play-game', async (event, game, isCustom = false) => {
       throw new Error('Game is already running');
     }
 
-    const handlerPath = path.join(appDirectory, '/resources/AscendaraGameHandler.exe');
+  
+    const handlerPath = path.join(appDirectory, '/resources/AscendaraGameHandler.exe')
+
     if (!fs.existsSync(handlerPath)) {
       throw new Error('Game handler not found');
-    }
+    };
 
     console.log('Launching game:', {
       handlerPath,

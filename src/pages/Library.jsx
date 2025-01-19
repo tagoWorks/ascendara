@@ -604,8 +604,8 @@ const InstalledGameCard = ({
       <CardContent className="p-0">
         <div className="aspect-[4/3] relative">
           <img 
-            src={imageData || '/no-image.png'} 
-            alt={game.game || game.name}
+            src={imageData} 
+            alt={game.game}
             className="w-full h-full object-cover"
           />
           {isUninstalling && (

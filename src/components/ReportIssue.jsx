@@ -49,19 +49,24 @@ const ReportIssue = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   const getToken = async () => {
-    const AUTHORIZATION = await window.electron.getAPIKey();
-    const response = await fetch("https://api.ascendara.app/auth/token", {
-      headers: {
-        Authorization: `Bearer ${AUTHORIZATION}`,
-      },
-    });
+    try {
+      const AUTHORIZATION = await window.electron.getAPIKey();
+      const response = await fetch("https://api.ascendara.app/auth/token", {
+        headers: {
+          'Authorization': AUTHORIZATION,
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error("Failed to obtain token");
+      if (!response.ok) {
+        throw new Error("Failed to obtain token");
+      }
+
+      const data = await response.json();
+      return data.token;
+    } catch (error) {
+      console.error("Error getting token:", error);
+      throw error;
     }
-
-    const data = await response.json();
-    return data.token;
   };
 
   const handleSubmit = async () => {
@@ -81,7 +86,7 @@ const ReportIssue = ({ isOpen, onClose }) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${freshToken}`,
+            'Authorization': `Bearer ${freshToken}`,
           },
           body: JSON.stringify({
             reportType: "AscendaraApp",
@@ -100,7 +105,7 @@ const ReportIssue = ({ isOpen, onClose }) => {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${newToken}`,
+                'Authorization': `Bearer ${newToken}`,
               },
               body: JSON.stringify({
                 reportType: "AscendaraApp",
@@ -108,13 +113,15 @@ const ReportIssue = ({ isOpen, onClose }) => {
                 details: details,
               }),
             });
-            
+
             if (retryResponse.ok) {
               resolve();
-              return;
+            } else {
+              reject(new Error("Failed to submit report after token refresh"));
             }
+          } else {
+            reject(new Error("Failed to submit report"));
           }
-          reject(new Error("Failed to submit report"));
         }
       } catch (error) {
         reject(error);
@@ -123,12 +130,16 @@ const ReportIssue = ({ isOpen, onClose }) => {
 
     toast.promise(promise, {
       loading: t('common.reportDialog.submitting'),
-      success: () => {
-        onClose();
-        return t('common.reportDialog.success');
-      },
-      error: t('common.reportDialog.error'),
+      success: t('common.reportDialog.submitted'),
+      error: (err) => `${t('common.reportDialog.error')}: ${err.message}`
     });
+
+    try {
+      await promise;
+      onClose();
+    } catch (error) {
+      console.error("Error submitting report:", error);
+    }
   };
 
   return (

@@ -18,7 +18,6 @@ const GameCard = memo(function GameCard({ game, compact }) {
   const [seamlessDownloads, setSeamlessDownloads] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
-  const [isDev, setIsDev] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useLanguage();
 
@@ -40,16 +39,14 @@ const GameCard = memo(function GameCard({ game, compact }) {
         if (!isMounted) return;
         setIsLoading(true);
 
-        const [settings, isDev, installedGames] = await Promise.all([
+        const [settings, installedGames] = await Promise.all([
           window.electron.getSettings(),
-          window.electron.isDev(),
           window.electron.getGames()
         ]);
 
         if (!isMounted) return;
 
         setSeamlessDownloads(settings.seamlessDownloads ?? true);
-        setIsDev(isDev);
         setIsInstalled(installedGames.some(installedGame => 
           installedGame.game === game.game
         ));
@@ -98,11 +95,7 @@ const GameCard = memo(function GameCard({ game, compact }) {
       const hasGoFile = providers.includes('gofile');
       
       if (hasGoFile && seamlessDownloads) {
-        if (isDev) {
-          toast.error(t('download.toast.cannotDownloadDev'));
-          return;
-        }
-        
+
         setIsStarting(true);
         
         // Get first valid gofile link
@@ -162,7 +155,7 @@ const GameCard = memo(function GameCard({ game, compact }) {
     } finally {
       setIsLoading(false);
     }
-  }, [navigate, game, seamlessDownloads, isDev, isInstalled, t]);
+  }, [navigate, game, seamlessDownloads, isInstalled, t]);
 
   if (compact) {
     return (

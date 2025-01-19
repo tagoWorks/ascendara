@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogCancel } from "../components/ui/alert-dialog";
@@ -66,7 +66,7 @@ export default function DownloadPage() {
   const { gameData } = state || {};
   const { t } = useLanguage();
   
-  // All state declarations first
+  // State declarations
   const [selectedProvider, setSelectedProvider] = useState("");
   const [inputLink, setInputLink] = useState("");
   const [isStartingDownload, setIsStartingDownload] = useState(false);
@@ -81,24 +81,15 @@ export default function DownloadPage() {
   const [showNewUserGuide, setShowNewUserGuide] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
   const [guideImages, setGuideImages] = useState({});
-  const [isDev, setIsDev] = useState(false);
   const [settings, setSettings] = useState({ downloadHandler: false });
 
-  useEffect(() => {
-    const checkDevMode = async () => {
-      const isDevMode = await window.electron.isDev();
-      setIsDev(isDevMode);
-    };
-    checkDevMode();
-  }, []);
+  // Refs for URL tracking
+  const recentUrlsRef = useRef(new Map());
+  const isProcessingUrlRef = useRef(false);
 
-  // Then handleDownload
+  // Define handleDownload first since it's used in handleProtocolUrl
   const handleDownload = useCallback(async (directUrl = null) => {
-    if (isDev) {
-      toast.error(t('download.toast.cannotDownloadDev'));
-      return;
-    }
-    
+
     if (showNoDownloadPath) {
       return;
     }
@@ -112,109 +103,109 @@ export default function DownloadPage() {
     if (selectedProvider !== 'gofile' && !isValidLink && !directUrl) {
       return;
     }
-  
-    if (!isDev) {
-      if (isStartingDownload) {
-        console.log('Download already in progress, skipping');
-        return;
-      }
-
-      setIsStartingDownload(true);
-      try {
-        const sanitizedGameName = sanitizeText(gameData.game);
-        const urlToUse = directUrl || inputLink;
-        
-        console.log('Starting download with URL:', urlToUse);
-        await window.electron.downloadFile(
-          urlToUse,
-          sanitizedGameName,
-          gameData.online,
-          gameData.dlc,
-          gameData.version,
-          gameData.imgID,
-          gameData.size
-        );
-        
-        toast.success(t('download.toast.downloadStarted'));
-        
-        // Add a delay before navigation to ensure the download has started
-        // and the toast is visible
-        setTimeout(() => {
-          setIsStartingDownload(false);
-          navigate('/downloads');
-        }, 1000);
-      } catch (error) {
-        console.error('Download failed:', error);
-        toast.error(t('download.toast.downloadFailed'));
-        setIsStartingDownload(false);
-      }
-    } else {
-      toast.error(t('download.toast.cannotDownloadDev'));
+    if (isStartingDownload) {
+      console.log('Download already in progress, skipping');
+      return;
     }
-  }, [showNoDownloadPath, gameData, selectedProvider, isValidLink, inputLink, navigate, t, isDev, isStartingDownload]);
-
-  useEffect(() => {
-    const checkDevMode = async () => {
-      const isDevMode = await window.electron.isDev();
-      setIsDev(isDevMode);
-    };
-    checkDevMode();
-    
-    let lastUrl = null;
-  
-    const handleProtocolUrl = async (event, url) => {
-      if (!url || url === lastUrl) return;
-      console.log('1. Protocol handler received URL:', url);
-      lastUrl = url;
+    setIsStartingDownload(true);
+    try {
+      const sanitizedGameName = sanitizeText(gameData.game);
+      const urlToUse = directUrl || inputLink;
       
-      // Strip protocol and clean up URL, handling both http and https
-      let downloadUrl = url
-        .replace('ascendara://https//', 'https://')
-        .replace('ascendara://http//', 'http://');
-        
-      // If it still has ascendara:// prefix, try to fix malformed URLs
-      if (downloadUrl.startsWith('ascendara://')) {
-        downloadUrl = downloadUrl
-          .replace('ascendara://', '')
-          .replace(/^http\/\//, 'http://')
-          .replace(/^https\/\//, 'https://');
-      }
-
-      console.log('2. After stripping protocol:', downloadUrl);
+      console.log('Starting download with URL:', urlToUse);
+      await window.electron.downloadFile(
+        urlToUse,
+        sanitizedGameName,
+        gameData.online,
+        gameData.dlc,
+        gameData.version,
+        gameData.imgID,
+        gameData.size
+      );
       
-      if (!downloadUrl || downloadUrl.trim() === '') {
-        console.log('Download URL is empty after processing');
-        return;
-      }
+      toast.success(t('download.toast.downloadStarted'));
       
-      // Ensure URL has proper protocol
-      if (!downloadUrl.startsWith('http://') && !downloadUrl.startsWith('https://')) {
-        downloadUrl = 'https://' + downloadUrl;
-      }
-      
-      console.log('3. Final URL to download:', downloadUrl);
-      
-      // Only trigger the download directly without updating UI state
-      if (isDev) {
-        toast.error(t('download.toast.cannotDownloadDev'));
-        console.error('Couldn\'t start the download because the app is running in development mode. Removing listener...');
-        window.electron.ipcRenderer.removeListener('protocol-download-url', handleProtocolUrl);
-        navigate('/');
-        return;
-      }
-      handleDownload(downloadUrl);
-      
-      // Reset lastUrl after a delay
+      // Add a delay before navigation to ensure the download has started
+      // and the toast is visible
       setTimeout(() => {
-        lastUrl = null;
-      }, 5000);
-    };
-  
+        setIsStartingDownload(false);
+        navigate('/downloads');
+      }, 1000);
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error(t('download.toast.downloadFailed'));
+      setIsStartingDownload(false);
+    }
+
+  }, [showNoDownloadPath, gameData, selectedProvider, isValidLink, inputLink, navigate, t, isStartingDownload]);
+
+  // Then define handleProtocolUrl which depends on handleDownload
+  const handleProtocolUrl = useCallback(async (event, url) => {
+    if (!url || isProcessingUrlRef.current) return;
+    
+    // Check if this URL was recently processed (within last 10 seconds)
+    const now = Date.now();
+    const lastProcessed = recentUrlsRef.current.get(url);
+    if (lastProcessed && (now - lastProcessed) < 10000) {
+      console.log('URL was recently processed, skipping:', url);
+      return;
+    }
+    
+    // Set processing flag
+    isProcessingUrlRef.current = true;
+    
+    try {
+      console.log('1. Protocol handler received URL:', url);
+      
+      // Add URL to recent list with timestamp
+      recentUrlsRef.current.set(url, now);
+      
+      // Clean up old entries from recentUrls
+      for (const [key, timestamp] of recentUrlsRef.current.entries()) {
+        if (now - timestamp > 10000) {
+          recentUrlsRef.current.delete(key);
+        }
+      }
+
+      // First remove the ascendara:// protocol
+      let downloadUrl = url.replace(/^ascendara:\/+/i, '');
+      
+      // URL decode the remaining string
+      downloadUrl = decodeURIComponent(downloadUrl);
+      
+      // Now the URL should be in a normal http/https format
+      // Validate it's a proper URL
+      const urlObj = new URL(downloadUrl);
+      
+      console.log('2. Final URL to download:', downloadUrl);
+      
+      await handleDownload(downloadUrl);
+    } catch (e) {
+      console.error('Error processing URL:', e);
+      toast.error(t('download.toast.invalidUrl'));
+    } finally {
+      // Clear processing flag after a short delay to prevent race conditions
+      setTimeout(() => {
+        isProcessingUrlRef.current = false;
+      }, 1000);
+    }
+  }, [handleDownload, t]);
+
+  // Set up protocol handler
+  useEffect(() => {
     window.electron.ipcRenderer.on('protocol-download-url', handleProtocolUrl);
     return () => {
       window.electron.ipcRenderer.removeListener('protocol-download-url', handleProtocolUrl);
     };
-  }, [handleDownload]);
+  }, [handleProtocolUrl]);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      recentUrlsRef.current.clear();
+      isProcessingUrlRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const loadFileFromPath = async (path) => {

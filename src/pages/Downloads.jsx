@@ -20,6 +20,7 @@ import {
   RefreshCcw,
   Trash2,
   AlertCircle,
+  AlertTriangle,
   Download,
   Clock,
   HardDrive,
@@ -36,8 +37,6 @@ import {
   AlertDialogTitle,
 } from "../components/ui/alert-dialog";
 import { Input } from "../components/ui/input";
-import { analytics } from '../services/analyticsService';
-import ReportIssue from '../components/ReportIssue';
 
 const Downloads = () => {
   const [downloadingGames, setDownloadingGames] = useState([]);
@@ -254,6 +253,10 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
     styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
   }, []);
 
+  const handleRemoveDownload = async (game) => {
+    await window.electron.deleteGameDirectory(game.game);
+  };
+
   const { downloadingData } = game;
   const isDownloading = downloadingData?.downloading;
   const isExtracting = downloadingData?.extracting;
@@ -281,7 +284,7 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
       const AUTHORIZATION = await window.electron.getAPIKey();
       const response = await fetch("https://api.ascendara.app/auth/token", {
         headers: {
-          Authorization: `Bearer ${AUTHORIZATION}`,
+          'Authorization': AUTHORIZATION,
         },
       });
 
@@ -296,7 +299,7 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           reportType: "GameDownload",
@@ -359,7 +362,7 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
   };
 
   useEffect(() => {
-    if (hasError && !wasReported) {
+    if (hasError && !wasReported && downloadingData.message !== 'content_type_error') {
       handleReport();
     }
   }, [hasError, wasReported]);
@@ -390,7 +393,7 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                   <RefreshCcw className="mr-2 h-4 w-4" />
                   Retry Download
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onStop(game)}>
+                <DropdownMenuItem onClick={() => handleRemoveDownload(game)}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Cancel & Delete
                 </DropdownMenuItem>
@@ -418,34 +421,50 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                 <div className="font-medium text-destructive">
                   {t('downloads.downloadError')}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {downloadingData.message || t('downloads.genericError')}
-                </p>
+                {downloadingData.message === 'content_type_error' && (
+                  <p className="text-sm text-muted-foreground">
+                    {t('downloads.contentTypeError')}<br />
+                    <a 
+                      onClick={() => window.electron.openURL('https://ascendara.app/docs/troubleshooting/common-issues#download-issues')}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary cursor-pointer hover:underline"
+                    >
+                      {t('common.learnMore')}
+                    </a>
+                  </p>
+                ) || (
+                  <p className="text-sm text-muted-foreground">
+                    {downloadingData.message}
+                  </p>
+                )}
                 <div className="flex items-center space-x-2 pt-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-destructive/30 hover:bg-destructive/10"
-                    onClick={handleReport}
-                    disabled={isReporting || wasReported}
-                  >
-                    {isReporting ? (
-                      <>
-                        <Loader className="mr-2 h-4 w-4 animate-spin" />
-                        {t('common.reporting')}
-                      </>
-                    ) : wasReported ? (
-                      <>
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        {t('downloads.alreadyReported')}
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle className="mr-2 h-4 w-4" />
-                        {t('common.reportToAscendara')}
-                      </>
-                    )}
-                  </Button>
+                  {downloadingData.message !== 'content_type_error' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-destructive/30 hover:bg-destructive/10"
+                      onClick={handleReport}
+                      disabled={isReporting || wasReported}
+                    >
+                      {isReporting ? (
+                        <>
+                          <Loader className="mr-2 h-4 w-4 animate-spin" />
+                          {t('common.reporting')}
+                        </>
+                      ) : wasReported ? (
+                        <>
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          {t('downloads.alreadyReported')}
+                        </>
+                      ) : (
+                        <>
+                          <AlertTriangle className="mr-2 h-4 w-4" />
+                          {t('common.reportToAscendara')}
+                        </>
+                      )}
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"

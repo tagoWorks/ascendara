@@ -52,6 +52,7 @@ contextBridge.exposeInMainWorld('electron', {
   addGame: (game, online, dlc, version, executable, imgID) => ipcRenderer.invoke('save-custom-game', game, online, dlc, version, executable, imgID),
   removeCustomGame: (game) => ipcRenderer.invoke('remove-game', game),
   deleteGame: (game) => ipcRenderer.invoke('delete-game', game),
+  deleteGameDirectory: (game) => ipcRenderer.invoke('delete-game-directory', game),
   getInstalledGames: () => ipcRenderer.invoke('get-installed-games'),
 
   // Download Status

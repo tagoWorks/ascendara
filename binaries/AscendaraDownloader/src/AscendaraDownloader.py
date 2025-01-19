@@ -233,7 +233,7 @@ def download_file(link, game, online, dlc, version, size, download_dir):
             response.raise_for_status()
             content_type = response.headers.get('Content-Type')
             if content_type and 'text/html' in content_type:
-                raise Exception("Content-Type was text/html. Link most likely expired.")
+                raise Exception("content_type_error")
 
             total_size = int(response.headers.get('content-length', 0) or 0)
             if total_size == 0:

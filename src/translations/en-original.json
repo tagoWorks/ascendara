@@ -191,6 +191,7 @@
       "retryDownload": "Retry Download",
       "openFolder": "Open Folder",
       "stopDownload": "Stop Download",
+      "contentTypeError": "Received content type error from downloader. Download link most likely expired",
       "downloadProgress": "Download Progress",
       "speed": "Speed",
       "timeRemaining": "Time Remaining",
