@@ -9,7 +9,7 @@ import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
-import { Loader, InfoIcon, CopyIcon, CheckIcon, BadgeCheckIcon, TriangleAlert, ArrowBigLeft, ExternalLink } from "lucide-react";
+import { Loader, InfoIcon, CopyIcon, CheckIcon, BadgeCheckIcon, TriangleAlert, ArrowBigLeft, ExternalLink, MessageSquareWarning } from "lucide-react";
 import imageCacheService from '../services/imageCacheService';
 import { toast } from "sonner";
 import { useLanguage } from '../contexts/LanguageContext';
@@ -103,6 +103,7 @@ export default function DownloadPage() {
     if (selectedProvider !== 'gofile' && !isValidLink && !directUrl) {
       return;
     }
+
     if (isStartingDownload) {
       console.log('Download already in progress, skipping');
       return;
@@ -169,6 +170,11 @@ export default function DownloadPage() {
 
       // First remove the ascendara:// protocol
       let downloadUrl = url.replace(/^ascendara:\/+/i, '');
+      
+      // Remove the trailing "/" if it exists
+      if (downloadUrl.endsWith('/')) {
+        downloadUrl = downloadUrl.slice(0, -1);
+      }
       
       // URL decode the remaining string
       downloadUrl = decodeURIComponent(downloadUrl);
@@ -582,14 +588,14 @@ export default function DownloadPage() {
             <img 
               src={cachedImage || `https://api.ascendara.app/v2/image/${gameData.imgID}`}
               alt={gameData.game}
-              className="w-48 h-28 object-cover rounded-lg"
+              className="w-64 h-36 object-cover rounded-lg"
             />
-            <div className="flex flex-col gap-1">
-              <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col">
+              <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold">{gameData.game}</h1>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button className="" variant="outline" size="sm">
                       {t('download.reportBroken')}
                     </Button>
                   </AlertDialogTrigger>
@@ -659,8 +665,18 @@ export default function DownloadPage() {
                     </form>
                   </AlertDialogContent>
                 </AlertDialog>
+
               </div>
+
               <div className="flex items-center gap-2">
+                {gameData.emulator && (
+                  <span className="text-sm bg-yellow-500/10 text-yellow-500 px-2 py-0.5 rounded flex items-center">
+                    <InfoIcon className="h-4 w-4 mr-1" /> {t('download.gameNeedsEmulator')}&nbsp;<a onClick={() => window.electron.openURL('https://ascendara.app/docs/troubleshooting/emulators')} className="hover:underline cursor-pointer">{t('common.learnMore')}</a>
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center mt-4 gap-2 mb-2">
                 {gameData.version && (
                   <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded">
                     {gameData.version}
@@ -708,7 +724,7 @@ export default function DownloadPage() {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <InfoIcon className="h-5 w-5 text-primary" />
+                <MessageSquareWarning className="h-5 w-5 text-primary" />
                 <span className="text-sm font-medium">
                   {t('download.dmcaNotice')}
                 </span>

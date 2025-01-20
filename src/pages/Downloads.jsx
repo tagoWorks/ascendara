@@ -504,20 +504,26 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
             )}
             {(isExtracting || isUpdating) && (
               <div className="space-y-2 mt-2">
-                <div className="relative overflow-hidden">
-                  <Progress value={undefined} />
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/30 to-transparent" 
-                       style={{ 
-                         animation: 'shimmer 2s linear infinite',
-                         transform: 'translateX(-100%)',
-                         maskImage: 'linear-gradient(to right, transparent 20%, black 50%, transparent 80%)',
-                         WebkitMaskImage: 'linear-gradient(to right, transparent 20%, black 50%, transparent 80%)'
-                       }} 
+                <div className="relative overflow-hidden rounded-full">
+                  <Progress value={undefined} className="bg-muted/30" />
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent rounded-full"
+                    style={{
+                      animation: 'shimmer 3s infinite ease-in-out',
+                      backgroundSize: '200% 100%',
+                      WebkitAnimation: 'shimmer 3s infinite ease-in-out',
+                      WebkitBackgroundSize: '200% 100%'
+                    }}
                   />
                 </div>
-                  <div className="flex flex-col items-center justify-center space-x-2 text-sm text-muted-foreground mt-1">
-                  <span className="text-lg font-semibold flex items-center gap-2"><Loader className="h-4 w-4 animate-spin" /> {isExtracting ? t('downloads.extracting') : null}</span>
-                  <span className="text-xs">{isExtracting ? t('downloads.extractingDescription') : null}</span>
+                <div className="flex flex-col items-center justify-center text-sm text-muted-foreground mt-1">
+                  <span className="text-lg font-semibold flex items-center gap-2">
+                    <Loader className="h-4 w-4 animate-spin" /> 
+                    {isExtracting ? t('downloads.extracting') : t('downloads.updating')}
+                  </span>
+                  <span className="text-xs">
+                    {isExtracting ? t('downloads.extractingDescription') : t('downloads.updatingDescription')}
+                  </span>
                 </div>
               </div>
             )}

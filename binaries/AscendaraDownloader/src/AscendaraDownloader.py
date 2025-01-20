@@ -164,11 +164,7 @@ class DownloadManager:
             if os.path.exists(settings_path):
                 with open(settings_path, 'r') as f:
                     settings = json.load(f)
-                    thread_count = settings.get('threadCount', 4)
-                    # Limit maximum threads and ensure reasonable values
-                    # Most servers handle 4-8 concurrent connections well
-                    # More than 16 threads often causes issues
-                    self.num_threads = max(1, min(thread_count, 16))  # Cap at 16 threads
+                    self.num_threads = settings.get('threadCount', 4)
             else:
                 self.num_threads = 4
         except Exception:
@@ -258,34 +254,15 @@ def download_file(link, game, online, dlc, version, size, download_dir):
             
             game_info["downloadingData"]["downloading"] = True
             start_time = time.time()
-            last_progress = 0
-            last_speed = 0
-            speed_samples = []
-            MAX_SPEED_SAMPLES = 5  # Use last 5 samples for moving average
             safe_write_json(game_info_path, game_info)
 
             def update_progress(bytes_downloaded):
-                nonlocal start_time, last_progress, last_speed, speed_samples
+                nonlocal start_time
                 progress = manager.downloaded_size / total_size if total_size > 0 else 0
-                
-                # Ensure progress never goes backwards
-                if progress >= last_progress:
-                    last_progress = progress
-                    game_info["downloadingData"]["progressCompleted"] = f"{progress * 100:.2f}"
-                
+                game_info["downloadingData"]["progressCompleted"] = f"{progress * 100:.2f}"
+
                 elapsed_time = time.time() - start_time
-                current_speed = manager.downloaded_size / elapsed_time if elapsed_time > 0 else 0
-                
-                # Use moving average for download speed
-                speed_samples.append(current_speed)
-                if len(speed_samples) > MAX_SPEED_SAMPLES:
-                    speed_samples.pop(0)
-                download_speed = sum(speed_samples) / len(speed_samples)
-                
-                # Ensure speed doesn't drop too drastically
-                if download_speed < last_speed * 0.5 and last_speed > 0:
-                    download_speed = last_speed * 0.5
-                last_speed = download_speed
+                download_speed = manager.downloaded_size / elapsed_time if elapsed_time > 0 else 0
 
                 if download_speed < 1024:
                     game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed:.2f} B/s"
@@ -297,8 +274,6 @@ def download_file(link, game, online, dlc, version, size, download_dir):
                 remaining_size = total_size - manager.downloaded_size
                 if download_speed > 0:
                     time_until_complete = remaining_size / download_speed
-                    # Cap maximum ETA at 24 hours to prevent unrealistic estimates
-                    time_until_complete = min(time_until_complete, 86400)
                     minutes, seconds = divmod(time_until_complete, 60)
                     hours, minutes = divmod(minutes, 60)
                     if hours > 0:

@@ -2,13 +2,15 @@ import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Switch } from '../components/ui/switch';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { CircleAlert, Languages, Zap, Loader, Hand } from "lucide-react";
+import { CircleAlert, Languages, Zap, Loader, Hand, RefreshCw } from "lucide-react";
+import gameService from '../services/gameService';
 
 const themes = [
   // Light themes
@@ -404,6 +406,38 @@ function Settings() {
     }
   };
 
+  const [apiMetadata, setApiMetadata] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const data = await gameService.getAllGames();
+        setApiMetadata(data.metadata);
+      } catch (error) {
+        console.error('Error fetching metadata:', error);
+      }
+    };
+    fetchMetadata();
+  }, []);
+
+  const handleRefreshIndex = async () => {
+    setIsRefreshing(true);
+    try {
+      const lastModified = await gameService.checkMetadataUpdate();
+      if (lastModified) {
+        const freshData = await gameService.getAllGames();
+        setApiMetadata(freshData.metadata);
+      }
+    } catch (error) {
+      console.error('Error checking for updates:', error);
+    } finally {
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 500);
+    }
+  };
+
   // Show loading state
   if (isLoading) {
     return (
@@ -572,57 +606,64 @@ function Settings() {
             {/* Game Sources Card */}
             <Card className="p-6">
               <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.gameSources')}</h2>
+              <p className="text-sm text-muted-foreground mb-6">{t('settings.gameSourcesDescription')}</p>
+              
               <div className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t('settings.primarySource')}</Label>
-                      <p className="text-sm text-muted-foreground">{t('settings.primarySourceDescription')}</p>
-                    </div>
-                    <Select 
-                      value={settings.primaryGameSource}
-                      onValueChange={handlePrimarySourceChange}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder={t('settings.selectSource')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="steamrip">SteamRip</SelectItem>
-                        <SelectItem disabled value="steamunlocked">SteamUnlocked</SelectItem>
-                        <SelectItem disabled value="fitgirlrepacks">FitgirlRepacks</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Separator />
-
+                {/* Source Status Section */}
+                <div>
+                  <h3 className="text-sm font-medium mb-3">{t('settings.sourceStatus')}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">{t('settings.sourceStatusDescription')}</p>
+                  
                   <div className="space-y-4">
-                    <h3 className="text-sm font-medium">{t('settings.enabledSources')}</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Label>SteamRip</Label>
-                        <Switch
-                          disabled
-                          checked={settings.enabledSources.steamrip}
-                          onCheckedChange={() => handleSourceToggle('steamrip')}
-                        />
+                    {/* SteamRip Status */}
+                    <div className="flex items-center justify-between p-4 rounded-lg border">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Label className="font-medium">SteamRip</Label>
+                          <Badge variant="success" className="text-xs">{t('settings.sourceActive')}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{t('settings.steamripDescription')}</p>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <Label>SteamUnlocked</Label>
-                        <Switch
-                          disabled
-                          checked={settings.enabledSources.steamunlocked}
-                          onCheckedChange={() => handleSourceToggle('steamunlocked')}
-                        />
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline" 
+                          className="whitespace-nowrap"
+                          size="sm"
+                          onClick={() => window.electron.openURL('https://ascendara.app/sources/steamrip')}
+                        >
+                          {t('common.learnMore')}
+                        </Button>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <Label>FitgirlRepacks</Label>
-                        <Switch
-                          disabled
-                          checked={settings.enabledSources.fitgirlrepacks}
-                          onCheckedChange={() => handleSourceToggle('fitgirlrepacks')}
-                        />
-                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Source Information */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium">{t('settings.sourceInfo')}</h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefreshIndex}
+                      disabled={isRefreshing}
+                      className="flex items-center gap-2"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                      {isRefreshing ? t('search.refreshingIndex') : t('search.refreshIndex')}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">{t('settings.lastUpdated')}</Label>
+                      <p className="text-sm font-medium">{apiMetadata?.getDate || '-'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">{t('settings.totalGames')}</Label>
+                      <p className="text-sm font-medium">{apiMetadata?.games?.toLocaleString() || '-'}</p>
                     </div>
                   </div>
                 </div>

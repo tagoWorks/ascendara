@@ -260,6 +260,20 @@
       
       "general": "General",
       "gameSources": "Game Sources",
+      "gameSourcesDescription": "Ascendara uses trusted sources to provide you with a safe and reliable gaming experience",
+      "sourceStatus": "Source Status",
+      "sourceStatusDescription": "Current status of game providers",
+      "sourceActive": "Active",
+      "sourceInactive": "Inactive",
+      "sourceMaintenanceMode": "Under Maintenance",
+      "sourceInfo": "Source Information",
+      "lastUpdated": "Last Updated",
+      "totalGames": "Total Games",
+      "averageSize": "Average Game Size",
+      "downloadSpeed": "Download Speed",
+      "steamripDescription": "SteamRip is currently our primary and most reliable game source, offering a vast collection of games with regular updates.",
+      "steamunlockedDescription": "SteamUnlocked is temporarily unavailable while we improve its integration.",
+      "fitgirlDescription": "FitGirl Repacks integration is coming soon, offering highly compressed game installations.",
       "theme": "Theme",
       "languageSettings": "Language Settings",
       "quickLinks": "Quick Links",
@@ -292,11 +306,6 @@
       "matureContent": "Mature Content",
       "matureContentDescription": "Allow games with mature themes to appear in search results",
       
-      "primarySource": "Primary Source",
-      "primarySourceDescription": "Select your preferred game source",
-      "selectSource": "Select source",
-      "enabledSources": "Enabled Sources",
-      
       "lightThemes": "Light Themes",
       "darkThemes": "Dark Themes",
       
@@ -318,7 +327,8 @@
     },
     "download": {
       "title": "Download Game",
-      "reportBroken": "Report Broken Game",
+      "reportBroken": "Report",
+      "gameNeedsEmulator": "This requires an emulator to run.",
       "reportReason": "Why are you reporting this game?",
       "reportDescription": "Please provide more details about the issue",
       "reportError": "Please provide a reason and details for your report",
