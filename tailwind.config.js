@@ -45,6 +45,10 @@ module.exports = {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' }
         },
+        shine: {
+          '0%': { backgroundPosition: '200% 0' },
+          '100%': { backgroundPosition: '-200% 0' },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -52,6 +56,7 @@ module.exports = {
         "collapsible-down": "collapsible-down 0.2s ease-out",
         "collapsible-up": "collapsible-up 0.2s ease-out",
         shimmer: 'shimmer 3s ease-in-out infinite',
+        shine: 'shine 3s ease-in-out infinite',
       },
     },
   },
@@ -77,6 +82,9 @@ module.exports = {
           '--shimmer-from': 'rgb(var(--color-primary) / 0.5)',
           '--shimmer-via': 'rgb(var(--color-primary) / 1)',
           '--shimmer-to': 'rgb(var(--color-primary) / 0.5)',
+          '--shine-from': 'rgb(var(--color-primary) / 0.5)',
+          '--shine-via': 'rgb(var(--color-primary) / 1)',
+          '--shine-to': 'rgb(var(--color-primary) / 0.5)',
         },
         '[data-theme="dark"]': {
           '--color-background': '15 23 42',

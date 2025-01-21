@@ -474,11 +474,16 @@ const Welcome = ({ welcomeData, onComplete }) => {
 
   const handleSelectDirectory = async () => {
     const directory = await window.electron.openDirectoryDialog();
+    const canCreateFiles = await window.electron.canCreateFiles(directory);
+    if (!canCreateFiles) {
+      setWarningMessage(t('welcome.cannotWriteWarning'));
+      return;
+    }
     if (directory) {
       setDownloadDirectory(directory);
       const { freeSpace } = await window.electron.getDriveSpace(directory);
       if (freeSpace < 40 * 1024 * 1024 * 1024) {
-        setWarningMessage('Woah! You have less than 40 GB of free space on the selected drive. Consider clearing some space or selecting a different drive.');
+        setWarningMessage(t('welcome.notEnoughSpaceWarning'));
       } else {
         setWarningMessage('');
       }
@@ -753,7 +758,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   Ascendara&nbsp;
                 </span>
                 <span className="relative">
-                  <span className="animate-shimmer bg-[linear-gradient(110deg,var(--shimmer-from),45%,var(--shimmer-via),55%,var(--shimmer-to))] bg-[length:200%_100%] inline-block bg-clip-text text-transparent">
+                  <span className="animate-shine bg-[linear-gradient(110deg,var(--shine-from),45%,var(--shine-via),55%,var(--shine-to))] bg-[length:200%_100%] inline-block bg-clip-text text-transparent">
                     v7
                   </span>
                 </span>
@@ -902,7 +907,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                       {t('welcome.welcomeToAscendara')}&nbsp;
                     </span>
                     <span className="relative">
-                      <span className="animate-shimmer bg-[linear-gradient(110deg,var(--shimmer-from),45%,var(--shimmer-via),55%,var(--shimmer-to))] bg-[length:200%_100%] inline-block bg-clip-text text-transparent">
+                      <span className="animate-shine bg-[linear-gradient(110deg,var(--shine-from),45%,var(--shine-via),55%,var(--shine-to))] bg-[length:200%_100%] inline-block bg-clip-text text-transparent">
                         v7
                       </span>
                     </span>

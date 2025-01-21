@@ -74,6 +74,7 @@ contextBridge.exposeInMainWorld('electron', {
   // File and Directory Management
   openGameDirectory: (game, isCustom) => ipcRenderer.invoke('open-game-directory', game, isCustom),
   openDirectoryDialog: () => ipcRenderer.invoke('open-directory-dialog'),
+  canCreateFiles: (directory) => ipcRenderer.invoke('can-create-files', directory),
   openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
   getDownloadDirectory: () => ipcRenderer.invoke('get-download-directory'),
   getDriveSpace: (directory) => ipcRenderer.invoke('get-drive-space', directory),

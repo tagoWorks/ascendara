@@ -416,6 +416,16 @@ ipcMain.handle('get-game-image', async (event, game) => {
   }
 });
 
+ipcMain.handle('can-create-files', async (event, directory) => {
+  try {
+    const filePath = path.join(directory, 'test.txt');
+    fs.writeFileSync(filePath, 'test');
+    fs.unlinkSync(filePath);
+    return true;
+  } catch (error) {
+    return false;
+  }
+});
 
 // Download the file
 ipcMain.handle('download-file', async (event, link, game, online, dlc, version, imgID, size) => {

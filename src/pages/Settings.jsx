@@ -9,7 +9,7 @@ import { Label } from '../components/ui/label';
 import { Card } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { CircleAlert, Languages, Zap, Loader, Hand, RefreshCw } from "lucide-react";
+import { ShieldAlert, Languages, Zap, Loader, Hand, RefreshCw, CircleAlert } from "lucide-react";
 import gameService from '../services/gameService';
 
 const themes = [
@@ -142,6 +142,7 @@ function Settings() {
   const { theme, setTheme } = useTheme();
   const { language, changeLanguage, t } = useLanguage();
   const [downloadPath, setDownloadPath] = useState('');
+  const [canCreateFiles, setCanCreateFiles] = useState(true);
   const [version, setVersion] = useState('');
   const [isDownloaderRunning, setIsDownloaderRunning] = useState(false);
   const [settings, setSettings] = useState({
@@ -261,6 +262,15 @@ function Settings() {
     try {
       const directory = await window.electron.openDirectoryDialog();
       if (directory) {
+        const canCreateFiles = await window.electron.canCreateFiles(directory);
+        setCanCreateFiles(canCreateFiles);
+        if (!canCreateFiles) {
+          return;
+        } else {
+          if (canCreateFiles) {
+            setCanCreateFiles(true);
+          }
+        }
         setDownloadPath(directory);
         // Update settings with new directory and trigger immediate save
         const newSettings = {
@@ -479,22 +489,6 @@ function Settings() {
                   </div>
                   
                   <div>
-                    <Label htmlFor="downloadPath">{t('settings.downloadLocation')}</Label>
-                    <div className="flex gap-2">
-                      <Input 
-                        id="downloadPath"
-                        value={downloadPath}
-                        readOnly
-                        className="flex-1"
-                      />
-                      <Button className="text-secondary" onClick={handleDirectorySelect}>
-                        {t('settings.selectDirectory')}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="mb-6">
-                    <Label>{t('settings.downloadThreads')}</Label>
                     {isDownloaderRunning && (
                       <div className="mt-2 flex items-center gap-2 text-red-600 dark:text-red-500">
                         <CircleAlert size={14} />
@@ -503,6 +497,30 @@ function Settings() {
                         </p>
                       </div>
                     )}
+                    <Label htmlFor="downloadPath">{t('settings.downloadLocation')}</Label>
+                    {!canCreateFiles && (
+                      <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-500">
+                        <ShieldAlert size={18} />
+                        <p className="text-sm font-medium">
+                          {t('settings.downloadLocationWarning')}
+                        </p>
+                      </div>
+                    )}
+                    <div className="flex gap-2 mt-2">
+                      <Input 
+                        id="downloadPath"
+                        value={downloadPath}
+                        readOnly
+                        className="flex-1"
+                      />
+                      <Button disabled={isDownloaderRunning} className="text-secondary" onClick={handleDirectorySelect}>
+                        {t('settings.selectDirectory')}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <Label>{t('settings.downloadThreads')}</Label>
                     <Select
                       disabled={isDownloaderRunning}
                       value={settings.threadCount === 0 ? 'custom' : (settings.threadCount || 4).toString()}

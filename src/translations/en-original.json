@@ -292,6 +292,7 @@
       },
       "highThreadWarning": "High thread counts may cause download issues. Consider using 4-8 threads for better reliability.",
       "downloaderRunningWarning": "You cannot change this setting while a download is in progress",
+      "downloadLocationWarning": "Ascendara cannot write files to the chosen directory. Change was not saved.",
       "customThreadCount": "Custom Thread Count",
       "customThreadCountDesc": "Higher values may improve download speed but require more CPU power and memory. Maximum: 32 threads",
       
@@ -470,6 +471,8 @@
       "languageNote": "You can change your language later in Settings",
       "downloadLocation": "Choose Download Location",
       "downloadLocationDesc": "Select where you want your games to be downloaded",
+      "notEnoughSpaceWarning": "Woah! You have less than 40 GB of free space on the selected drive. Consider clearing some space or selecting a different drive.",
+      "cannotWriteWarning": "Looks like Ascendara cannot write files to the chosen directory. Please select a different directory.",
       "browseLocation": "Browse Location",
       "extension": "Get the Download Handler Extension",
       "extensionDesc": "Get the Ascendara Download Handler extension for Chrome or Firefox",
