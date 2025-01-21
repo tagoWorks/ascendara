@@ -152,13 +152,9 @@ function Settings() {
     autoCreateShortcuts: true,
     sendAnalytics: true,
     autoUpdate: true,
-    primaryGameSource: 'steamrip',
     language: 'en',
     theme: 'purple',
     threadCount: 4,
-    enabledSources: {
-      steamrip: true,
-    }
   });
   
   // Track if settings have been initialized
@@ -279,42 +275,6 @@ function Settings() {
       console.error('Error selecting directory:', error);
     }
   }, [settings]);
-
-  const handleSourceToggle = useCallback((source) => {
-    setSettings(prev => {
-      const newSettings = {
-        ...prev,
-        enabledSources: {
-          ...prev.enabledSources,
-          [source]: !prev.enabledSources[source]
-        }
-      };
-      return newSettings;
-    });
-  }, []);
-
-  const handleAscendaraSettingChange = useCallback((setting, value) => {
-    setSettings(prev => {
-      const newSettings = {
-        ...prev,
-        ascendaraSettings: {
-          ...prev.ascendaraSettings,
-          [setting]: value
-        }
-      };
-      return newSettings;
-    });
-  }, []);
-
-  const handlePrimarySourceChange = useCallback((value) => {
-    setSettings(prev => {
-      const newSettings = {
-        ...prev,
-        primaryGameSource: value
-      };
-      return newSettings;
-    });
-  }, []);
 
   const handleLanguageChange = useCallback((value) => {
     // Ensure value is a string

@@ -31,7 +31,7 @@ let isDev = false;
 
 
 
-const CURRENT_VERSION = "7.5.7";
+const CURRENT_VERSION = "7.5.8";
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { Client } = require('discord-rpc');
 const disk = require('diskusage');
@@ -866,10 +866,6 @@ ipcMain.handle('get-settings', () => {
       threadCount: 4,
       language: 'en',
       theme: 'purple',
-      primaryGameSource: 'steamrip',
-      enabledSources: {
-        steamrip: true,
-      },
       downloadDirectory: settings.downloadDirectory || ''
     };
 
@@ -900,11 +896,9 @@ ipcMain.handle('get-settings', () => {
       seeInappropriateContent: false,
       sendAnalytics: true,
       autoUpdate: true,
-      primaryGameSource: 'steamrip',
+      autoCreateShortcuts: true,
+      threadCount: 4,
       language: 'en',
-      enabledSources: {
-        steamrip: true,
-      },
       downloadDirectory: ''
     };
     return defaultSettings;
@@ -1750,18 +1744,13 @@ function createWindow() {
     width: 1600,
     height: 800,
     frame: false,
-    titleBarStyle: 'hidden',
-    titleBarOverlay: {
-      color: 'rgba(0, 0, 0, 0)',
-      symbolColor: '#000000',
-      height: 28
-    },
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true,
       contextIsolation: true,
     }
   });
+
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
   } else {
@@ -1769,14 +1758,6 @@ function createWindow() {
   }
 
   mainWindow.setMinimumSize(1600, 800);
-
-  mainWindow.on('maximize', () => {
-    mainWindow.webContents.send('window-state-changed', true);
-  });
-
-  mainWindow.on('unmaximize', () => {
-    mainWindow.webContents.send('window-state-changed', false);
-  });
 }
 
 // Window visibility control functions

@@ -34,3 +34,4 @@ build/config.prod.js
 build/icon.ico
 /installer/build
 /binaries/AscendaraCrashReporter/build
+/server

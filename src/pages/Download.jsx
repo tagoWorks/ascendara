@@ -9,7 +9,7 @@ import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
-import { Loader, InfoIcon, CopyIcon, CheckIcon, BadgeCheckIcon, TriangleAlert, ArrowBigLeft, ExternalLink, MessageSquareWarning } from "lucide-react";
+import { Loader, InfoIcon, CopyIcon, CheckIcon, BadgeCheckIcon, TriangleAlert, ArrowBigLeft, ExternalLink, MessageSquareWarning, CircleSlash } from "lucide-react";
 import imageCacheService from '../services/imageCacheService';
 import { toast } from "sonner";
 import { useLanguage } from '../contexts/LanguageContext';
@@ -595,7 +595,7 @@ export default function DownloadPage() {
                 <h1 className="text-2xl font-bold">{gameData.game}</h1>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button className="" variant="outline" size="sm">
+                    <Button className="fixed right-8" variant="outline" size="sm">
                       {t('download.reportBroken')}
                     </Button>
                   </AlertDialogTrigger>
@@ -668,15 +668,27 @@ export default function DownloadPage() {
 
               </div>
 
+
               <div className="flex items-center gap-2">
                 {gameData.emulator && (
                   <span className="text-sm bg-yellow-500/10 text-yellow-500 px-2 py-0.5 rounded flex items-center">
-                    <InfoIcon className="h-4 w-4 mr-1" /> {t('download.gameNeedsEmulator')}&nbsp;<a onClick={() => window.electron.openURL('https://ascendara.app/docs/troubleshooting/emulators')} className="hover:underline cursor-pointer">{t('common.learnMore')}</a>
+                    <CircleSlash className="h-4 w-4 mr-1" /> {t('download.gameNeedsEmulator')}&nbsp;<a onClick={() => window.electron.openURL('https://ascendara.app/docs/troubleshooting/emulators')} className="hover:underline cursor-pointer">{t('common.learnMore')}</a>
+                  </span>
+                )}
+                {gameData.category?.includes("Virtual Reality") && (
+                  <span className="text-sm bg-purple-500/10 text-foreground px-2 py-0.5 rounded flex items-center">
+                    <svg className="text-foreground p-0.5" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M2 10C2 8.89543 2.89543 8 4 8H20C21.1046 8 22 8.89543 22 10V17C22 18.1046 21.1046 19 20 19H16.1324C15.4299 19 14.7788 18.6314 14.4174 18.029L12.8575 15.4292C12.4691 14.7818 11.5309 14.7818 11.1425 15.4292L9.58261 18.029C9.22116 18.6314 8.57014 19 7.86762 19H4C2.89543 19 2 18.1046 2 17V10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M3.81253 6.7812C4.5544 5.6684 5.80332 5 7.14074 5H16.8593C18.1967 5 19.4456 5.6684 20.1875 6.7812L21 8H3L3.81253 6.7812Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                      <span className="ml-1text-foreground">&nbsp;{t('download.gameNeedsVR')}</span>
                   </span>
                 )}
               </div>
 
+
               <div className="flex items-center mt-4 gap-2 mb-2">
+                
                 {gameData.version && (
                   <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded">
                     {gameData.version}

@@ -72,7 +72,7 @@
       },
       "crashScreen": {
         "title": "Oh no...",
-        "description": "Ascendara did not like what just happened. No worries, if you have analytics enabled this error has been tracked and we'll get this fixed.",
+        "description": "Ascendara did not like what just happened. No worries, if you have analytics enabled this error has been tracked and the developer will get this fixed.",
         "reload": "Reload Ascendara"
       }
     },
@@ -261,8 +261,8 @@
       "general": "General",
       "gameSources": "Game Sources",
       "gameSourcesDescription": "Ascendara uses trusted sources to provide you with a safe and reliable gaming experience",
-      "sourceStatus": "Source Status",
-      "sourceStatusDescription": "Current status of game providers",
+      "sourceStatus": "Ascendara Sources",
+      "sourceStatusDescription": "Current sources used by Ascendara for game downloads",
       "sourceActive": "Active",
       "sourceInactive": "Inactive",
       "sourceMaintenanceMode": "Under Maintenance",
@@ -271,9 +271,7 @@
       "totalGames": "Total Games",
       "averageSize": "Average Game Size",
       "downloadSpeed": "Download Speed",
-      "steamripDescription": "SteamRip is currently our primary and most reliable game source, offering a vast collection of games with regular updates.",
-      "steamunlockedDescription": "SteamUnlocked is temporarily unavailable while we improve its integration.",
-      "fitgirlDescription": "FitGirl Repacks integration is coming soon, offering highly compressed game installations.",
+      "steamripDescription": "SteamRip is currently the primary and only source for Ascendara. It is secure and reliable, offering a huge collection of games with regular updates.",
       "theme": "Theme",
       "languageSettings": "Language Settings",
       "quickLinks": "Quick Links",
@@ -329,6 +327,7 @@
       "title": "Download Game",
       "reportBroken": "Report",
       "gameNeedsEmulator": "This requires an emulator to run.",
+      "gameNeedsVR": "This game may require a virtual reality headset to run.",
       "reportReason": "Why are you reporting this game?",
       "reportDescription": "Please provide more details about the issue",
       "reportError": "Please provide a reason and details for your report",

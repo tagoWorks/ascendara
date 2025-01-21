@@ -9,7 +9,7 @@ import {
   AlertDialogCancel,
   AlertDialogFooter,
 } from './ui/alert-dialog';
-import { AlertTriangle, Loader2, WifiOff, Hammer } from 'lucide-react';
+import { AlertTriangle, Loader2, WifiOff, Hammer, X, Minus } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const MenuBar = () => {
@@ -142,7 +142,7 @@ const MenuBar = () => {
       className="fixed h-10 flex items-center select-none z-50 w-full"
       style={{ WebkitAppRegion: 'drag' }}
     >
-      <div className="flex-1 px-3 flex items-center h-full">
+      <div className="flex-1 px-3 flex items-center h-full mt-4 ml-2">
         <div className="flex items-center">
           {iconData && (
             <img 
@@ -199,7 +199,20 @@ const MenuBar = () => {
         )}
         <div className="flex-1" />
       </div>
-
+      <div className="window-controls flex items-center mr-2">
+        <button
+          onClick={() => window.electron.minimizeWindow()}
+          className="p-1 hover:bg-gray-200 rounded"
+        >
+          <Minus className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => window.electron.closeWindow()}
+          className="p-1 hover:bg-red-500 hover:text-white rounded ml-1"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <AlertDialogContent className="max-w-md bg-background">
           <AlertDialogHeader>
