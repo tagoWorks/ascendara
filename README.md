@@ -1,80 +1,106 @@
 <div align="center">
-    </a>
-    <br />
-    <img align="center" width="128" height="128" src="./public/icon.png">
-    <br />
-    <br />
-    
-    
-   ![GitHub last commit](https://img.shields.io/github/last-commit/tagoWorks/ascendara)
-   ![GitHub issues](https://img.shields.io/github/issues-raw/tagoWorks/ascendara)
-   
+    <img align="center" width="128" height="128" src="./public/icon.png" alt="Ascendara Logo">
+    <h1>Ascendara</h1>
+    <p><em>The best way to test games before you buy them.</em></p>
+    <p>
+        <img src="https://img.shields.io/github/last-commit/tagoWorks/ascendara" alt="Last Commit">
+        <img src="https://img.shields.io/github/issues-raw/tagoWorks/ascendara" alt="Issues">
+        <a href="https://ascendara.app/"><img src="https://img.shields.io/badge/website-ascendara.app-blue" alt="Website"></a>
+        <a href="./LICENSE"><img src="https://img.shields.io/badge/license-CC%20BY--NC%201.0-green" alt="License"></a>
+    </p>
 </div>
 
-> With Ascendara, you can easily download, manage, and play pre-installed games without needs to go through the hassle of extracting, installing, and moving files. Ascendara's game list comes from a custom webscraper which for now only has games from [STEAMRIP](https://steamrip.com/), but plans for more sources later on.
+## 🎮 About
 
+### Ascendara is completely developed and maintained by a [single developer](https://tago.works).
 
-# Preview of Ascendara
+Ascendara simplifies your pirating experience by providing a seamless way to download, manage, and play the pre-installed games. No more hassle with extracting, installing, or moving files. The game library is powered by a custom webscraper, currently featuring games from [STEAMRIP](https://steamrip.com/), with plans to expand to more sources.
 
-#### Download Ascendara V7 right now https://ascendara.app/
+## ✨ Features
 
-Home Page
-![(home)](./readme/home.png)
+- 🎯 One-click game downloads and installations
+- 📖 Detailed documentation for users & developers
+- 📚 Organized game library management
+- 🔍 Smart search functionality
+- 🎮 Auto-created game shortcuts
+- 🎨 Customizable themes
 
-Search Page
-![(search)](./readme/search.png)
+## 🖼️ Preview
 
-Library Page
-![(library)](./readme/library.png)
+### Download Latest Version
+🚀 [Download the Ascendara Installer](https://ascendara.app/)
 
-Downloads Page
-![(downloads)](./readme/downloads.png)
+<details>
+<summary>📸 Screenshots</summary>
 
+### Home Page
+![Home Page](./readme/home.png)
 
-# Building the app from source [(view wiki)](https://ascendara.app/docs/developer/build-from-source)
-### Make sure you have all the dependencies required to build the app from source. [View requirements here](https://ascendara.app/docs/developer/build-from-source#prerequisites)
+### Search Page
+![Search Page](./readme/search.png)
 
-1. Clone the repository
-    ```sh
-    git clone https://github.com/tagoWorks/ascendara.git
-    ```
+### Library Page
+![Library Page](./readme/library.png)
 
-2. Install requirements
-    ```sh
-    npm install -r
-    ```
-    
-3. Build the React-Electron app (runs python script)
-    ```sh
-    npm run dist
-    ```
-    
-# Development Roadmap
+### Downloads Page
+![Downloads Page](./readme/downloads.png)
 
-### Ascendara App
-- [ ] Auto create shortcuts
-- [ ] Be able to run scripts optionally instead of execute game file
-- [x] Add news section
-- [x] Make game searches less harsh
-- [ ] Storage information ontop of games library
-- [x] Theme settings
-- [x] Add different filtering options
-- [ ] Add total time played
-- [x] Add tooltips
-- [x] Populate pages
-- [ ] Add notifications for games status
-- [ ] Add different sources
-- [x] Welcome to app screens/info
-- [x] Move tabs to the top left
-- [x] Make seperate library, downloads, and browse
-- [x] Add your own games
-- [x] Create Public API
-- [ ] Create Retry Download & Extract
-- [ ] Add mulitple checks to alert if antivirus ruined a operation
-- [ ] Add older game versions
-- [x] Sort by popularity
+</details>
 
-# License & Contact 
-This project is published under the [CC BY-NC 1.0 Universal License (Non-Commercial Use Only)](./LICENSE)
+## 🛠️ Building from Source
 
-If you are interested in working together, or want to get in contact with me please email me at santiago@tago.works
+For detailed instructions, check out the [Developer Docs](https://ascendara.app/docs/developer/build-from-source).
+
+### Prerequisites
+Before building, ensure you have all required dependencies. [View full requirements](https://ascendara.app/docs/developer/build-from-source#prerequisites).
+
+### Quick Start
+
+> ⚠️ **Note:** Some API features like reporting and analytics services will not work on the public version of the app. Additionally, you will not be able to run games in development mode. Check the [Developer Docs](https://ascendara.app/docs/developer/build-from-source#important-limitations) for more information.
+
+1. **Clone the Repository**
+   ```sh
+   git clone https://github.com/tagoWorks/ascendara.git
+   ```
+
+2. **Install Dependencies**
+   ```sh
+   npm install -r
+   ```
+
+3. **Build the App**
+   ```sh
+   npm run dist
+   ```
+
+## 🗺️ Development Roadmap
+
+### 🎯 Current Goals
+- [ ] Additional game sources integration
+- [ ] Retry Download & Extract functionality
+- [ ] Enhanced antivirus operation checks
+- [ ] Legacy game version support
+- [ ] Improved download management (pausing, ending, resuming)
+- [ ] Game dependencies reinstallation option
+
+### ✅ Completed Features
+- [x] Complete UI overhaul (V7)
+- [x] Automatic shortcut creation
+- [x] Enhanced search algorithms
+- [x] Theme customization
+- [x] Advanced filtering options
+- [x] Comprehensive tooltips
+- [x] Page population
+- [x] Welcome screens
+- [x] Improved tab navigation
+- [x] Separate library, downloads, and browse sections
+- [x] Custom game addition support
+- [x] Public API creation
+- [x] Popularity-based sorting
+
+## 📝 License & Contact
+
+This project is licensed under the [CC BY-NC 1.0 Universal License](./LICENSE) (Non-Commercial Use Only)
+
+📧 **Get in Touch**  
+Interested in collaboration? Contact me at [santiago@tago.works](mailto:santiago@tago.works)
