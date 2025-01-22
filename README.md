@@ -22,7 +22,7 @@ Ascendara simplifies your pirating experience by providing a seamless way to dow
 - 📖 Detailed documentation for users & developers
 - 📚 Organized game library management
 - 🔍 Smart search functionality
-- 🎮 Auto-created game shortcuts
+- 🔄 Regular updates
 - 🎨 Customizable themes
 
 ## 🖼️ Preview
