@@ -18,8 +18,6 @@ Ascendara simplifies your pirating experience by providing a seamless way to dow
 
 ## ✨ Features
 
-### 🖥️ App Features
-
 - 🌐 Support for 8 languages 
 <details>
 <summary>Click to expand</summary>
