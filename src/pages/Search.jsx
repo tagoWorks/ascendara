@@ -14,11 +14,11 @@ import {
   Gamepad2,
   Gift,
   InfoIcon,
-  RefreshCw,
+  RefreshCw, X
 } from 'lucide-react';
 import gameService from '../services/gameService';
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../components/ui/alert-dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogCancel, AlertDialogTitle, AlertDialogTrigger } from "../components/ui/alert-dialog";
 import { useNavigate } from 'react-router-dom';
 import imageCacheService from '../services/imageCacheService';
 
@@ -265,6 +265,9 @@ const Search = memo(() => {
                   <InfoIcon className="w-4 h-4 cursor-pointer hover:text-foreground transition-colors" />
                 </AlertDialogTrigger>
                 <AlertDialogContent>
+                  <AlertDialogCancel className="absolute top-2 right-2 cursor-pointer hover:text-foreground transition-colors">
+                    <X className="w-4 h-4" />
+                  </AlertDialogCancel>
                   <AlertDialogHeader>
                     <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('search.indexedInformation')}</AlertDialogTitle>
                     <div className="space-y-2 mt-4 text-sm text-muted-foreground">
