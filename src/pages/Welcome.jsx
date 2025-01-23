@@ -14,7 +14,7 @@ import {
   Palette,
   Zap,
   Layout,
-  CheckCircle,
+  CircleCheck,
   Loader,
   XCircle,
   Globe2
@@ -366,7 +366,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
         setDependencyStatus(prevStatus => {
             const updatedStatus = {
                 ...prevStatus,
-                [label]: { installed: true, icon: <CheckCircle className="w-5 h-5 text-green-500" /> },
+                [label]: { installed: true, icon: <CircleCheck className="w-5 h-5 text-green-500" /> },
             };
             const allInstalled = Object.values(updatedStatus).every(dep => dep.installed);
             if (allInstalled) {
@@ -436,7 +436,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
             setDependencyStatus(prevStatus => {
                 const updatedStatus = {
                     ...prevStatus,
-                    [label]: { installed: true, icon: <CheckCircle className="w-5 h-5 text-green-500" /> },
+                    [label]: { installed: true, icon: <CircleCheck className="w-5 h-5 text-green-500" /> },
                 };
 
                 // Check if all dependencies are installed after updating the status
@@ -826,8 +826,8 @@ const Welcome = ({ welcomeData, onComplete }) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('welcome.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleInstallDependencies}>{t('welcome.continue')}</AlertDialogAction>
+            <AlertDialogCancel className="text-primary">{t('welcome.cancel')}</AlertDialogCancel>
+            <AlertDialogAction className="text-secondary bg-primary" onClick={handleInstallDependencies}>{t('welcome.continue')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -841,9 +841,8 @@ const Welcome = ({ welcomeData, onComplete }) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('welcome.cancel')}</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={async () => {
+            <AlertDialogCancel className="text-primary" >{t('welcome.cancel')}</AlertDialogCancel>
+            <AlertDialogAction className="text-secondary bg-primary" onClick={async () => {
                 setShowSkipAlert(false);
                 handleExit(true);
               }}
@@ -863,7 +862,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setShowDepsErrorAlert(false)}>
+            <AlertDialogAction className="text-secondary bg-primary" onClick={() => setShowDepsErrorAlert(false)}>
               {t('welcome.okay')}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -879,8 +878,8 @@ const Welcome = ({ welcomeData, onComplete }) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleSkip}>{t('welcome.skip')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRestart}>{t('welcome.restart')}</AlertDialogAction>
+            <AlertDialogCancel className="text-primary" onClick={handleSkip}>{t('welcome.skip')}</AlertDialogCancel>
+            <AlertDialogAction className="text-secondary bg-primary" onClick={handleRestart}>{t('welcome.restart')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

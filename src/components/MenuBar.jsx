@@ -142,7 +142,7 @@ const MenuBar = () => {
       className="fixed h-10 flex items-center select-none z-50 w-full"
       style={{ WebkitAppRegion: 'drag' }}
     >
-      <div className="flex-1 px-3 flex items-center h-full mt-4 ml-2">
+      <div className="flex-1 px-3 flex items-center h-full mt-2 ml-0.5">
         <div className="flex items-center">
           {iconData && (
             <img 
@@ -292,7 +292,7 @@ const MenuBar = () => {
             </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-card/50 hover:bg-card text-foreground border-0">
+            <AlertDialogCancel className="text-primary">
               {t('common.close')}
             </AlertDialogCancel>
           </AlertDialogFooter>

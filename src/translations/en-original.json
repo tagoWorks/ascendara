@@ -182,13 +182,17 @@
       "downloadSpeed": "Download Speed",
       "estimatedTime": "Estimated Time",
       "pause": "Pause",
-      "resume": "Resume",
-      "cancel": "Cancel",
+      "actions": {
+        "retryDownload": "Retry Download",
+        "cancelAndDelete": "Cancel & Delete",
+        "stopDownload": "Stop Download",
+        "openFolder": "Open Folder"
+      },
       "activeDownloads": "Active Downloads",
       "downloadQueue": "Download Queue",
       "downloadComplete": "Download Complete",
       "downloadFailed": "Download Failed",
-      "retryDownload": "Retry Download",
+      "retryDownload": "Retrying Downloads",
       "openFolder": "Open Folder",
       "stopDownload": "Stop Download",
       "contentTypeError": "Received content type error from downloader. Download link most likely expired",
@@ -217,8 +221,8 @@
       "extractingDescription": "Extracting game files may take up to 30 minutes depending on the file size.",
       "updating": "Updating game...",
       "firstTimeDownload": {
-        "title": "First Time Download",
-        "message": "Downloads will appear here. You can track progress, manage downloads, and see download history.",
+        "title": "Downloading on Ascendara",
+        "message": "Ascendara will continue to download games in the background if you close the application. You can stop the download at any time by clicking the action button then clicking the \"Stop Download\" button.",
         "understand": "I understand"
       },
       "activeDownload": "active download",
@@ -230,8 +234,7 @@
       "eta": "ETA:",
       "extractingFiles": "Extracting files...",
       "updatingGame": "Updating game...",
-      "retryDownloadDescription": "Enter the new download link to retry downloading",
-      "enterDownloadLink": "Enter download link...",
+      "retryDownloadDescription": "Automatically retrying downloads is currently not implemented. To retry the download, stop and delete the failed download here then search for the game again and download it again.",
       "removeFromList": "Remove from list",
       "addDownload": "Add Download",
       "stop": "Stop",
@@ -274,8 +277,7 @@
       "steamripDescription": "SteamRip is currently the primary and only source for Ascendara. It is secure and reliable, offering a huge collection of games with regular updates.",
       "theme": "Theme",
       "languageSettings": "Language Settings",
-      "quickLinks": "Quick Links",
-      
+
       "seamlessDownloads": "Seamless Downloads",
       "seamlessDownloadsDescription": "If available, Ascendara will automatically handle game downloads without requiring browser interaction",
       
@@ -291,7 +293,7 @@
         "extreme": "Extreme (16 threads) - Use with caution"
       },
       "highThreadWarning": "High thread counts may cause download issues. Consider using 4-8 threads for better reliability.",
-      "downloaderRunningWarning": "You cannot change this setting while a download is in progress",
+      "downloaderRunningWarning": "You cannot change these settings while a download is in progress",
       "downloadLocationWarning": "Ascendara cannot write files to the chosen directory. Change was not saved.",
       "customThreadCount": "Custom Thread Count",
       "customThreadCountDesc": "Higher values may improve download speed but require more CPU power and memory. Maximum: 32 threads",
@@ -315,14 +317,20 @@
       "ascendaraToggleAnalytics": "Opt-in and help improve Ascendara",
       "ascendaraAnalyticsDescription": "Help improve Ascendara by sending usage data. This data is anonymous and cannot be used to identify you.",
       
-      "privacyPolicy": "Privacy Policy",
-      "termsOfService": "Terms of Service",
-      "dmca": "DMCA Policy",
-      
       "warningTitle": "Hey there, please read this!",
       "warningDescription": "Ascendara is designed as a testing platform for video games, allowing users to evaluate gameplay, performance, and compatibility before making a purchase decision. Ascendara strongly encourages users to support game developers by purchasing games they enjoy.",
       "warningSupportDevelopers": "Game developers invest significant time, resources, and creativity into creating the experiences we all enjoy. Your purchase directly supports their ability to continue making great games and sustains the gaming industry.",
-      "warningSupportDevelopersCallToAction": "Please support the developers by purchasing games you enjoy."
+      "warningSupportDevelopersCallToAction": "Please support the developers by purchasing games you enjoy.",
+      "installGameDependencies": "Game Dependencies",
+      "reinstallDependenciesDesc": "If a game isn't running correctly, you can try reinstalling all the crucial libraries it needs to run",
+      "reinstallDependencies": "Reinstall Dependencies",
+      "reinstallSuccess": "Dependencies reinstalled successfully",
+      "reinstallError": "Error reinstalling dependencies",
+      "checkingDependencies": "Checking dependencies...",
+      "allDependenciesInstalled": "All dependencies installed",
+      "noDependenciesInstalled": "No dependencies installed",
+      "someDependenciesMissing": "{{installed}} of {{total}} dependencies installed",
+      "manageDependencies": "Manage Dependencies"
     },
     "download": {
       "title": "Download Game",

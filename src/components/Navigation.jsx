@@ -61,6 +61,9 @@ const Navigation = memo(({ items }) => {
   }), [size]);
 
   const isActive = useCallback((path) => {
+    if (path === '/search' && location.pathname === '/download') {
+      return true;
+    }
     return location.pathname === path;
   }, [location.pathname]);
 

@@ -8,6 +8,7 @@ import Search from './pages/Search';
 import Library from './pages/Library';
 import Downloads from './pages/Downloads';
 import Settings from './pages/Settings';
+import Dependencies from './pages/Dependencies';
 import Welcome from './pages/Welcome';
 import DownloadPage from './pages/Download';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -21,7 +22,6 @@ import ContextMenu from './components/ContextMenu';
 import './components/ContextMenu.css';
 import { useTranslation } from 'react-i18next';
 import i18n from './i18n';
-import enTranslations from './translations/en-original.json';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -388,6 +388,7 @@ const AppRoutes = () => {
           <Route path="downloads" element={<Downloads />} />
           <Route path="settings" element={<Settings />} />
           <Route path="download" element={<DownloadPage />} />
+          <Route path="dependencies" element={<Dependencies />} />
         </Route>
       </Routes>
     </motion.div>

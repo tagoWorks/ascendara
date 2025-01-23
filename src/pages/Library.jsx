@@ -323,15 +323,17 @@ const Library = () => {
         <AlertDialogHeader>
           <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('library.launchError')}</AlertDialogTitle>
           <AlertDialogDescription className="space-y-4 text-muted-foreground">
-            <p>{t('library.launchErrorMessage', { game: errorGame })}</p>
+            <p>{t('library.launchErrorMessage', { game: errorGame })}&nbsp;
+              <span onClick={() => {window.electron.openURL('https://ascendara.app/docs/troubleshooting')}} className="hover:underline cursor-pointer">{t('common.learnMore')}</span>
+            </p>
             <p>{errorMessage}</p>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex gap-2">
-          <Button variant="secondary" onClick={handleCloseErrorDialog}>
+          <Button className="text-primary" onClick={handleCloseErrorDialog}>
             {t('common.cancel')}
           </Button>
-          <Button className="text-secondary" onClick={async () => {
+          <Button className="text-secondary bg-primary" onClick={async () => {
                 const exePath = await window.electron.ipcRenderer.invoke('open-file-dialog');
                 if (exePath) {
                   await window.electron.ipcRenderer.invoke('modify-game-executable', errorGame, exePath);
@@ -988,14 +990,14 @@ const AddGameForm = ({ onSuccess }) => {
         <Button
           variant="outline"
           onClick={() => onSuccess()}
-          className="bg-background text-primary hover:bg-accent"
+          className="text-primary"
         >
           {t('common.cancel')}
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={!formData.executable || !formData.name}
-          className="bg-primary text-secondary hover:bg-primary/90"
+          className="bg-primary text-secondary "
         >
           {t('library.addGame')}
         </Button>

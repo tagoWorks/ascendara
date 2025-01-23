@@ -9,8 +9,9 @@ import { Label } from '../components/ui/label';
 import { Card } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ShieldAlert, Languages, Zap, Loader, Hand, RefreshCw, CircleAlert } from "lucide-react";
+import { ShieldAlert, Languages, Zap, Loader, Hand, RefreshCw, CircleAlert, CircleCheck, AlertCircle } from "lucide-react";
 import gameService from '../services/gameService';
+import { useNavigate } from 'react-router-dom';
 
 const themes = [
   // Light themes
@@ -141,6 +142,7 @@ function createDebouncedFunction(func, wait) {
 function Settings() {
   const { theme, setTheme } = useTheme();
   const { language, changeLanguage, t } = useLanguage();
+  const navigate = useNavigate();
   const [downloadPath, setDownloadPath] = useState('');
   const [canCreateFiles, setCanCreateFiles] = useState(true);
   const [version, setVersion] = useState('');
@@ -408,6 +410,56 @@ function Settings() {
     }
   };
 
+  const [dependencyStatus, setDependencyStatus] = useState(null);
+  
+  // Check dependency status on mount and after reinstall
+  const checkDependencies = useCallback(async () => {
+    try {
+      const status = await window.electron.checkGameDependencies();
+      setDependencyStatus(status);
+    } catch (error) {
+      console.error('Failed to check dependencies:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkDependencies();
+  }, [checkDependencies]);
+
+  // Get dependency status indicator
+  const getDependencyStatusInfo = useMemo(() => {
+    if (!dependencyStatus) {
+      return {
+        icon: <CircleAlert className="w-5 h-5 text-muted-foreground" />,
+        text: t('settings.checkingDependencies'),
+        color: 'text-muted-foreground'
+      };
+    }
+
+    const installedCount = dependencyStatus.filter(dep => dep.installed).length;
+    const totalCount = dependencyStatus.length;
+
+    if (installedCount === totalCount) {
+      return {
+        icon: <CircleCheck className="w-5 h-5 text-green-500" />,
+        text: t('settings.allDependenciesInstalled'),
+        color: 'text-green-500'
+      };
+    } else if (installedCount === 0) {
+      return {
+        icon: <AlertCircle className="w-5 h-5 text-red-500" />,
+        text: t('settings.noDependenciesInstalled'),
+        color: 'text-red-500'
+      };
+    } else {
+      return {
+        icon: <AlertCircle className="w-5 h-5 text-yellow-500" />,
+        text: t('settings.someDependenciesMissing', { installed: installedCount, total: totalCount }),
+        color: 'text-yellow-500'
+      };
+    }
+  }, [dependencyStatus, t]);
+
   // Show loading state
   if (isLoading) {
     return (
@@ -490,14 +542,19 @@ function Settings() {
                   
                   <div>
                     {isDownloaderRunning && (
-                      <div className="mt-2 flex items-center gap-2 text-red-600 dark:text-red-500">
+                      <div className="mt-2 mb-4 flex items-center gap-2 text-red-600 dark:text-red-500 p-2 rounded-md border border-red-400 bg-red-50">
                         <CircleAlert size={14} />
                         <p className="text-sm">
                           {t('settings.downloaderRunningWarning')}
                         </p>
                       </div>
                     )}
-                    <Label htmlFor="downloadPath">{t('settings.downloadLocation')}</Label>
+                    <Label
+                      htmlFor="downloadPath"
+                      className={isDownloaderRunning ? 'opacity-50' : ''}
+                    >
+                      {t('settings.downloadLocation')}
+                    </Label>
                     {!canCreateFiles && (
                       <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-500">
                         <ShieldAlert size={18} />
@@ -509,6 +566,7 @@ function Settings() {
                     <div className="flex gap-2 mt-2">
                       <Input 
                         id="downloadPath"
+                        disabled={isDownloaderRunning}
                         value={downloadPath}
                         readOnly
                         className="flex-1"
@@ -520,7 +578,12 @@ function Settings() {
                   </div>
 
                   <div className="mb-6">
-                    <Label>{t('settings.downloadThreads')}</Label>
+                    <Label
+                      htmlFor="downloadThreads"
+                      className={isDownloaderRunning ? 'opacity-50' : ''}
+                    >
+                      {t('settings.downloadThreads')}
+                    </Label>
                     <Select
                       disabled={isDownloaderRunning}
                       value={settings.threadCount === 0 ? 'custom' : (settings.threadCount || 4).toString()}
@@ -747,6 +810,34 @@ function Settings() {
               </div>
             </Card>
 
+            {/* Install Game Dependencies Card */}
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.installGameDependencies')}</h2>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                    {getDependencyStatusInfo.icon}
+                    <span className={`text-sm ${getDependencyStatusInfo.color}`}>
+                      {getDependencyStatusInfo.text}
+                    </span>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">
+                      {t('settings.reinstallDependenciesDesc')}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Button
+                      onClick={() => navigate('/dependencies')}
+                      className="text-secondary w-full flex items-center gap-2"
+                    >
+                      {t('settings.manageDependencies')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
             {/* Developer Settings Card - Only shown in development mode */}
             {isDev && (
               <Card className="p-6">
@@ -811,54 +902,11 @@ function Settings() {
               </Card>
             )}
 
-            {/* Quick Links Card */}
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.quickLinks')}</h2>
-              <div className="grid gap-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start text-muted-foreground hover:text-primary hover:bg-secondary"
-                  onClick={() => window.electron.openURL('https://ascendara.app/privacy')}
-                >
-                  <span className="flex items-center gap-2">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 5l7 7-7 7" />
-                    </svg>
-                    {t('settings.privacyPolicy')}
-                  </span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start text-muted-foreground hover:text-primary hover:bg-secondary"
-                  onClick={() => window.electron.openURL('https://ascendara.app/terms')}
-                >
-                  <span className="flex items-center gap-2">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 5l7 7-7 7" />
-                    </svg>
-                    {t('settings.termsOfService')}
-                  </span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start text-muted-foreground hover:text-primary hover:bg-secondary"
-                  onClick={() => window.electron.openURL('https://ascendara.app/dmca')}
-                >
-                  <span className="flex items-center gap-2">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 5l7 7-7 7" />
-                    </svg>
-                    {t('settings.dmca')}
-                  </span>
-                </Button>
-              </div>
-            </Card>
-
-            {/* Warning Card */}
+            {/* Notice Card */}
             <Card className="p-6 border-yellow-500/50 bg-yellow-500/5">
               <div className="space-y-4">
                 <div className="flex items-center gap-3 text-yellow-500">
-                  <Hand className="w-5 h-5" />
+                  <Hand className="w-5 h-5 scale-x-[-1]" />
                   <h2 className="text-lg font-semibold mb-0">{t('settings.warningTitle')}</h2>
                 </div>
                 

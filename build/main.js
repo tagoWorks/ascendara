@@ -1,7 +1,8 @@
 /**
- * =====================================
- * Ascendara - Copy, Paste Play.
- * =====================================
+ *       =====================================
+ *                    Ascendara
+ *    The best way to test games before you buy them.
+ *       =====================================
  * 
  * This is the main process file for the Ascendara Game Launcher, built with Electron.
  * It handles core functionality including:
@@ -16,7 +17,7 @@
  * - Protocol handling for custom URL schemes
  * 
  *  Start development by first setting the isDev variable to true, then run `npm run start`.
- *  Build the app from source to an executable by running `npm run dist`.
+ *  Build the app from source to an executable by setting isDev to false and running `npm run dist`.
  *  Note: This will run the execute.py script to build the the index files, then build the app.
  * 
  *  Learn more about developing Ascendara at https://ascendara.app/docs/developer/overview
@@ -31,7 +32,7 @@ let isDev = false;
 
 
 
-const CURRENT_VERSION = "7.5.8";
+const CURRENT_VERSION = "7.5.9";
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { Client } = require('discord-rpc');
 const disk = require('diskusage');
@@ -212,41 +213,6 @@ ipcMain.handle('open-url', async (event, url) => {
   shell.openExternal(url);
 });
 
-// Stop all active downloads
-ipcMain.handle('stop-all-downloads', async () => {
-  console.log('Stopping all downloads');
-  // Stop main downloads
-  for (const [game, downloadProcess] of downloadProcesses) {
-    const processName = 'AscendaraDownloader.exe';
-    const killProcess = spawn('taskkill', ['/f', '/im', processName]);
-    killProcess.on('close', (code) => {
-      console.log(`Process ${processName} exited with code ${code}`);
-      deleteGameDirectory(game);
-    });
-  }
-  // Stop GoFile downloads
-  for (const [game, downloadProcess] of goFileProcesses) {
-    const processName = 'AscendaraGofileHelper.exe';
-    const killProcess = spawn('taskkill', ['/f', '/im', processName]);
-    killProcess.on('close', (code) => {
-      console.log(`Process ${processName} exited with code ${code}`);
-      deleteGameDirectory(game);
-    });
-  }
-  // Stop retry downloads
-  for (const [game, downloadProcess] of retryDownloadProcesses) {
-    const processName = downloadProcess.spawnfile.includes('GofileHelper') ? 'AscendaraGofileHelper.exe' : 'AscendaraDownloader.exe';
-    const killProcess = spawn('taskkill', ['/f', '/im', processName]);
-    killProcess.on('close', (code) => {
-      console.log(`Process ${processName} exited with code ${code}`);
-      deleteGameDirectory(game);
-    });
-  }
-  downloadProcesses.clear();
-  goFileProcesses.clear();
-  retryDownloadProcesses.clear();
-});
-
 ipcMain.handle('get-version', () => CURRENT_VERSION);
 
 // Check if any game is downloading
@@ -309,44 +275,36 @@ ipcMain.handle('delete-game-directory', async (event, game) => {
 
 ipcMain.handle('stop-download', async (event, game) => {
   try {
-    const downloadProcess = downloadProcesses.get(game);
-    if (downloadProcess) {
-      // On Windows, send SIGTERM first
-      downloadProcess.kill('SIGTERM');
-      
-      // Give it a moment to terminate gracefully
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Force kill if still running
-      try {
-        downloadProcess.kill('SIGKILL');
-      } catch (killError) {
-        // Process may already be terminated, ignore error
-      }
-      
-      downloadProcesses.delete(game);
-      
-      // Clean up any temporary download files
-      const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-      const data = fs.readFileSync(filePath, 'utf8');
-      const settings = JSON.parse(data);
-      
-      if (settings.downloadDirectory) {
-        const gameDir = path.join(settings.downloadDirectory, game);
-        try {
-          await fs.promises.rm(gameDir, { recursive: true, force: true });
-        } catch (rmError) {
-          console.error('Error removing game directory:', rmError);
-          // Continue even if directory removal fails
-        }
-      }
-      
-      return true;
+    // Kill any running downloader processes for this game
+    const processNames = ['AscendaraDownloader.exe', 'AscendaraGofileHelper.exe'];
+    
+    for (const processName of processNames) {
+      const killProcess = spawn('taskkill', ['/f', '/im', processName]);
+      await new Promise((resolve) => killProcess.on('close', resolve));
     }
-    return false;
+
+    // Wait for processes to fully terminate and release file handles
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Try to delete directory multiple times in case file handles are still being released
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      try {
+        await deleteGameDirectory(game.game);
+        return true;
+      } catch (deleteError) {
+        attempts++;
+        if (attempts === maxAttempts) {
+          throw deleteError;
+        }
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
   } catch (error) {
     console.error('Error stopping download:', error);
-    // Don't throw, just return false to indicate failure
     return false;
   }
 });
@@ -477,25 +435,14 @@ ipcMain.handle('download-file', async (event, link, game, online, dlc, version, 
           spawnCommand = [link, game, online, dlc, version, size, gamesDirectory];
           console.log(spawnCommand)
         }
-        const gameDownloadProcess = spawn(executablePath, spawnCommand);
 
-        if (link.includes('gofile.io')) {
-          goFileProcesses.set(game, gameDownloadProcess);
-        } else {
-          downloadProcesses.set(game, gameDownloadProcess);
-        }
+        spawn(executablePath, spawnCommand, {
+          detached: true,
+          stdio: 'ignore',
+          windowsHide: false
+        }).unref();
 
-        gameDownloadProcess.stdout.on('data', (data) => {
-          console.log(`stdout: ${data}`);
-        });
-
-        gameDownloadProcess.stderr.on('data', (data) => {
-          console.error(`stderr: ${data}`);
-        });
-
-        gameDownloadProcess.on('close', (code) => {
-          console.log(`Game download process exited with code ${code}`);
-        });
+        // Send download stats
         axios.post('https://api.ascendara.app/stats/download', {
           game: game,
         })
@@ -780,7 +727,6 @@ ipcMain.handle('create-timestamp', () => {
   fs.writeFileSync(filePath, JSON.stringify(timestamp, null, 2));
 });
 
-// Determine weather to show the dev warning modal or not
 ipcMain.handle('has-launched', (event) => {
   if (has_launched) {
     return false;
@@ -2170,7 +2116,7 @@ if (process.platform === 'win32') {
   } else {
     app.on('second-instance', (event, commandLine) => {
       // Someone tried to run a second instance, we should focus our window.
-      const mainWindow = BrowserWindow.getAllWindows()[0];  // <-- Use same method as handleProtocolUrl
+      const mainWindow = BrowserWindow.getFocusedWindow();  // <-- Use same method as handleProtocolUrl
       if (mainWindow) {
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.focus();
@@ -2199,7 +2145,127 @@ if (process.defaultApp || isDev) {
 } else {
   app.setAsDefaultProtocolClient('ascendara');
 }
-// Register protocol handler for development mode
-if (isDev) {
-  app.setAsDefaultProtocolClient('ascendara', process.execPath, [path.resolve(process.argv[1])]);
+
+/**
+ * Check if a file exists using PowerShell
+ * @param {string} filePath - The file path to check
+ * @returns {Promise<boolean>} - Whether the file exists
+ */
+async function checkFileExists(filePath) {
+  return new Promise((resolve) => {
+    const { exec } = require('child_process');
+    const command = `powershell -Command "Test-Path '${filePath}'"`;
+    
+    exec(command, (error, stdout) => {
+      if (error) {
+        console.error('Error checking file:', error);
+        resolve(false);
+        return;
+      }
+      resolve(stdout.trim().toLowerCase() === 'true');
+    });
+  });
 }
+
+/**
+ * Check if a dependency is installed by looking up its registry key
+ * @param {string} registryKey - The registry key to check
+ * @param {string} valueName - The value name to look for
+ * @returns {Promise<boolean>} - Whether the dependency is installed
+ */
+async function checkRegistryKey(registryKey, valueName) {
+  return new Promise((resolve) => {
+    try {
+      const Registry = require('winreg');
+      const regKey = new Registry({
+        hive: Registry.HKLM,
+        key: registryKey.replace('HKLM\\', '\\')
+      });
+
+      regKey.valueExists(valueName, (err, exists) => {
+        if (err || !exists) {
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      });
+    } catch (error) {
+      console.error('Error checking registry:', error);
+      resolve(false);
+    }
+  });
+}
+
+// Registry paths for dependencies
+const DEPENDENCY_REGISTRY_PATHS = {
+  'dotNetFx40_Full_x86_x64.exe': {
+    key: 'HKLM\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full',
+    value: 'Install',
+    name: '.NET Framework 4.0',
+    checkType: 'registry'
+  },
+  'dxwebsetup.exe': {
+    key: 'HKLM\\SOFTWARE\\Microsoft\\DirectX',
+    value: 'Version',
+    name: 'DirectX',
+    checkType: 'registry'
+  },
+  'oalinst.exe': {
+    filePath: 'C:\\Windows\\System32\\OpenAL32.dll',
+    name: 'OpenAL',
+    checkType: 'file'
+  },
+  'VC_redist.x64.exe': {
+    key: 'HKLM\\SOFTWARE\\Microsoft\\DevDiv\\VC\\Servicing\\14.0\\RuntimeMinimum',
+    value: 'Install',
+    name: 'Visual C++ Redistributable',
+    checkType: 'registry'
+  },
+  'xnafx40_redist.msi': {
+    key: 'HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\XNA\\Framework\\v4.0',
+    value: 'Installed',
+    name: 'XNA Framework',
+    checkType: 'registry'
+  }
+};
+
+/**
+ * Check if a dependency is installed
+ * @param {Object} depInfo - Dependency information
+ * @returns {Promise<boolean>} - Whether the dependency is installed
+ */
+async function checkDependencyInstalled(depInfo) {
+  let isInstalled;
+  if (depInfo.checkType === 'file') {
+    isInstalled = await checkFileExists(depInfo.filePath);
+    console.log(`File check for ${depInfo.name}: ${isInstalled ? 'Found' : 'Not found'} at ${depInfo.filePath}`);
+  } else {
+    isInstalled = await checkRegistryKey(depInfo.key, depInfo.value);
+    console.log(`Registry check for ${depInfo.name}: ${isInstalled ? 'Found' : 'Not found'} at ${depInfo.key}`);
+  }
+  return isInstalled;
+}
+
+/**
+ * Check the installation status of all game dependencies
+ * @returns {Promise<Array>} Array of dependency status objects
+ */
+async function checkGameDependencies() {
+  const results = [];
+  
+  for (const [file, info] of Object.entries(DEPENDENCY_REGISTRY_PATHS)) {
+    const isInstalled = await checkDependencyInstalled(info);
+    results.push({
+      name: info.name,
+      file: file,
+      installed: isInstalled
+    });
+  }
+  
+  return results;
+}
+
+// Handle IPC call to check dependencies
+ipcMain.handle('check-game-dependencies', async () => {
+  return await checkGameDependencies();
+});

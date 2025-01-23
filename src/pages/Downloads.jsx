@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Progress } from "../components/ui/progress";
 import { Separator } from "../components/ui/separator";
-import { Badge } from "../components/ui/badge";
 import { useLanguage } from '../contexts/LanguageContext';
 import { toast } from 'sonner';
 import {
@@ -24,7 +23,7 @@ import {
   Download,
   Clock,
   HardDrive,
-  CheckCircle2
+  CircleCheck
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -36,7 +35,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../components/ui/alert-dialog";
-import { Input } from "../components/ui/input";
 
 const Downloads = () => {
   const [downloadingGames, setDownloadingGames] = useState([]);
@@ -66,10 +64,15 @@ const Downloads = () => {
         // Update error details for games with errors
         downloading.forEach(game => {
           if (game.downloadingData?.error) {
-            // The error message is now directly in downloadingData.message
             console.log(`Error for game ${game.game}:`, game.downloadingData.message);
           }
         });
+
+        // Check if this is the first download ever
+        if (downloading.length > 0 && !localStorage.getItem('hasDownloadedBefore')) {
+          setShowFirstTimeAlert(true);
+          localStorage.setItem('hasDownloadedBefore', 'true');
+        }
 
         // Only update state if there are actual changes
         if (JSON.stringify(downloading) !== JSON.stringify(downloadingGames)) {
@@ -127,7 +130,7 @@ const Downloads = () => {
 
   const handleStopDownload = async (game) => {
     setStoppingDownloads(prev => new Set([...prev, game.game]));
-    await window.electron.killDownload(game.game);
+    await window.electron.stopDownload(game);
   };
 
   const handleRetryDownload = (game) => {
@@ -163,27 +166,21 @@ const Downloads = () => {
       </div>
 
       {showFirstTimeAlert && (
-        <Card className="mb-8 bg-primary/5 border-primary/20">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <AlertCircle className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
-              <div className="space-y-2">
-                <h3 className="font-medium">{t('downloads.firstTimeDownload.title')}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {t('downloads.firstTimeDownload.message')}
-                </p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowFirstTimeAlert(false)}
-                >
-                  {t('downloads.firstTimeDownload.understand')}
-
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <AlertDialog open={showFirstTimeAlert} onOpenChange={setShowFirstTimeAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-2xl font-bold text-foreground" >{t('downloads.firstTimeDownload.title')}</AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
+                {t('downloads.firstTimeDownload.message')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction className="text-primary" onClick={() => setShowFirstTimeAlert(false)}>
+                {t('downloads.firstTimeDownload.understand')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
 
       <div className="space-y-4">
@@ -219,18 +216,8 @@ const Downloads = () => {
               {t('downloads.retryDownloadDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="my-4">
-            <Input
-              value={retryLink}
-              onChange={(e) => setRetryLink(e.target.value)}
-              placeholder={t('downloads.enterDownloadLink')}
-            />
-          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel className="text-muted-foreground bg-secondary" onClick={() => setRetryModalOpen(false)}>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction className="bg-primary text-secondary" onClick={handleRetryConfirm}>
-              {t('common.retry')}
-            </AlertDialogAction>
+            <AlertDialogCancel className="text-primary" onClick={() => setRetryModalOpen(false)}>{t('common.ok')}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -391,22 +378,22 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
               < >
                 <DropdownMenuItem onClick={() => onRetry(game)}>
                   <RefreshCcw className="mr-2 h-4 w-4" />
-                  Retry Download
+                  {t('downloads.actions.retryDownload')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleRemoveDownload(game)}>
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Cancel & Delete
+                  {t('downloads.actions.cancelAndDelete')}
                 </DropdownMenuItem>
               </ >
             ) : (
               <DropdownMenuItem onClick={() => onStop(game)}>
                 <StopCircle className="mr-2 h-4 w-4" />
-                Stop Download
+                {t('downloads.actions.stopDownload')}
               </DropdownMenuItem>
             )}
             {!isDownloading && <DropdownMenuItem onClick={() => onOpenFolder(game)}>
               <FolderOpen className="mr-2 h-4 w-4" />
-              Open Folder
+              {t('downloads.actions.openFolder')}
             </DropdownMenuItem>}
           </DropdownMenuContent>
         </DropdownMenu>
@@ -454,7 +441,7 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                         </>
                       ) : wasReported ? (
                         <>
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          <CircleCheck className="mr-2 h-4 w-4" />
                           {t('downloads.alreadyReported')}
                         </>
                       ) : (

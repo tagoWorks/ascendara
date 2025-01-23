@@ -18,6 +18,22 @@ Ascendara simplifies your pirating experience by providing a seamless way to dow
 
 ## ✨ Features
 
+### 🖥️ App Features
+
+- 🌐 Support for 8 languages 
+<details>
+<summary>Click to expand</summary>
+
+- Spanish (es)
+- Chinese (Simplified) (zh-CN)
+- Arabic (ar)
+- Hindi (hi)
+- Bengali (bn)
+- Portuguese (pt)
+- Russian (ru)
+- Japanese (ja)
+</details>
+
 - 🎯 One-click game downloads and installations
 - 📖 Detailed documentation for users & developers
 - 📚 Organized game library management
@@ -80,8 +96,8 @@ Before building, ensure you have all required dependencies. [View full requireme
 - [ ] Retry Download & Extract functionality
 - [ ] Enhanced antivirus operation checks
 - [ ] Legacy game version support
-- [ ] Improved download management (pausing, ending, resuming)
-- [ ] Game dependencies reinstallation option
+- [ ] Improved download management (pausing, resuming)
+- [x] Game dependencies reinstallation option
 
 ### ✅ Completed Features
 - [x] Complete UI overhaul (V7)

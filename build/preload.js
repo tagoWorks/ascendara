@@ -81,8 +81,7 @@ contextBridge.exposeInMainWorld('electron', {
 
   // Download and Installation
   installDependencies: () => ipcRenderer.invoke('install-dependencies'),
-  killDownload: (game) => ipcRenderer.invoke('stop-download', game),
-  killAllDownloads: () => ipcRenderer.invoke('stop-all-downloads'),
+  stopDownload: (game) => ipcRenderer.invoke('stop-download', game),
   retryDownload: (link, game, online, dlc, version) => ipcRenderer.invoke('retry-download', link, game, online, dlc, version),
   downloadFile: (link, game, online, dlc, version, imgID, size) => ipcRenderer.invoke('download-file', link, game, online, dlc, version, imgID, size),
   checkRetryExtract: (game) => ipcRenderer.invoke('check-retry-extract', game),
@@ -96,6 +95,7 @@ contextBridge.exposeInMainWorld('electron', {
   // Miscellaneous
   createTimestamp: () => ipcRenderer.invoke('create-timestamp'),
   isLatest: () => ipcRenderer.invoke('is-latest'),
+  checkGameDependencies: () => ipcRenderer.invoke('check-game-dependencies'),
   isDownloaderRunning: () => ipcRenderer.invoke('is-downloader-running'),
   deleteInstaller: () => ipcRenderer.invoke('delete-installer'),
   updateAscendara: () => ipcRenderer.invoke('update-ascendara'),
