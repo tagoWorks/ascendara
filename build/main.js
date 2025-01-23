@@ -76,15 +76,30 @@ rpc.on('ready', () => {
 });
 
 rpc.login({ clientId }).catch(console.error);
-app.whenReady().then(async () => {
-  try {
-    await checkVersionAndUpdate();
-    createWindow();
-  } catch (error) {
-    console.error('Error during startup:', error);
-    createWindow();
+
+// Handle app ready event
+app.whenReady().then(() => {
+  console.log('App ready, creating window');
+  createWindow();
+
+  // Check for protocol URL in argv
+  const protocolUrl = process.argv.find(arg => {
+    console.log('Checking arg:', arg);
+    return arg.startsWith('ascendara://');
+  });
+  
+  if (protocolUrl) {
+    console.log('Found protocol URL in argv:', protocolUrl);
+    handleProtocolUrl(protocolUrl);
   }
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
 });
+
 async function checkVersionAndUpdate() {
   if (isDev) {
     return true;
@@ -1717,7 +1732,14 @@ function createWindow() {
 }
 
 // Window visibility control functions
+let isHandlingProtocolUrl = false;
+
 function hideWindow() {
+  // Don't hide window if handling protocol URL
+  if (isHandlingProtocolUrl) {
+    console.log('Skipping window hide during protocol URL handling');
+    return;
+  }
   BrowserWindow.getAllWindows().forEach(window => {
     window.hide();
   });
@@ -2095,6 +2117,9 @@ function handleProtocolUrl(url) {
   mainWindow.focus();
 
   try {
+    // Set flag to prevent window hiding
+    isHandlingProtocolUrl = true;
+
     // Update last handled URL info
     lastHandledUrl = cleanUrl;
     lastHandleTime = currentTime;
@@ -2102,35 +2127,58 @@ function handleProtocolUrl(url) {
     // Just pass the URL directly, let renderer handle it
     console.log('Sending URL to renderer:', cleanUrl);
     mainWindow.webContents.send('protocol-download-url', cleanUrl);
+
+    // Reset flag after a delay to allow for URL processing
+    setTimeout(() => {
+      isHandlingProtocolUrl = false;
+    }, 5000);
   } catch (error) {
     console.error('Error handling protocol URL:', error);
+    isHandlingProtocolUrl = false;
   }
 }
 
 // Handle URLs in Windows
 if (process.platform === 'win32') {
+  console.log('Setting up protocol handler for Windows');
   const gotTheLock = app.requestSingleInstanceLock();
   
   if (!gotTheLock) {
+    console.log('Another instance is running, quitting');
     app.quit();
   } else {
-    app.on('second-instance', (event, commandLine) => {
-      // Someone tried to run a second instance, we should focus our window.
-      const mainWindow = BrowserWindow.getFocusedWindow();  // <-- Use same method as handleProtocolUrl
+    app.on('second-instance', (event, commandLine, workingDirectory) => {
+      console.log('Second instance detected with args:', commandLine);
+      
+      // Check for protocol URL first
+      const protocolUrl = commandLine.find(arg => arg.startsWith('ascendara://'));
+      console.log('Protocol URL from second instance:', protocolUrl);
+      
+      if (protocolUrl) {
+        // For protocol URLs, just focus existing window and handle URL
+        const mainWindow = BrowserWindow.getAllWindows()[0];
+        if (mainWindow) {
+          if (mainWindow.isMinimized()) mainWindow.restore();
+          mainWindow.focus();
+          handleProtocolUrl(protocolUrl);
+        }
+        return; // Exit early to prevent window creation
+      }
+
+      // Only create/focus window if no protocol URL (normal app launch)
+      const mainWindow = BrowserWindow.getAllWindows()[0];
       if (mainWindow) {
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.focus();
-
-        // Handle protocol URL from second instance
-        const protocolUrl = commandLine.find(arg => arg.startsWith('ascendara://'));
-        if (protocolUrl) {
-          handleProtocolUrl(protocolUrl);
-        }
+      } else {
+        createWindow();
       }
     });
 
     // Handle protocol URL from first instance
+    console.log('Checking first instance args:', process.argv);
     const protocolUrl = process.argv.find(arg => arg.startsWith('ascendara://'));
+    console.log('Protocol URL from first instance:', protocolUrl);
     if (protocolUrl) {
       app.whenReady().then(() => {
         handleProtocolUrl(protocolUrl);
@@ -2139,12 +2187,22 @@ if (process.platform === 'win32') {
   }
 }
 
-// Remove the development mode registration and consolidate into one
+// Register protocol handler
+console.log('Registering protocol handler. isDev:', process.defaultApp || isDev);
 if (process.defaultApp || isDev) {
-  app.setAsDefaultProtocolClient('ascendara', process.execPath, [path.resolve(process.argv[1])]);
+  const args = [path.resolve(process.argv[1])];
+  console.log('Registering with args:', args);
+  app.setAsDefaultProtocolClient('ascendara', process.execPath, args);
 } else {
   app.setAsDefaultProtocolClient('ascendara');
 }
+
+// Add open-url handler for protocol URLs
+app.on('open-url', (event, url) => {
+  console.log('Received open-url event:', url);
+  event.preventDefault();
+  handleProtocolUrl(url);
+});
 
 /**
  * Check if a file exists using PowerShell

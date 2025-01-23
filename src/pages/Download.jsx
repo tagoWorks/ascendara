@@ -86,6 +86,7 @@ export default function DownloadPage() {
   // Refs for URL tracking
   const recentUrlsRef = useRef(new Map());
   const isProcessingUrlRef = useRef(false);
+  const activeDownloadsRef = useRef(new Set());
 
   // Define handleDownload first since it's used in handleProtocolUrl
   const handleDownload = useCallback(async (directUrl = null) => {
@@ -108,12 +109,24 @@ export default function DownloadPage() {
       console.log('Download already in progress, skipping');
       return;
     }
+
+    const urlToUse = directUrl || inputLink;
+
+    // Check if this URL is already being downloaded
+    if (activeDownloadsRef.current.has(urlToUse)) {
+      console.log('URL already being downloaded:', urlToUse);
+      toast.error(t('download.toast.alreadyDownloading'));
+      return;
+    }
+
     setIsStartingDownload(true);
     try {
       const sanitizedGameName = sanitizeText(gameData.game);
-      const urlToUse = directUrl || inputLink;
       
       console.log('Starting download with URL:', urlToUse);
+      // Add URL to active downloads
+      activeDownloadsRef.current.add(urlToUse);
+
       await window.electron.downloadFile(
         urlToUse,
         sanitizedGameName,
@@ -135,6 +148,8 @@ export default function DownloadPage() {
     } catch (error) {
       console.error('Download failed:', error);
       toast.error(t('download.toast.downloadFailed'));
+      // Remove URL from active downloads on error
+      activeDownloadsRef.current.delete(urlToUse);
       setIsStartingDownload(false);
     }
 
@@ -185,6 +200,7 @@ export default function DownloadPage() {
       
       console.log('2. Final URL to download:', downloadUrl);
       
+      // Start download immediately
       await handleDownload(downloadUrl);
     } catch (e) {
       console.error('Error processing URL:', e);
@@ -205,11 +221,14 @@ export default function DownloadPage() {
     };
   }, [handleProtocolUrl]);
 
-  // Clean up on unmount
+  // Clean up on unmount and route change
   useEffect(() => {
     return () => {
+      console.log('Cleaning up Download component state');
       recentUrlsRef.current.clear();
+      activeDownloadsRef.current.clear();
       isProcessingUrlRef.current = false;
+      setIsStartingDownload(false);
     };
   }, []);
 
