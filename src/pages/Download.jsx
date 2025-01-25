@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogCancel } from "../components/ui/alert-dialog";
@@ -62,10 +62,46 @@ const sanitizeGameName = (name) => {
 
 export default function DownloadPage() {
   const { state } = useLocation();
+  const location = useLocation();
   const navigate = useNavigate();
   const { gameData } = state || {};
   const { t } = useLanguage();
   
+  // Clear data when leaving the page
+  useEffect(() => {
+    return () => {
+      // Only clear if we're actually navigating away from the download page
+      if (!location.pathname.includes('download')) {
+        // Clear all state
+        setSelectedProvider("");
+        setInputLink("");
+        setIsStartingDownload(false);
+        setShowNoDownloadPath(false);
+        setCachedImage(null);
+        setIsValidLink(true);
+        setShowCopySuccess(false);
+        setIsReporting(false);
+        setReportReason("");
+        setReportDetails("");
+        setShowNewUserGuide(false);
+        setGuideStep(0);
+        setGuideImages({});
+        
+        // Remove the state from history
+        window.history.replaceState({}, document.title, location.pathname);
+      }
+    };
+  }, [location]);
+
+  // Log and validate game data
+  useEffect(() => {
+    if (!gameData) {
+      navigate('/search');
+      return;
+    }
+    console.log('Received game data:', gameData);
+  }, [gameData, navigate]);
+
   // State declarations
   const [selectedProvider, setSelectedProvider] = useState("");
   const [inputLink, setInputLink] = useState("");
@@ -82,15 +118,15 @@ export default function DownloadPage() {
   const [guideStep, setGuideStep] = useState(0);
   const [guideImages, setGuideImages] = useState({});
   const [settings, setSettings] = useState({ downloadHandler: false });
+  const [lastProcessedUrl, setLastProcessedUrl] = useState(null);
+  const [isProcessingUrl, setIsProcessingUrl] = useState(false);
 
-  // Refs for URL tracking
-  const recentUrlsRef = useRef(new Map());
-  const isProcessingUrlRef = useRef(false);
-  const activeDownloadsRef = useRef(new Set());
+  // Use a ref to track the event handler and active status
+  const urlHandlerRef = useRef(null);
+  const isActive = useRef(false);
 
-  // Define handleDownload first since it's used in handleProtocolUrl
-  const handleDownload = useCallback(async (directUrl = null) => {
-
+  // Simple download handler function
+  async function handleDownload(directUrl = null) {
     if (showNoDownloadPath) {
       return;
     }
@@ -101,8 +137,29 @@ export default function DownloadPage() {
       return;
     }
   
-    if (selectedProvider !== 'gofile' && !isValidLink && !directUrl) {
-      return;
+    // Special handling for GoFile when no direct URL is provided
+    if (!directUrl && selectedProvider === 'gofile') {
+      const goFileLinks = gameData.download_links?.['gofile'] || [];
+      const validGoFileLink = goFileLinks.find(link => link && typeof link === 'string');
+      
+      if (!validGoFileLink) {
+        toast.error(t('download.toast.invalidLink'));
+        return;
+      }
+
+      // Properly format the GoFile link
+      directUrl = validGoFileLink.replace(/^(?:https?:)?\/\//, 'https://');
+    }
+    // For manual downloads with other providers, check if we have a valid link
+    else if (!directUrl) {
+      if (!selectedProvider) {
+        console.log('No provider selected');
+        return;
+      }
+      if (!inputLink || !isValidLink) {
+        console.log('Invalid link for manual download');
+        return;
+      }
     }
 
     if (isStartingDownload) {
@@ -111,126 +168,99 @@ export default function DownloadPage() {
     }
 
     const urlToUse = directUrl || inputLink;
-
-    // Check if this URL is already being downloaded
-    if (activeDownloadsRef.current.has(urlToUse)) {
-      console.log('URL already being downloaded:', urlToUse);
-      toast.error(t('download.toast.alreadyDownloading'));
-      return;
-    }
-
+    console.log('Starting download with URL:', urlToUse);
+    
     setIsStartingDownload(true);
+
     try {
       const sanitizedGameName = sanitizeText(gameData.game);
       
-      console.log('Starting download with URL:', urlToUse);
-      // Add URL to active downloads
-      activeDownloadsRef.current.add(urlToUse);
-
       await window.electron.downloadFile(
         urlToUse,
         sanitizedGameName,
-        gameData.online,
-        gameData.dlc,
-        gameData.version,
+        gameData.online || false,
+        gameData.dlc || false,
+        gameData.version || '',
         gameData.imgID,
-        gameData.size
+        gameData.size || ''
       );
       
       toast.success(t('download.toast.downloadStarted'));
       
-      // Add a delay before navigation to ensure the download has started
-      // and the toast is visible
+      // Keep isStarting true until download actually begins
+      const removeDownloadListener = window.electron.onDownloadProgress((downloadInfo) => {
+        if (downloadInfo.game === sanitizedGameName) {
+          setIsStartingDownload(false);
+          removeDownloadListener();
+        }
+      });
+
       setTimeout(() => {
-        setIsStartingDownload(false);
         navigate('/downloads');
-      }, 1000);
+      }, 2500);
     } catch (error) {
       console.error('Download failed:', error);
       toast.error(t('download.toast.downloadFailed'));
-      // Remove URL from active downloads on error
-      activeDownloadsRef.current.delete(urlToUse);
       setIsStartingDownload(false);
     }
+  }
 
-  }, [showNoDownloadPath, gameData, selectedProvider, isValidLink, inputLink, navigate, t, isStartingDownload]);
+  // Protocol URL listener effect
+  useEffect(() => {
+    if (!useAscendara) return;
 
-  // Then define handleProtocolUrl which depends on handleDownload
-  const handleProtocolUrl = useCallback(async (event, url) => {
-    if (!url || isProcessingUrlRef.current) return;
-    
-    // Check if this URL was recently processed (within last 10 seconds)
-    const now = Date.now();
-    const lastProcessed = recentUrlsRef.current.get(url);
-    if (lastProcessed && (now - lastProcessed) < 10000) {
-      console.log('URL was recently processed, skipping:', url);
-      return;
+    // Mark component as active
+    isActive.current = true;
+
+    // Remove any existing listener first
+    if (urlHandlerRef.current) {
+      window.electron.ipcRenderer.removeListener('protocol-download-url', urlHandlerRef.current);
+      urlHandlerRef.current = null;
     }
-    
-    // Set processing flag
-    isProcessingUrlRef.current = true;
-    
-    try {
-      console.log('1. Protocol handler received URL:', url);
-      
-      // Add URL to recent list with timestamp
-      recentUrlsRef.current.set(url, now);
-      
-      // Clean up old entries from recentUrls
-      for (const [key, timestamp] of recentUrlsRef.current.entries()) {
-        if (now - timestamp > 10000) {
-          recentUrlsRef.current.delete(key);
+
+    // Create new handler and store in ref
+    urlHandlerRef.current = (event, url) => {
+      if (!url?.startsWith('ascendara://') || !isActive.current) {
+        return;
+      }
+
+      try {
+        const encodedUrl = url.replace('ascendara://', '');
+        const decodedUrl = decodeURIComponent(encodedUrl);
+        // Remove trailing slash if it exists
+        const cleanUrl = decodedUrl.endsWith('/') ? decodedUrl.slice(0, -1) : decodedUrl;
+        
+        // Don't process if it's the same URL we just handled
+        if (cleanUrl === lastProcessedUrl) {
+          console.log('Ignoring duplicate URL:', cleanUrl);
+          return;
         }
+        
+        console.log('Handling protocol URL:', cleanUrl);
+        handleDownload(cleanUrl);
+      } catch (error) {
+        console.error('Error handling protocol URL:', error);
+        toast.error(t('download.toast.invalidProtocolUrl'));
       }
+    };
 
-      // First remove the ascendara:// protocol
-      let downloadUrl = url.replace(/^ascendara:\/+/i, '');
+    // Add the new listener
+    window.electron.ipcRenderer.on('protocol-download-url', urlHandlerRef.current);
+    
+    // Cleanup function
+    return () => {
+      // Mark component as inactive
+      isActive.current = false;
       
-      // Remove the trailing "/" if it exists
-      if (downloadUrl.endsWith('/')) {
-        downloadUrl = downloadUrl.slice(0, -1);
+      if (urlHandlerRef.current) {
+        window.electron.ipcRenderer.removeListener('protocol-download-url', urlHandlerRef.current);
+        urlHandlerRef.current = null;
       }
-      
-      // URL decode the remaining string
-      downloadUrl = decodeURIComponent(downloadUrl);
-      
-      // Now the URL should be in a normal http/https format
-      // Validate it's a proper URL
-      const urlObj = new URL(downloadUrl);
-      
-      console.log('2. Final URL to download:', downloadUrl);
-      
-      // Start download immediately
-      await handleDownload(downloadUrl);
-    } catch (e) {
-      console.error('Error processing URL:', e);
-      toast.error(t('download.toast.invalidUrl'));
-    } finally {
-      // Clear processing flag after a short delay to prevent race conditions
-      setTimeout(() => {
-        isProcessingUrlRef.current = false;
-      }, 1000);
-    }
-  }, [handleDownload, t]);
-
-  // Set up protocol handler
-  useEffect(() => {
-    window.electron.ipcRenderer.on('protocol-download-url', handleProtocolUrl);
-    return () => {
-      window.electron.ipcRenderer.removeListener('protocol-download-url', handleProtocolUrl);
+      // Clear URL tracking on unmount
+      setLastProcessedUrl(null);
+      setIsProcessingUrl(false);
     };
-  }, [handleProtocolUrl]);
-
-  // Clean up on unmount and route change
-  useEffect(() => {
-    return () => {
-      console.log('Cleaning up Download component state');
-      recentUrlsRef.current.clear();
-      activeDownloadsRef.current.clear();
-      isProcessingUrlRef.current = false;
-      setIsStartingDownload(false);
-    };
-  }, []);
+  }, [useAscendara]); // Remove lastProcessedUrl from dependencies
 
   useEffect(() => {
     const loadFileFromPath = async (path) => {
@@ -924,7 +954,12 @@ export default function DownloadPage() {
                   {(!useAscendara || selectedProvider === 'gofile') && (
                     <Button
                       onClick={() => handleDownload()}
-                      disabled={isStartingDownload || !selectedProvider || (selectedProvider !== 'gofile' && (!inputLink || !isValidLink))}
+                      disabled={
+                        isStartingDownload || 
+                        !selectedProvider || 
+                        (selectedProvider !== 'gofile' && (!inputLink || !isValidLink)) ||
+                        !gameData
+                      }
                       className="w-full text-secondary"
                     >
                       {isStartingDownload ? (

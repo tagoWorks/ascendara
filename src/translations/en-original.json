@@ -234,7 +234,7 @@
       "eta": "ETA:",
       "extractingFiles": "Extracting files...",
       "updatingGame": "Updating game...",
-      "retryDownloadDescription": "Automatically retrying downloads is currently not implemented. To retry the download, stop and delete the failed download here then search for the game again and download it again.",
+      "retryDownloadDescription": "Automatically retrying downloads is currently not implemented. To retry the download, cancel and delete the failed download here then search for the game again and download it again.",
       "removeFromList": "Remove from list",
       "addDownload": "Add Download",
       "stop": "Stop",

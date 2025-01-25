@@ -32,8 +32,8 @@ let isDev = false;
 
 
 
-const CURRENT_VERSION = "7.5.9";
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const CURRENT_VERSION = "7.5.10";
+const { app, BrowserWindow, ipcMain, dialog, shell, protocol } = require('electron');
 const { Client } = require('discord-rpc');
 const disk = require('diskusage');
 const path = require('path');
@@ -1019,6 +1019,131 @@ ipcMain.handle('install-dependencies', async (event) => {
     } finally {
         isInstalling = false;
     }
+});
+
+/**
+ * Check if a file exists using PowerShell
+ * @param {string} filePath - The file path to check
+ * @returns {Promise<boolean>} - Whether the file exists
+ */
+async function checkFileExists(filePath) {
+  return new Promise((resolve) => {
+    const { exec } = require('child_process');
+    const command = `powershell -Command "Test-Path '${filePath}'"`;
+    
+    exec(command, (error, stdout) => {
+      if (error) {
+        console.error('Error checking file:', error);
+        resolve(false);
+        return;
+      }
+      resolve(stdout.trim().toLowerCase() === 'true');
+    });
+  });
+}
+
+
+/**
+ * Check if a dependency is installed by looking up its registry key
+ * @param {string} registryKey - The registry key to check
+ * @param {string} valueName - The value name to look for
+ * @returns {Promise<boolean>} - Whether the dependency is installed
+ */
+async function checkRegistryKey(registryKey, valueName) {
+  return new Promise((resolve) => {
+    try {
+      const Registry = require('winreg');
+      const regKey = new Registry({
+        hive: Registry.HKLM,
+        key: registryKey.replace('HKLM\\', '\\')
+      });
+
+      regKey.valueExists(valueName, (err, exists) => {
+        if (err || !exists) {
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      });
+    } catch (error) {
+      console.error('Error checking registry:', error);
+      resolve(false);
+    }
+  });
+}
+
+// Registry paths for dependencies
+const DEPENDENCY_REGISTRY_PATHS = {
+  'dotNetFx40_Full_x86_x64.exe': {
+    key: 'HKLM\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full',
+    value: 'Install',
+    name: '.NET Framework 4.0',
+    checkType: 'registry'
+  },
+  'dxwebsetup.exe': {
+    key: 'HKLM\\SOFTWARE\\Microsoft\\DirectX',
+    value: 'Version',
+    name: 'DirectX',
+    checkType: 'registry'
+  },
+  'oalinst.exe': {
+    filePath: 'C:\\Windows\\System32\\OpenAL32.dll',
+    name: 'OpenAL',
+    checkType: 'file'
+  },
+  'VC_redist.x64.exe': {
+    key: 'HKLM\\SOFTWARE\\Microsoft\\DevDiv\\VC\\Servicing\\14.0\\RuntimeMinimum',
+    value: 'Install',
+    name: 'Visual C++ Redistributable',
+    checkType: 'registry'
+  },
+  'xnafx40_redist.msi': {
+    key: 'HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\XNA\\Framework\\v4.0',
+    value: 'Installed',
+    name: 'XNA Framework',
+    checkType: 'registry'
+  }
+};
+
+/**
+ * Check if a dependency is installed
+ * @param {Object} depInfo - Dependency information
+ * @returns {Promise<boolean>} - Whether the dependency is installed
+ */
+async function checkDependencyInstalled(depInfo) {
+  let isInstalled;
+  if (depInfo.checkType === 'file') {
+    isInstalled = await checkFileExists(depInfo.filePath);
+    console.log(`File check for ${depInfo.name}: ${isInstalled ? 'Found' : 'Not found'} at ${depInfo.filePath}`);
+  } else {
+    isInstalled = await checkRegistryKey(depInfo.key, depInfo.value);
+    console.log(`Registry check for ${depInfo.name}: ${isInstalled ? 'Found' : 'Not found'} at ${depInfo.key}`);
+  }
+  return isInstalled;
+}
+
+/**
+ * Check the installation status of all game dependencies
+ * @returns {Promise<Array>} Array of dependency status objects
+ */
+async function checkGameDependencies() {
+  const results = [];
+  
+  for (const [file, info] of Object.entries(DEPENDENCY_REGISTRY_PATHS)) {
+    const isInstalled = await checkDependencyInstalled(info);
+    results.push({
+      name: info.name,
+      file: file,
+      installed: isInstalled
+    });
+  }
+  
+  return results;
+}
+
+// Handle IPC call to check dependencies
+ipcMain.handle('check-game-dependencies', async () => {
+  return await checkGameDependencies();
 });
 
 ipcMain.handle('get-games', async () => {
@@ -2092,6 +2217,7 @@ process.on('unhandledRejection', (reason, promise) => {
 // Handle the protocol URL
 let lastHandledUrl = null;
 let lastHandleTime = 0;
+let pendingUrls = new Set();
 const URL_DEBOUNCE_TIME = 2000; // 2 seconds
 
 function handleProtocolUrl(url) {
@@ -2101,16 +2227,15 @@ function handleProtocolUrl(url) {
   const cleanUrl = url.trim();
   if (!cleanUrl.startsWith('ascendara://')) return;
 
-  // Debounce handling of the same URL
-  const currentTime = Date.now();
-  if (cleanUrl === lastHandledUrl && (currentTime - lastHandleTime) < URL_DEBOUNCE_TIME) {
-    console.log('Skipping duplicate URL within debounce time:', cleanUrl);
-    return;
-  }
+  // Add to pending URLs
+  pendingUrls.add(cleanUrl);
 
   // Get the main window
   const mainWindow = BrowserWindow.getAllWindows()[0];
-  if (!mainWindow) return;
+  if (!mainWindow) {
+    pendingUrls.clear();
+    return;
+  }
 
   // Show window if minimized
   if (mainWindow.isMinimized()) mainWindow.restore();
@@ -2120,23 +2245,64 @@ function handleProtocolUrl(url) {
     // Set flag to prevent window hiding
     isHandlingProtocolUrl = true;
 
-    // Update last handled URL info
-    lastHandledUrl = cleanUrl;
-    lastHandleTime = currentTime;
+    // Only send if it's a new URL or enough time has passed
+    const currentTime = Date.now();
+    if (cleanUrl !== lastHandledUrl || (currentTime - lastHandleTime) > URL_DEBOUNCE_TIME) {
+      lastHandledUrl = cleanUrl;
+      lastHandleTime = currentTime;
 
-    // Just pass the URL directly, let renderer handle it
-    console.log('Sending URL to renderer:', cleanUrl);
-    mainWindow.webContents.send('protocol-download-url', cleanUrl);
+      // Send only the current URL
+      console.log('Sending URL to renderer:', cleanUrl);
+      mainWindow.webContents.send('protocol-download-url', cleanUrl);
+      
+      // Clear pending URLs since we've handled this one
+      pendingUrls.clear();
+    }
 
-    // Reset flag after a delay to allow for URL processing
+    // Reset flag after a delay
     setTimeout(() => {
       isHandlingProtocolUrl = false;
-    }, 5000);
+    }, 1000);
   } catch (error) {
     console.error('Error handling protocol URL:', error);
     isHandlingProtocolUrl = false;
+    pendingUrls.clear();
   }
 }
+
+// Register IPC handler for renderer to request pending URLs
+ipcMain.handle('get-pending-urls', () => {
+  const urls = Array.from(pendingUrls);
+  pendingUrls.clear();
+  return urls;
+});
+
+// Register protocol handler
+console.log('Registering protocol handler. isDev:', process.defaultApp || isDev);
+if (process.defaultApp || isDev) {
+  // Development - register protocol for testing
+  app.setAsDefaultProtocolClient('ascendara', process.execPath, [path.resolve(process.argv[1])]);
+} else {
+  // Production - register protocol normally
+  app.setAsDefaultProtocolClient('ascendara');
+}
+
+// Add open-url handler for protocol URLs
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  handleProtocolUrl(url);
+});
+
+// Handle protocol URLs in the main process
+app.on('ready', () => {
+  // Protocol handler for Windows
+  protocol.registerHttpProtocol('ascendara', (request, callback) => {
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    if (mainWindow) {
+      handleProtocolUrl(request.url);
+    }
+  });
+});
 
 // Handle URLs in Windows
 if (process.platform === 'win32') {
@@ -2186,144 +2352,3 @@ if (process.platform === 'win32') {
     }
   }
 }
-
-// Register protocol handler
-console.log('Registering protocol handler. isDev:', process.defaultApp || isDev);
-if (process.defaultApp || isDev) {
-  const args = [path.resolve(process.argv[1])];
-  console.log('Registering with args:', args);
-  app.setAsDefaultProtocolClient('ascendara', process.execPath, args);
-} else {
-  app.setAsDefaultProtocolClient('ascendara');
-}
-
-// Add open-url handler for protocol URLs
-app.on('open-url', (event, url) => {
-  console.log('Received open-url event:', url);
-  event.preventDefault();
-  handleProtocolUrl(url);
-});
-
-/**
- * Check if a file exists using PowerShell
- * @param {string} filePath - The file path to check
- * @returns {Promise<boolean>} - Whether the file exists
- */
-async function checkFileExists(filePath) {
-  return new Promise((resolve) => {
-    const { exec } = require('child_process');
-    const command = `powershell -Command "Test-Path '${filePath}'"`;
-    
-    exec(command, (error, stdout) => {
-      if (error) {
-        console.error('Error checking file:', error);
-        resolve(false);
-        return;
-      }
-      resolve(stdout.trim().toLowerCase() === 'true');
-    });
-  });
-}
-
-/**
- * Check if a dependency is installed by looking up its registry key
- * @param {string} registryKey - The registry key to check
- * @param {string} valueName - The value name to look for
- * @returns {Promise<boolean>} - Whether the dependency is installed
- */
-async function checkRegistryKey(registryKey, valueName) {
-  return new Promise((resolve) => {
-    try {
-      const Registry = require('winreg');
-      const regKey = new Registry({
-        hive: Registry.HKLM,
-        key: registryKey.replace('HKLM\\', '\\')
-      });
-
-      regKey.valueExists(valueName, (err, exists) => {
-        if (err || !exists) {
-          resolve(false);
-        } else {
-          resolve(true);
-        }
-      });
-    } catch (error) {
-      console.error('Error checking registry:', error);
-      resolve(false);
-    }
-  });
-}
-
-// Registry paths for dependencies
-const DEPENDENCY_REGISTRY_PATHS = {
-  'dotNetFx40_Full_x86_x64.exe': {
-    key: 'HKLM\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full',
-    value: 'Install',
-    name: '.NET Framework 4.0',
-    checkType: 'registry'
-  },
-  'dxwebsetup.exe': {
-    key: 'HKLM\\SOFTWARE\\Microsoft\\DirectX',
-    value: 'Version',
-    name: 'DirectX',
-    checkType: 'registry'
-  },
-  'oalinst.exe': {
-    filePath: 'C:\\Windows\\System32\\OpenAL32.dll',
-    name: 'OpenAL',
-    checkType: 'file'
-  },
-  'VC_redist.x64.exe': {
-    key: 'HKLM\\SOFTWARE\\Microsoft\\DevDiv\\VC\\Servicing\\14.0\\RuntimeMinimum',
-    value: 'Install',
-    name: 'Visual C++ Redistributable',
-    checkType: 'registry'
-  },
-  'xnafx40_redist.msi': {
-    key: 'HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\XNA\\Framework\\v4.0',
-    value: 'Installed',
-    name: 'XNA Framework',
-    checkType: 'registry'
-  }
-};
-
-/**
- * Check if a dependency is installed
- * @param {Object} depInfo - Dependency information
- * @returns {Promise<boolean>} - Whether the dependency is installed
- */
-async function checkDependencyInstalled(depInfo) {
-  let isInstalled;
-  if (depInfo.checkType === 'file') {
-    isInstalled = await checkFileExists(depInfo.filePath);
-    console.log(`File check for ${depInfo.name}: ${isInstalled ? 'Found' : 'Not found'} at ${depInfo.filePath}`);
-  } else {
-    isInstalled = await checkRegistryKey(depInfo.key, depInfo.value);
-    console.log(`Registry check for ${depInfo.name}: ${isInstalled ? 'Found' : 'Not found'} at ${depInfo.key}`);
-  }
-  return isInstalled;
-}
-
-/**
- * Check the installation status of all game dependencies
- * @returns {Promise<Array>} Array of dependency status objects
- */
-async function checkGameDependencies() {
-  const results = [];
-  
-  for (const [file, info] of Object.entries(DEPENDENCY_REGISTRY_PATHS)) {
-    const isInstalled = await checkDependencyInstalled(info);
-    results.push({
-      name: info.name,
-      file: file,
-      installed: isInstalled
-    });
-  }
-  
-  return results;
-}
-
-// Handle IPC call to check dependencies
-ipcMain.handle('check-game-dependencies', async () => {
-  return await checkGameDependencies();
-});
