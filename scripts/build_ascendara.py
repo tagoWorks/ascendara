@@ -1,3 +1,5 @@
+# This script is used to easily and quickly build Ascendara from source to EXE
+
 import os
 import subprocess
 import shutil
