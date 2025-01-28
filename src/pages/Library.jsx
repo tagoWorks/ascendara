@@ -735,12 +735,6 @@ const InstalledGameCard = ({
                 {t('library.changeExecutable')}
               </DropdownMenuItem>
             )}
-            {!game.isCustom && game.downloadingData && (
-              <DropdownMenuItem onClick={() => window.electron.ipcRenderer.invoke('open-req-path', game.game)}>
-                <Shield className="w-4 h-4 mr-2" />
-                {t('library.requiredLibraries')}
-              </DropdownMenuItem>
-            )}
             <DropdownMenuItem 
               onClick={(e) => {
                 e.stopPropagation();

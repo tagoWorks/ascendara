@@ -32,7 +32,7 @@ let isDev = false;
 
 
 
-const CURRENT_VERSION = "7.5.10";
+const CURRENT_VERSION = "7.6.0";
 const { app, BrowserWindow, ipcMain, dialog, shell, protocol } = require('electron');
 const { Client } = require('discord-rpc');
 const disk = require('diskusage');
@@ -101,9 +101,7 @@ app.whenReady().then(() => {
 });
 
 async function checkVersionAndUpdate() {
-  if (isDev) {
-    return true;
-  }
+
   try {
     const response = await axios.get('https://api.ascendara.app/');
     const latest_version = response.data.appVer;
@@ -152,25 +150,24 @@ async function downloadUpdateInBackground() {
       'X-Ascendara-Version': CURRENT_VERSION
     };
 
-    // First get a download token
-    const tokenResponse = await axios.get('https://lfs.ascendara.app/generate-download-token', { headers });
-    if (tokenResponse.status !== 200) {
-      throw new Error('Failed to get download token');
-    }
-    const downloadToken = tokenResponse.data.token;
 
-    const updateUrl = `https://lfs.ascendara.app/AscendaraInstaller.exe?update&token=${downloadToken}`;
+    const updateUrl = `https://lfs.ascendara.app/download?update`;
     const tempDir = path.join(os.tmpdir(), 'ascendarainstaller');
     const installerPath = path.join(tempDir, 'AscendaraInstaller.exe');
 
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir);
     }
+    const mainWindow = BrowserWindow.getAllWindows()[0];
     const response = await axios({
       url: updateUrl,
       method: 'GET',
       responseType: 'arraybuffer',
-      headers
+      headers,
+      onDownloadProgress: (progressEvent) => {
+        const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        mainWindow.webContents.send('update-download-progress', progress);
+      }
     });
 
     fs.writeFileSync(installerPath, Buffer.from(response.data));
@@ -798,22 +795,6 @@ ipcMain.handle('get-timestamp-value', async (event, key) => {
   }
 });
 
-ipcMain.handle('is-latest', async () => {
-  try {    
-    if (isDev) {
-      return true;
-    }
-    const response = await axios.get('https://api.ascendara.app/');
-    const latest_version = response.data.appVer;
-    is_latest = latest_version === CURRENT_VERSION;
-    console.log(`Version check: Current=${CURRENT_VERSION}, Latest=${latest_version}, Is Latest=${is_latest}`);
-    
-    return is_latest;
-  } catch (error) {
-    console.error('Error checking version:', error);
-    return true; // Return true on error to prevent update notifications
-  }
-});
 // Read the settings JSON file and send it to the renderer process
 ipcMain.handle('get-settings', () => {
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
@@ -1242,11 +1223,12 @@ ipcMain.handle('update-ascendara', async () => {
 });
 
 ipcMain.handle('check-for-updates', async () => {
+  if (isDev) return true;
   try {
     return await checkVersionAndUpdate();
   } catch (error) {
     console.error('Error checking for updates:', error);
-    return true; // Return true to prevent update notifications on error
+    return true;
   }
 });
 
@@ -2137,15 +2119,13 @@ async function createGameShortcut(game) {
     await new Promise((resolve, reject) => {
       const process = spawn('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-File', psPath], { windowsHide: true });
       
-      process.on('close', (code) => {
+      process.on('error', (error) => {
+        reject(error);
+      });
+      process.on('exit', (code) => {
         fs.unlinkSync(psPath); // Clean up temp file
         if (code === 0) resolve();
-        else reject(new Error(`Failed to create shortcut with code ${code}`));
-      });
-      
-      process.on('error', (err) => {
-        fs.unlinkSync(psPath); // Clean up temp file
-        reject(err);
+        else reject(new Error(`Process exited with code ${code}`));
       });
     });
     
@@ -2227,17 +2207,17 @@ function handleProtocolUrl(url) {
   const cleanUrl = url.trim();
   if (!cleanUrl.startsWith('ascendara://')) return;
 
-  // Add to pending URLs
-  pendingUrls.add(cleanUrl);
-
   // Get the main window
   const mainWindow = BrowserWindow.getAllWindows()[0];
+  
+  // If no window exists, store URL and create window
   if (!mainWindow) {
-    pendingUrls.clear();
+    pendingUrls.add(cleanUrl);
+    createWindow();
     return;
   }
 
-  // Show window if minimized
+  // Show and focus window
   if (mainWindow.isMinimized()) mainWindow.restore();
   mainWindow.focus();
 
@@ -2250,13 +2230,24 @@ function handleProtocolUrl(url) {
     if (cleanUrl !== lastHandledUrl || (currentTime - lastHandleTime) > URL_DEBOUNCE_TIME) {
       lastHandledUrl = cleanUrl;
       lastHandleTime = currentTime;
-
-      // Send only the current URL
-      console.log('Sending URL to renderer:', cleanUrl);
-      mainWindow.webContents.send('protocol-download-url', cleanUrl);
       
-      // Clear pending URLs since we've handled this one
-      pendingUrls.clear();
+      // Check if this is a game URL
+      if (cleanUrl.includes('game')) {
+        try {
+          // Extract the ID, removing any query parameters
+          const imageId = cleanUrl.split('?').pop().replace('/', '');
+          if (imageId) {
+            console.log('Sending game URL to renderer with imageId:', imageId);
+            mainWindow.webContents.send('protocol-game-url', { imageId });
+          }
+        } catch (error) {
+          console.error('Error parsing game URL:', error);
+        }
+      } else {
+        // Handle existing download protocol
+        console.log('Sending download URL to renderer:', cleanUrl);
+        mainWindow.webContents.send('protocol-download-url', cleanUrl);
+      }
     }
 
     // Reset flag after a delay
@@ -2266,8 +2257,10 @@ function handleProtocolUrl(url) {
   } catch (error) {
     console.error('Error handling protocol URL:', error);
     isHandlingProtocolUrl = false;
-    pendingUrls.clear();
   }
+  
+  // Clear pending URLs since we've handled this one
+  pendingUrls.clear();
 }
 
 // Register IPC handler for renderer to request pending URLs
@@ -2277,78 +2270,71 @@ ipcMain.handle('get-pending-urls', () => {
   return urls;
 });
 
-// Register protocol handler
-console.log('Registering protocol handler. isDev:', process.defaultApp || isDev);
-if (process.defaultApp || isDev) {
-  // Development - register protocol for testing
-  app.setAsDefaultProtocolClient('ascendara', process.execPath, [path.resolve(process.argv[1])]);
+// Single instance lock check
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  console.log('Another instance is running, quitting this instance');
+  app.quit();
 } else {
-  // Production - register protocol normally
-  app.setAsDefaultProtocolClient('ascendara');
-}
-
-// Add open-url handler for protocol URLs
-app.on('open-url', (event, url) => {
-  event.preventDefault();
-  handleProtocolUrl(url);
-});
-
-// Handle protocol URLs in the main process
-app.on('ready', () => {
-  // Protocol handler for Windows
-  protocol.registerHttpProtocol('ascendara', (request, callback) => {
-    const mainWindow = BrowserWindow.getAllWindows()[0];
-    if (mainWindow) {
-      handleProtocolUrl(request.url);
-    }
-  });
-});
-
-// Handle URLs in Windows
-if (process.platform === 'win32') {
-  console.log('Setting up protocol handler for Windows');
-  const gotTheLock = app.requestSingleInstanceLock();
-  
-  if (!gotTheLock) {
-    console.log('Another instance is running, quitting');
-    app.quit();
+  // Register protocol handler
+  if (process.defaultApp || isDev) {
+    app.setAsDefaultProtocolClient('ascendara', process.execPath, [path.resolve(process.argv[1])]);
   } else {
-    app.on('second-instance', (event, commandLine, workingDirectory) => {
-      console.log('Second instance detected with args:', commandLine);
-      
-      // Check for protocol URL first
-      const protocolUrl = commandLine.find(arg => arg.startsWith('ascendara://'));
-      console.log('Protocol URL from second instance:', protocolUrl);
-      
-      if (protocolUrl) {
-        // For protocol URLs, just focus existing window and handle URL
-        const mainWindow = BrowserWindow.getAllWindows()[0];
-        if (mainWindow) {
-          if (mainWindow.isMinimized()) mainWindow.restore();
-          mainWindow.focus();
-          handleProtocolUrl(protocolUrl);
-        }
-        return; // Exit early to prevent window creation
-      }
+    app.setAsDefaultProtocolClient('ascendara');
+  }
 
-      // Only create/focus window if no protocol URL (normal app launch)
+  // Handle second instance
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    console.log('Second instance detected with args:', commandLine);
+    
+    // Check for protocol URL
+    const protocolUrl = commandLine.find(arg => arg.startsWith('ascendara://'));
+    
+    if (protocolUrl) {
+      handleProtocolUrl(protocolUrl);
+    } else {
+      // Focus existing window for normal launch
       const mainWindow = BrowserWindow.getAllWindows()[0];
       if (mainWindow) {
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.focus();
-      } else {
-        createWindow();
       }
+    }
+  });
+
+  // Handle protocol URLs
+  app.on('open-url', (event, url) => {
+    event.preventDefault();
+    handleProtocolUrl(url);
+  });
+
+  // Setup on app ready
+  app.whenReady().then(() => {
+    // Register protocol handler
+    protocol.registerHttpProtocol('ascendara', (request, callback) => {
+      handleProtocolUrl(request.url);
     });
 
-    // Handle protocol URL from first instance
-    console.log('Checking first instance args:', process.argv);
+    // Check first instance protocol URL
     const protocolUrl = process.argv.find(arg => arg.startsWith('ascendara://'));
-    console.log('Protocol URL from first instance:', protocolUrl);
     if (protocolUrl) {
-      app.whenReady().then(() => {
-        handleProtocolUrl(protocolUrl);
-      });
+      handleProtocolUrl(protocolUrl);
     }
-  }
+  });
+
+  // Cleanup on app quit
+  app.on('window-all-closed', () => {
+    pendingUrls.clear();
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+  });
+
+  // Handle activation
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
 }

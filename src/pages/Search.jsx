@@ -265,7 +265,7 @@ const Search = memo(() => {
                   <InfoIcon className="w-4 h-4 cursor-pointer hover:text-foreground transition-colors" />
                 </AlertDialogTrigger>
                 <AlertDialogContent>
-                  <AlertDialogCancel className="absolute top-2 right-2 cursor-pointer hover:text-foreground transition-colors">
+                  <AlertDialogCancel className="absolute top-2 right-2 cursor-pointer text-foreground transition-colors">
                     <X className="w-4 h-4" />
                   </AlertDialogCancel>
                   <AlertDialogHeader>

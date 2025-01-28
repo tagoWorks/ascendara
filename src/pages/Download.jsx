@@ -80,6 +80,7 @@ export default function DownloadPage() {
         setCachedImage(null);
         setIsValidLink(true);
         setShowCopySuccess(false);
+        setShowShareCopySuccess(false);
         setIsReporting(false);
         setReportReason("");
         setReportDetails("");
@@ -111,6 +112,7 @@ export default function DownloadPage() {
   const [cachedImage, setCachedImage] = useState(null);
   const [isValidLink, setIsValidLink] = useState(true);
   const [showCopySuccess, setShowCopySuccess] = useState(false);
+  const [showShareCopySuccess, setShowShareCopySuccess] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [reportDetails, setReportDetails] = useState("");
@@ -439,6 +441,17 @@ export default function DownloadPage() {
   }, []);
 
   useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        navigate('/search');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
+
+  useEffect(() => {
     if (gameData) {
       console.log('Game Data:', gameData);
       
@@ -504,6 +517,13 @@ export default function DownloadPage() {
     if (isNewUser) {
       setShowNewUserGuide(true);
     }
+  };
+
+  const handleShareLink = async () => {
+    const shareLink = `https://ascendara.app/game/${gameData.imgID}`;
+    await navigator.clipboard.writeText(shareLink);
+    setShowShareCopySuccess(true);
+    setTimeout(() => setShowShareCopySuccess(false), 2000);
   };
 
   const handleSubmitReport = async () => {
@@ -620,18 +640,20 @@ export default function DownloadPage() {
   }
 
   return (
-    <div className="container max-w-7xl mx-auto flex flex-col p-4 min-h-screen pt-24 fade-in" style={{ transform: 'scale(0.95)', transformOrigin: 'top center' }}>
+    <div className="container max-w-7xl mx-auto flex flex-col min-h-screen fade-in" style={{ transform: 'scale(0.95)', transformOrigin: 'top center' }}>
       <div className="w-full max-w-6xl">
-        <div className="flex flex-col gap-4">
-          {/* Back Button */}
-          <Button
-            variant="ghost"
-            className="w-fit"
-            onClick={() => navigate(-1)}
+        
+        <div 
+            className="text-center text-muted-foreground font-bold"
+            style={{
+              animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            }}
           >
-            <ArrowBigLeft size={16} className="mr-2 mt-0.5" /> {t('common.back')}
-          </Button>
+            {t('download.pressEscToGoBack')}
+        </div>
 
+      
+        <div className="flex flex-col gap-4 mt-4">
           {/* Game Header Section */}
           <div className="flex items-start gap-4">
             <img 
@@ -1030,59 +1052,43 @@ export default function DownloadPage() {
         </div>
       </div>
 
-      {/* New User Guide Alert Dialog */}
-      <AlertDialog open={showNewUserGuide} onOpenChange={handleCloseGuide}>
-        <AlertDialogContent className="sm:max-w-[425px]">
-          <AlertDialogHeader>
-            {guideStep === 0 ? (
-              <>
-                <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('download.newUserGuide.title')}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t('download.newUserGuide.description')}
-                </AlertDialogDescription>
-              </>
-            ) : (
-              <>
-                <AlertDialogTitle className="text-2xl font-bold text-foreground">
-                  {t(`download.newUserGuide.steps.${guideStep - 1}.title`)}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t(`download.newUserGuide.steps.${guideStep - 1}.description`)}
-                </AlertDialogDescription>
-                <div className="mt-4 space-y-4">
-                  {guideSteps[guideStep - 1].image && (
-                    <img 
-                      src={guideSteps[guideStep - 1].image}
-                      alt={t(`download.newUserGuide.steps.${guideStep - 1}.title`)}
-                      className="w-full rounded-lg border border-border"
-                    />
-                  )}
-                  {guideSteps[guideStep - 1].action && (
-                    <Button 
-                      className="w-full" 
-                      onClick={guideSteps[guideStep - 1].action.onClick}
-                    >
-                      {guideSteps[guideStep - 1].action.label}
-                    </Button>
-                  )}
-                </div>
-              </>
-            )}
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="text-primary" onClick={handleCloseGuide}>
-              {guideStep === 0 ? t('download.newUserGuide.noThanks') : t('download.newUserGuide.close')}
-            </AlertDialogCancel>
-            <Button variant="text-secondary bg-primary" onClick={guideStep === 0 ? handleStartGuide : handleNextStep}>
-              {guideStep === 0 ? t('download.newUserGuide.startGuide') : 
-               guideStep === guideSteps.length ? t('download.newUserGuide.finish') : 
-               guideStep === 1 ? t('download.newUserGuide.installed') :
-               guideStep === 2 ? t('download.newUserGuide.handlerEnabled') :
-               t('download.newUserGuide.nextStep')}
+      <TooltipProvider>
+        <Tooltip open={showShareCopySuccess}>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              onClick={handleShareLink}
+              className="fixed bottom-20 right-4 z-50 flex items-center gap-2"
+            >
+              {showShareCopySuccess ? (
+                <CheckIcon className="h-4 w-4" />
+              ) : (
+                <CopyIcon className="h-4 w-4" />
+              )}
+              {t('download.shareGame')}
             </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p>{t('download.linkCopied')}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
     </div>
   );
 }
+
+<style jsx>{`
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+`}</style>

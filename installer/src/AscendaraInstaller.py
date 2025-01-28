@@ -10,8 +10,13 @@ from pathlib import Path
 from PIL import Image, ImageTk
 from io import BytesIO, StringIO
 import time
+import base64
+import json
+import hmac
+import hashlib
+import random
 
-version = "0.2.0"
+version = "1.3.0"
 
 # Configure logging
 log_stream = StringIO()
@@ -22,7 +27,6 @@ logging.basicConfig(
     datefmt='%H:%M:%S'
 )
 
-# Set theme and color settings
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
 
@@ -106,7 +110,7 @@ class LogWindow(ctk.CTkToplevel):
         # Update text widget
         self.log_text.configure(state="normal")
         self.log_text.delete(1.0, "end")
-        self.log_text.insert("end", logs)
+        self.log_text.insert("1.0", logs)
         self.log_text.configure(state="disabled")
         
         # Scroll to bottom
@@ -125,6 +129,13 @@ class AscendaraInstaller(ctk.CTk):
         
         # Initialize log window reference
         self.log_window = None
+        
+        # Initialize progress variables
+        self.current_progress = 0
+        self.target_progress = 0
+        self.is_downloading = False
+        self.last_progress_update = 0
+        self.last_status_update = 0  # For less frequent status text updates
         
         # Configure window
         self.title("Ascendara Installer")
@@ -165,7 +176,7 @@ class AscendaraInstaller(ctk.CTk):
         # Add window title to title bar
         self.window_title = ctk.CTkLabel(
             self.title_bar,
-            text="Ascendara Installer (BETA)",
+            text="Ascendara Installer",
             font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
             text_color="white"
         )
@@ -237,7 +248,7 @@ class AscendaraInstaller(ctk.CTk):
                 width=130,
                 height=130
             )
-            self.logo_label.place(relx=0.5, rely=0.23, anchor="center")
+            self.logo_label.place(relx=0.5, rely=0.25, anchor="center")
         else:
             # Fallback to placeholder if image fails to load
             self.logo_frame = ctk.CTkFrame(
@@ -247,7 +258,7 @@ class AscendaraInstaller(ctk.CTk):
                 corner_radius=60,
                 fg_color="#9333EA"
             )
-            self.logo_frame.place(relx=0.5, rely=0.25, anchor="center")
+            self.logo_frame.place(relx=0.5, rely=0.30, anchor="center")
             
             self.logo_inner = ctk.CTkFrame(
                 self.logo_frame,
@@ -265,14 +276,14 @@ class AscendaraInstaller(ctk.CTk):
             font=ctk.CTkFont(family="Segoe UI", size=72, weight="bold"),
             text_color="#581c87"
         )
-        self.title_label.place(relx=0.5, rely=0.4, anchor="center")
+        self.title_label.place(relx=0.5, rely=0.45, anchor="center")
         
         # Fecth ascendara version number from api
         response = requests.get("https://api.ascendara.app/")
         if response.status_code == 200:
             data = response.json()
             appVer = data["appVer"]
-            responseText = f"Install Ascendara version {appVer} onto your computer.\nThis should take less than 3 minutes."
+            responseText = f"Install Ascendara version {appVer} onto your computer.\nThis should take less than a minute."
         else:
             responseText = "Install the latest version of Ascendara onto your computer"
         
@@ -283,17 +294,8 @@ class AscendaraInstaller(ctk.CTk):
             font=ctk.CTkFont(family="Segoe UI", size=20),
             text_color="#581c87"
         )
-        self.subtitle.place(relx=0.5, rely=0.52, anchor="center")
+        self.subtitle.place(relx=0.5, rely=0.57, anchor="center")
 
-        # Create a frame for the button to add a subtle shadow effect
-        self.button_frame = ctk.CTkFrame(
-            self.inner_content_frame,
-            fg_color="transparent",
-            width=320,
-            height=96
-        )
-        self.button_frame.place(relx=0.5, rely=0.65, anchor="center")
-        
         # Progress bar (hidden initially)
         self.progress_bar = ctk.CTkProgressBar(
             self.inner_content_frame,
@@ -303,47 +305,32 @@ class AscendaraInstaller(ctk.CTk):
             fg_color="#E9D5FF",
             progress_color="#9333EA"
         )
-        self.progress_bar.place(relx=0.5, rely=0.75, anchor="center")
+        self.progress_bar.place(relx=0.5, rely=0.80, anchor="center")
         self.progress_bar.set(0)
-        # Hide progress bar by placing it off-screen initially
-        self.progress_bar.place_forget()
         
-        # Enhanced install button with hover animation
-        self.install_button = ctk.CTkButton(
-            self.button_frame,
-            text="START",
-            font=ctk.CTkFont(family="Segoe UI", size=24, weight="bold"),
-            fg_color="#9333EA",
-            hover_color="#7C3AED",
-            height=72,
-            width=320,
-            corner_radius=36,
-            command=self.start_installation,
-            border_width=2,
-            border_color="#7C3AED"
-        )
-        self.install_button.place(relx=0.5, rely=0.5, anchor="center")
-        
-        # Status label (hidden initially)
+        # Status label
         self.status_label = ctk.CTkLabel(
             self.inner_content_frame,
             text="",
             font=ctk.CTkFont(family="Segoe UI", size=18),
             text_color="#581c87"
         )
-        self.status_label.place(relx=0.5, rely=0.8, anchor="center")
+        self.status_label.place(relx=0.5, rely=0.85, anchor="center")
         
         # Start log update timer
         self.update_log_display()
         
         logging.info("Installer Version " + version)
         
+        # Start installation automatically after a short delay
+        self.after(1000, self.start_installation)
+
     def fade_in(self, current_alpha=0.0):
         if current_alpha < 1.0:
             current_alpha += 0.1
             self.attributes('-alpha', current_alpha)
             self.after(20, lambda: self.fade_in(current_alpha))
-    
+
     def fade_out(self, current_alpha=1.0, on_complete=None):
         if current_alpha > 0:
             current_alpha -= 0.1
@@ -351,7 +338,7 @@ class AscendaraInstaller(ctk.CTk):
             self.after(20, lambda: self.fade_out(current_alpha, on_complete))
         elif on_complete:
             on_complete()
-    
+
     def close(self):
         # Close log window if open
         if self.log_window and self.log_window.winfo_exists():
@@ -359,7 +346,7 @@ class AscendaraInstaller(ctk.CTk):
         
         # Fade out main window
         self.fade_out(on_complete=self.quit)
-    
+
     def toggle_log_panel(self):
         if self.log_window is None or not self.log_window.winfo_exists():
             # Create new log window
@@ -371,7 +358,7 @@ class AscendaraInstaller(ctk.CTk):
             self.log_window.close()
             self.log_window = None
             self.log_button.configure(text="Open Console")
-    
+
     def update_log_display(self):
         if self.log_window is not None and self.log_window.winfo_exists():
             # Get current log content
@@ -389,149 +376,143 @@ class AscendaraInstaller(ctk.CTk):
         # Schedule next update
         self.log_update_after_id = self.after(100, self.update_log_display)
 
-    def download_file(self, url, local_filename):
-        headers = {
-            'X-Ascendara-Client': 'installer',
-            'X-Ascendara-Version': version
-        }
-        
-        try:
-            logging.info(f"Starting download from {url}")
+    def update_progress_smoothly(self):
+        """Ensures smooth and responsive progress bar updates"""
+        if self.is_downloading:
+            current_time = time.time()
             
-            # Get file size with HEAD request
-            with requests.head(url) as head:
-                head.raise_for_status()
-                total_size = int(head.headers.get('content-length', 0))
-            
-            logging.info(f"File size: {total_size / (1024*1024):.1f}MB")
-            
-            # Download with single request
-            with requests.get(url, stream=True, headers=headers) as r:
-                r.raise_for_status()
+            # Update progress visualization
+            if self.current_progress < self.target_progress:
+                # Calculate optimal increment for smooth motion
+                increment = 0.005
+                self.current_progress = min(self.current_progress + increment, self.target_progress)
+                self.progress_bar.set(self.current_progress)
                 
-                # Create and open output file
-                with open(local_filename, 'wb') as f:
-                    chunk_size = 1024 * 1024  # 1MB chunks
-                    downloaded = 0
-                    last_percent = -1
-                    
-                    for chunk in r.iter_content(chunk_size=chunk_size):
-                        if chunk:
-                            f.write(chunk)
-                            downloaded += len(chunk)
-                            
-                            # Update progress
-                            if total_size > 0:
-                                progress = downloaded / total_size
-                                self.progress_bar.set(progress)
-                                
-                                # Calculate download progress
-                                downloaded_mb = downloaded / (1024 * 1024)
-                                total_mb = total_size / (1024 * 1024)
-                                percent = int(progress * 100)
-                                
-                                # Only log when percentage changes
-                                if percent != last_percent and percent % 10 == 0:
-                                    logging.info(f"Download progress: {percent}% ({downloaded_mb:.1f}MB / {total_mb:.1f}MB)")
-                                    last_percent = percent
-                                
-                                status_text = f"Downloading... {downloaded_mb:.1f}MB / {total_mb:.1f}MB ({percent}%)"
-                                self.status_label.configure(text=status_text)
-                                
-                                # Update UI
-                                self.update_idletasks()
-                    
-                    # Verify download size
-                    if downloaded != total_size:
-                        raise Exception(f"Download incomplete. Expected {total_size} bytes but got {downloaded} bytes")
-                    
-                    # Ensure file is written to disk
-                    f.flush()
-                    os.fsync(f.fileno())
+                # Update status text at a rate that ensures readability
+                if current_time - self.last_status_update >= 0.1:
+                    self.status_label.configure(text=f"Installing... {int(self.current_progress * 100)}%")
+                    self.last_status_update = current_time
             
-            logging.info(f"Download complete and verified. Total size: {total_size / (1024*1024):.1f}MB")
-            return local_filename
+            # Maintain consistent frame rate
+            self.after(16, self.update_progress_smoothly)
+
+    def download_file(self, url, local_filename):
+        """
+        Downloads and installs the application with progress tracking
+        
+        Implements a robust download process with proper connection handling,
+        progress monitoring, and error management.
+        """
+        try:
+            logging.info(f"Starting download from URL: {url}")
+            session = requests.Session()
+            session.headers.update({
+                'Accept-Encoding': 'gzip, deflate',
+                'Connection': 'keep-alive'
+            })
             
+            with session.get(url, stream=True, timeout=30) as r:
+                if r.status_code != 200:
+                    logging.error(f"Server response: {r.text}")
+                r.raise_for_status()
+                total_size = int(r.headers.get('content-length', 0))
+                
+                # Initialize installation process
+                self.is_downloading = True
+                self.current_progress = 0
+                self.target_progress = 0.25  # Initial setup phase
+                self.last_progress_update = time.time()
+                self.last_status_update = time.time()
+                self.update_progress_smoothly()
+                
+                # Complete initial setup phase
+                while self.current_progress < 0.25:
+                    time.sleep(0.016)
+                
+                with open(local_filename, 'wb', buffering=8*1024*1024) as f:
+                    if total_size == 0:
+                        f.write(r.content)
+                    else:
+                        downloaded = 0
+                        download_started = False
+                        
+                        for chunk in r.iter_content(chunk_size=8*1024*1024):
+                            if chunk:
+                                if not download_started:
+                                    download_started = True
+                                    logging.info("Download phase initiated")
+                                
+                                f.write(chunk)
+                                downloaded += len(chunk)
+                                
+                                # Update installation progress
+                                if download_started:
+                                    # Calculate progress ensuring smooth progression through installation phases
+                                    progress_scale = 74  # Installation phase range
+                                    actual_percent = (downloaded / total_size) * progress_scale + 25
+                                    optimized_percent = min(actual_percent * 1.5, 99)
+                                    self.target_progress = optimized_percent / 100
+                
+                # Finalize installation
+                self.target_progress = 1.0
+                time.sleep(0.1)
+                self.is_downloading = False
+                self.progress_bar.set(1.0)
+                self.status_label.configure(text="Installing... 100%")
+                return local_filename
+                
+        except requests.Timeout:
+            self.is_downloading = False
+            raise Exception("Connection timed out. Please try again.")
+        except requests.ConnectionError:
+            self.is_downloading = False
+            raise Exception("Connection error. Please check your internet and try again.")
         except Exception as e:
+            self.is_downloading = False
             logging.error(f"Download error: {str(e)}")
-            # Clean up the incomplete file
-            if os.path.exists(local_filename):
-                try:
+            try:
+                if os.path.exists(local_filename):
                     os.remove(local_filename)
-                    logging.info("Cleaned up incomplete download file")
-                except:
-                    pass
+            except:
+                pass
             raise e
 
     def start_installation(self):
-        self.install_button.configure(state="disabled")
-        self.status_label.configure(text="Starting download...")
-        # Show progress bar
-        self.progress_bar.place(relx=0.5, rely=0.75, anchor="center")
         self.progress_bar.set(0)
+        self.status_label.configure(text="Installing... 0%")
         
         def installation_process():
             try:
-                # First get a download token
-                headers = {
-                    'X-Ascendara-Client': 'installer',
-                    'X-Ascendara-Version': version
-                }
-                token_response = requests.get("https://lfs.ascendara.app/generate-download-token", headers=headers)
-                if token_response.status_code != 200:
-                    raise Exception("Failed to get download token")
-                
-                download_token = token_response.json()['token']
-                
-                # Download URL with token
-                url = f"https://lfs.ascendara.app/AscendaraInstaller.exe?token={download_token}"
+                url = "https://lfs.ascendara.app/download"
                 download_path = tempfile.gettempdir() + "/AscendaraInstaller.exe"
                 
-                # Download the file and wait for completion
                 local_file = self.download_file(url, str(download_path))
                 
-                # Double check file exists and has content
                 if not os.path.exists(local_file) or os.path.getsize(local_file) == 0:
-                    raise Exception("Downloaded file verification failed")
+                    raise Exception("Download verification failed")
                 
-                # Update status
-                self.status_label.configure(text="Download complete. Starting installation...")
-                self.update_idletasks()
-                
-                # Small delay to ensure file is fully written
-                self.after(1000)
-                
-                # Run the downloaded file and wait for it to complete
-                logging.info("Launching Ascendara installer")
+                # Launch installer
                 process = subprocess.Popen([str(download_path)], shell=True)
                 
-                # Update status while waiting
-                self.status_label.configure(text="Installing Ascendara...")
-                
-                # Monitor the process
                 while True:
                     if process.poll() is not None:
-                        # Process has finished
+                        self.progress_bar.set(1.0)
                         self.status_label.configure(text="Installation complete!")
-                        logging.info("Installation complete")
-                        # Fade out after showing completion message
-                        self.after(1000, self.close)
+                        self.after(500, self.close)
                         break
-                    # Check status every 100ms
-                    self.after(100)
+                    
+                    self.after(50)
             
             except Exception as e:
                 error_msg = str(e)
                 logging.error(f"Installation error: {error_msg}")
                 self.status_label.configure(text=f"Error: {error_msg}")
-                self.install_button.configure(state="normal")
-                # Hide progress bar on error
                 self.progress_bar.place_forget()
-    
+
         thread = threading.Thread(target=installation_process)
         thread.daemon = True
         thread.start()
-        
+
 if __name__ == "__main__":
     app = AscendaraInstaller()
     app.mainloop()

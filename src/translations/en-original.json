@@ -349,6 +349,9 @@
       "allDlc": "ALL-DLCs",
       "allDlcTooltip": "Includes all downloadable content (DLC) available for this game",
       "size": "Size",
+      "pressEscToGoBack": "Press ESC key to go back",
+      "shareGame": "Share Ascendara Game Link",
+      "linkCopied": "Link copied to clipboard",
       "dmcaNotice": "DMCA Notice: Ascendara uses outsourced links and files and does not host anything on its own servers.",
       "downloadInstructions": "Download Instructions",
       "protectYourself": {

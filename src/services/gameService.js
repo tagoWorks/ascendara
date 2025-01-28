@@ -14,7 +14,8 @@ let memoryCache = {
   games: null,
   metadata: null,
   timestamp: null,
-  lastUpdated: null
+  lastUpdated: null,
+  imageIdMap: null // New cache for image ID lookups
 };
 
 const gameService = {
@@ -119,21 +120,30 @@ const gameService = {
     try {
       const now = Date.now();
       
-      // Update localStorage
-      localStorage.setItem(CACHE_KEY, JSON.stringify(data.games));
-      localStorage.setItem(METADATA_CACHE_KEY, JSON.stringify(data.metadata));
-      localStorage.setItem(CACHE_TIMESTAMP_KEY, now.toString());
-      if (data.metadata?.getDate) {
-        localStorage.setItem(LAST_UPDATED_KEY, data.metadata.getDate);
-      }
+      // Create image ID map for efficient lookups
+      const imageIdMap = new Map();
+      data.games.forEach(game => {
+        if (game.imgID) {
+          imageIdMap.set(game.imgID, game);
+        }
+      });
 
       // Update memory cache
       memoryCache = {
         games: data.games,
         metadata: data.metadata,
         timestamp: now,
-        lastUpdated: data.metadata?.getDate
+        lastUpdated: data.metadata?.getDate,
+        imageIdMap // Store the map in memory cache
       };
+
+      // Update localStorage cache
+      localStorage.setItem(CACHE_KEY, JSON.stringify(data.games));
+      localStorage.setItem(METADATA_CACHE_KEY, JSON.stringify(data.metadata));
+      localStorage.setItem(CACHE_TIMESTAMP_KEY, now.toString());
+      if (data.metadata?.getDate) {
+        localStorage.setItem(LAST_UPDATED_KEY, data.metadata.getDate);
+      }
     } catch (error) {
       console.error('Error updating cache:', error);
     }
@@ -271,6 +281,43 @@ const gameService = {
       return null;
     }
   },
+
+  async findGameByImageId(imageId) {
+    try {
+      // Ensure we have the latest data
+      if (!memoryCache.imageIdMap) {
+        const data = await this.getCachedData();
+        if (!memoryCache.imageIdMap) {
+          // Create image ID map if it doesn't exist
+          const imageIdMap = new Map();
+          data.games.forEach(game => {
+            if (game.imgID) {
+              // Store the game with its download links directly from the API
+              imageIdMap.set(game.imgID, {
+                ...game,
+                // Ensure download_links exists, even if empty
+                download_links: game.download_links || {}
+              });
+            }
+          });
+          memoryCache.imageIdMap = imageIdMap;
+        }
+      }
+
+      // O(1) lookup from the map
+      const game = memoryCache.imageIdMap.get(imageId);
+      if (!game) {
+        console.warn(`No game found with image ID: ${imageId}`);
+        return null;
+      }
+
+      console.log('Found game with download links:', game.download_links);
+      return game;
+    } catch (error) {
+      console.error('Error finding game by image ID:', error);
+      return null;
+    }
+  }
 };
 
 export default gameService;

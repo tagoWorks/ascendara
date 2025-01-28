@@ -17,11 +17,12 @@ import './Index.css';
 import { Toaster, toast } from 'sonner';
 import { Loader } from 'lucide-react';
 import UpdateOverlay from './components/UpdateOverlay';
-import { analytics } from './services/analyticsService'
+import { analytics } from './services/analyticsService';
+import gameService from './services/gameService';
 import ContextMenu from './components/ContextMenu';
-import './components/ContextMenu.css';
 import { useTranslation } from 'react-i18next';
 import i18n from './i18n';
+import { checkForUpdates } from './services/updateCheckingService';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -48,6 +49,7 @@ const AppRoutes = () => {
   const loadStartTime = useRef(Date.now());
   const hasShownUpdateNotification = useRef(false);
   const hasShownUpdateReadyNotification = useRef(false);
+  const protocolHandlerRef = useRef(null);
 
   useEffect(() => {
     const loadIconPath = async () => {
@@ -109,6 +111,55 @@ const AppRoutes = () => {
       console.log('Starting app initialization...');
 
       try {
+        // Set up game protocol URL listener
+        const handleGameProtocol = async (event, { imageId }) => {
+          console.log('Received game protocol URL with imageId:', imageId);
+          if (!imageId) {
+            console.error('No imageId received in game protocol URL');
+            return;
+          }
+
+          try {
+            // Clean the imageId by removing any query parameters or slashes
+            const cleanImageId = imageId.replace(/[?/]/g, '');
+            console.log('Looking up game with cleaned imageId:', cleanImageId);
+            
+            // Find the game using the efficient lookup service
+            const game = await gameService.findGameByImageId(cleanImageId);
+            console.log('Found game:', game);
+            
+            if (!game) {
+              toast.error('Game not found', {
+                description: 'The requested game could not be found.'
+              });
+              return;
+            }
+
+            console.log('Navigating to download page with game:', game.game);
+            // Navigate to the download page with the game data in the expected format
+            navigate('/download', { 
+              replace: true, // Use replace to avoid browser back button issues
+              state: { 
+                gameData: {
+                  ...game, // Pass all game data directly
+                  download_links: game.download_links || {} // Ensure download_links exists
+                }
+              } 
+            });
+          } catch (error) {
+            console.error('Error handling game protocol:', error);
+            toast.error('Error', {
+              description: 'Failed to load game information.'
+            });
+          }
+        };
+
+        // Store the handler in the ref so we can access it in cleanup
+        protocolHandlerRef.current = handleGameProtocol;
+
+        // Register the protocol listener using the ipcRenderer from preload
+        window.electron.ipcRenderer.on('protocol-game-url', protocolHandlerRef.current);
+
         // Check if we're forcing a loading screen from settings
         const forceLoading = localStorage.getItem('forceLoading');
         if (forceLoading) {
@@ -203,11 +254,14 @@ const AppRoutes = () => {
 
     initializeApp();
 
-    // Cleanup function to ensure loading states are reset if component unmounts
+    // Cleanup function to ensure loading states are reset and listeners are removed
     return () => {
       setIsLoading(false);
       setIsUpdating(false);
       setIsInstalling(false);
+      if (protocolHandlerRef.current) {
+        window.electron.ipcRenderer.removeListener('protocol-game-url', protocolHandlerRef.current);
+      }
     };
   }, []);
 
@@ -254,12 +308,12 @@ const AppRoutes = () => {
     const checkVersionAndSetupUpdates = async () => {
       try {
         const settings = await window.electron.getSettings();
-        const isLatest = await window.electron.isLatest();
+        const isLatestVersion = await checkForUpdates();
         
-        if (!isLatest && !settings.autoUpdate && !hasShownUpdateNotification.current) {
+        if (!isLatestVersion && !hasShownUpdateNotification.current) {
           hasShownUpdateNotification.current = true;
           toast(t('app.toasts.outOfDate'), {
-            description: t('app.toasts.outOfDateDesc'),
+            description: settings.autoUpdate ? t('app.toasts.autoUpdateDesc') : t('app.toasts.outOfDateDesc'),
             action: {
               label: t('app.toasts.updateNow'),
               onClick: () => window.electron.openURL('https://ascendara.app/')
@@ -492,6 +546,18 @@ function ToasterWithTheme() {
 }
 
 function App() {
+  useEffect(() => {
+    const checkUpdates = async () => {
+      const hasUpdate = await checkForUpdates();
+      if (hasUpdate) {
+        console.log('Update available');
+        // You can trigger any UI updates or notifications here
+      }
+    };
+    
+    checkUpdates();
+  }, []);
+
   return (
     <ErrorBoundary>
       <ThemeProvider>

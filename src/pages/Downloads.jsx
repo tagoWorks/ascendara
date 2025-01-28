@@ -175,7 +175,7 @@ const Downloads = () => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogAction className="text-primary" onClick={() => setShowFirstTimeAlert(false)}>
+              <AlertDialogAction className="bg-primary text-secondary" onClick={() => setShowFirstTimeAlert(false)}>
                 {t('downloads.firstTimeDownload.understand')}
               </AlertDialogAction>
             </AlertDialogFooter>

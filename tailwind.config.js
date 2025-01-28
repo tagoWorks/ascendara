@@ -61,6 +61,7 @@ module.exports = {
     },
   },
   plugins: [
+    require('babel-plugin-react-compiler'),
     function({ addBase }) {
       addBase({
         ':root': {

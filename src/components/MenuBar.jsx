@@ -11,6 +11,7 @@ import {
 } from './ui/alert-dialog';
 import { AlertTriangle, Loader2, WifiOff, Hammer, X, Minus } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { checkForUpdates } from '../services/updateCheckingService';
 
 const MenuBar = () => {
   const { t } = useLanguage();
@@ -34,6 +35,7 @@ const MenuBar = () => {
   const [isLatest, setIsLatest] = useState(true);
   const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
   const [isDev, setIsDev] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   // Check for dev mode
   useEffect(() => {
@@ -46,8 +48,8 @@ const MenuBar = () => {
 
   useEffect(() => {
     const checkLatestVersion = async () => {
-      const latest = await window.electron.isLatest();
-      setIsLatest(latest);
+      const isLatestVersion = await checkForUpdates();
+      setIsLatest(isLatestVersion);
     };
     checkLatestVersion();
 
@@ -78,6 +80,18 @@ const MenuBar = () => {
       if (interval) clearInterval(interval);
     };
   }, [isLatest]);
+
+  useEffect(() => {
+    const handleDownloadProgress = (event, progress) => {
+      setDownloadProgress(progress);
+    };
+    
+    window.electron.ipcRenderer.on('update-download-progress', handleDownloadProgress);
+    
+    return () => {
+      window.electron.ipcRenderer.removeListener('update-download-progress', handleDownloadProgress);
+    };
+  }, []);
 
   useEffect(() => {
     let isSubscribed = true;
@@ -183,7 +197,29 @@ const MenuBar = () => {
             {isDownloadingUpdate ? (
               <>
               <span className="text-[14px] px-1 py-0.5 rounded bg-green-500/10 text-green-500 border border-green-500/20 flex items-center gap-1">
-                <Loader2 className="w-3 h-3 animate-spin" />
+                <div className="relative w-4 h-4">
+                  {/* Track circle */}
+                  <svg className="absolute inset-0 w-full h-full -rotate-90">
+                    <circle 
+                      cx="8" 
+                      cy="8" 
+                      r="6" 
+                      fill="none" 
+                      strokeWidth="3"
+                      className="stroke-green-500/20" 
+                    />
+                    {/* Progress circle */}
+                    <circle 
+                      cx="8" 
+                      cy="8" 
+                      r="6" 
+                      fill="none" 
+                      strokeWidth="3"
+                      className="stroke-green-500" 
+                      strokeDasharray={`${downloadProgress * 0.377} 100`}
+                    />
+                  </svg>
+                </div>
                 {t('app.downloading-update')}
               </span>
               </>

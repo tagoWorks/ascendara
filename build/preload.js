@@ -94,7 +94,7 @@ contextBridge.exposeInMainWorld('electron', {
 
   // Miscellaneous
   createTimestamp: () => ipcRenderer.invoke('create-timestamp'),
-  isLatest: () => ipcRenderer.invoke('is-latest'),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   checkGameDependencies: () => ipcRenderer.invoke('check-game-dependencies'),
   isDownloaderRunning: () => ipcRenderer.invoke('is-downloader-running'),
   deleteInstaller: () => ipcRenderer.invoke('delete-installer'),
