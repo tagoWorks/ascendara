@@ -18,7 +18,7 @@ Ascendara simplifies your pirating experience by providing a seamless way to dow
 
 ## ✨ Features
 
-- 🌐 Support for 8 languages 
+- 🌐 Support for 8 additional languages 
 <details>
 <summary>Click to expand</summary>
 
