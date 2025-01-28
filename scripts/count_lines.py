@@ -2,6 +2,8 @@
 # all files in the src, installer, build, and binaries directories. It excludes
 # any whitespace lines (lines that are just indented) by default.
 
+# View the results of the latest count in 'lineCountResult.txt'.
+
 import os
 
 def count_lines_in_file(filepath):
