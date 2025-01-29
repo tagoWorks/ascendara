@@ -23,6 +23,7 @@ import ContextMenu from './components/ContextMenu';
 import { useTranslation } from 'react-i18next';
 import i18n from './i18n';
 import { checkForUpdates } from './services/updateCheckingService';
+import SupportDialog from './components/SupportDialog';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -43,6 +44,7 @@ const AppRoutes = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
   const [iconData, setIconData] = useState('');
+  const [showSupportDialog, setShowSupportDialog] = useState(false);
   const location = useLocation();
   const hasChecked = useRef(false);
   const navigate = useNavigate();
@@ -99,6 +101,26 @@ const AppRoutes = () => {
       await ensureMinLoadingTime();
       setIsLoading(false);
     }
+  };
+
+  const checkAndSetWelcomeStatus = async () => {
+    const hasLaunched = await window.electron.hasLaunched();
+    if (!hasLaunched) {
+      const data = await checkWelcomeStatus();
+      setWelcomeData(data);
+      // Update launch count since this is the first launch
+      const launchCount = await window.electron.updateLaunchCount();
+      if (launchCount === 5) {
+        setTimeout(() => {
+          setShowSupportDialog(true);
+        }, 4000);
+      }
+    } else {
+      const isV7 = await window.electron.isV7();
+      setShouldShowWelcome(!isV7);
+      setWelcomeData({ isNew: false, isV7 });
+    }
+    return hasLaunched;
   };
 
   const [welcomeData, setWelcomeData] = useState(null);
@@ -204,15 +226,7 @@ const AppRoutes = () => {
             await window.electron.setTimestampValue('isUpdating', false);
             setIsUpdating(false);
             setIsLoading(false);
-            const hasLaunched = await window.electron.hasLaunched();
-            if (!hasLaunched) {
-              const data = await checkWelcomeStatus();
-              setWelcomeData(data);
-            } else {
-              const isV7 = await window.electron.isV7();
-              setShouldShowWelcome(!isV7);
-              setWelcomeData({ isNew: false, isV7 });
-            }
+            await checkAndSetWelcomeStatus();
             const version = await window.electron.getVersion();
             toast(t('app.toasts.justUpdated'), {
               description: t('app.toasts.justUpdatedDesc', { version }),
@@ -227,20 +241,9 @@ const AppRoutes = () => {
           return;
         }
 
-        const hasLaunched = await window.electron.hasLaunched();
-        console.log('Has launched check:', hasLaunched);
-
-        if (!hasLaunched) {
-          console.log('First launch - checking welcome status...');
-          const data = await checkWelcomeStatus();
-          console.log('Welcome status data:', data);
-          setWelcomeData(data);
-        } else {
-          console.log('Not first launch - checking v7 status...');
-          const isV7 = await window.electron.isV7();
-          console.log('Is V7:', isV7);
-          setShouldShowWelcome(!isV7);
-          setWelcomeData({ isNew: false, isV7 });
+        const hasLaunched = await checkAndSetWelcomeStatus();
+        
+        if (hasLaunched) {
           await ensureMinLoadingTime();
           setIsLoading(false);
         }
@@ -310,10 +313,10 @@ const AppRoutes = () => {
         const settings = await window.electron.getSettings();
         const isLatestVersion = await checkForUpdates();
         
-        if (!isLatestVersion && !hasShownUpdateNotification.current) {
+        if (!isLatestVersion && !hasShownUpdateNotification.current && !settings.autoUpdate) {
           hasShownUpdateNotification.current = true;
           toast(t('app.toasts.outOfDate'), {
-            description: settings.autoUpdate ? t('app.toasts.autoUpdateDesc') : t('app.toasts.outOfDateDesc'),
+            description: t('app.toasts.outOfDateDesc'),
             action: {
               label: t('app.toasts.updateNow'),
               onClick: () => window.electron.openURL('https://ascendara.app/')
@@ -362,40 +365,45 @@ const AppRoutes = () => {
   if (isLoading || isUpdating || isInstalling) {
     console.log('Rendering loading screen...');
     return (
-      <motion.div 
-        className="loading-container"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        {iconData && (
-          <motion.img 
-            src={iconData}
-            alt="Loading"
-            className="loading-icon"
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ 
-              duration: 0.5,
-              ease: "easeOut"
-            }}
-          />
+      <>
+        <motion.div 
+          className="loading-container"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {iconData && (
+            <motion.img 
+              src={iconData}
+              alt="Loading"
+              className="loading-icon"
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ 
+                duration: 0.5,
+                ease: "easeOut"
+              }}
+            />
+          )}
+          {isInstalling && <UpdateOverlay />}
+          {isUpdating && (
+            <><motion.div 
+              className="loading-text"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              {t('app.loading.finishingUpdate')}
+            </motion.div>
+            <br />
+            <Loader className="animate-spin" /></>
+          )}
+        </motion.div>
+        {showSupportDialog && (
+          <SupportDialog onClose={() => setShowSupportDialog(false)} />
         )}
-        {isInstalling && <UpdateOverlay />}
-        {isUpdating && (
-          <><motion.div 
-            className="loading-text"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            {t('app.loading.finishingUpdate')}
-          </motion.div>
-          <br />
-          <Loader className="animate-spin" /></>
-        )}
-      </motion.div>
+      </>
     );
   }
 
@@ -417,35 +425,34 @@ const AppRoutes = () => {
   console.log('Rendering main routes with location:', location.pathname);
   
   return (
-    <motion.div className="app-container">
-      <ScrollToTop />
-      <Routes>
-        <Route 
-          path="/welcome" 
-          element={
-            <AnimatePresence mode="wait">
-              <Welcome 
-                welcomeData={welcomeData} 
-                onComplete={handleWelcomeComplete}
-              />
-            </AnimatePresence>
-          } 
-        />
-        <Route path="/" element={<Layout />}>
-          <Route index element={
-            <AnimatePresence mode="wait">
-              <Home />
-            </AnimatePresence>
-          } />
-          <Route path="search" element={<Search />} />
-          <Route path="library" element={<Library />} />
-          <Route path="downloads" element={<Downloads />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="download" element={<DownloadPage />} />
-          <Route path="dependencies" element={<Dependencies />} />
-        </Route>
-      </Routes>
-    </motion.div>
+    <>
+      <AnimatePresence mode="wait">
+        {shouldShowWelcome ? (
+          <Welcome
+            key="welcome"
+            isNewInstall={isNewInstall}
+            welcomeData={welcomeData}
+            onComplete={handleWelcomeComplete}
+          />
+        ) : (
+          <Routes location={location} key={location.pathname}>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Home />} />
+              <Route path="search" element={<Search />} />
+              <Route path="library" element={<Library />} />
+              <Route path="downloads" element={<Downloads />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="dependencies" element={<Dependencies />} />
+              <Route path="download" element={<DownloadPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        )}
+      </AnimatePresence>
+      {showSupportDialog && (
+        <SupportDialog onClose={() => setShowSupportDialog(false)} />
+      )}
+    </>
   );
 };
 
@@ -565,6 +572,7 @@ function App() {
           <Router>
             <ToasterWithTheme />
             <ContextMenu />
+            <ScrollToTop />
             <AnimatePresence mode="wait">
               <AppRoutes />
             </AnimatePresence>

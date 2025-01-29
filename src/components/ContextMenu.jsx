@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { TriangleAlert } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import ReportIssue from './ReportIssue';
+import './ContextMenu.css';
 
 const ContextMenu = () => {
   const [isVisible, setIsVisible] = useState(false);

@@ -32,7 +32,7 @@ let isDev = false;
 
 
 
-const CURRENT_VERSION = "7.6.0";
+const CURRENT_VERSION = "7.6.1";
 const { app, BrowserWindow, ipcMain, dialog, shell, protocol } = require('electron');
 const { Client } = require('discord-rpc');
 const disk = require('diskusage');
@@ -739,12 +739,31 @@ ipcMain.handle('create-timestamp', () => {
   fs.writeFileSync(filePath, JSON.stringify(timestamp, null, 2));
 });
 
-ipcMain.handle('has-launched', (event) => {
-  if (has_launched) {
-    return false;
-  } else {
+
+ipcMain.handle('has-launched', () => {
+  const result = has_launched;
+  if (!has_launched) {
     has_launched = true;
-    return true;
+  }
+  return result;
+});
+
+ipcMain.handle('update-launch-count', () => {
+  try {
+    const timestampPath = path.join(os.homedir(), 'timestamp.ascendara.json');
+    let timestamp = {};
+    
+    if (fs.existsSync(timestampPath)) {
+      timestamp = JSON.parse(fs.readFileSync(timestampPath, 'utf8'));
+    }
+    
+    timestamp.launchCount = (timestamp.launchCount || 0) + 1;
+    fs.writeFileSync(timestampPath, JSON.stringify(timestamp, null, 2));
+    
+    return timestamp.launchCount;
+  } catch (error) {
+    console.error('Error updating launch count:', error);
+    return 1;
   }
 });
 
@@ -2338,3 +2357,17 @@ if (!gotTheLock) {
     }
   });
 }
+
+ipcMain.handle('get-launch-count', () => {
+  try {
+    const timestampPath = path.join(os.homedir(), 'timestamp.ascendara.json');
+    if (fs.existsSync(timestampPath)) {
+      const timestamp = JSON.parse(fs.readFileSync(timestampPath, 'utf8'));
+      return timestamp.launchCount || 0;
+    }
+    return 0;
+  } catch (error) {
+    console.error('Error reading launch count:', error);
+    return 0;
+  }
+});
