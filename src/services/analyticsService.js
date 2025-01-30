@@ -1,3 +1,8 @@
+/**
+ * Analytics and reporting are only available in official builds to ensure security.
+ *
+ * @see https://ascendara.app/docs/developer/build-from-source#important-limitations
+ */
 export const analytics = {
     isDummy: true,
     trackPageView: (page) => {
