@@ -201,7 +201,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
   const { t } = useTranslation();
   const { language, changeLanguage } = useLanguage();
   const { setTheme } = useTheme();
-  const [isV7Welcome, setIsV7Welcome] = useState(false);
+  const [isV7Welcome, setIsV7Welcome] = useState(welcomeData.isV7Welcome);
   const [step, setStep] = useState('language');
   const [selectedTheme, setSelectedTheme] = useState('purple');
   const [showingLightThemes, setShowingLightThemes] = useState(true);
@@ -318,30 +318,10 @@ const Welcome = ({ welcomeData, onComplete }) => {
   }, [langPreferenceMessages.length]);
 
   useEffect(() => {
-    const checkWelcomeType = async () => {
-      try {
-        const isNew = await window.electron.isNew();
-        console.log('Is New Installation:', isNew);
-        const shouldShowV7 = await window.electron.checkV7Welcome();
-        console.log('Should Show V7 Welcome:', shouldShowV7);
-        
-        setIsV7Welcome(!isNew && shouldShowV7);
-        
-        if (!isNew) {
-          const isV7 = await window.electron.isV7();
-          console.log('Is V7:', isV7);
-          if (!isV7) {
-            const result = await window.electron.createTimestamp();
-            console.log('Timestamp Created/Updated:', result);
-          }
-        }
-      } catch (error) {
-        console.error('Error checking welcome type:', error);
-      }
-    };
-
-    checkWelcomeType();
-  }, []);
+    if (welcomeData?.isV7Welcome !== undefined) {
+      setIsV7Welcome(welcomeData.isV7Welcome);
+    }
+  }, [welcomeData?.isV7Welcome]);
 
   useEffect(() => {
     const handleDependencyStatus = (event, { name, status }) => {
@@ -617,7 +597,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
     }
   };
 
-  if (isV7Welcome) {
+  if (welcomeData.isV7Welcome) {
     if (showAnalyticsStep) {
       return (
         <div className={`h-screen bg-background relative overflow-hidden flex items-center justify-center transition-opacity duration-500 ${isExiting ? 'opacity-0' : 'opacity-100'}`}>
