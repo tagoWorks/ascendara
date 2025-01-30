@@ -149,7 +149,6 @@ function Settings() {
   const [isDownloaderRunning, setIsDownloaderRunning] = useState(false);
   const [settings, setSettings] = useState({
     downloadDirectory: '',
-    seamlessDownloads: true,
     viewOldDownloadLinks: false,
     seeInappropriateContent: false,
     autoCreateShortcuts: true,
@@ -492,20 +491,6 @@ function Settings() {
               <h2 className="text-xl font-semibold mb-4 text-primary">{t('settings.general')}</h2>
               <div className="space-y-6">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>
-                        <span className="flex items-center gap-1">
-                          {t('settings.seamlessDownloads')} <Zap size={12} />
-                        </span>
-                      </Label>
-                      <p className="text-sm text-muted-foreground">{t('settings.seamlessDownloadsDescription')}</p>
-                    </div>
-                    <Switch
-                      checked={settings.seamlessDownloads}
-                      onCheckedChange={() => handleSettingChange({ seamlessDownloads: !settings.seamlessDownloads })}
-                    />
-                  </div>
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">

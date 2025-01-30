@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TriangleAlert } from 'lucide-react';
+import { MessageSquareText, TriangleAlert } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import ReportIssue from './ReportIssue';
 import './ContextMenu.css';
@@ -38,6 +38,11 @@ const ContextMenu = () => {
 
   const handleReport = () => {
     setIsReportOpen(true);
+    setIsVisible(false);
+  };
+
+  const handleFeedback = () => {
+    window.electron.openURL('https://ascendara.app/feedback');
     setIsVisible(false);
   };
 
@@ -87,6 +92,10 @@ const ContextMenu = () => {
               <button onClick={handleReport} className="context-menu-item">
                 <TriangleAlert className="w-4 h-4 mr-2" />
                 {t('common.reportIssue')}
+              </button>
+              <button onClick={handleFeedback} className="context-menu-item">
+                <MessageSquareText className="w-4 h-4 mr-2" />
+                {t('common.giveFeedback')}
               </button>
             </div>
           </motion.div>

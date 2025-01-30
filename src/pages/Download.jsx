@@ -9,7 +9,7 @@ import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
-import { Loader, InfoIcon, CopyIcon, CheckIcon, BadgeCheckIcon, TriangleAlert, ArrowBigLeft, ExternalLink, MessageSquareWarning, CircleSlash } from "lucide-react";
+import { Loader, InfoIcon, CopyIcon, CheckIcon, BadgeCheckIcon, TriangleAlert, ArrowBigLeft, ExternalLink, MessageSquareWarning, CircleSlash, Zap } from "lucide-react";
 import imageCacheService from '../services/imageCacheService';
 import { toast } from "sonner";
 import { useLanguage } from '../contexts/LanguageContext';
@@ -476,8 +476,15 @@ export default function DownloadPage() {
 
       console.log('Filtered Available Providers:', availableProviders);
       
-      if (!selectedProvider && availableProviders.includes('megadb')) {
-        setSelectedProvider('megadb');
+      if (!selectedProvider) {
+        if (availableProviders.includes('gofile')) {
+          setSelectedProvider('gofile');
+        } else if (availableProviders.includes('megadb')) {
+          setSelectedProvider('megadb');
+        } else {
+          const verifiedProvider = availableProviders.find(provider => VERIFIED_PROVIDERS.includes(provider));
+          setSelectedProvider(verifiedProvider || availableProviders[0]);
+        }
       }
     }
   }, [gameData, selectedProvider]);
@@ -818,237 +825,315 @@ export default function DownloadPage() {
 
           <Separator className="my-1" />
 
-          {/* Download Options Section - Two columns with reduced spacing */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Left Column - Download Options */}
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <h2 className="text-xl font-semibold">{t('download.downloadOptions.downloadOptions')}</h2>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>{t('download.downloadOptions.downloadSource')}</Label>
-                    {providers.length > 0 ? (
-                      <Select 
-                        value={selectedProvider}
-                        onValueChange={setSelectedProvider}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('download.downloadOptions.selectProvider')} />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border-border">
-                          {providers.map((provider) => {
-                            let displayName;
-                            switch(provider.toLowerCase()) {
-                              case 'gofile':
-                                displayName = 'Seamless (GoFile)';
-                                break;
-                              case 'megadb':
-                                displayName = 'Default (MegaDB)';
-                                break;
-                              case 'buzzheavier':
-                                displayName = 'BuzzHeavier';
-                                break;
-                              case 'qiwi':
-                                displayName = 'QIWI';
-                                break;
-                              case 'datanodes':
-                                displayName = 'DataNodes';
-                                break;
-                              default:
-                                displayName = provider.charAt(0).toUpperCase() + provider.slice(1);
-                            }
-                            const isVerified = VERIFIED_PROVIDERS.includes(provider.toLowerCase());
-                            return (
-                              <SelectItem 
-                                key={provider} 
-                                value={provider}
-                                className="hover:bg-muted focus:bg-muted"
-                              >
-                                <div className="flex items-center gap-2">
-                                  {displayName}
-                                  {isVerified && (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <BadgeCheckIcon className="h-4 w-4 text-primary" />
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Verified Provider</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  )}
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <p>{t('download.downloadOptions.noProviders')}</p>
-                    )}
-                  </div>
+          {/* Download Options Section */}
+          {selectedProvider === 'gofile' ? (
+            <div className="max-w-xl mx-auto">
+              <div className="flex flex-col items-center space-y-8 py-2">
+                <div className="w-full flex justify-between items-center">
+                  <h2 className="text-xl font-semibold flex items-center gap-2 grid">
+                    <span className="flex items-center gap-1">Seamless <Zap className="w-5 h-5 text-primary" /></span>
+                    <span className="flex items-center gap-1 text-muted-foreground text-sm">(GoFile <BadgeCheckIcon className="w-4 h-4" />)</span>
+                  </h2>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedProvider(providers.find(p => p !== 'gofile') || '')}
+                  >
+                    {t('download.switchProvider')}
+                  </Button>
+                </div>
 
-                  {selectedProvider && (
-                    <div className="space-y-3">
-                      <div>
-                        <Label>{t('download.downloadOptions.downloadLink')}</Label>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div 
-                            className="flex-1 bg-muted p-2 rounded-md text-sm flex items-center justify-between group cursor-pointer hover:bg-muted/80 transition-colors"
-                            onClick={handleCopyLink}
-                          >
-                            <span>{downloadLinks[selectedProvider][0].startsWith('//') 
-                              ? `https:${downloadLinks[selectedProvider][0]}` 
-                              : downloadLinks[selectedProvider][0]}</span>
-                            {showCopySuccess ? (
-                              <CheckIcon className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <CopyIcon className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            )}
-                          </div>
-                          <Button 
-                            size="sm" 
-                            onClick={handleOpenInBrowser} 
-                            variant="outline"
-                          >
-                            {t('download.downloadOptions.openInBrowser')}
-                          </Button>
-                        </div>
-                      </div>
+                <div className="text-center space-y-4 w-full max-w-md">
+                  <h3 className="text-2xl font-semibold">{t('download.downloadOptions.gofileInstructions.thanks')}</h3>
+                  <p className="text-muted-foreground">
+                    {t('download.downloadOptions.gofileInstructions.description')}
+                  </p>
+                </div>
 
-                      {!useAscendara && selectedProvider !== 'gofile' && (
-                        <div>
-                          <Input
-                            placeholder={t('download.downloadOptions.pasteLink')}
-                            value={inputLink}
-                            onChange={handleInputChange}
-                            className={!isValidLink ? "border-red-500" : ""}
-                          />
-                          {!isValidLink && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {t('download.downloadOptions.invalidLink')} {selectedProvider}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {selectedProvider && selectedProvider !== "gofile" && (
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="ascendara-handler"
-                          checked={useAscendara}
-                          onCheckedChange={(checked) => {
-                            setUseAscendara(checked);
-                            localStorage.setItem('useAscendara', JSON.stringify(checked));
-                          }}
-                        />
-                        <Label htmlFor="ascendara-handler" className="text-sm">
-                          {t('download.downloadOptions.ascendaraHandler')}
-                        </Label>
-                      </div>
-                      {!useAscendara && (
-                        <p 
-                          className="text-xs text-muted-foreground hover:underline cursor-pointer"
-                          onClick={() => window.electron.openURL('https://ascendara.app/extension')}
-                        >
-                          {t('download.downloadOptions.getExtension')}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  
-                  {selectedProvider && useAscendara && selectedProvider !== 'gofile' && (
-                    <div className="flex items-center justify-center space-x-2 py-2 text-muted-foreground">
-                      <Loader className="h-4 w-4 animate-spin" />
-                      <span className="text-sm">
-                        {isStartingDownload 
-                          ? t('download.downloadOptions.startingDownload')
-                          : t('download.downloadOptions.waitingForBrowser')
-                        }
-                      </span>
-                    </div>
-                  )}
-                  
-                  {(!useAscendara || selectedProvider === 'gofile') && (
-                    <Button
-                      onClick={() => handleDownload()}
-                      disabled={
-                        isStartingDownload || 
-                        !selectedProvider || 
-                        (selectedProvider !== 'gofile' && (!inputLink || !isValidLink)) ||
-                        !gameData
-                      }
-                      className="w-full text-secondary"
-                    >
-                      {isStartingDownload ? (
-                        <>
-                        <Loader className="mr-2 h-4 w-4 animate-spin" />
+                <div className="w-full max-w-md">
+                  <Button
+                    onClick={() => handleDownload()}
+                    disabled={isStartingDownload || !gameData}
+                    className="w-full text-secondary h-12 text-lg"
+                  >
+                    {isStartingDownload ? (
+                      <>
+                        <Loader className="mr-2 h-5 w-5 animate-spin" />
                         {t('download.downloadOptions.downloading')}
                       </>
                     ) : (
                       t('download.downloadOptions.downloadNow')
                     )}
                   </Button>
-                  )}
                 </div>
+
+                <p className="text-muted-foreground">
+                  {t('download.downloadOptions.gofileInstructions.action')}
+                </p>
               </div>
             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Left Column - Download Options */}
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <h2 className="text-xl font-semibold">{t('download.downloadOptions.downloadOptions')}</h2>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>{t('download.downloadOptions.downloadSource')}</Label>
+                      {providers.length > 0 ? (
+                        <Select 
+                          value={selectedProvider}
+                          onValueChange={setSelectedProvider}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('download.downloadOptions.selectProvider')} />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background border-border">
+                            {providers.map((provider) => {
+                              let displayName;
+                              switch(provider.toLowerCase()) {
+                                case 'gofile':
+                                  displayName = 'Seamless (GoFile)';
+                                  break;
+                                case 'megadb':
+                                  displayName = 'Default (MegaDB)';
+                                  break;
+                                case 'buzzheavier':
+                                  displayName = 'BuzzHeavier';
+                                  break;
+                                case 'qiwi':
+                                  displayName = 'QIWI';
+                                  break;
+                                case 'datanodes':
+                                  displayName = 'DataNodes';
+                                  break;
+                                default:
+                                  displayName = provider.charAt(0).toUpperCase() + provider.slice(1);
+                              }
+                              const isVerified = VERIFIED_PROVIDERS.includes(provider.toLowerCase());
+                              return (
+                                <SelectItem 
+                                  key={provider} 
+                                  value={provider}
+                                  className="hover:bg-muted focus:bg-muted"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    {displayName}
+                                    {isVerified && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <BadgeCheckIcon className="h-4 w-4 text-primary" />
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Verified Provider</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p>{t('download.downloadOptions.noProviders')}</p>
+                      )}
+                    </div>
 
-            {/* Right Column - Instructions */}
-            <div className="space-y-3">
-              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
-                <div className="flex">
-                  <div className="ml-3">
-                    <p className="text-lg font-bold text-red-700 inline-flex items-center gap-2">
-                      <TriangleAlert strokeWidth={2.3} className="text-red-400" />
-                      {t('download.protectYourself.warningTitle')}
-                    </p>
-                    <p className="mt-2 text-sm text-red-700">{t('download.protectYourself.warning')}</p>
-                    <a onClick={() => window.electron.openURL('https://ascendara.app/protect-yourself')} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block flex items-center gap-1 text-sm text-red-700 hover:text-red-900 cursor-pointer hover:underline">
-                      {t('download.protectYourself.learnHow')} <ExternalLink size={16} />
-                    </a>
+                    {selectedProvider && (
+                      <div className="space-y-3">
+                        <div>
+                          <Label>{t('download.downloadOptions.downloadLink')}</Label>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div 
+                              className="flex-1 bg-muted p-2 rounded-md text-sm flex items-center justify-between group cursor-pointer hover:bg-muted/80 transition-colors"
+                              onClick={handleCopyLink}
+                            >
+                              <span>{downloadLinks[selectedProvider][0].startsWith('//') 
+                                ? `https:${downloadLinks[selectedProvider][0]}` 
+                                : downloadLinks[selectedProvider][0]}</span>
+                              {showCopySuccess ? (
+                                <CheckIcon className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <CopyIcon className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              )}
+                            </div>
+                            <Button 
+                              size="sm" 
+                              onClick={handleOpenInBrowser} 
+                              variant="outline"
+                            >
+                              {t('download.downloadOptions.openInBrowser')}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {!useAscendara && (
+                          <div>
+                            <Input
+                              placeholder={t('download.downloadOptions.pasteLink')}
+                              value={inputLink}
+                              onChange={handleInputChange}
+                              className={!isValidLink ? "border-red-500" : ""}
+                            />
+                            {!isValidLink && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {t('download.downloadOptions.invalidLink')} {selectedProvider}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedProvider && (
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="ascendara-handler"
+                            checked={useAscendara}
+                            onCheckedChange={(checked) => {
+                              setUseAscendara(checked);
+                              localStorage.setItem('useAscendara', JSON.stringify(checked));
+                            }}
+                          />
+                          <Label htmlFor="ascendara-handler" className="text-sm">
+                            {t('download.downloadOptions.ascendaraHandler')}
+                          </Label>
+                        </div>
+                        {!useAscendara && (
+                          <p 
+                            className="text-xs text-muted-foreground hover:underline cursor-pointer"
+                            onClick={() => window.electron.openURL('https://ascendara.app/extension')}
+                          >
+                            {t('download.downloadOptions.getExtension')}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    
+                    {selectedProvider && useAscendara && (
+                      <div className="flex items-center justify-center space-x-2 py-2 text-muted-foreground">
+                        <Loader className="h-4 w-4 animate-spin" />
+                        <span className="text-sm">
+                          {isStartingDownload 
+                            ? t('download.downloadOptions.startingDownload')
+                            : t('download.downloadOptions.waitingForBrowser')
+                          }
+                        </span>
+                      </div>
+                    )}
+                    
+                    {!useAscendara && (
+                      <Button
+                        onClick={() => handleDownload()}
+                        disabled={
+                          isStartingDownload || 
+                          !selectedProvider || 
+                          (!inputLink || !isValidLink) ||
+                          !gameData
+                        }
+                        className="w-full text-secondary"
+                      >
+                        {isStartingDownload ? (
+                          <>
+                            <Loader className="mr-2 h-4 w-4 animate-spin" />
+                            {t('download.downloadOptions.downloading')}
+                          </>
+                        ) : (
+                          t('download.downloadOptions.downloadNow')
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
-              <h2 className="text-xl font-semibold">{t('download.downloadInstructions')}</h2>
-              {selectedProvider ? (
-                <div>
-                  {selectedProvider === "gofile" ? (
-                    <div className="space-y-2">
-                      <h2 className="text-large">{t('download.downloadOptions.gofileInstructions.thanks')}</h2>
-                      <h3>{t('download.downloadOptions.gofileInstructions.description')}</h3>
-                      <h3 className="text-large">{t('download.downloadOptions.gofileInstructions.action')}</h3>
+
+              {/* Right Column - Instructions */}
+              <div className="space-y-3">
+                {selectedProvider && selectedProvider !== "gofile" && (
+                  <>
+                    <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+                      <div className="flex">
+                        <div className="ml-3">
+                          <p className="text-lg font-bold text-red-700 inline-flex items-center gap-2">
+                            <TriangleAlert strokeWidth={2.3} className="text-red-400" />
+                            {t('download.protectYourself.warningTitle')}
+                          </p>
+                          <p className="mt-2 text-sm text-red-700">{t('download.protectYourself.warning')}</p>
+                          <a onClick={() => window.electron.openURL('https://ascendara.app/protect-yourself')} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block flex items-center gap-1 text-sm text-red-700 hover:text-red-900 cursor-pointer hover:underline">
+                            {t('download.protectYourself.learnHow')} <ExternalLink size={16} />
+                          </a>
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    <div>
-                      {useAscendara ? (
-                        <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                          <li>{t('download.downloadOptions.handlerInstructions.step1')}</li>
-                          <li>{t('download.downloadOptions.handlerInstructions.step2')}</li>
-                          <li>{t('download.downloadOptions.handlerInstructions.step3')}</li>
-                        </ol>
-                      ) : (
-                        <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                          <li>{t('download.downloadOptions.manualInstructions.step1')}</li>
-                          <li>{t('download.downloadOptions.manualInstructions.step2')}</li>
-                          <li>{t('download.downloadOptions.manualInstructions.step3')}</li>
-                          <li>{t('download.downloadOptions.manualInstructions.step4')}</li>
-                          <li>{t('download.downloadOptions.manualInstructions.step5')}</li>
-                          <li>{t('download.downloadOptions.manualInstructions.step6')}</li>
-                        </ol>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">{t('download.downloadOptions.selectProviderPrompt')}</p>
-              )}
+                    <h2 className="text-xl font-semibold">{t('download.downloadInstructions')}</h2>
+                  </>
+                )}
+                {selectedProvider ? (
+                  <div>
+                    {selectedProvider === "gofile" ? (
+                      <div className="flex flex-col items-center justify-center space-y-6 mt-8">
+                        <div className="text-center space-y-2 max-w-md">
+                          <h2 className="text-2xl font-semibold">{t('download.downloadOptions.gofileInstructions.thanks')}</h2>
+                          <p className="text-muted-foreground">
+                            {t('download.downloadOptions.gofileInstructions.description')}
+                          </p>
+                        </div>
+                        
+                        <div className="w-full max-w-sm">
+                          <Button
+                            onClick={() => handleDownload()}
+                            disabled={isStartingDownload || !gameData}
+                            className="w-full text-secondary h-12 text-lg"
+                          >
+                            {isStartingDownload ? (
+                              <>
+                                <Loader className="mr-2 h-5 w-5 animate-spin" />
+                                {t('download.downloadOptions.downloading')}
+                              </>
+                            ) : (
+                              <>
+                                {t('download.downloadOptions.downloadNow')}
+                              </>
+                            )}
+                          </Button>
+                        </div>
+
+                        <div className="text-center text-muted-foreground">
+                          <p>{t('download.downloadOptions.gofileInstructions.action')}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        {useAscendara ? (
+                          <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                            <li>{t('download.downloadOptions.handlerInstructions.step1')}</li>
+                            <li>{t('download.downloadOptions.handlerInstructions.step2')}</li>
+                            <li>{t('download.downloadOptions.handlerInstructions.step3')}</li>
+                          </ol>
+                        ) : (
+                          <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                            <li>{t('download.downloadOptions.manualInstructions.step1')}</li>
+                            <li>{t('download.downloadOptions.manualInstructions.step2')}</li>
+                            <li>{t('download.downloadOptions.manualInstructions.step3')}</li>
+                            <li>{t('download.downloadOptions.manualInstructions.step4')}</li>
+                            <li>{t('download.downloadOptions.manualInstructions.step5')}</li>
+                            <li>{t('download.downloadOptions.manualInstructions.step6')}</li>
+                          </ol>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">{t('download.downloadOptions.selectProviderPrompt')}</p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -1068,7 +1153,7 @@ export default function DownloadPage() {
               {t('download.shareGame')}
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="left">
+          <TooltipContent className="text-secondary" side="left">
             <p>{t('download.linkCopied')}</p>
           </TooltipContent>
         </Tooltip>

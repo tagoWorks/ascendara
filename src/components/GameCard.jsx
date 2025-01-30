@@ -1,4 +1,4 @@
-import React, { useState, memo, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent, CardFooter } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -15,10 +15,9 @@ const GameCard = memo(function GameCard({ game, compact }) {
   const navigate = useNavigate();
   const [showAllTags, setShowAllTags] = useState(false);
   const { cachedImage, loading, error } = useImageLoader(game?.imgID);
-  const [seamlessDownloads, setSeamlessDownloads] = useState(false);
-  const [isStarting, setIsStarting] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const isMounted = useRef(true);
   const { t } = useLanguage();
 
   if (!game) {
@@ -32,130 +31,41 @@ const GameCard = memo(function GameCard({ game, compact }) {
   }, [gameCategories, showAllTags]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const loadSettings = async () => {
+    const checkInstalled = async () => {
       try {
-        if (!isMounted) return;
-        setIsLoading(true);
-
-        const [settings, installedGames] = await Promise.all([
-          window.electron.getSettings(),
-          window.electron.getGames()
-        ]);
-
-        if (!isMounted) return;
-
-        setSeamlessDownloads(settings.seamlessDownloads ?? true);
-        setIsInstalled(installedGames.some(installedGame => 
-          installedGame.game === game.game
-        ));
-      } catch (error) {
-        console.error('Error loading game settings:', error);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
+        const installedGames = await window.electron.getGames();
+        if (isMounted.current) {
+          setIsInstalled(installedGames.some(installedGame => 
+            installedGame.game === game.game
+          ));
         }
+      } catch (error) {
+        console.error('Error checking game installation:', error);
       }
     };
 
-    loadSettings();
-
-    // Subscribe to download status updates
-    const removeDownloadListener = window.electron.onDownloadProgress((downloadInfo) => {
-      if (downloadInfo.game === game.game) {
-        setIsStarting(true);
-      }
-    });
-
-    const removeDownloadCompleteListener = window.electron.onDownloadComplete((completedGame) => {
-      if (completedGame === game.game) {
-        setIsInstalled(true);
-        setIsStarting(false);
-      }
-    });
+    checkInstalled();
 
     return () => {
-      isMounted = false;
-      if (removeDownloadListener) removeDownloadListener();
-      if (removeDownloadCompleteListener) removeDownloadCompleteListener();
+      isMounted.current = false;
     };
   }, [game.game]);
 
   const handleDownload = useCallback(async () => {
     if (isInstalled) return;
-
-    try {
-      setIsLoading(true);
-      const downloadLinks = game.download_links || {};
-      const providers = Object.entries(downloadLinks)
-        .filter(([_, links]) => Array.isArray(links) && links.length > 0)
-        .map(([provider]) => provider);
-      
-      const hasGoFile = providers.includes('gofile');
-      
-      if (hasGoFile && seamlessDownloads) {
-
-        setIsStarting(true);
-        
-        // Get first valid gofile link
-        const goFileLinks = game.download_links['gofile'];
-        const validGoFileLink = goFileLinks.find(link => link && typeof link === 'string');
-        
-        if (!validGoFileLink) {
-          toast.error(t('download.toast.invalidLink'));
-          setIsStarting(false);
-          return;
-        }
-
-        // Properly format the GoFile link
-        const formattedLink = validGoFileLink.replace(/^(?:https?:)?\/\//, 'https://');
-        
-        await window.electron.downloadFile(
-          formattedLink,
-          game.game,
-          game.online || false,
-          game.dlc || false,
-          game.version || '',
-          game.imgID,
-          game.size || ''
-        );
-
-        setTimeout(() => {
-          toast.success(t('download.toast.downloadStarted'));
-        }, 2500);
-
-        // Keep isStarting true until download actually begins
-        window.electron.onDownloadProgress((downloadInfo) => {
-          if (downloadInfo.game === game.game) {
-            setIsStarting(false);
+    setIsLoading(true);
+    const downloadLinks = game.download_links || {};
+    setTimeout(() => {
+      navigate('/download', { 
+        state: { 
+          gameData: {
+            ...game,
+            download_links: downloadLinks
           }
-        });
-      } else {
-        const container = document.querySelector('.page-container');
-        if (container) {
-          container.classList.add('fade-out');
         }
-        
-        setTimeout(() => {
-          navigate('/download', { 
-            state: { 
-              gameData: {
-                ...game,
-                download_links: downloadLinks
-              }
-            }
-          });
-        }, 300);
-      }
-    } catch (error) {
-      console.error('Download failed:', error);
-      toast.error(t('download.toast.downloadFailed'));
-      setIsStarting(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [navigate, game, seamlessDownloads, isInstalled, t]);
+      });
+    });
+  }, [navigate, game, isInstalled, t]);
 
   if (compact) {
     return (
@@ -274,18 +184,18 @@ const GameCard = memo(function GameCard({ game, compact }) {
           size="sm" 
           className="w-full font-medium bg-accent hover:bg-accent/90 text-accent-foreground"
           onClick={handleDownload}
-          disabled={isInstalled || isStarting || isLoading}
+          disabled={isInstalled || isLoading}
         >
-          {isStarting ? (
+          {isLoading ? (
             <Loader className="w-4 h-4 mr-2 animate-spin" />
           ) : isInstalled ? (
             <Gamepad2 className="w-4 h-4 mr-2" />
-          ) : Object.keys(game.download_links || {}).includes('gofile') && seamlessDownloads ? (
+          ) : Object.keys(game.download_links || {}).includes('gofile') ? (
             <Zap className="w-4 h-4 mr-2" />
           ) : (
             <Download className="w-4 h-4 mr-2" />
           )}
-          {isInstalled ? t('gameCard.installed') : t('gameCard.download')}
+          {isLoading ? t('gameCard.loading') : isInstalled ? t('gameCard.installed') : t('gameCard.download')}
         </Button>
       </CardFooter>
     </Card>

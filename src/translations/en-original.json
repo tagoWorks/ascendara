@@ -28,6 +28,7 @@
       "uninstall": "Uninstall",
       "install": "Install",
       "learnMore": "Learn More",
+      "giveFeedback": "Give Feedback",
       "reportIssue": "Report Issue",
       "reportToAscendara": "Report to Ascendara",
       "reporting": "Reporting...",
@@ -285,9 +286,6 @@
       "theme": "Theme",
       "languageSettings": "Language Settings",
 
-      "seamlessDownloads": "Seamless Downloads",
-      "seamlessDownloadsDescription": "If available, Ascendara will automatically handle game downloads without requiring browser interaction",
-      
       "downloadLocation": "Download Location",
       "selectDirectory": "Select Directory",
       
@@ -351,6 +349,7 @@
       "reportFailed": "Failed to submit report",
       "downloadSuccess": "Download started successfully",
       "downloadFailed": "Failed to start download",
+      "switchProvider": "Switch Provider",
       "online": "ONLINE",
       "onlineTooltip": "Online multiplayer capabilities enabled through online-fix.me",
       "allDlc": "ALL-DLCs",
@@ -396,7 +395,7 @@
         },
         "gofileInstructions": {
           "thanks": "Thanks to ltsdw on GitHub",
-          "description": "Unlike other providers that require a CAPTCHA verification, GoFile allows direct downloads through their API without such interruptions.",
+          "description": "Unlike other providers that require a CAPTCHA verification, GoFile allows direct downloads through their API.",
           "action": "Simply click on Download Now to start downloading this game."
         },
         "selectProviderPrompt": "Please select a download provider to see the instructions."
@@ -464,6 +463,7 @@
     "gameCard": {
       "installed": "Installed",
       "downloading": "Downloading...",
+      "loading": "Fetching Game Details...",
       "error": "Error",
       "updateAvailable": "Update Available",
       "notInstalled": "Not Installed",

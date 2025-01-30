@@ -1,8 +1,8 @@
 {
   "name": "ascendara",
-  "version": "7.6.1",
+  "version": "7.6.2",
   "main": "main.js",
-  "description": "Download games effortlessly with Ascendara. Copy the link, paste it into the app, and download.",
+  "description": "Skip extracting files, navigating setup processes, or any unnecessary hassles.",
   "scripts": {
     "dev": "vite --mode development ./src",
     "build": "vite build ./src",

@@ -154,7 +154,7 @@ const ReportIssue = ({ isOpen, onClose }) => {
 
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="reason">{t('common.reportDialog.reasonLabel')}</Label>
+            <Label className="text-primary" htmlFor="reason">{t('common.reportDialog.reasonLabel')}</Label>
             <Input
               id="reason"
               value={reportReason}
@@ -163,7 +163,7 @@ const ReportIssue = ({ isOpen, onClose }) => {
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="details">{t('common.reportDialog.detailsLabel')}</Label>
+            <Label className="text-primary" htmlFor="details">{t('common.reportDialog.detailsLabel')}</Label>
             <Textarea
               id="details"
               value={details}

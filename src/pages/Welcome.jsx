@@ -231,19 +231,14 @@ const Welcome = ({ welcomeData, onComplete }) => {
   const [autoUpdate, setAutoUpdate] = useState(true);
   const [settings, setSettings] = useState({
     downloadDirectory: '',
-    seamlessDownloads: true,
     viewOldDownloadLinks: false,
     seeInappropriateContent: false,
     autoCreateShortcuts: true,
     sendAnalytics: true,
     autoUpdate: true,
-    primaryGameSource: 'steamrip',
     language: 'en',
     theme: 'purple',
     threadCount: 4,
-    enabledSources: {
-      steamrip: true,
-    }
   });
   const [currentLangIndex, setCurrentLangIndex] = useState(0);
 

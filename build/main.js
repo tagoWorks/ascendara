@@ -32,7 +32,7 @@ let isDev = false;
 
 
 
-const CURRENT_VERSION = "7.6.1";
+const CURRENT_VERSION = "7.6.2";
 const { app, BrowserWindow, ipcMain, dialog, shell, protocol } = require('electron');
 const { Client } = require('discord-rpc');
 const disk = require('diskusage');
@@ -828,16 +828,15 @@ ipcMain.handle('get-settings', () => {
     
     // Define default settings
     const defaultSettings = {
-      seamlessDownloads: true,
+      downloadDirectory: settings.downloadDirectory || '',
       viewOldDownloadLinks: false,
       seeInappropriateContent: false,
       autoCreateShortcuts: true,
       sendAnalytics: true,
       autoUpdate: true,
-      threadCount: 4,
       language: 'en',
       theme: 'purple',
-      downloadDirectory: settings.downloadDirectory || ''
+      threadCount: 4,
     };
 
     // Merge existing settings with defaults, preserving existing values
@@ -862,15 +861,15 @@ ipcMain.handle('get-settings', () => {
     console.error('Error reading settings:', error);
     // Return default settings if there's an error
     const defaultSettings = {
-      seamlessDownloads: true,
+      downloadDirectory: '',
       viewOldDownloadLinks: false,
       seeInappropriateContent: false,
+      autoCreateShortcuts: true,
       sendAnalytics: true,
       autoUpdate: true,
-      autoCreateShortcuts: true,
-      threadCount: 4,
       language: 'en',
-      downloadDirectory: ''
+      theme: 'purple',
+      threadCount: 4,
     };
     return defaultSettings;
   }
