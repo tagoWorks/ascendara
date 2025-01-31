@@ -14,9 +14,12 @@ import {
   Gamepad2,
   Gift,
   InfoIcon,
-  RefreshCw, X
+  RefreshCw,
+  AlertTriangle,
+  X 
 } from 'lucide-react';
 import gameService from '../services/gameService';
+import { checkServerStatus } from '../services/serverStatus';
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogCancel, AlertDialogTitle, AlertDialogTrigger } from "../components/ui/alert-dialog";
 import { useNavigate } from 'react-router-dom';
@@ -39,6 +42,7 @@ const Search = memo(() => {
   const [showDLC, setShowDLC] = useState(false);
   const [showOnline, setShowOnline] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isIndexUpdating, setIsIndexUpdating] = useState(false);
   const gamesPerPage = useWindowSize();
   const [size, setSize] = useState(() => {
     const savedSize = localStorage.getItem('navSize');
@@ -121,6 +125,24 @@ const Search = memo(() => {
       }
     };
     loadSettings();
+  }, []);
+
+  useEffect(() => {
+    const checkIndexStatus = async () => {
+      try {
+        const status = await checkServerStatus();
+        console.log('Server Status:', status);
+        console.log('Setting isIndexUpdating to:', status.indexStatus === 'updating');
+        setIsIndexUpdating(status.indexStatus === 'updating');
+      } catch (error) {
+        console.error('Failed to check index status:', error);
+      }
+    };
+
+    checkIndexStatus();
+    const interval = setInterval(checkIndexStatus, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   const filteredGames = useMemo(() => {
@@ -315,6 +337,11 @@ const Search = memo(() => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
                 />
+                {isIndexUpdating && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-yellow-500">
+                    <AlertTriangle size={20} />
+                  </div>
+                )}
               </div>
               <Sheet>
                 <SheetTrigger asChild>
@@ -453,6 +480,22 @@ const Search = memo(() => {
           </div>
         </div>
       </div>
+      {isIndexUpdating && (
+        <AlertDialog defaultOpen>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-2xl font-bold text-foreground">
+                <AlertTriangle className="text-yellow-500" />
+                Index Update in Progress
+              </AlertDialogTitle>
+            </AlertDialogHeader>
+            <p className="text-muted-foreground">The search index is currently being updated. Search results may be incomplete or inconsistent during this time. Please try again later.</p>
+            <div className="flex justify-end mt-4">
+              <AlertDialogCancel className="text-muted-foreground">Dismiss</AlertDialogCancel>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 });

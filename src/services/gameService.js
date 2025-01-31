@@ -6,7 +6,6 @@ const LAST_UPDATED_KEY = 'local_ascendara_last_updated';
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
 import { checkServerStatus } from './serverStatus';
-import imageCacheService from './imageCacheService';
 import { sanitizeText } from '../lib/utils';
 
 // Memory cache to avoid localStorage reads
