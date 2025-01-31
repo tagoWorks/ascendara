@@ -78,6 +78,10 @@ contextBridge.exposeInMainWorld('electron', {
   openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
   getDownloadDirectory: () => ipcRenderer.invoke('get-download-directory'),
   getDriveSpace: (directory) => ipcRenderer.invoke('get-drive-space', directory),
+  getLocalCrackUsername: () => ipcRenderer.invoke('get-local-crack-username'),
+  getLocalCrackDirectory: () => ipcRenderer.invoke('get-local-crack-directory'),
+  setLocalCrackUsername: (username) => ipcRenderer.invoke('set-local-crack-username', username),
+  setLocalCrackDirectory: (directory) => ipcRenderer.invoke('set-local-crack-directory', directory),
 
   // Download and Installation
   installDependencies: () => ipcRenderer.invoke('install-dependencies'),

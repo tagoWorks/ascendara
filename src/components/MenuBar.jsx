@@ -9,7 +9,7 @@ import {
   AlertDialogCancel,
   AlertDialogFooter,
 } from './ui/alert-dialog';
-import { AlertTriangle, Loader2, WifiOff, Hammer, X, Minus } from 'lucide-react';
+import { AlertTriangle, WifiOff, Hammer, X, Minus } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { checkForUpdates } from '../services/updateCheckingService';
 
@@ -252,6 +252,9 @@ const MenuBar = () => {
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <AlertDialogContent className="max-w-md bg-background">
           <AlertDialogHeader>
+            <div className="fixed top-2 right-2 cursor-pointer p-2" onClick={() => setIsDialogOpen(false)}>
+              <X className="w-4 h-4" />
+            </div>
             <AlertDialogTitle className="text-2xl font-bold text-foreground">
               {serverStatus.isOffline ? t('server-status.offline') : t('server-status.title')}
             </AlertDialogTitle>
@@ -328,9 +331,6 @@ const MenuBar = () => {
             </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="text-primary">
-              {t('common.close')}
-            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

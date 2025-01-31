@@ -1064,7 +1064,7 @@ export default function DownloadPage() {
                             {t('download.protectYourself.warningTitle')}
                           </p>
                           <p className="mt-2 text-sm text-red-700">{t('download.protectYourself.warning')}</p>
-                          <a onClick={() => window.electron.openURL('https://ascendara.app/protect-yourself')} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block flex items-center gap-1 text-sm text-red-700 hover:text-red-900 cursor-pointer hover:underline">
+                          <a onClick={() => window.electron.openURL('https://ascendara.app/protect-yourself')} className="mt-2 inline-block flex items-center gap-1 text-sm text-red-700 hover:text-red-900 cursor-pointer hover:underline">
                             {t('download.protectYourself.learnHow')} <ExternalLink size={16} />
                           </a>
                         </div>

@@ -556,13 +556,27 @@ function App() {
   useEffect(() => {
     const checkUpdates = async () => {
       const hasUpdate = await checkForUpdates();
-      if (hasUpdate) {
-        console.log('Update available');
-        // You can trigger any UI updates or notifications here
-      }
     };
     
     checkUpdates();
+  }, []);
+
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      * {
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+      
+      input, textarea {
+        -webkit-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
+      }
+    `;
+    document.head.appendChild(style);
   }, []);
 
   return (

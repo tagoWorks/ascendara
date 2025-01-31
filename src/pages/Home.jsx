@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, memo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Skeleton } from "../components/ui/skeleton";
 import HomeGameCard from '../components/HomeGameCard';

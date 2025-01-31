@@ -49,6 +49,7 @@ import imageCacheService from '../services/imageCacheService';
 import gameService from '../services/gameService';
 import fs from 'fs';
 import { toast } from 'sonner';
+import UserSettingsDialog from '../components/UserSettingsDialog';
 
 const Library = () => {
   const [games, setGames] = useState([]);
@@ -375,104 +376,108 @@ const Library = () => {
             </p>
           </div>
 
-          <Input
-            placeholder={t('library.searchLibrary')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-sm"
-          />
-        </div>
+          <div className="flex justify-between items-center mb-4">
+            <Input
+              type="text"
+              placeholder={t('search_games')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="max-w-xs"
+            />
+            <UserSettingsDialog />
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <AlertDialog key="add-game-dialog" open={isAddGameOpen} onOpenChange={setIsAddGameOpen}>
-            <AlertDialogTrigger asChild>
-              <AddGameCard />
-            </AlertDialogTrigger>
-            <AlertDialogContent className="sm:max-w-[425px] bg-background border-border">
-              <AlertDialogHeader className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <AlertDialog key="add-game-dialog" open={isAddGameOpen} onOpenChange={setIsAddGameOpen}>
+              <AlertDialogTrigger asChild>
+                <AddGameCard />
+              </AlertDialogTrigger>
+              <AlertDialogContent className="sm:max-w-[425px] bg-background border-border">
+                <AlertDialogHeader className="space-y-2">
+                  <AlertDialogTitle className="text-2xl font-bold text-foreground">
+                    {t('library.addGame')}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-muted-foreground">
+                    {t('library.addGameDescription2')}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="py-4 max-h-[60vh] overflow-y-auto">
+                  <AddGameForm onSuccess={() => {
+                    setIsAddGameOpen(false);
+                    setSelectedGameImage(null);
+                    loadGames();
+                  }} />
+                </div>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {filteredGames.map((game) => (
+              <div key={game.game || game.name}>
+                <InstalledGameCard
+                  game={game}
+                  onPlay={() => handlePlayGame(game)}
+                  onDelete={() => setGameToDelete(game)}
+                  onSelect={() => setSelectedGame(game)}
+                  isSelected={isGameSelected(game, selectedGame)}
+                  onOpenDirectory={() => handleOpenDirectory(game)}
+                  isLaunching={launchingGame === (game.game || game.name)}
+                  isUninstalling={uninstallingGame === (game.game || game.name)}
+                  favorites={favorites}
+                  onToggleFavorite={toggleFavorite}
+                />
+              </div>
+            ))}
+          </div>
+
+          <ErrorDialog />
+
+          <AlertDialog 
+            key="delete-game-dialog" 
+            open={!!gameToDelete} 
+            onOpenChange={(open) => !open && setGameToDelete(null)}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
                 <AlertDialogTitle className="text-2xl font-bold text-foreground">
-                  {t('library.addGame')}
+                  {gameToDelete?.isCustom 
+                    ? t('library.removeGameFromLibrary')
+                    : t('library.uninstallGame')}
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-muted-foreground">
-                  {t('library.addGameDescription2')}
+                  {gameToDelete?.isCustom 
+                    ? t('library.removeGameFromLibraryWarning')
+                    : t('library.uninstallGameWarning')}
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <div className="py-4 max-h-[60vh] overflow-y-auto">
-                <AddGameForm onSuccess={() => {
-                  setIsAddGameOpen(false);
-                  setSelectedGameImage(null);
-                  loadGames();
-                }} />
-              </div>
+              <AlertDialogFooter className="flex justify-end gap-2">
+                {isUninstalling ? (
+                  <div className="w-full">
+                    <Progress className="w-full" value={undefined} />
+                    <p className="text-sm text-muted-foreground mt-2 text-center">
+                      {t('library.uninstallingGame')} {gameToDelete?.game || gameToDelete?.name}...
+                    </p>
+                  </div>
+                ) : (
+                  < >
+                    <Button
+                      variant="outline"
+                      onClick={() => setGameToDelete(null)}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      {t('common.cancel')}
+                    </Button>
+                    <Button
+                      onClick={() => handleDeleteGame(gameToDelete)}
+                      className="text-secondary hover:text-secondary-foreground"
+                    >
+                      {gameToDelete?.isCustom ? t('library.removeGame') : t('library.uninstallGame')}
+                    </Button>
+                  </ >
+                )}
+              </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-
-          {filteredGames.map((game) => (
-            <div key={game.game || game.name}>
-              <InstalledGameCard
-                game={game}
-                onPlay={() => handlePlayGame(game)}
-                onDelete={() => setGameToDelete(game)}
-                onSelect={() => setSelectedGame(game)}
-                isSelected={isGameSelected(game, selectedGame)}
-                onOpenDirectory={() => handleOpenDirectory(game)}
-                isLaunching={launchingGame === (game.game || game.name)}
-                isUninstalling={uninstallingGame === (game.game || game.name)}
-                favorites={favorites}
-                onToggleFavorite={toggleFavorite}
-              />
-            </div>
-          ))}
         </div>
-
-        <ErrorDialog />
-
-        <AlertDialog 
-          key="delete-game-dialog" 
-          open={!!gameToDelete} 
-          onOpenChange={(open) => !open && setGameToDelete(null)}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-2xl font-bold text-foreground">
-                {gameToDelete?.isCustom 
-                  ? t('library.removeGameFromLibrary')
-                  : t('library.uninstallGame')}
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-muted-foreground">
-                {gameToDelete?.isCustom 
-                  ? t('library.removeGameFromLibraryWarning')
-                  : t('library.uninstallGameWarning')}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="flex justify-end gap-2">
-              {isUninstalling ? (
-                <div className="w-full">
-                  <Progress className="w-full" value={undefined} />
-                  <p className="text-sm text-muted-foreground mt-2 text-center">
-                    {t('library.uninstallingGame')} {gameToDelete?.game || gameToDelete?.name}...
-                  </p>
-                </div>
-              ) : (
-                < >
-                  <Button
-                    variant="outline"
-                    onClick={() => setGameToDelete(null)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    {t('common.cancel')}
-                  </Button>
-                  <Button
-                    onClick={() => handleDeleteGame(gameToDelete)}
-                    className="text-secondary hover:text-secondary-foreground"
-                  >
-                    {gameToDelete?.isCustom ? t('library.removeGame') : t('library.uninstallGame')}
-                  </Button>
-                </ >
-              )}
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </div>
   );

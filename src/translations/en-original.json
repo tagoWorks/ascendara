@@ -268,7 +268,6 @@
     "settings": {
       "title": "Settings",
       "configure": "Configure your app preferences",
-      
       "general": "General",
       "gameSources": "Game Sources",
       "gameSourcesDescription": "Ascendara uses trusted sources to provide you with a safe and reliable gaming experience",
@@ -285,10 +284,22 @@
       "steamripDescription": "SteamRip is currently the primary and only source for Ascendara. It is secure and reliable, offering a huge collection of games with regular updates.",
       "theme": "Theme",
       "languageSettings": "Language Settings",
-
+      "userSettings": {
+        "title": "Update Your Username",
+        "description": "Configure your game username. Usernames are only supported for games using Goldberg crack.",
+        "username": "Username",
+        "usernamePlaceholder": "Enter your game username",
+        "saveChanges": "Save Changes",
+        "directory": "Goldberg Settings Directory",
+        "directoryDescription": "Location where game-specific settings are stored",
+        "directoryPermissionError": "Cannot write to this directory. Please choose a directory where you have write permissions.",
+        "browseDirectory": "Browse",
+        "usernameError": "Failed to save username",
+        "directoryError": "Failed to set directory",
+        "saveSuccess": "Settings saved successfully"
+      },
       "downloadLocation": "Download Location",
       "selectDirectory": "Select Directory",
-      
       "downloadThreads": "Download Performance",
       "downloadThreadsPresets": {
         "low": "Low (2 threads) - Minimal CPU usage",
@@ -302,26 +313,19 @@
       "downloadLocationWarning": "Ascendara cannot write files to the chosen directory. Change was not saved.",
       "customThreadCount": "Custom Thread Count",
       "customThreadCountDesc": "Higher values may improve download speed but require more CPU power and memory. Maximum: 32 threads",
-      
       "ascendaraUpdates": "Automatic Updates",
       "ascendaraUpdatesDescription": "Automatically download new versions of Ascendara and ask you to install them when ready",
-      
       "autoCreateShortcuts": "Automatically Create Shortcuts",
       "autoCreateShortcutsDescription": "Automatically create shortcuts on desktop for games that run successfully for the first time",
-
       "matureContent": "Mature Content",
       "matureContentDescription": "Allow games with mature themes to appear in search results",
-      
       "lightThemes": "Light Themes",
       "darkThemes": "Dark Themes",
-      
       "languageSettingsDescription": "Choose your preferred language for the UI",
       "languageSetNote": "NOTE: This will not change game names, tags, or anything else to do with the games provided",
-      
       "ascendaraAnalytics": "Ascendara Usage Analytics",
       "ascendaraToggleAnalytics": "Opt-in and help improve Ascendara",
       "ascendaraAnalyticsDescription": "Help improve Ascendara by sending usage data. This data is anonymous and cannot be used to identify you.",
-      
       "warningTitle": "Hey there, please read this!",
       "warningDescription": "Ascendara is designed as a testing platform for video games, allowing users to evaluate gameplay, performance, and compatibility before making a purchase decision. Ascendara strongly encourages users to support game developers by purchasing games they enjoy.",
       "warningSupportDevelopers": "Game developers invest significant time, resources, and creativity into creating the experiences we all enjoy. Your purchase directly supports their ability to continue making great games and sustains the gaming industry.",

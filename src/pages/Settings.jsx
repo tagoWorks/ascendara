@@ -739,8 +739,6 @@ function Settings() {
                           <a 
                             className="text-primary cursor-pointer hover:underline" 
                             onClick={() => window.electron.openURL('https://ascendara.app/analytics')} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
                           >
                             {t('common.learnMore')}
                           </a>

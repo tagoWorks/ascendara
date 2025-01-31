@@ -413,8 +413,6 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                     {t('downloads.contentTypeError')}<br />
                     <a 
                       onClick={() => window.electron.openURL('https://ascendara.app/docs/troubleshooting/common-issues#download-issues')}
-                      target="_blank" 
-                      rel="noopener noreferrer"
                       className="text-primary cursor-pointer hover:underline"
                     >
                       {t('common.learnMore')}

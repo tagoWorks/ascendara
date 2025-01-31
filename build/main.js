@@ -4,7 +4,7 @@
  *    The best way to test games before you buy them.
  *       =====================================
  * 
- * This is the main process file for the Ascendara Game Launcher, built with Electron.
+ * This is the main process file for , built with Electron.
  * It handles core functionality including:
  * 
  * - Application lifecycle management
@@ -32,7 +32,7 @@ let isDev = false;
 
 
 
-const CURRENT_VERSION = "7.6.2";
+const CURRENT_VERSION = "7.6.3";
 const { app, BrowserWindow, ipcMain, dialog, shell, protocol } = require('electron');
 const { Client } = require('discord-rpc');
 const disk = require('diskusage');
@@ -2368,5 +2368,99 @@ ipcMain.handle('get-launch-count', () => {
   } catch (error) {
     console.error('Error reading launch count:', error);
     return 0;
+  }
+});
+
+ipcMain.handle('get-local-crack-directory', () => {
+  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  const steamEmuPathGoldberg = path.join(os.homedir(), 'AppData', 'Roaming', 'Goldberg SteamEmu Saves', 'settings');
+  
+  let settings;
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    settings = JSON.parse(data);
+  } catch (error) {
+    console.error('Error reading local crack settings:', error);
+    settings = {};
+  }
+
+  if (!settings.crackDirectory) {
+    settings.crackDirectory = steamEmuPathGoldberg;
+  }
+  
+  if (!settings.crackUsernamePath) {
+    settings.crackUsernamePath = steamEmuPathGoldberg;
+  }
+
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
+  } catch (error) {
+    console.error('Error writing local crack settings:', error);
+    return null;
+  }
+
+  return settings.crackDirectory;
+});
+
+ipcMain.handle('get-system-username', () => {
+  try {
+    return os.userInfo().username;
+  } catch (error) {
+    console.error('Error getting system username:', error);
+    return null;
+  }
+});
+
+ipcMain.handle('set-local-crack-directory', (event, directory) => {
+  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  try {
+    let settings = {};
+    if (fs.existsSync(filePath)) {
+      settings = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    }
+    settings.crackDirectory = directory;
+    fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Error setting crack directory:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('get-local-crack-username', () => {
+  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  const settings = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  const steamEmuPathGoldberg = settings.crackUsernamePath;
+
+  try {
+    if (fs.existsSync(steamEmuPathGoldberg)) {
+      const accountNamePath = path.join(steamEmuPathGoldberg, 'account_name.txt');
+      if (fs.existsSync(accountNamePath)) {
+        const accountName = fs.readFileSync(accountNamePath, 'utf8').trim();
+        return accountName;
+      }
+    }
+  } catch (error) {
+    console.error('Error reading local crack username:', error);
+  }
+  return null;
+});
+
+ipcMain.handle('set-local-crack-username', (event, username) => {
+  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  try {
+    const settings = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    const steamEmuPathGoldberg = settings.crackUsernamePath;
+    
+    if (!fs.existsSync(steamEmuPathGoldberg)) {
+      fs.mkdirSync(steamEmuPathGoldberg, { recursive: true });
+    }
+
+    const accountNamePath = path.join(steamEmuPathGoldberg, 'account_name.txt');
+    fs.writeFileSync(accountNamePath, username);
+    return true;
+  } catch (error) {
+    console.error('Error setting crack username:', error);
+    return false;
   }
 });
