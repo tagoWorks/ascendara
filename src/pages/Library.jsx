@@ -379,7 +379,7 @@ const Library = () => {
           <div className="flex justify-between items-center mb-4">
             <Input
               type="text"
-              placeholder={t('search_games')}
+              placeholder={t('library.searchLibrary')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="max-w-xs"

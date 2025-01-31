@@ -153,7 +153,7 @@ const UserSettingsDialog = () => {
                 placeholder={t('settings.userSettings.directoryDescription')}
                 className="flex-1 text-foreground"
               />
-              <Button onClick={handleDirectorySelect}>
+              <Button className="text-secondary" onClick={handleDirectorySelect}>
                 {t('settings.userSettings.browseDirectory')}
               </Button>
             </div>
@@ -166,7 +166,7 @@ const UserSettingsDialog = () => {
         </div>
 
         <AlertDialogFooter>
-          <Button onClick={handleSave} disabled={!canCreateFiles}>
+          <Button className="text-secondary" onClick={handleSave} disabled={!canCreateFiles}>
             {t('settings.userSettings.saveChanges')}
           </Button>
         </AlertDialogFooter>

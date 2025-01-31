@@ -252,7 +252,7 @@ const MenuBar = () => {
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <AlertDialogContent className="max-w-md bg-background">
           <AlertDialogHeader>
-            <div className="fixed top-2 right-2 cursor-pointer p-2" onClick={() => setIsDialogOpen(false)}>
+            <div className="fixed top-2 right-2 cursor-pointer p-2 text-foreground" onClick={() => setIsDialogOpen(false)}>
               <X className="w-4 h-4" />
             </div>
             <AlertDialogTitle className="text-2xl font-bold text-foreground">
