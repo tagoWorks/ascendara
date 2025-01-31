@@ -116,7 +116,7 @@ const UserSettingsDialog = () => {
       <AlertDialogContent className="sm:max-w-[425px]">
         <AlertDialogHeader>
           <div className="fixed items-center justify-center top-4 right-4">
-            <X className="h-5 w-5 cursor-pointer" onClick={() => setIsOpen(false)} /> 
+            <X className="h-5 w-5 cursor-pointer text-foreground" onClick={() => setIsOpen(false)} /> 
           </div>
           <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('settings.userSettings.title')}</AlertDialogTitle>
           <AlertDialogDescription className="text-muted-foreground">
@@ -129,19 +129,20 @@ const UserSettingsDialog = () => {
         
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="username">
+            <Label className="text-muted-foreground" htmlFor="username">
               {t('settings.userSettings.username')}
             </Label>
             <Input
               id="username"
               value={username}
+              className="text-foreground"
               onChange={(e) => setUsername(e.target.value)}
               placeholder={t('settings.userSettings.usernamePlaceholder')}
             />
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="directory">
+            <Label className="text-muted-foreground" htmlFor="directory">
               {t('settings.userSettings.directory')}
             </Label>
             <div className="flex gap-2">
@@ -150,14 +151,14 @@ const UserSettingsDialog = () => {
                 value={directory}
                 onChange={(e) => setDirectory(e.target.value)}
                 placeholder={t('settings.userSettings.directoryDescription')}
-                className={`flex-1 ${!canCreateFiles ? 'border-destructive' : ''}`}
+                className="flex-1 text-foreground"
               />
               <Button onClick={handleDirectorySelect}>
                 {t('settings.userSettings.browseDirectory')}
               </Button>
             </div>
             {!canCreateFiles && (
-              <p className="text-sm text-destructive">
+              <p className="text-sm text-muted-foreground">
                 {t('settings.userSettings.directoryPermissionError')}
               </p>
             )}
