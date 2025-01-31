@@ -118,8 +118,8 @@ const UserSettingsDialog = () => {
           <div className="fixed items-center justify-center top-4 right-4">
             <X className="h-5 w-5 cursor-pointer" onClick={() => setIsOpen(false)} /> 
           </div>
-          <AlertDialogTitle>{t('settings.userSettings.title')}</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('settings.userSettings.title')}</AlertDialogTitle>
+          <AlertDialogDescription className="text-muted-foreground">
             {t('settings.userSettings.description')}&nbsp;
               <a onClick={() => window.electron.openURL('https://ascendara.app/docs/features/overview#username-customization')} className="text-sm text-muted-foreground hover:text-primary cursor-pointer">
                 {t('common.learnMore')} <ExternalLink className="inline-block mb-1 h-3 w-3" />
