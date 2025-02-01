@@ -12,27 +12,29 @@
 
 ## 🎮 About
 
-### Ascendara is completely developed and maintained by a [single developer](https://tago.works).
+#### The website, API, and application were all completely developed and stay maintained by a [single developer](https://tago.works).
 
 Ascendara simplifies your pirating experience by providing a seamless way to download, manage, and play the pre-installed games. No more hassle with extracting, installing, or moving files. The game library is powered by a custom webscraper, currently featuring games from [STEAMRIP](https://steamrip.com/), with plans to expand to more sources.
 
 ## ✨ Features
 
-- 🌐 Support for 8 additional languages 
+- 🌐 Support for 9 total languages
 <details>
 <summary>Click to expand</summary>
-
-- Spanish (es)
-- Chinese (Simplified) (zh-CN)
-- Arabic (ar)
-- Hindi (hi)
-- Bengali (bn)
-- Portuguese (pt)
-- Russian (ru)
-- Japanese (ja)
+    
+- English 
+- Spanish
+- Chinese
+- Arabic 
+- Hindi
+- Bengali
+- Portuguese
+- Russian 
+- Japanese
+  
 </details>
 
-- 🎯 One-click game downloads and installations
+- 🎯 2 Clicks to start game downloads
 - 📖 Detailed documentation for users & developers
 - 📚 Organized game library management
 - 🔍 Smart search functionality
