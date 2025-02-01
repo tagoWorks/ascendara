@@ -45,62 +45,97 @@ const checkInternetConnectivity = async () => {
   }
 };
 
-export const checkServerStatus = async () => {
+// Singleton state
+let currentStatus = {
+  ok: true, // Start optimistically
+  api: { ok: true },
+  storage: { ok: true },
+  lfs: { ok: true }
+};
+let lastCheck = null;
+let checkInterval = null;
+let subscribers = new Set();
+
+const CACHE_DURATION = 10000; // 10 seconds
+
+export const checkServerStatus = async (force = false) => {
+  // Return cached status if available and not forced
+  if (!force && currentStatus && lastCheck && (Date.now() - lastCheck < CACHE_DURATION)) {
+    return currentStatus;
+  }
+
   try {
     // First check internet connectivity
     const isOnline = await checkInternetConnectivity();
+    
     if (!isOnline) {
-      return {
-        isHealthy: false,
-        downServices: ['internet'],
-        isOffline: true,
-        indexStatus: 'unknown'
+      currentStatus = { 
+        ok: false, 
+        api: { ok: false },
+        storage: { ok: false },
+        lfs: { ok: false },
+        message: 'No internet connection'
       };
+      lastCheck = Date.now();
+      notifySubscribers();
+      return currentStatus;
     }
 
-    const results = await Promise.all(
-      Object.entries(ENDPOINTS).map(async ([service, url]) => {
-        const status = await checkEndpoint(url);
-        return { service, status };
-      })
-    );
+    const results = await Promise.all([
+      checkEndpoint(ENDPOINTS.api),
+      checkEndpoint(ENDPOINTS.storage),
+      checkEndpoint(ENDPOINTS.lfs)
+    ]);
 
-    const downServices = results
-      .filter(({ status }) => !status.ok)
-      .map(({ service }) => service);
-
-    const apiResult = results.find(r => r.service === 'api');
-    console.log('API Result:', apiResult);
-    const apiStatus = apiResult?.status?.data;
-    console.log('API Status:', apiStatus);
-
-    if (!apiStatus) {
-      console.warn('API status not found in response');
-      return {
-        isHealthy: false,
-        downServices: [...downServices, 'api'],
-        isOffline: false,
-        indexStatus: 'unknown',
-        version: '0.0',
-        endpoint: 'unknown'
-      };
-    }
-
-    return {
-      isHealthy: downServices.length === 0,
-      downServices,
-      isOffline: false,
-      indexStatus: apiStatus.status === 'updatingIndex' ? 'updating' : 'ready',
-      version: apiStatus.version,
-      endpoint: apiStatus.endpoint
+    currentStatus = {
+      ok: results.every(r => r.ok),
+      api: results[0],
+      storage: results[1],
+      lfs: results[2]
     };
+    
+    lastCheck = Date.now();
+    notifySubscribers();
+    return currentStatus;
   } catch (error) {
     console.error('Error checking server status:', error);
-    return {
-      isHealthy: false,
-      downServices: ['unknown'],
-      isOffline: true,
-      indexStatus: 'unknown'
-    };
+    // Don't update status on error, keep previous status
+    return currentStatus;
   }
 };
+
+// Function to notify all subscribers of status changes
+const notifySubscribers = () => {
+  subscribers.forEach(callback => callback(currentStatus));
+};
+
+// Subscribe to status updates
+export const subscribeToStatus = (callback) => {
+  subscribers.add(callback);
+  // Return unsubscribe function
+  return () => subscribers.delete(callback);
+};
+
+// Start the status check interval
+export const startStatusCheck = (interval = 30000) => {
+  if (checkInterval) {
+    clearInterval(checkInterval);
+  }
+  
+  // Do an immediate check
+  checkServerStatus(true).catch(console.error);
+  
+  checkInterval = setInterval(() => {
+    checkServerStatus(true).catch(console.error);
+  }, interval);
+  
+  return () => {
+    if (checkInterval) {
+      clearInterval(checkInterval);
+      checkInterval = null;
+    }
+  };
+};
+
+// Get the current status without checking
+export const getCurrentStatus = () => currentStatus;

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { checkServerStatus } from '../services/serverStatus';
+import React, { useState, useEffect, useRef } from 'react';
+import { subscribeToStatus, getCurrentStatus } from '../services/serverStatus';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -9,25 +9,20 @@ import {
   AlertDialogCancel,
   AlertDialogFooter,
 } from './ui/alert-dialog';
-import { AlertTriangle, WifiOff, Hammer, X, Minus } from 'lucide-react';
+import { AlertTriangle, WifiOff, Hammer, X, Minus, Download } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { checkForUpdates } from '../services/updateCheckingService';
+import { exportToSvg } from '../lib/exportToSvg';
 
 const MenuBar = () => {
   const { t } = useLanguage();
   const [serverStatus, setServerStatus] = useState(() => {
-    // Try to load cached status from localStorage
-    const cached = localStorage.getItem('serverStatus');
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      return parsed;
-    }
     // Default status if no valid cache exists
     return { 
-      isHealthy: true,
-      isOffline: false,
-      lastChecked: null,
-      downServices: []
+      ok: true,
+      api: { ok: true },
+      storage: { ok: true },
+      lfs: { ok: true }
     };
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -36,6 +31,7 @@ const MenuBar = () => {
   const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
   const [isDev, setIsDev] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const mainContentRef = useRef(null);
 
   // Check for dev mode
   useEffect(() => {
@@ -94,32 +90,24 @@ const MenuBar = () => {
   }, []);
 
   useEffect(() => {
-    let isSubscribed = true;
-    
-    const checkStatus = async () => {
-      try {
-        const status = await checkServerStatus();
-        if (isSubscribed) {
-          const newStatus = {
-            isHealthy: status.isHealthy,
-            isOffline: status.isOffline,
-            lastChecked: new Date().toISOString(),
-            downServices: status.downServices
-          };
-          setServerStatus(newStatus);
-          localStorage.setItem('serverStatus', JSON.stringify(newStatus));
-        }
-      } catch (error) {
-        console.warn('Failed to check server status:', error);
+    const checkStatus = () => {
+      const status = getCurrentStatus();
+      if (status) {
+        setServerStatus(status);
       }
     };
+
+    // Subscribe to status updates
+    const unsubscribe = subscribeToStatus(status => {
+      if (status) {
+        setServerStatus(status);
+      }
+    });
+
+    // Initial check
     checkStatus();
-    const interval = setInterval(checkStatus, 300000); // 5 minutes
-    
-    return () => {
-      isSubscribed = false; 
-      clearInterval(interval);
-    };
+
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -136,6 +124,11 @@ const MenuBar = () => {
     loadIconPath();
   }, []);
 
+  useEffect(() => {
+    // Assign ref to main content area
+    mainContentRef.current = document.querySelector('main');
+  }, []);
+
   const handleStatusClick = () => {
     setIsDialogOpen(true);
   };
@@ -149,6 +142,16 @@ const MenuBar = () => {
     if (diff < 60) return 'Just now';
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     return `${Math.floor(diff / 3600)}h ago`;
+  };
+
+  const handleExportSvg = async () => {
+    if (mainContentRef.current) {
+      try {
+        await exportToSvg(mainContentRef.current, 'ascendara-export');
+      } catch (error) {
+        console.error('Failed to export SVG:', error);
+      }
+    }
   };
 
   return (
@@ -174,11 +177,11 @@ const MenuBar = () => {
           title={t('server-status.title')}
           style={{ WebkitAppRegion: 'no-drag' }}
         >
-          {serverStatus.isOffline ? (
+          {!serverStatus?.ok ? (
             <WifiOff className="w-4 h-4 text-red-500" />
           ) : (
             <div className={`w-1.5 h-1.5 rounded-full ${
-              serverStatus.isHealthy 
+              serverStatus.api?.ok && serverStatus.storage?.ok && serverStatus.lfs?.ok
                 ? 'bg-green-500 hover:bg-green-600' 
                 : 'bg-red-500 animate-pulse hover:bg-red-600'
             }`} />
@@ -234,6 +237,18 @@ const MenuBar = () => {
           </div>
         )}
         <div className="flex-1" />
+        {isDev && (
+          <div className="flex items-center ml-2">
+            <button
+              onClick={handleExportSvg}
+              className="text-[14px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center gap-1 hover:bg-blue-500/20 transition-colors"
+              style={{ WebkitAppRegion: 'no-drag' }}
+            >
+              <Download className="w-3 h-3" />
+              {t('app.exportSvg', 'Export SVG')}
+            </button>
+          </div>
+        )}
       </div>
       <div className="window-controls flex items-center mr-2">
         <button
@@ -256,7 +271,7 @@ const MenuBar = () => {
               <X className="w-4 h-4" />
             </div>
             <AlertDialogTitle className="text-2xl font-bold text-foreground">
-              {serverStatus.isOffline ? t('server-status.offline') : t('server-status.title')}
+              {!serverStatus?.ok ? t('server-status.offline') : t('server-status.title')}
             </AlertDialogTitle>
             
             <AlertDialogDescription className="sr-only">
@@ -265,7 +280,7 @@ const MenuBar = () => {
             
             <div className="mt-4 space-y-4">
               {/* Status Card */}
-              {serverStatus.isOffline ? (
+              {!serverStatus?.ok ? (
                 <div className="p-4 rounded-lg border bg-red-500/5 border-red-500/20">
                   <div className="flex items-center gap-3">
                     <WifiOff className="w-8 h-8 text-red-500" />
@@ -277,38 +292,33 @@ const MenuBar = () => {
                 </div>
               ) : (
                 <div className={`p-4 rounded-lg border ${
-                  serverStatus.isHealthy 
+                  serverStatus.api?.ok && serverStatus.storage?.ok && serverStatus.lfs?.ok
                     ? 'bg-green-500/5 border-green-500/20' 
                     : 'bg-red-500/5 border-red-500/20'
                 }`}>
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-foreground">
-                      {serverStatus.isHealthy ? t('server-status.healthy') : t('server-status.unhealthy')}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {t('server-status.last-checked')} {formatLastChecked(serverStatus.lastChecked)}
+                      {serverStatus.api?.ok && serverStatus.storage?.ok && serverStatus.lfs?.ok ? t('server-status.healthy') : t('server-status.unhealthy')}
                     </span>
                   </div>
                   <p className="text-sm mt-2 text-muted-foreground">
-                    {serverStatus.isHealthy 
+                    {serverStatus.api?.ok && serverStatus.storage?.ok && serverStatus.lfs?.ok 
                       ? t('server-status.healthy-description')
                       : (
                         <div>
                           {t('server-status.unhealthy-description')}
                           <ul className="mt-2 space-y-2">
-                            {serverStatus.downServices?.map(service => (
-                              <li key={service} className="flex items-start">
+                            {(!serverStatus.api?.ok || !serverStatus.storage?.ok || !serverStatus.lfs?.ok) && (
+                              <li key="downServices" className="flex items-start">
                                 <span className="w-2.5 h-2.5 mt-1.5 rounded-full bg-red-500 mr-2" />
                                 <div>
-                                  <span className="font-medium">{service === 'lfs' ? service.toUpperCase() : service.charAt(0).toUpperCase() + service.slice(1)} Server</span>
+                                  <span className="font-medium">{t('server-status.down-services')}</span>
                                   <p className="text-xs text-muted-foreground">
-                                    {service === 'api' && t('server-status.api-description')}
-                                    {service === 'storage' && t('server-status.storage-description')}
-                                    {service === 'lfs' && t('server-status.lfs-description')}
+                                    {t('server-status.down-services-description')}
                                   </p>
                                 </div>
                               </li>
-                            ))}
+                            )}
                           </ul>
                         </div>
                       )} 

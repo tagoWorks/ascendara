@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './Index'
+import App from './index'
 import './app.css'
 import './i18n'
 import { analytics } from './services/analyticsService'

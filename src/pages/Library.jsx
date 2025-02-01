@@ -22,7 +22,9 @@ import {
   FolderOpen,
   Pencil,
   Trash2,
-  Shield,
+  Search,
+  User,
+  HardDrive,
   Gamepad2,
   Monitor,
   Gift,
@@ -66,6 +68,8 @@ const Library = () => {
   const [coverSearchResults, setCoverSearchResults] = useState([]);
   const [isCoverSearchLoading, setIsCoverSearchLoading] = useState(false);
   const [selectedGameImage, setSelectedGameImage] = useState(null);
+  const [storageInfo, setStorageInfo] = useState(null);
+  const [username, setUsername] = useState(null);
   const [errorGame, setErrorGame] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [showErrorDialog, setShowErrorDialog] = useState(false);
@@ -99,6 +103,36 @@ const Library = () => {
         : [...prev, gameName];
       return newFavorites;
     });
+  };
+
+  const fetchUsername = async () => {
+    try {
+      const username = await window.electron.getLocalCrackUsername();
+      setUsername(username);
+      return username;
+    } catch (error) {
+      console.error('Error fetching username:', error);
+      return null;
+    }
+  };
+
+  const formatBytes = (bytes) => {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    if (bytes === 0) return '0 Byte';
+    const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  const fetchStorageInfo = async () => {
+    try {
+      const installPath = await window.electron.getDownloadDirectory();
+      if (installPath) {
+        const { freeSpace } = await window.electron.getDriveSpace(installPath);
+        setStorageInfo({ freeSpace });
+      }
+    } catch (error) {
+      console.error('Error fetching storage info:', error);
+    }
   };
 
   const loadGames = async () => {
@@ -165,6 +199,11 @@ const Library = () => {
   };
 
   useEffect(() => {
+    fetchStorageInfo();
+    fetchUsername();
+  }, [games]);
+
+  useEffect(() => {
     loadGames();
 
     // Set up event listeners
@@ -220,8 +259,6 @@ const Library = () => {
       setLaunchingGame(null);
       return;
     }
-
-
 
     try {
       // First check if game is already running
@@ -331,7 +368,7 @@ const Library = () => {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex gap-2">
-          <Button className="text-primary" onClick={handleCloseErrorDialog}>
+          <Button variant="outline" className="text-primary" onClick={handleCloseErrorDialog}>
             {t('common.cancel')}
           </Button>
           <Button className="text-secondary bg-primary" onClick={async () => {
@@ -364,29 +401,63 @@ const Library = () => {
             {error}
           </div>
         )}
-        
-        <div className="flex flex-col gap-4 mb-6">
-          <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold text-primary">{t('library.installedGames')}</h1>
-            <Separator orientation="vertical" className="h-8" />
-            <p className="text-muted-foreground">
-              {games.length === 0 
-                ? t('library.noGamesMessage')
-                : `${games.length} ${t('library.game')}${games.length === 1 ? '' : 's'} ${t('library.inYourLibrary')}`}
-            </p>
-          </div>
+          <div className="flex flex-col gap-6 mb-8">
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-row justify-between items-start">
+                {/* Left side: Title and Search */}
+                <div className="flex-1">
+                  <div className="flex items-center mb-4">
+                    <h1 className="text-3xl font-bold text-primary tracking-tight">{t('library.pageTitle')}</h1>
+                  </div>
+                <div className="relative w-72">
+                  <Input
+                    type="text"
+                    placeholder={t('library.searchLibrary')}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pr-8"
+                  />
+                  <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                </div>
+              </div>
 
-          <div className="flex justify-between items-center mb-4">
-            <Input
-              type="text"
-              placeholder={t('library.searchLibrary')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-xs"
-            />
-            <UserSettingsDialog />
+              {/* Right side: Storage Info and Settings */}
+              <div className="flex items-start gap-4">
+                {storageInfo && (
+                  <div className="bg-secondary/10 rounded-lg p-3 min-w-[250px]">
+                    <div className="space-y-3">
+                      {/* Username section */}
+                      <div className="flex items-center justify-between pb-2 border-b border-secondary/20">
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-medium">{username || 'Guest'}</span>
+                        </div>
+                            <UserSettingsDialog />
+                      </div>
+                
+                      {/* Storage section */}
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <div className="flex items-center gap-2">
+                            <HardDrive className="w-4 h-4 text-primary" />
+                            <span className="text-sm text-muted-foreground">{t('library.availableSpace')}</span>
+                          </div>
+                          <span className="text-sm font-medium">{formatBytes(storageInfo.freeSpace)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <Gamepad2 className="w-4 h-4 text-primary" />
+                            <span className="text-sm text-muted-foreground">{t('library.gamesInLibrary')}</span>
+                          </div>
+                          <span className="text-sm font-medium">{games.length}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <AlertDialog key="add-game-dialog" open={isAddGameOpen} onOpenChange={setIsAddGameOpen}>
               <AlertDialogTrigger asChild>

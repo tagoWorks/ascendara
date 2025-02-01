@@ -5,7 +5,7 @@ const METADATA_CACHE_KEY = 'local_ascendara_metadata_cache';
 const LAST_UPDATED_KEY = 'local_ascendara_last_updated';
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
-import { checkServerStatus } from './serverStatus';
+import { getCurrentStatus } from './serverStatus';
 import { sanitizeText } from '../lib/utils';
 
 // Memory cache to avoid localStorage reads
@@ -63,15 +63,14 @@ const gameService = {
     }
 
     try {
-      const status = await checkServerStatus();
-      
-      if (!status.isHealthy) {
+      const status = getCurrentStatus();
+      if (!status?.ok) {
         if (cachedGames && cachedMetadata) {
           const parsedGames = JSON.parse(cachedGames);
           const parsedMetadata = JSON.parse(cachedMetadata);
           return { games: parsedGames, metadata: parsedMetadata };
         }
-        throw new Error('Server is down and no cache available');
+        throw new Error('Server is not available');
       }
 
       const data = await this.fetchDataFromAPI();

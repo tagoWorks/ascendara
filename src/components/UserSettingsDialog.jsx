@@ -11,7 +11,7 @@ import {
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { ExternalLink, User, X } from 'lucide-react';
+import { ExternalLink, Pencil, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { toast } from 'sonner';
 
@@ -110,7 +110,7 @@ const UserSettingsDialog = () => {
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
         <Button variant="ghost" size="icon" className="w-9 h-9">
-          <User className="h-5 w-5" />
+          <Pencil className="h-4 w-4" />
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent className="sm:max-w-[425px]">

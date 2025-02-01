@@ -19,7 +19,7 @@ import {
   X 
 } from 'lucide-react';
 import gameService from '../services/gameService';
-import { checkServerStatus } from '../services/serverStatus';
+import { subscribeToStatus, getCurrentStatus, startStatusCheck } from '../services/serverStatus';
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogCancel, AlertDialogTitle, AlertDialogTrigger } from "../components/ui/alert-dialog";
 import { useNavigate } from 'react-router-dom';
@@ -63,6 +63,23 @@ const Search = memo(() => {
            gamesCache.timestamp && 
            (Date.now() - gamesCache.timestamp) < gamesCache.expiryTime;
   }, []);
+
+    const fuzzyMatch = (text, query) => {
+      if (!text || !query) return false;
+      text = text.toLowerCase();
+      query = query.toLowerCase();
+      const words = text.split(/\s+/);
+      return words.some(word => {
+        if (word.includes(query)) return true;
+        let matches = 0;
+        const uniqueChars = [...new Set(query)];
+        uniqueChars.forEach(char => {
+          if (word.includes(char)) matches++;
+        });
+        
+        return matches >= query.length * 0.8;
+      });
+    };
 
   const refreshGames = useCallback(async (forceRefresh = false) => {
     if (!forceRefresh && isCacheValid()) {
@@ -130,19 +147,37 @@ const Search = memo(() => {
   useEffect(() => {
     const checkIndexStatus = async () => {
       try {
-        const status = await checkServerStatus();
-        console.log('Server Status:', status);
-        console.log('Setting isIndexUpdating to:', status.indexStatus === 'updating');
-        setIsIndexUpdating(status.indexStatus === 'updating');
+        const status = getCurrentStatus();
+        if (status?.api?.data?.status === 'updatingIndex') {
+          setIsIndexUpdating(true);
+        } else {
+          setIsIndexUpdating(false);
+        }
       } catch (error) {
-        console.error('Failed to check index status:', error);
+        console.error('Error checking index status:', error);
+        setIsIndexUpdating(false);
       }
     };
 
-    checkIndexStatus();
-    const interval = setInterval(checkIndexStatus, 30000); // Check every 30 seconds
+    // Subscribe to status updates
+    const unsubscribe = subscribeToStatus(status => {
+      if (status?.api?.data?.status === 'updatingIndex') {
+        setIsIndexUpdating(true);
+      } else {
+        setIsIndexUpdating(false);
+      }
+    });
 
-    return () => clearInterval(interval);
+    // Initial check
+    checkIndexStatus();
+
+    return () => unsubscribe();
+  }, []);
+
+  // Start status check interval when component mounts
+  useEffect(() => {
+    const stopStatusCheck = startStatusCheck();
+    return () => stopStatusCheck();
   }, []);
 
   const filteredGames = useMemo(() => {
@@ -152,13 +187,13 @@ const Search = memo(() => {
       result = result.filter(game => !game.category?.includes('Nudity'));
     }
     
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(game => 
-        game.game?.toLowerCase().includes(query) ||
-        game.description?.toLowerCase().includes(query)
-      );
-    }
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        result = result.filter(game => 
+          fuzzyMatch(game.game, query) ||
+          fuzzyMatch(game.description, query)
+        );
+      }
 
     if (selectedCategories.length > 0) {
       result = result.filter(game =>

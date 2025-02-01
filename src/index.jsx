@@ -268,6 +268,20 @@ const AppRoutes = () => {
     };
   }, []);
 
+  useEffect(() => {
+    // Remove the initial loader once React is ready
+    if (!isLoading && !isUpdating && !isInstalling) {
+      const loader = document.getElementById('initial-loader');
+      if (loader) {
+        loader.style.transition = 'opacity 0.3s';
+        loader.style.opacity = '0';
+        setTimeout(() => {
+          loader.style.display = 'none';
+        }, 300);
+      }
+    }
+  }, [isLoading, isUpdating, isInstalling]);
+
   const handleWelcomeComplete = async (withTour = false) => {
     setWelcomeData({ isNew: false, isV7: true });
     setShouldShowWelcome(false);
@@ -365,45 +379,37 @@ const AppRoutes = () => {
   if (isLoading || isUpdating || isInstalling) {
     console.log('Rendering loading screen...');
     return (
-      <>
-        <motion.div 
-          className="loading-container"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {iconData && (
-            <motion.img 
-              src={iconData}
-              alt="Loading"
-              className="loading-icon"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              transition={{ 
-                duration: 0.5,
-                ease: "easeOut"
-              }}
-            />
-          )}
-          {isInstalling && <UpdateOverlay />}
-          {isUpdating && (
-            <><motion.div 
-              className="loading-text"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              {t('app.loading.finishingUpdate')}
-            </motion.div>
-            <br />
-            <Loader className="animate-spin" /></>
-          )}
-        </motion.div>
-        {showSupportDialog && (
-          <SupportDialog onClose={() => setShowSupportDialog(false)} />
-        )}
-      </>
+      <motion.div 
+        className="loading-container"
+        initial={{ opacity: 1 }}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'linear-gradient(135deg, #fff0f3 0%, #ffffff 100%)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999
+        }}
+      >
+        <motion.img 
+          src={iconData}
+          alt="Loading"
+          style={{ width: '128px', height: '128px' }}
+          animate={{
+            scale: [0.95, 1, 0.95],
+            opacity: [0.8, 1, 0.8]
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+      </motion.div>
     );
   }
 
