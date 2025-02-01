@@ -410,8 +410,15 @@ class GofileDownloader:
             if root != self.download_dir and "_CommonRedist" not in root and not os.listdir(root):
                 shutil.rmtree(root)
 
-        # Remove downloadingData after extraction is complete
-        del self.game_info["downloadingData"]
+        # Reset downloadingData to default values after extraction is complete
+        self.game_info["downloadingData"] = {
+            "downloading": False,
+            "extracting": False,
+            "updating": False,
+            "progressCompleted": "0.00",
+            "progressDownloadSpeeds": "0.00 KB/s",
+            "timeUntilComplete": "0s"
+        }
         safe_write_json(self.game_info_path, self.game_info)
 
 def open_console():
