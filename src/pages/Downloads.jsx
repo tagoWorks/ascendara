@@ -22,7 +22,7 @@ import {
   AlertTriangle,
   Download,
   Clock,
-  HardDrive,
+  ExternalLink,
   CircleCheck
 } from 'lucide-react';
 import {
@@ -415,7 +415,7 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                       onClick={() => window.electron.openURL('https://ascendara.app/docs/troubleshooting/common-issues#download-issues')}
                       className="text-primary cursor-pointer hover:underline"
                     >
-                      {t('common.learnMore')}
+                      {t('common.learnMore')} <ExternalLink className="inline-block mb-1 h-3 w-3" />
                     </a>
                   </p>
                 ) || (
@@ -469,8 +469,11 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
         ) : (
           < >
             {isDownloading && (
-              <div className="space-y-2">
+              <div className="space-y-2 ">
+                <div className="flex items-center space-x-2">
+                <span className="text-xs text-muted-foreground">{downloadingData.progressCompleted}%</span>
                 <Progress value={parseFloat(downloadingData.progressCompleted)} />
+                </div>
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <div className="flex items-center space-x-2">
                     <Download className="h-3 w-3" />
@@ -479,10 +482,6 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                   <div className="flex items-center space-x-2">
                     <Clock className="h-3 w-3" />
                     <span>ETA: {downloadingData.timeUntilComplete}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <HardDrive className="h-3 w-3" />
-                    <span>{downloadingData.progressCompleted}% of {game.size}</span>
                   </div>
                 </div>
               </div>

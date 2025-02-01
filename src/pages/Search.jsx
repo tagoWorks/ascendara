@@ -14,6 +14,7 @@ import {
   Gamepad2,
   Gift,
   InfoIcon,
+  ExternalLink,
   RefreshCw,
   AlertTriangle,
   X 
@@ -335,7 +336,7 @@ const Search = memo(() => {
                           onClick={() => window.electron.openURL('https://ascendara.app/dmca')}
                           className="text-primary hover:underline cursor-pointer"
                         >
-                          {t('common.learnMore')}
+                          {t('common.learnMore')} <ExternalLink className="inline-block mb-1 h-3 w-3" />
                         </a>
                       </p>
 

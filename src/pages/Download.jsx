@@ -750,7 +750,7 @@ export default function DownloadPage() {
               <div className="flex items-center gap-2">
                 {gameData.emulator && (
                   <span className="text-sm bg-yellow-500/10 text-yellow-500 px-2 py-0.5 rounded flex items-center">
-                    <CircleSlash className="h-4 w-4 mr-1" /> {t('download.gameNeedsEmulator')}&nbsp;<a onClick={() => window.electron.openURL('https://ascendara.app/docs/troubleshooting/emulators')} className="hover:underline cursor-pointer">{t('common.learnMore')}</a>
+                    <CircleSlash className="h-4 w-4 mr-1" /> {t('download.gameNeedsEmulator')}&nbsp;<a onClick={() => window.electron.openURL('https://ascendara.app/docs/troubleshooting/emulators')} className="hover:underline cursor-pointer">{t('common.learnMore')} <ExternalLink className="inline-block mb-1 h-3 w-3" /></a>
                   </span>
                 )}
                 {gameData.category?.includes("Virtual Reality") && (

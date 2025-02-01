@@ -9,7 +9,7 @@ import { Label } from '../components/ui/label';
 import { Card } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ShieldAlert, Languages, Zap, Loader, Hand, RefreshCw, CircleAlert, CircleCheck, AlertCircle } from "lucide-react";
+import { ShieldAlert, Languages, Zap, Loader, Hand, RefreshCw, CircleAlert, CircleCheck, AlertCircle, ExternalLink } from "lucide-react";
 import gameService from '../services/gameService';
 import { useNavigate } from 'react-router-dom';
 
@@ -657,7 +657,7 @@ function Settings() {
                           size="sm"
                           onClick={() => window.electron.openURL('https://ascendara.app/sources/steamrip')}
                         >
-                          {t('common.learnMore')}
+                          {t('common.learnMore')} <ExternalLink className="inline-block ml-1 h-3 w-3" />
                         </Button>
                       </div>
                     </div>
@@ -740,7 +740,7 @@ function Settings() {
                             className="text-primary cursor-pointer hover:underline" 
                             onClick={() => window.electron.openURL('https://ascendara.app/analytics')} 
                           >
-                            {t('common.learnMore')}
+                            {t('common.learnMore')} <ExternalLink className="inline-block mb-1 h-3 w-3" />
                           </a>
                         </p>
                       </div>

@@ -232,8 +232,12 @@ def download_file(link, game, online, dlc, version, size, download_dir):
                 raise Exception("content_type_error")
 
             total_size = int(response.headers.get('content-length', 0) or 0)
+            
+            # If HEAD request didn't give us the size, try a GET request
             if total_size == 0:
-                raise Exception("Could not determine file size")
+                response = session.get(link, stream=True, timeout=(10, 30))
+                response.raise_for_status()
+                total_size = int(response.headers.get('content-length', 0) or 0)
 
             # Determine file extension
             archive_ext = "rar"
@@ -258,8 +262,12 @@ def download_file(link, game, online, dlc, version, size, download_dir):
 
             def update_progress(bytes_downloaded):
                 nonlocal start_time
-                progress = manager.downloaded_size / total_size if total_size > 0 else 0
-                game_info["downloadingData"]["progressCompleted"] = f"{progress * 100:.2f}"
+                if total_size > 0:
+                    progress = manager.downloaded_size / total_size
+                    game_info["downloadingData"]["progressCompleted"] = f"{progress * 100:.2f}"
+                else:
+                    # If we don't know total size, show downloaded amount instead
+                    game_info["downloadingData"]["progressCompleted"] = f"{manager.downloaded_size / (1024*1024):.1f}MB"
 
                 elapsed_time = time.time() - start_time
                 download_speed = manager.downloaded_size / elapsed_time if elapsed_time > 0 else 0
@@ -271,8 +279,8 @@ def download_file(link, game, online, dlc, version, size, download_dir):
                 else:
                     game_info["downloadingData"]["progressDownloadSpeeds"] = f"{download_speed / (1024 * 1024):.2f} MB/s"
 
-                remaining_size = total_size - manager.downloaded_size
-                if download_speed > 0:
+                remaining_size = total_size - manager.downloaded_size if total_size > 0 else 0
+                if download_speed > 0 and remaining_size > 0:
                     time_until_complete = remaining_size / download_speed
                     minutes, seconds = divmod(time_until_complete, 60)
                     hours, minutes = divmod(minutes, 60)
@@ -285,26 +293,31 @@ def download_file(link, game, online, dlc, version, size, download_dir):
 
                 safe_write_json(game_info_path, game_info)
 
-            # Download chunks in parallel
-            manager.split_chunks()
-            with ThreadPoolExecutor(max_workers=manager.num_threads) as executor:
-                futures = []
-                for chunk in manager.chunks:
-                    future = executor.submit(manager.download_chunk, chunk, session, update_progress)
-                    futures.append(future)
-                
-                # Wait for all downloads to complete
-                for future in futures:
-                    future.result()
+            if total_size > 0:
+                # Download chunks in parallel if we know the size
+                manager.split_chunks()
+                with ThreadPoolExecutor(max_workers=manager.num_threads) as executor:
+                    futures = []
+                    for chunk in manager.chunks:
+                        future = executor.submit(manager.download_chunk, chunk, session, update_progress)
+                        futures.append(future)
+                    
+                    # Wait for all downloads to complete
+                    for future in futures:
+                        future.result()
 
-            # Write the complete file
-            with open(archive_file_path, "wb") as f:
-                for chunk in manager.chunks:
-                    f.write(chunk.data)
-
-            game_info["downloadingData"]["downloading"] = False
-            game_info["downloadingData"]["extracting"] = True
-            safe_write_json(game_info_path, game_info)
+                # Write the complete file
+                with open(archive_file_path, "wb") as f:
+                    for chunk in manager.chunks:
+                        f.write(chunk.data)
+            else:
+                # If we don't know the size, download sequentially in chunks
+                with open(archive_file_path, "wb") as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                            manager.downloaded_size += len(chunk)
+                            update_progress(len(chunk))
             return archive_file_path, archive_ext
 
         except Exception as e:

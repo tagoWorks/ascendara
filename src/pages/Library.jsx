@@ -20,6 +20,7 @@ import {
   Play, 
   Plus,
   FolderOpen,
+  ExternalLink,
   Pencil,
   Trash2,
   Search,
@@ -362,7 +363,7 @@ const Library = () => {
           <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('library.launchError')}</AlertDialogTitle>
           <AlertDialogDescription className="space-y-4 text-muted-foreground">
             <p>{t('library.launchErrorMessage', { game: errorGame })}&nbsp;
-              <span onClick={() => {window.electron.openURL('https://ascendara.app/docs/troubleshooting')}} className="hover:underline cursor-pointer">{t('common.learnMore')}</span>
+              <span onClick={() => {window.electron.openURL('https://ascendara.app/docs/troubleshooting/common-issues')}} className="hover:underline cursor-pointer">{t('common.learnMore')} <ExternalLink className="inline-block mb-1 h-3 w-3" /></span>
             </p>
             <p>{errorMessage}</p>
           </AlertDialogDescription>
