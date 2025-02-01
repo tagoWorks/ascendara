@@ -1,18 +1,18 @@
 Code Line Count Summary:
 --------------------------------------------------
-html files:     1 files,     12 lines
- jsx files:    47 files,   9759 lines
-  js files:    13 files,   3462 lines
+  js files:    14 files,   3541 lines
+ jsx files:    46 files,   9888 lines
+html files:     1 files,     50 lines
  css files:     5 files,    356 lines
-  py files:     5 files,   1874 lines
+  py files:     5 files,   1894 lines
 
 Lines by Directory:
 --------------------------------------------------
-      src:  11262 lines
+      src:  11508 lines
 installer:    437 lines
     build:   2327 lines
- binaries:   1437 lines
+ binaries:   1457 lines
 
 Total Summary:
 --------------------------------------------------
-Total:    71 files,  15463 lines
+Total:    71 files,  15729 lines
