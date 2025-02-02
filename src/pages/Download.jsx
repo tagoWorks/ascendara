@@ -479,8 +479,8 @@ export default function DownloadPage() {
       if (!selectedProvider) {
         if (availableProviders.includes('gofile')) {
           setSelectedProvider('gofile');
-        } else if (availableProviders.includes('buzzheavier')) {
-          setSelectedProvider('buzzheavier');
+        } else if (availableProviders.includes('megadb')) {
+          setSelectedProvider('megadb');
         } else {
           const verifiedProvider = availableProviders.find(provider => VERIFIED_PROVIDERS.includes(provider));
           setSelectedProvider(verifiedProvider || availableProviders[0]);
@@ -897,10 +897,10 @@ export default function DownloadPage() {
                                   displayName = 'Seamless (GoFile)';
                                   break;
                                 case 'megadb':
-                                  displayName = 'MegaDB';
+                                  displayName = 'Default (MegaDB)';
                                   break;
                                 case 'buzzheavier':
-                                  displayName = 'Default (BuzzHeavier)';
+                                  displayName = 'BuzzHeavier';
                                   break;
                                 case 'qiwi':
                                   displayName = 'QIWI';
