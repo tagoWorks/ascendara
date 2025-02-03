@@ -143,9 +143,19 @@ class GofileDownloader:
             print(f"No files found for download from {url}")
             return
 
-        with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
-            for item in files_info.values():
-                executor.submit(self._downloadContent, item)
+        total_files = len(files_info)
+        current_file = 0
+        
+        for item in files_info.values():
+            current_file += 1
+            try:
+                print(f"\nDownloading file {current_file}/{total_files}: {item.get('name', 'Unknown')}")
+                self._downloadContent(item)
+            except Exception as e:
+                print(f"Error downloading {item.get('name', 'Unknown')}: {str(e)}")
+                # Wait a bit before trying the next file
+                time.sleep(2)
+                continue
 
         self._extract_files()
 
@@ -194,7 +204,7 @@ class GofileDownloader:
 
         return files_info
 
-    def _downloadContent(self, file_info, chunk_size=16384):
+    def _downloadContent(self, file_info, chunk_size=32768):  
         filepath = os.path.join(self.download_dir, file_info["path"], file_info["filename"])
         if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
             print(f"{filepath} already exists, skipping.{NEW_LINE}")
@@ -202,6 +212,7 @@ class GofileDownloader:
 
         tmp_file = f"{filepath}.part"
         url = file_info["link"]
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
         
         for retry in range(self._max_retries):
             try:
@@ -239,72 +250,56 @@ class GofileDownloader:
                     total_size = int(response.headers.get("Content-Length", 0)) + part_size
                     if not total_size:
                         print(f"Couldn't find the file size from {url}.{NEW_LINE}")
-                        if retry < self._max_retries - 1:
-                            print(f"Retrying download ({retry + 2}/{self._max_retries})...{NEW_LINE}")
-                            time.sleep(2 ** retry)
-                            continue
                         return
 
-                    with open(tmp_file, "ab") as handler:
+                    mode = 'ab' if part_size > 0 else 'wb'
+                    with open(tmp_file, mode) as f:
+                        downloaded = part_size
                         start_time = time.time()
-                        downloaded_size = part_size
-                        
+                        last_update = start_time
+                        bytes_since_last_update = 0
+
                         for chunk in response.iter_content(chunk_size=chunk_size):
-                            if not chunk:  # Keep-alive new chunks
+                            if not chunk:
                                 continue
-                                
-                            handler.write(chunk)
-                            downloaded_size += len(chunk)
-                            progress = (downloaded_size / total_size) * 100
                             
-                            # Calculate speed using total time elapsed
-                            elapsed_time = time.time() - start_time
-                            if elapsed_time > 0:
-                                download_speed = downloaded_size / elapsed_time
-                                remaining_size = total_size - downloaded_size
-                                eta_seconds = remaining_size / download_speed if download_speed > 0 else 0
+                            f.write(chunk)
+                            downloaded += len(chunk)
+                            bytes_since_last_update += len(chunk)
+                            current_time = time.time()
+                            
+                            # Update progress every 0.5 seconds
+                            if current_time - last_update >= 0.5:
+                                progress = (downloaded / total_size) * 100
+                                rate = bytes_since_last_update / (current_time - last_update)
+                                eta = int((total_size - downloaded) / rate) if rate > 0 else 0
                                 
-                                self._update_progress(file_info['filename'], progress, download_speed, eta_seconds)
+                                self._update_progress(
+                                    file_info["filename"], 
+                                    progress,
+                                    rate,
+                                    eta
+                                )
+                                
+                                last_update = current_time
+                                bytes_since_last_update = 0
 
-                        # Verify file size after download
-                        final_size = handler.tell() + part_size
-                        if final_size == total_size:
-                            # Close the file before renaming
-                            handler.flush()
-                            os.fsync(handler.fileno())
-                        else:
-                            print(f"Download incomplete, retrying... (Got {final_size} bytes, expected {total_size}){NEW_LINE}")
-                            if retry < self._max_retries - 1:
-                                time.sleep(2 ** retry)
-                                continue
-                            return
-
-                # Ensure the download directory exists
-                os.makedirs(os.path.dirname(filepath), exist_ok=True)
-                
-                # Move the completed download to its final location
-                try:
+                    # Download completed successfully
                     os.replace(tmp_file, filepath)
-                    self._update_progress(file_info['filename'], 100, 0, done=True)
-                    print(f"Successfully downloaded {filepath}")
-                    return
-                except OSError as e:
-                    print(f"Error moving completed download: {e}{NEW_LINE}")
-                    if retry < self._max_retries - 1:
-                        time.sleep(2 ** retry)
-                        continue
+                    self._update_progress(file_info["filename"], 100, 0, 0, done=True)
                     return
 
-            except (requests.RequestException, IOError) as e:
+            except (requests.exceptions.RequestException, IOError) as e:
                 print(f"Error downloading {url}: {str(e)}{NEW_LINE}")
                 if retry < self._max_retries - 1:
                     print(f"Retrying download ({retry + 2}/{self._max_retries})...{NEW_LINE}")
-                    time.sleep(2 ** retry)
+                    time.sleep(2 ** retry)  # Exponential backoff
                     continue
+                if os.path.exists(tmp_file):
+                    os.remove(tmp_file)
+                raise
 
-        print(f"Failed to download {url} after {self._max_retries} attempts{NEW_LINE}")
-        if os.path.exists(tmp_file):
-            os.remove(tmp_file)
+        raise Exception(f"Failed to download {url} after {self._max_retries} retries")
 
     def _update_progress(self, filename, progress, rate, eta_seconds=0, done=False):
         with self._lock:
@@ -410,15 +405,7 @@ class GofileDownloader:
             if root != self.download_dir and "_CommonRedist" not in root and not os.listdir(root):
                 shutil.rmtree(root)
 
-        # Reset downloadingData to default values after extraction is complete
-        self.game_info["downloadingData"] = {
-            "downloading": False,
-            "extracting": False,
-            "updating": False,
-            "progressCompleted": "0.00",
-            "progressDownloadSpeeds": "0.00 KB/s",
-            "timeUntilComplete": "0s"
-        }
+        self.game_info["downloadingData"].clear()
         safe_write_json(self.game_info_path, self.game_info)
 
 def open_console():

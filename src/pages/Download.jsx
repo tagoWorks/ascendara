@@ -186,9 +186,6 @@ export default function DownloadPage() {
         gameData.imgID,
         gameData.size || ''
       );
-      
-      toast.success(t('download.toast.downloadStarted'));
-      
       // Keep isStarting true until download actually begins
       const removeDownloadListener = window.electron.onDownloadProgress((downloadInfo) => {
         if (downloadInfo.game === sanitizedGameName) {
@@ -198,6 +195,7 @@ export default function DownloadPage() {
       });
 
       setTimeout(() => {
+        toast.success(t('download.toast.downloadStarted'));
         navigate('/downloads');
       }, 2500);
     } catch (error) {
@@ -479,8 +477,8 @@ export default function DownloadPage() {
       if (!selectedProvider) {
         if (availableProviders.includes('gofile')) {
           setSelectedProvider('gofile');
-        } else if (availableProviders.includes('megadb')) {
-          setSelectedProvider('megadb');
+        } else if (availableProviders.includes('buzzheavier')) {
+          setSelectedProvider('buzzheavier');
         } else {
           const verifiedProvider = availableProviders.find(provider => VERIFIED_PROVIDERS.includes(provider));
           setSelectedProvider(verifiedProvider || availableProviders[0]);
@@ -897,10 +895,10 @@ export default function DownloadPage() {
                                   displayName = 'Seamless (GoFile)';
                                   break;
                                 case 'megadb':
-                                  displayName = 'Default (MegaDB)';
+                                  displayName = 'MegaDB';
                                   break;
                                 case 'buzzheavier':
-                                  displayName = 'BuzzHeavier';
+                                  displayName = 'Default (BuzzHeavier)';
                                   break;
                                 case 'qiwi':
                                   displayName = 'QIWI';

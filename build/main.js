@@ -32,7 +32,7 @@ let isDev = false;
 
 
 
-const CURRENT_VERSION = "7.6.5";
+const CURRENT_VERSION = "7.6.6";
 const { app, BrowserWindow, ipcMain, dialog, shell, protocol } = require('electron');
 const { Client } = require('discord-rpc');
 const disk = require('diskusage');
