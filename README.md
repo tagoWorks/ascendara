@@ -92,7 +92,8 @@ Before building, ensure you have all required dependencies. [View full requireme
 ## 🗺️ Development Roadmap
 
 ### 🎯 Current Goals
-- [ ] Additional game sources integration
+- [ ] Add planned sources (FitGirl, Xatab, Dodi)
+- [ ] Add semi-support for Linux, and macOS
 - [ ] Endpoint for known games that have weird installation paths, issues, etc.
 - [ ] Retry Download & Extract functionality
 - [ ] Enhanced antivirus operation checks
