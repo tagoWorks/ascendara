@@ -1166,12 +1166,12 @@ const Welcome = ({ welcomeData, onComplete }) => {
           )}
 
           {step === 'theme' && (
-            <div className="h-screen bg-background relative overflow-hidden flex items-center justify-center">
+            <div className="min-h-screen bg-background relative overflow-y-auto flex items-center justify-center py-8">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-background" />
               <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/10 to-transparent" />
               
               <motion.div
-                className="w-full max-w-4xl mx-auto px-6 relative z-10"
+                className="w-full max-w-4xl mx-auto px-6 relative z-10 py-4"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
