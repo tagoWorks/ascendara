@@ -1,6 +1,6 @@
 <div align="center">
     <img align="center" width="128" height="128" src="./public/icon.png" alt="Ascendara Logo">
-    <h1>Ascendara (Prerelease)</h1>
+    <h1>Ascendara</h1>
     <p>
         <img src="https://img.shields.io/badge/branch-development-orange" alt="Status">
         <img src="https://img.shields.io/github/last-commit/tagoWorks/ascendara/prerelease" alt="Last Commit">
