@@ -2,7 +2,7 @@
     <img align="center" width="128" height="128" src="./public/icon.png" alt="Ascendara Logo">
     <h1>Ascendara (Prerelease)</h1>
     <p>
-        <img src="https://img.shields.io/badge/status-prerelease-orange" alt="Status">
+        <img src="https://img.shields.io/badge/branch-development-orange" alt="Status">
         <img src="https://img.shields.io/github/last-commit/tagoWorks/ascendara/prerelease" alt="Last Commit">
         <img src="https://img.shields.io/github/issues-raw/tagoWorks/ascendara" alt="Issues">
         <a href="https://ascendara.app/"><img src="https://img.shields.io/badge/website-ascendara.app-blue" alt="Website"></a>
@@ -11,7 +11,7 @@
 </div>
 
 
-### ⚠️ Prerelease Notice
+### ⚠️ Development Branch Notice
 This branch contains features that are still in development and is intended for testing purposes. For production use, please refer to the [main branch](https://github.com/tagoWorks/ascendara/tree/main).
 
 ## 🖥️ System Requirements
@@ -76,12 +76,6 @@ Before building, ensure you have all required dependencies. [View full requireme
 ## 🤝 Contributing
 
 If you are looking to contribute to Ascendara, you are in the right place!
-
-### Recommended Development Workflow
-1. Fork the repository
-2. Create a feature branch from `prerelease`
-3. Implement your changes
-4. Submit a PR to `prerelease`
 
 ## 📝 License & Contact
 
