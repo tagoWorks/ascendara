@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, Heart, MessageCircle, DollarSign, X } from 'lucide-react';
+import { Star, MessageCircle, DollarSign, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
@@ -127,7 +127,7 @@ const SupportDialog = ({ onClose }) => {
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={handleDonate}
-                className="flex items-center justify-center gap-2 bg-primary text-secondary-foreground rounded-lg px-4 py-3 hover:bg-primary/90 transition-colors"
+                className="flex items-center justify-center gap-2 bg-primary/80 text-secondary-foreground rounded-lg px-4 py-3 hover:bg-primary/90 transition-colors"
               >
                 <DollarSign size={20} />
                 {t('app.supportDialog.donate')}
@@ -141,14 +141,14 @@ const SupportDialog = ({ onClose }) => {
               </button>
             </div>
 
-            <div className="text-center text-sm text-muted-foreground space-y-3 pt-2">
+            <div className="text-center text-sm text-muted-foreground bg-primary/40 rounded-lg p-4 space-y-3 pt-2">
               <p className="italic px-8">
                 {t('app.supportDialog.note')}
               </p>
               <div className="flex justify-center">
                 <img 
                   src="https://cdn.ascendara.app/files/signature.svg"
-                  className="w-28 "
+                  className="w-28"
                   alt="Santiago Signature"
                 />
               </div>

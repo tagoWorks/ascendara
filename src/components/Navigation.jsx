@@ -8,8 +8,6 @@ import {
   Library, 
   Settings,
   Download,
-  Clock,
-  Gamepad2,
   ChevronRight
 } from 'lucide-react';
 

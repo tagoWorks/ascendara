@@ -9,7 +9,7 @@ import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
-import { Loader, InfoIcon, CopyIcon, CheckIcon, BadgeCheckIcon, TriangleAlert, ArrowBigLeft, ExternalLink, MessageSquareWarning, CircleSlash, Zap } from "lucide-react";
+import { Loader, InfoIcon, CopyIcon, CheckIcon, BadgeCheckIcon, TriangleAlert, ExternalLink, MessageSquareWarning, CircleSlash, Zap } from "lucide-react";
 import imageCacheService from '../services/imageCacheService';
 import { toast } from "sonner";
 import { useLanguage } from '../contexts/LanguageContext';

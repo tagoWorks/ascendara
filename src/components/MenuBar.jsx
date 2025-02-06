@@ -6,7 +6,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogDescription,
-  AlertDialogCancel,
   AlertDialogFooter,
 } from './ui/alert-dialog';
 import { AlertTriangle, WifiOff, Hammer, X, Minus, Download } from 'lucide-react';

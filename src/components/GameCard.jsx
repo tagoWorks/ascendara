@@ -8,7 +8,6 @@ import { Skeleton } from "../components/ui/skeleton";
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { sanitizeText } from '../lib/utils';
-import { toast } from 'sonner';
 import { useImageLoader } from '../hooks/useImageLoader';
 
 const GameCard = memo(function GameCard({ game, compact }) {

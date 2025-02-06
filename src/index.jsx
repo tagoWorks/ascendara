@@ -15,7 +15,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from './contexts/ThemeContext';
 import './Index.css';
 import { Toaster, toast } from 'sonner';
-import { Loader } from 'lucide-react';
 import UpdateOverlay from './components/UpdateOverlay';
 import { analytics } from './services/analyticsService';
 import gameService from './services/gameService';
@@ -376,7 +375,11 @@ const AppRoutes = () => {
     };
   }, [shouldShowWelcome]);
 
-  if (isLoading || isUpdating || isInstalling) {
+  if (isInstalling) {
+    return <UpdateOverlay />;
+  }
+
+  if (isLoading || isUpdating) {
     console.log('Rendering loading screen...');
     return (
       <motion.div 
@@ -432,29 +435,54 @@ const AppRoutes = () => {
   
   return (
     <>
-      <AnimatePresence mode="wait">
-        {shouldShowWelcome ? (
-          <Welcome
-            key="welcome"
-            isNewInstall={isNewInstall}
-            welcomeData={welcomeData}
-            onComplete={handleWelcomeComplete}
-          />
-        ) : (
-          <Routes location={location} key={location.pathname}>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Home />} />
-              <Route path="search" element={<Search />} />
-              <Route path="library" element={<Library />} />
-              <Route path="downloads" element={<Downloads />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="dependencies" element={<Dependencies />} />
-              <Route path="download" element={<DownloadPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
-          </Routes>
-        )}
-      </AnimatePresence>
+      {shouldShowWelcome ? (
+        <Welcome
+          isNewInstall={isNewInstall}
+          welcomeData={welcomeData}
+          onComplete={handleWelcomeComplete}
+        />
+      ) : (
+        <Routes location={location}>
+          <Route path="/" element={<Layout />}>
+            <Route index element={
+              <AnimatePresence mode="wait">
+                <Home key="home" />
+              </AnimatePresence>
+            } />
+            <Route path="search" element={
+              <AnimatePresence mode="wait">
+                <Search key="search" />
+              </AnimatePresence>
+            } />
+            <Route path="library" element={
+              <AnimatePresence mode="wait">
+                <Library key="library" />
+              </AnimatePresence>
+            } />
+            <Route path="downloads" element={
+              <AnimatePresence mode="wait">
+                <Downloads key="downloads" />
+              </AnimatePresence>
+            } />
+            <Route path="settings" element={
+              <AnimatePresence mode="wait">
+                <Settings key="settings" />
+              </AnimatePresence>
+            } />
+            <Route path="dependencies" element={
+              <AnimatePresence mode="wait">
+                <Dependencies key="dependencies" />
+              </AnimatePresence>
+            } />
+            <Route path="download" element={
+              <AnimatePresence mode="wait">
+                <DownloadPage key="download" />
+              </AnimatePresence>
+            } />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      )}
       {showSupportDialog && (
         <SupportDialog onClose={() => setShowSupportDialog(false)} />
       )}

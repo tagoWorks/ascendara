@@ -17,7 +17,8 @@ import {
   CircleCheck,
   Loader,
   XCircle,
-  Globe2
+  Globe2,
+  ExternalLink
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -875,24 +876,24 @@ const Welcome = ({ welcomeData, onComplete }) => {
               exit="exit"
             >
               <motion.div className="flex items-center justify-center mb-8" variants={itemVariants}>
-                <h1 className="text-5xl font-bold">
+                <h1 className="text-6xl font-bold">
                   <div className="relative inline-flex items-center">
                     <span className="bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent">
-                      {t('welcome.welcomeToAscendara')}&nbsp;
+                      {t('welcome.welcomeTo')}&nbsp;
                     </span>
                     <span className="relative">
                       <span className="animate-shine bg-[linear-gradient(110deg,var(--shine-from),45%,var(--shine-via),55%,var(--shine-to))] bg-[length:200%_100%] inline-block bg-clip-text text-transparent">
-                        v7
+                        {t('welcome.ascendara')}
                       </span>
                     </span>
                   </div>
                 </h1>
               </motion.div>
               <motion.p 
-                className="text-xl mb-12 max-w-2xl text-foreground/80"
+                className="text-xl mb-12 max-w-3xl text-foreground/80"
                 variants={itemVariants}
               >
-                {t('welcome.ascendaraV7IsACompleteRevamp')}
+                {t('welcome.welcomeToAscendaraDescription')}
               </motion.p>
 
               <motion.div 
@@ -955,7 +956,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   size="lg"
                   onClick={handleNext}
                   disabled={!privacyChecked || !termsChecked}
-                  className="px-8 py-6 text-lg font-semibold"
+                  className="px-8 py-6 text-lg font-semibold text-secondary"
                 >
                   {t('welcome.getStarted')}
                 </Button>
@@ -1018,6 +1019,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
               <motion.div className="flex justify-center" variants={itemVariants}>
                 <Button 
                   size="lg"
+                  className="w-full bg-primary hover:bg-primary/90 text-secondary"
                   onClick={handleNext}
                   disabled={!language}
                 >
@@ -1060,9 +1062,9 @@ const Welcome = ({ welcomeData, onComplete }) => {
                     value={downloadDirectory}
                     readOnly
                     placeholder={t('welcome.selectADirectory')}
-                    className="flex-1 bg-background/50 border border-primary/10 rounded-lg px-4 py-2 text-foreground"
+                    className="flex-1 bg-background/50 border border-primary/10 rounded-lg px-4 py-2 text-primary-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                   />
-                  <Button onClick={handleSelectDirectory}>
+                  <Button className="text-secondary" onClick={handleSelectDirectory}>
                     {t('welcome.browse')}
                   </Button>
                 </div>
@@ -1088,7 +1090,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   size="lg"
                   onClick={handleNext}
                   disabled={!downloadDirectory}
-                  className="px-8 py-6 text-lg font-semibold bg-primary hover:bg-primary/90"
+                  className="px-8 py-6 text-lg font-semibold bg-primary hover:bg-primary/90 text-secondary"
                 >
                   {t('welcome.continue')}
                 </Button>
@@ -1147,17 +1149,17 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 variants={itemVariants}
               >
                 <Button
-                  variant="outline"
                   size="lg"
                   onClick={() => window.electron.openURL('https://ascendara.app/extension')}
-                  className="px-8 py-6"
+                  className="px-8 py-6 text-lg font-semibold bg-primary hover:bg-primary/90 text-secondary"
                 >
                   {t('welcome.getTheExtension')}
                 </Button>
                 <Button 
+                  variant="outline"
                   onClick={handleNext}
                   size="lg"
-                  className="px-8 py-6"
+                  className="px-8 py-6 text-lg font-semibold hover:bg-primary/10 text-primary"
                 >
                   {t('welcome.continue')}
                 </Button>
@@ -1194,7 +1196,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                       onClick={() => setShowingLightThemes(true)}
                       className={`px-4 py-2 rounded-md transition-all ${
                         showingLightThemes 
-                          ? 'bg-primary text-primary-foreground' 
+                          ? 'bg-primary text-secondary' 
                           : 'hover:bg-primary/10'
                       }`}
                     >
@@ -1204,7 +1206,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                       onClick={() => setShowingLightThemes(false)}
                       className={`px-4 py-2 rounded-md transition-all ${
                         !showingLightThemes 
-                          ? 'bg-primary text-primary-foreground' 
+                          ? 'bg-primary text-secondary' 
                           : 'hover:bg-primary/10'
                       }`}
                     >
@@ -1236,7 +1238,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   <Button
                     size="lg"
                     onClick={handleNext}
-                    className="px-8 py-6 text-lg font-semibold"
+                    className="px-8 py-6 text-lg bg-primary hover:bg-primary/90 text-secondary"
                   >
                     {t('welcome.continue')}
                   </Button>
@@ -1286,7 +1288,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   </div>
                   <Button
                     size="lg"
-                    className="w-full bg-primary hover:bg-primary/90"
+                    className="w-full bg-primary hover:bg-primary/90 text-secondary"
                     onClick={() => handleAnalyticsChoice(true)}
                   >
                     {t('welcome.shareAnonymousData')}
@@ -1320,7 +1322,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 variants={itemVariants}
               >
                 {t('welcome.ascendaraNeverCollectsPersonalInfo')} &nbsp;
-                <span className="text-primary hover:underline cursor-pointer" onClick={() => window.electron.openURL('https://ascendara.app/analytics')}>{t('common.learnMore')}</span>
+                <span className="text-primary hover:underline cursor-pointer" onClick={() => window.electron.openURL('https://ascendara.app/analytics')}>{t('common.learnMore')} <ExternalLink className="inline-block mb-1 h-3 w-3" /></span>
               </motion.p>
             </motion.div>
           )}
@@ -1369,7 +1371,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   </div>
                   <Button
                     size="lg"
-                    className="w-full bg-primary hover:bg-primary/90"
+                    className="w-full bg-primary hover:bg-primary/90 text-secondary"
                     onClick={() => handleUpdateChoice(true)}
                   >
                     {t('welcome.enableAutoUpdates')}
@@ -1424,7 +1426,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 variants={itemVariants}
               >
                 <p className="text-xl text-foreground/80">
-                  {t('welcome.toEnsureAllGamesRunSmoothly')}
+                  {t('welcome.dependenciesDesc')}
                 </p>
                 <div className="grid grid-cols-2 gap-4 text-left text-muted-foreground">
                   {[

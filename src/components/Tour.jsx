@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Rocket } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from './ui/button';
 import { useTranslation } from 'react-i18next';
 
 const getSteps = (t) => [
@@ -309,29 +308,24 @@ function Tour({ onClose }) {
             className="text-muted-foreground mb-4 pointer-events-auto"
             dangerouslySetInnerHTML={{ __html: steps[currentStep].content }}
           />
-          
-          {steps[currentStep].showDonateButton && (
-            <Button
-              onClick={() => window.electron.openURL('https://ascendara.app/donate')}
-              className="w-full mb-4 bg-primary/10 text-primary hover:bg-primary/20"
-            >
-              Support Ascendara
-            </Button>
-          )}
 
           <div className="flex justify-between items-center">
             <button
               onClick={prevStep}
               className={`flex items-center gap-1 ${currentStep === 0 ? 'invisible' : ''}`}
             >
-              <ChevronLeft className="w-4 h-4" /> Previous
+              <ChevronLeft className="w-4 h-4" /> {t('common.prev')}
             </button>
             <button
               onClick={nextStep}
               className="flex items-center gap-1 text-primary"
             >
-              {currentStep === steps.length - 1 ? 'Finish' : 'Next'} 
-              <ChevronRight className="w-4 h-4" />
+              {currentStep === steps.length - 1 ? t('common.finish') : t('common.next')} 
+              {currentStep === steps.length - 1 ? (
+                <Rocket className="w-4 h-4 ml-2" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
             </button>
           </div>
         </motion.div>

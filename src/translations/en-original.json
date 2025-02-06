@@ -18,6 +18,7 @@
       "remove": "Remove",
       "close": "Close",
       "back": "Back",
+      "prev": "Previous",
       "next": "Next",
       "finish": "Finish",
       "select": "Select",
@@ -77,7 +78,7 @@
         "reload": "Reload Ascendara"
       },
       "supportDialog": {
-        "title": "Starting to use Ascendara?",
+        "title": "Let me know how you like it",
         "message": "I know I said no ads but is this really an ad? You're starting to use Ascendara and I would love for you to rate it or give me some feedback. You won't ever see this message again.",
         "donate": "Support Development",
         "feedback": "Give Feedback",
@@ -503,8 +504,7 @@
       "analyticsDesc": "Share anonymous usage data to help improve your experience",
       "autoUpdate": "Stay Updated",
       "autoUpdateDesc": "Keep Ascendara up to date with the latest features and improvements",
-      "dependencies": "Essential Dependencies",
-      "dependenciesDesc": "To ensure all games run smoothly, Ascendara will help you install these essential components",
+      "dependenciesDesc": "If you are playing on a new PC or have recently installed Windows, Ascendara can help you install these essential components to ensure the best experience",
       "installComplete": "Dependencies Installed",
       "installCompleteDesc": "All required dependencies have been successfully installed. Welcome to Ascendara.",
       "takeTour": "Take the Tour",
@@ -513,8 +513,9 @@
       "haveDeps": "I have these, I'll take a tour",
       "skipDepsAndTour": "Skip the tour",
       "welcomeToAscendara": "Welcome to Ascendara",
-      "welcomeToAscendaraV7": "Welcome to Ascendara v7",
-      "ascendaraV7IsACompleteRevamp": "Ascendara v7 is a complete revamp of the app, bringing a complete overhaul to the user interface and experience. You are about to begin the onboarding process for Ascendara.",
+      "welcomeTo": "Welcome to",
+      "ascendara": "Ascendara",
+      "welcomeToAscendaraDescription": "Now you won't have to worry about extracting, installing, or moving files. Before we start, please read and agree to Terms of Service and Privacy Policy.",
       "iHaveReadAndAgreeTo": "I have read and agree to Ascendara's",
       "privacyPolicy": "Privacy Policy",
       "termsOfService": "Terms of Service",
@@ -576,7 +577,6 @@
       "chooseWhenToUpdateAscendaraYourself": "Choose when to update Ascendara yourself. You'll be notified when updates are available, but they won't install automatically.",
       "neverAutomaticallyUpdate": "Never Automatically Update",
       "youCanChangeThisSettingLater": "You can change this setting later in your preferences.",
-      "toEnsureAllGamesRunSmoothly": "To ensure all games run smoothly, Ascendara will help you install these essential components:",
       "iHaveTheseTakeMeToTheTour": "I have these, take me to the tour",
       "allRequiredDependenciesHaveBeenInstalled": "All required dependencies have been successfully installed. Welcome to Ascendara.",
       "stayUpToDate": "Keep Ascendara up to date",
@@ -615,7 +615,7 @@
     },
     "tour": {
       "title": "Ascendara Guide",
-      "welcome": "Let's take a quick tour of the completely redesigned interface!",
+      "welcome": "Welcome! Let's take a quick tour of Ascendara's interface.",
       "serverStatus": {
         "title": "Server Status",
         "content": "This green dot indicates that all systems are operational. Click it anytime to check detailed server status."
@@ -646,7 +646,7 @@
       },
       "final": {
         "title": "Welcome to Ascendara",
-        "content": "Thank you for downloading Ascendara! If you'd like to support development, please consider donating as it helps keep the servers running and the app updated. Ascendara was developed and is fully maintained by a <a class=\"text-primary hover:text-primary/80\" onclick=\"window.electron.openURL(\\\"https://tago.works\\\")\">single developer</a>."
+        "content": "Thank you for downloading Ascendara! If you encounter any issues, right click anywhere on the app and select \"Report Issue\"."
       }
     }
   }
