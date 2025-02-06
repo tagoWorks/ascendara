@@ -500,7 +500,6 @@ export default function DownloadPage() {
     let link = downloadLinks[selectedProvider][0].startsWith('//')
       ? `https:${downloadLinks[selectedProvider][0]}`
       : downloadLinks[selectedProvider][0];
-    link = sanitizeText(link);
     await navigator.clipboard.writeText(link);
     setShowCopySuccess(true);
     setTimeout(() => setShowCopySuccess(false), 1000);
@@ -515,7 +514,6 @@ export default function DownloadPage() {
     let link = downloadLinks[selectedProvider][0].startsWith('//')
       ? `https:${downloadLinks[selectedProvider][0]}`
       : downloadLinks[selectedProvider][0];
-    link = sanitizeText(link);
     window.electron.openURL(link);
 
     const isNewUser = await checkIfNewUser();
