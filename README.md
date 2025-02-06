@@ -89,36 +89,17 @@ Before building, ensure you have all required dependencies. [View full requireme
    npm run dist
    ```
 
-## 🗺️ Development Roadmap
-
-### 🎯 Current Goals
-- [ ] Add planned sources (FitGirl, Xatab, Dodi)
-- [ ] Add semi-support for Linux, and macOS
-- [ ] Endpoint for known games that have weird installation paths, issues, etc.
-- [ ] Retry Download & Extract functionality
-- [ ] Enhanced antivirus operation checks
-- [ ] Legacy game version support
-- [ ] Improved download management (pausing, resuming)
-- [x] Game dependencies reinstallation option
-
-### ✅ Completed Features
-- [x] Complete UI overhaul (V7)
-- [x] Automatic shortcut creation
-- [x] Enhanced search algorithms
-- [x] Theme customization
-- [x] Advanced filtering options
-- [x] Comprehensive tooltips
-- [x] Page population
-- [x] Welcome screens
-- [x] Improved tab navigation
-- [x] Separate library, downloads, and browse sections
-- [x] Custom game addition support
-- [x] Public API creation
-- [x] Popularity-based sorting
-
 ## 📝 License & Contact
 
-This project is licensed under the [CC BY-NC 1.0 Universal License](./LICENSE) (Non-Commercial Use Only)
+Licensed under [CC BY-NC 1.0 Universal](./LICENSE) - 2025 tagoWorks
 
-📧 **Get in Touch**  
-Interested in collaboration? Contact me at [santiago@tago.works](mailto:santiago@tago.works)
+### Get in Touch
+- Email: [santiago@tago.works](mailto:santiago@tago.works)
+- Website: [tago.works](https://tago.works)
+- Discord: [Join our community](https://ascendara.app/discord)
+
+---
+<div align="center">
+    <sub>Built with 💖 by <a href="https://tago.works">tago</a></sub>
+</div>
+
