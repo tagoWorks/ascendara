@@ -397,6 +397,11 @@ ipcMain.handle('can-create-files', async (event, directory) => {
   }
 });
 
+// Sanitize directory name to remove problematic characters
+function sanitizeDirectoryName(name) {
+  return name.replace(/[<>:"\/\\|?*']/g, '');
+}
+
 // Download the file
 ipcMain.handle('download-file', async (event, link, game, online, dlc, version, imgID, size) => {
   console.log(`Downloading file: ${link}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}, size: ${size}`);
@@ -409,7 +414,8 @@ ipcMain.handle('download-file', async (event, link, game, online, dlc, version, 
       return;
     }
     const gamesDirectory = settings.downloadDirectory;
-    const gameDirectory = path.join(gamesDirectory, game);
+    const sanitizedGameName = sanitizeDirectoryName(game);
+    const gameDirectory = path.join(gamesDirectory, sanitizedGameName);
     
     if (!fs.existsSync(gameDirectory)) {
       fs.mkdirSync(gameDirectory, { recursive: true });

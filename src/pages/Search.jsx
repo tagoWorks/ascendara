@@ -65,22 +65,29 @@ const Search = memo(() => {
            (Date.now() - gamesCache.timestamp) < gamesCache.expiryTime;
   }, []);
 
-    const fuzzyMatch = (text, query) => {
-      if (!text || !query) return false;
-      text = text.toLowerCase();
-      query = query.toLowerCase();
+  const fuzzyMatch = (text, query) => {
+    if (!text || !query) return false;
+    text = text.toLowerCase();
+    query = query.toLowerCase();
+    
+    // Split query into words and check if each word matches
+    const queryWords = query.split(/\s+/).filter(word => word.length > 0);
+    if (queryWords.length === 0) return false;
+
+    return queryWords.every(queryWord => {
       const words = text.split(/\s+/);
       return words.some(word => {
-        if (word.includes(query)) return true;
+        if (word.includes(queryWord)) return true;
         let matches = 0;
-        const uniqueChars = [...new Set(query)];
+        const uniqueChars = [...new Set(queryWord)];
         uniqueChars.forEach(char => {
           if (word.includes(char)) matches++;
         });
         
-        return matches >= query.length * 0.8;
+        return matches >= queryWord.length * 0.8;
       });
-    };
+    });
+  };
 
   const refreshGames = useCallback(async (forceRefresh = false) => {
     if (!forceRefresh && isCacheValid()) {
