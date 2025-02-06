@@ -140,8 +140,11 @@ class GofileDownloader:
         files_info = self._parseLinksRecursively(content_id, _password)
         
         if not files_info:
-            print(f"No files found for download from {url}")
+            print(f"No files found for download from {url}. Skipping...")
+            handleerror(self.game_info, self.game_info_path, "no_files_error")
             return
+
+
 
         total_files = len(files_info)
         current_file = 0

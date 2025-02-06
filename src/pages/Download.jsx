@@ -97,7 +97,7 @@ export default function DownloadPage() {
   // Log and validate game data
   useEffect(() => {
     if (!gameData) {
-      navigate('/search');
+      console.error('No game data available');
       return;
     }
     console.log('Received game data:', gameData);
@@ -376,15 +376,11 @@ export default function DownloadPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (!gameData) {
-      navigate('/search');
-    } else {
-      const loadCachedImage = async () => {
-        const image = await imageCacheService.getImage(gameData.imgID);
-        setCachedImage(image);
-      };
-      loadCachedImage();
-    }
+    const loadCachedImage = async () => {
+      const image = await imageCacheService.getImage(gameData.imgID);
+      setCachedImage(image);
+    };
+    loadCachedImage();
     checkDownloadPath();
   }, [gameData, navigate]);
 

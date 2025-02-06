@@ -207,6 +207,7 @@
       "openFolder": "Open Folder",
       "stopDownload": "Stop Download",
       "contentTypeError": "Received content type error from downloader. Download link most likely expired",
+      "noFilesError": "Received no files error from downloader. Download link most likely was removed from the source",
       "downloadProgress": "Download Progress",
       "speed": "Speed",
       "timeRemaining": "Time Remaining",
