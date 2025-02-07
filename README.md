@@ -3,7 +3,7 @@
     <h1>Ascendara</h1>
     <p>
         <img src="https://img.shields.io/badge/branch-development-orange" alt="Status">
-        <img src="https://img.shields.io/github/last-commit/tagoWorks/ascendara/prerelease" alt="Last Commit">
+        <img src="https://img.shields.io/github/last-commit/tagoWorks/ascendara/development" alt="Last Commit">
         <img src="https://img.shields.io/github/issues-raw/tagoWorks/ascendara" alt="Issues">
         <a href="https://ascendara.app/"><img src="https://img.shields.io/badge/website-ascendara.app-blue" alt="Website"></a>
         <a href="./LICENSE"><img src="https://img.shields.io/badge/license-CC%20BY--NC%201.0-green" alt="License"></a>
