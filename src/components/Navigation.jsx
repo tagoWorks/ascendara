@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo, useCallback, useMemo } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Home, Search, Library, Settings, Download, ChevronRight } from "lucide-react";
@@ -8,6 +8,7 @@ const Navigation = memo(({ items }) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
   const [hoveredItem, setHoveredItem] = useState(null);
   const [size, setSize] = useState(() => {
     const savedSize = localStorage.getItem("navSize");
@@ -110,9 +111,40 @@ const Navigation = memo(({ items }) => {
         setSize(parseFloat(newSize));
       }
     };
+    /**  @param {KeyboardEvent} event */
+    const handleCtrlNavigation = event => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      console.log("button pressed");
+      switch (event.key) {
+        case "1": {
+          navigate("/");
+          break;
+        }
+        case "2": {
+          navigate("/search");
+          break;
+        }
+        case "3": {
+          navigate("/library");
+          break;
+        }
+        case "4": {
+          navigate("/downloads");
+          break;
+        }
+        case "5": {
+          navigate("/settings");
+          break;
+        }
+      }
+    };
 
+    window.addEventListener("keydown", handleCtrlNavigation);
     window.addEventListener("navResize", handleResize);
-    return () => window.removeEventListener("navResize", handleResize);
+    return () => {
+      window.removeEventListener("keydown", handleCtrlNavigation);
+      window.removeEventListener("navResize", handleResize);
+    };
   }, []);
 
   return (
