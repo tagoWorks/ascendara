@@ -158,49 +158,49 @@ const MenuBar = () => {
 
   return (
     <div
-      className="fixed h-10 flex items-center select-none z-50 w-full"
+      className="fixed z-50 flex h-10 w-full select-none items-center"
       style={{ WebkitAppRegion: "drag" }}
     >
-      <div className="flex-1 px-3 flex items-center h-full mt-2 ml-0.5">
+      <div className="ml-0.5 mt-2 flex h-full flex-1 items-center px-3">
         <div className="flex items-center">
-          {iconData && <img src={iconData} alt="Ascendara" className="w-6 h-6 mr-2" />}
+          {iconData && <img src={iconData} alt="Ascendara" className="mr-2 h-6 w-6" />}
           <span className="text-sm font-medium">Ascendara</span>
         </div>
 
         <div
-          className="ml-1.5 cursor-pointer flex items-center gap-1"
+          className="ml-1.5 flex cursor-pointer items-center gap-1"
           onClick={handleStatusClick}
           title={t("server-status.title")}
           style={{ WebkitAppRegion: "no-drag" }}
         >
           {!serverStatus?.ok ? (
-            <WifiOff className="w-4 h-4 text-red-500" />
+            <WifiOff className="h-4 w-4 text-red-500" />
           ) : (
             <div
-              className={`w-1.5 h-1.5 rounded-full ${
+              className={`h-1.5 w-1.5 rounded-full ${
                 serverStatus.api?.ok && serverStatus.storage?.ok && serverStatus.lfs?.ok
                   ? "bg-green-500 hover:bg-green-600"
-                  : "bg-red-500 animate-pulse hover:bg-red-600"
+                  : "animate-pulse bg-red-500 hover:bg-red-600"
               }`}
             />
           )}
         </div>
 
         {isDev && (
-          <span className="text-[14px] ml-2 px-1 py-0.5 rounded bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center gap-1">
-            <Hammer className="w-3 h-3" />
+          <span className="ml-2 flex items-center gap-1 rounded border border-blue-500/20 bg-blue-500/10 px-1 py-0.5 text-[14px] text-blue-500">
+            <Hammer className="h-3 w-3" />
             {t("app.runningInDev")}
           </span>
         )}
 
         {!isLatest && (
-          <div className="flex items-center ml-2 gap-2">
+          <div className="ml-2 flex items-center gap-2">
             {isDownloadingUpdate ? (
               <>
-                <span className="text-[14px] px-1 py-0.5 rounded bg-green-500/10 text-green-500 border border-green-500/20 flex items-center gap-1">
-                  <div className="relative w-4 h-4">
+                <span className="flex items-center gap-1 rounded border border-green-500/20 bg-green-500/10 px-1 py-0.5 text-[14px] text-green-500">
+                  <div className="relative h-4 w-4">
                     {/* Track circle */}
-                    <svg className="absolute inset-0 w-full h-full -rotate-90">
+                    <svg className="absolute inset-0 h-full w-full -rotate-90">
                       <circle
                         cx="8"
                         cy="8"
@@ -226,8 +226,8 @@ const MenuBar = () => {
               </>
             ) : (
               <>
-                <span className="text-[14px] px-1 py-0.5 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" />
+                <span className="flex items-center gap-1 rounded border border-yellow-500/20 bg-yellow-500/10 px-1 py-0.5 text-[14px] text-yellow-500">
+                  <AlertTriangle className="h-3 w-3" />
                   {t("app.outdated")}
                 </span>
               </>
@@ -236,40 +236,40 @@ const MenuBar = () => {
         )}
         <div className="flex-1" />
         {isDev && (
-          <div className="flex items-center ml-2">
+          <div className="ml-2 flex items-center">
             <button
               onClick={handleExportSvg}
-              className="text-[14px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center gap-1 hover:bg-blue-500/20 transition-colors"
+              className="flex items-center gap-1 rounded border border-blue-500/20 bg-blue-500/10 px-1.5 py-0.5 text-[14px] text-blue-500 transition-colors hover:bg-blue-500/20"
               style={{ WebkitAppRegion: "no-drag" }}
             >
-              <Download className="w-3 h-3" />
+              <Download className="h-3 w-3" />
               {t("app.exportSvg", "Export SVG")}
             </button>
           </div>
         )}
       </div>
-      <div className="window-controls flex items-center mr-2">
+      <div className="window-controls mr-2 flex items-center">
         <button
           onClick={() => window.electron.minimizeWindow()}
-          className="p-1 hover:bg-gray-200 rounded"
+          className="rounded p-1 hover:bg-gray-200"
         >
-          <Minus className="w-4 h-4" />
+          <Minus className="h-4 w-4" />
         </button>
         <button
           onClick={() => window.electron.closeWindow()}
-          className="p-1 hover:bg-red-500 hover:text-white rounded ml-1"
+          className="ml-1 rounded p-1 hover:bg-red-500 hover:text-white"
         >
-          <X className="w-4 h-4" />
+          <X className="h-4 w-4" />
         </button>
       </div>
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <AlertDialogContent className="max-w-md bg-background">
           <AlertDialogHeader>
             <div
-              className="fixed top-2 right-2 cursor-pointer p-2 text-foreground"
+              className="fixed right-2 top-2 cursor-pointer p-2 text-foreground"
               onClick={() => setIsDialogOpen(false)}
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" />
             </div>
             <AlertDialogTitle className="text-2xl font-bold text-foreground">
               {!serverStatus?.ok ? t("server-status.offline") : t("server-status.title")}
@@ -282,9 +282,9 @@ const MenuBar = () => {
             <div className="mt-4 space-y-4">
               {/* Status Card */}
               {!serverStatus?.ok ? (
-                <div className="p-4 rounded-lg border bg-red-500/5 border-red-500/20">
+                <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4">
                   <div className="flex items-center gap-3">
-                    <WifiOff className="w-8 h-8 text-red-500" />
+                    <WifiOff className="h-8 w-8 text-red-500" />
                     <div>
                       <h3 className="font-semibold text-foreground">
                         {t("server-status.no-internet")}
@@ -297,12 +297,12 @@ const MenuBar = () => {
                 </div>
               ) : (
                 <div
-                  className={`p-4 rounded-lg border ${
+                  className={`rounded-lg border p-4 ${
                     serverStatus.api?.ok &&
                     serverStatus.storage?.ok &&
                     serverStatus.lfs?.ok
-                      ? "bg-green-500/5 border-green-500/20"
-                      : "bg-red-500/5 border-red-500/20"
+                      ? "border-green-500/20 bg-green-500/5"
+                      : "border-red-500/20 bg-red-500/5"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -314,7 +314,7 @@ const MenuBar = () => {
                         : t("server-status.unhealthy")}
                     </span>
                   </div>
-                  <p className="text-sm mt-2 text-muted-foreground">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     {serverStatus.api?.ok &&
                     serverStatus.storage?.ok &&
                     serverStatus.lfs?.ok ? (
@@ -327,7 +327,7 @@ const MenuBar = () => {
                             !serverStatus.storage?.ok ||
                             !serverStatus.lfs?.ok) && (
                             <li key="downServices" className="flex items-start">
-                              <span className="w-2.5 h-2.5 mt-1.5 rounded-full bg-red-500 mr-2" />
+                              <span className="mr-2 mt-1.5 h-2.5 w-2.5 rounded-full bg-red-500" />
                               <div>
                                 <span className="font-medium">
                                   {t("server-status.down-services")}
@@ -345,17 +345,17 @@ const MenuBar = () => {
                 </div>
               )}
               {/* Status Page Link */}
-              <div className="flex items-center justify-between p-3 rounded-lg border bg-card/30">
+              <div className="flex items-center justify-between rounded-lg border bg-card/30 p-3">
                 <span className="text-sm text-muted-foreground">
                   {t("server-status.need-more-details")}
                 </span>
                 <button
                   onClick={() => window.electron.openURL("https://status.ascendara.app")}
-                  className="text-sm text-foreground hover:underline flex items-center gap-1"
+                  className="flex items-center gap-1 text-sm text-foreground hover:underline"
                 >
                   {t("server-status.visit-status-page")}
                   <svg
-                    className="w-4 h-4"
+                    className="h-4 w-4"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"

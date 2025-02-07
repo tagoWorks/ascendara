@@ -77,7 +77,7 @@ const RecentGameCard = ({ game, onPlay }) => {
     <Card
       className={cn(
         "group relative overflow-hidden transition-all duration-300",
-        "hover:shadow-lg cursor-pointer",
+        "cursor-pointer hover:shadow-lg",
         isRunning && "ring-2 ring-primary"
       )}
       onMouseEnter={() => setIsHovered(true)}
@@ -85,14 +85,14 @@ const RecentGameCard = ({ game, onPlay }) => {
     >
       <CardContent className="p-0">
         <AspectRatio ratio={16 / 9}>
-          <div className="w-full h-full relative">
-            {loading && <Skeleton className="w-full h-full absolute inset-0" />}
+          <div className="relative h-full w-full">
+            {loading && <Skeleton className="absolute inset-0 h-full w-full" />}
             {!loading && imageData && (
               <img
                 src={imageData}
                 alt={sanitizedGameName}
                 className={cn(
-                  "w-full h-full object-cover transition-transform duration-300",
+                  "h-full w-full object-cover transition-transform duration-300",
                   isHovered && "scale-110"
                 )}
               />
@@ -109,7 +109,7 @@ const RecentGameCard = ({ game, onPlay }) => {
                   <div className="space-y-1">
                     <h3
                       className={cn(
-                        "text-lg font-semibold text-white line-clamp-1",
+                        "line-clamp-1 text-lg font-semibold text-white",
                         "transition-transform duration-300",
                         isHovered ? "translate-x-2" : "translate-x-0"
                       )}
@@ -130,7 +130,7 @@ const RecentGameCard = ({ game, onPlay }) => {
                     size="icon"
                     variant="ghost"
                     className={cn(
-                      "text-white hover:text-primary hover:bg-white/20",
+                      "text-white hover:bg-white/20 hover:text-primary",
                       "transition-transform duration-300",
                       isHovered ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0"
                     )}

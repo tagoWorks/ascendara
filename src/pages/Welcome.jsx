@@ -190,12 +190,11 @@ function ThemeButton({ theme, currentTheme, onSelect }) {
       </div>
 
       <div
-        className={`absolute bottom-0 left-0 right-0 p-3 
-        ${colors.bg} bg-opacity-80 backdrop-blur-sm`}
+        className={`absolute bottom-0 left-0 right-0 p-3 ${colors.bg} bg-opacity-80 backdrop-blur-sm`}
       >
         <div className="flex items-center justify-between">
           <span className={`font-medium ${colors.text}`}>{theme.name}</span>
-          <div className={`w-3 h-3 rounded-full ${colors.primary}`} />
+          <div className={`h-3 w-3 rounded-full ${colors.primary}`} />
         </div>
       </div>
     </button>
@@ -250,17 +249,17 @@ const Welcome = ({ welcomeData, onComplete }) => {
   const features = useMemo(
     () => [
       {
-        icon: <Download className="w-5 h-5" />,
+        icon: <Download className="h-5 w-5" />,
         title: t("welcome.automaticUpdatesTitle"),
         description: t("welcome.automaticUpdatesDesc"),
       },
       {
-        icon: <Shield className="w-5 h-5" />,
+        icon: <Shield className="h-5 w-5" />,
         title: t("welcome.securityPatchesTitle"),
         description: t("welcome.securityPatchesDesc"),
       },
       {
-        icon: <Zap className="w-5 h-5" />,
+        icon: <Zap className="h-5 w-5" />,
         title: t("welcome.bugFixesTitle"),
         description: t("welcome.bugFixesDesc"),
       },
@@ -286,22 +285,22 @@ const Welcome = ({ welcomeData, onComplete }) => {
   const v7Features = useMemo(
     () => [
       {
-        icon: <Palette className="w-5 h-5" />,
+        icon: <Palette className="h-5 w-5" />,
         title: t("welcome.freshNewLookTitle"),
         description: t("welcome.freshNewLookDesc"),
       },
       {
-        icon: <Zap className="w-5 h-5" />,
+        icon: <Zap className="h-5 w-5" />,
         title: t("welcome.lightningFastTitle"),
         description: t("welcome.lightningFastDesc"),
       },
       {
-        icon: <Layout className="w-5 h-5" />,
+        icon: <Layout className="h-5 w-5" />,
         title: t("welcome.smartOrganizationTitle"),
         description: t("welcome.smartOrganizationDesc"),
       },
       {
-        icon: <PuzzleIcon className="w-5 h-5" />,
+        icon: <PuzzleIcon className="h-5 w-5" />,
         title: t("welcome.improvedUXTitle"),
         description: t("welcome.improvedUXDesc"),
       },
@@ -352,7 +351,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
           ...prevStatus,
           [label]: {
             installed: false,
-            icon: <Loader className="w-5 h-5 animate-spin" />,
+            icon: <Loader className="h-5 w-5 animate-spin" />,
           },
         }));
       } else if (status === "finished") {
@@ -362,7 +361,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
             ...prevStatus,
             [label]: {
               installed: true,
-              icon: <CircleCheck className="w-5 h-5 text-green-500" />,
+              icon: <CircleCheck className="h-5 w-5 text-green-500" />,
             },
           };
           const allInstalled = Object.values(updatedStatus).every(dep => dep.installed);
@@ -378,7 +377,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
           ...prevStatus,
           [label]: {
             installed: false,
-            icon: <XCircle className="w-5 h-5 text-red-500" />,
+            icon: <XCircle className="h-5 w-5 text-red-500" />,
           },
         }));
       }
@@ -428,7 +427,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
       Object.keys(updatedStatus).forEach(dep => {
         updatedStatus[dep] = {
           installed: false,
-          icon: <Loader className="w-5 h-5 animate-spin" />,
+          icon: <Loader className="h-5 w-5 animate-spin" />,
         };
       });
       return updatedStatus;
@@ -447,7 +446,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
             ...prevStatus,
             [label]: {
               installed: true,
-              icon: <CircleCheck className="w-5 h-5 text-green-500" />,
+              icon: <CircleCheck className="h-5 w-5 text-green-500" />,
             },
           };
 
@@ -647,65 +646,65 @@ const Welcome = ({ welcomeData, onComplete }) => {
     if (showAnalyticsStep) {
       return (
         <div
-          className={`h-screen bg-background relative overflow-hidden flex items-center justify-center transition-opacity duration-500 ${isExiting ? "opacity-0" : "opacity-100"}`}
+          className={`relative flex h-screen items-center justify-center overflow-hidden bg-background transition-opacity duration-500 ${isExiting ? "opacity-0" : "opacity-100"}`}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-background" />
-          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/10 to-transparent" />
+          <div className="absolute left-0 top-0 h-32 w-full bg-gradient-to-b from-primary/10 to-transparent" />
 
           <motion.div
-            className="w-full max-w-4xl mx-auto px-6 relative z-10"
+            className="relative z-10 mx-auto w-full max-w-4xl px-6"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
           >
-            <motion.div className="text-center mb-8" variants={itemVariants}>
-              <h2 className="text-3xl font-bold mb-4">{t("welcome.helpImprove")}</h2>
-              <p className="text-lg text-muted-foreground mb-8">
+            <motion.div className="mb-8 text-center" variants={itemVariants}>
+              <h2 className="mb-4 text-3xl font-bold">{t("welcome.helpImprove")}</h2>
+              <p className="mb-8 text-lg text-muted-foreground">
                 {t("welcome.chooseHowToHelp")}
               </p>
             </motion.div>
 
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"
+              className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2"
               variants={itemVariants}
             >
               {/* Share Analytics Option */}
               <button
                 onClick={() => setAnalyticsConsent(true)}
-                className={`p-6 rounded-xl transition-all duration-200 ${
+                className={`rounded-xl p-6 transition-all duration-200 ${
                   analyticsConsent
-                    ? "bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-2 border-primary scale-105"
-                    : "bg-card/30 border border-primary/10 hover:border-primary/30"
+                    ? "scale-105 border-2 border-primary bg-gradient-to-br from-primary/10 via-primary/5 to-transparent"
+                    : "border border-primary/10 bg-card/30 hover:border-primary/30"
                 }`}
               >
-                <div className="flex items-center space-x-3 mb-4">
+                <div className="mb-4 flex items-center space-x-3">
                   <div
-                    className={`p-2 rounded-lg ${analyticsConsent ? "bg-primary/20" : "bg-muted"}`}
+                    className={`rounded-lg p-2 ${analyticsConsent ? "bg-primary/20" : "bg-muted"}`}
                   >
                     <Rocket
-                      className={`w-6 h-6 ${analyticsConsent ? "text-primary" : "text-muted-foreground"}`}
+                      className={`h-6 w-6 ${analyticsConsent ? "text-primary" : "text-muted-foreground"}`}
                     />
                   </div>
                   <h3 className="text-xl font-semibold">
                     {t("welcome.shareAndImprove")}
                   </h3>
                 </div>
-                <ul className="space-y-3 text-left mb-6">
+                <ul className="mb-6 space-y-3 text-left">
                   <li className="flex items-start space-x-2">
                     <CheckCircle2
-                      className={`w-5 h-5 ${analyticsConsent ? "text-primary" : "text-muted-foreground"} shrink-0 mt-0.5`}
+                      className={`h-5 w-5 ${analyticsConsent ? "text-primary" : "text-muted-foreground"} mt-0.5 shrink-0`}
                     />
                     <span>{t("welcome.helpIdentifyAndFix")}</span>
                   </li>
                   <li className="flex items-start space-x-2">
                     <CheckCircle2
-                      className={`w-5 h-5 ${analyticsConsent ? "text-primary" : "text-muted-foreground"} shrink-0 mt-0.5`}
+                      className={`h-5 w-5 ${analyticsConsent ? "text-primary" : "text-muted-foreground"} mt-0.5 shrink-0`}
                     />
                     <span>{t("welcome.influenceFutureFeatures")}</span>
                   </li>
                   <li className="flex items-start space-x-2">
                     <CheckCircle2
-                      className={`w-5 h-5 ${analyticsConsent ? "text-primary" : "text-muted-foreground"} shrink-0 mt-0.5`}
+                      className={`h-5 w-5 ${analyticsConsent ? "text-primary" : "text-muted-foreground"} mt-0.5 shrink-0`}
                     />
                     <span>{t("welcome.bePartOfImproving")}</span>
                   </li>
@@ -715,25 +714,25 @@ const Welcome = ({ welcomeData, onComplete }) => {
               {/* Privacy Option */}
               <button
                 onClick={() => setAnalyticsConsent(false)}
-                className={`p-6 rounded-xl transition-all duration-200 ${
+                className={`rounded-xl p-6 transition-all duration-200 ${
                   !analyticsConsent
-                    ? "bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-2 border-primary scale-105"
-                    : "bg-card/30 border border-primary/10 hover:border-primary/30"
+                    ? "scale-105 border-2 border-primary bg-gradient-to-br from-primary/10 via-primary/5 to-transparent"
+                    : "border border-primary/10 bg-card/30 hover:border-primary/30"
                 }`}
               >
-                <div className="flex items-center space-x-3 mb-4">
+                <div className="mb-4 flex items-center space-x-3">
                   <div
-                    className={`p-2 rounded-lg ${!analyticsConsent ? "bg-primary/20" : "bg-muted"}`}
+                    className={`rounded-lg p-2 ${!analyticsConsent ? "bg-primary/20" : "bg-muted"}`}
                   >
                     <Shield
-                      className={`w-6 h-6 ${!analyticsConsent ? "text-primary" : "text-muted-foreground"}`}
+                      className={`h-6 w-6 ${!analyticsConsent ? "text-primary" : "text-muted-foreground"}`}
                     />
                   </div>
                   <h3 className="text-xl font-semibold">{t("welcome.stayPrivate")}</h3>
                 </div>
-                <div className="space-y-4 text-left mb-6">
+                <div className="mb-6 space-y-4 text-left">
                   <p>{t("welcome.optOutOfSharing")}</p>
-                  <div className="bg-card/30 p-4 rounded-lg">
+                  <div className="rounded-lg bg-card/30 p-4">
                     <p className="text-sm text-muted-foreground">
                       {t("welcome.ascendaraNeverCollects")}
                     </p>
@@ -751,7 +750,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   handleAnalyticsChoice(analyticsConsent);
                   handleExit(true);
                 }}
-                className="mb-4 px-12 py-6 text-lg font-semibold text-primary bg-primary/10 hover:bg-primary/20"
+                className="mb-4 bg-primary/10 px-12 py-6 text-lg font-semibold text-primary hover:bg-primary/20"
               >
                 {t("welcome.seeWhatsNew")}
               </Button>
@@ -760,7 +759,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   handleAnalyticsChoice(analyticsConsent);
                   handleExit(false);
                 }}
-                className="text-sm text-foreground/60 hover:text-primary transition-colors"
+                className="text-sm text-foreground/60 transition-colors hover:text-primary"
               >
                 {t("welcome.exploreOnMyOwn")}
               </button>
@@ -772,20 +771,20 @@ const Welcome = ({ welcomeData, onComplete }) => {
 
     return (
       <div
-        className={`h-screen bg-background relative overflow-hidden flex items-center justify-center transition-opacity duration-500 ${isExiting ? "opacity-0" : "opacity-100"}`}
+        className={`relative flex h-screen items-center justify-center overflow-hidden bg-background transition-opacity duration-500 ${isExiting ? "opacity-0" : "opacity-100"}`}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-background" />
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/10 to-transparent" />
+        <div className="absolute left-0 top-0 h-32 w-full bg-gradient-to-b from-primary/10 to-transparent" />
 
         <motion.div
-          className="w-full max-w-5xl mx-auto px-6 relative z-10"
+          className="relative z-10 mx-auto w-full max-w-5xl px-6"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          <motion.div className="text-center mb-8" variants={itemVariants}>
+          <motion.div className="mb-8 text-center" variants={itemVariants}>
             <h1 className="text-6xl font-bold">
-              <span className="text-4xl block mb-2 text-foreground/80">
+              <span className="mb-2 block text-4xl text-foreground/80">
                 {t("welcome.sayHelloTo")}
               </span>
               <div className="relative inline-flex items-center">
@@ -793,7 +792,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   Ascendara&nbsp;
                 </span>
                 <span className="relative">
-                  <span className="animate-shine bg-[linear-gradient(110deg,var(--shine-from),45%,var(--shine-via),55%,var(--shine-to))] bg-[length:200%_100%] inline-block bg-clip-text text-transparent">
+                  <span className="inline-block animate-shine bg-[linear-gradient(110deg,var(--shine-from),45%,var(--shine-via),55%,var(--shine-to))] bg-[length:200%_100%] bg-clip-text text-transparent">
                     v7
                   </span>
                 </span>
@@ -802,20 +801,20 @@ const Welcome = ({ welcomeData, onComplete }) => {
           </motion.div>
 
           <motion.p
-            className="text-xl mb-10 max-w-2xl mx-auto text-center text-foreground/80"
+            className="mx-auto mb-10 max-w-2xl text-center text-xl text-foreground/80"
             variants={itemVariants}
           >
             {t("welcome.yourContinuedSupport")}
           </motion.p>
 
-          <motion.div className="grid grid-cols-2 gap-6 mb-10" variants={itemVariants}>
+          <motion.div className="mb-10 grid grid-cols-2 gap-6" variants={itemVariants}>
             {v7Features.map(feature => (
               <div
                 key={feature.title}
-                className="p-5 rounded-xl bg-card/30 backdrop-blur-sm border border-primary/10 hover:bg-card/40 transition-colors"
+                className="rounded-xl border border-primary/10 bg-card/30 p-5 backdrop-blur-sm transition-colors hover:bg-card/40"
               >
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className="text-primary bg-primary/10 p-2 rounded-lg">
+                <div className="mb-3 flex items-center space-x-3">
+                  <div className="rounded-lg bg-primary/10 p-2 text-primary">
                     {feature.icon}
                   </div>
                   <h3 className="text-lg font-semibold">{feature.title}</h3>
@@ -826,7 +825,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
           </motion.div>
 
           <motion.p
-            className="text-center text-foreground/70 text-sm mb-8"
+            className="mb-8 text-center text-sm text-foreground/70"
             variants={itemVariants}
           >
             {t("welcome.everyUpdateIsInspired")}
@@ -839,7 +838,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
             <Button
               size="lg"
               onClick={() => setShowAnalyticsStep(true)}
-              className="px-8 py-6 text-lg font-semibold bg-primary hover:bg-primary/90"
+              className="bg-primary px-8 py-6 text-lg font-semibold hover:bg-primary/90"
             >
               {t("welcome.continue")}
             </Button>
@@ -868,7 +867,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
               {t("welcome.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
-              className="text-secondary bg-primary"
+              className="bg-primary text-secondary"
               onClick={handleInstallDependencies}
             >
               {t("welcome.continue")}
@@ -892,7 +891,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
               {t("welcome.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
-              className="text-secondary bg-primary"
+              className="bg-primary text-secondary"
               onClick={async () => {
                 setShowSkipAlert(false);
                 handleExit(true);
@@ -916,7 +915,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction
-              className="text-secondary bg-primary"
+              className="bg-primary text-secondary"
               onClick={() => setShowDepsErrorAlert(false)}
             >
               {t("welcome.okay")}
@@ -938,7 +937,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
               {t("welcome.skip")}
             </AlertDialogCancel>
             <AlertDialogAction
-              className="text-secondary bg-primary"
+              className="bg-primary text-secondary"
               onClick={handleRestart}
             >
               {t("welcome.restart")}
@@ -947,23 +946,23 @@ const Welcome = ({ welcomeData, onComplete }) => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="min-h-screen bg-background relative overflow-hidden">
+      <div className="relative min-h-screen overflow-hidden bg-background">
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-background" />
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/10 to-transparent" />
+        <div className="absolute left-0 top-0 h-32 w-full bg-gradient-to-b from-primary/10 to-transparent" />
 
         <AnimatePresence mode="wait">
           {step === "welcome" && (
             <motion.div
               key="welcome"
-              className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative z-10"
+              className="relative z-10 flex min-h-screen flex-col items-center justify-center p-8 text-center"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
               <motion.div
-                className="flex items-center justify-center mb-8"
+                className="mb-8 flex items-center justify-center"
                 variants={itemVariants}
               >
                 <h1 className="text-6xl font-bold">
@@ -972,7 +971,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                       {t("welcome.welcomeTo")}&nbsp;
                     </span>
                     <span className="relative">
-                      <span className="animate-shine bg-[linear-gradient(110deg,var(--shine-from),45%,var(--shine-via),55%,var(--shine-to))] bg-[length:200%_100%] inline-block bg-clip-text text-transparent">
+                      <span className="inline-block animate-shine bg-[linear-gradient(110deg,var(--shine-from),45%,var(--shine-via),55%,var(--shine-to))] bg-[length:200%_100%] bg-clip-text text-transparent">
                         {t("welcome.ascendara")}
                       </span>
                     </span>
@@ -980,20 +979,20 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 </h1>
               </motion.div>
               <motion.p
-                className="text-xl mb-12 max-w-3xl text-foreground/80"
+                className="mb-12 max-w-3xl text-xl text-foreground/80"
                 variants={itemVariants}
               >
                 {t("welcome.welcomeToAscendaraDescription")}
               </motion.p>
 
-              <motion.div className="space-y-6 mb-12 max-w-xl" variants={itemVariants}>
+              <motion.div className="mb-12 max-w-xl space-y-6" variants={itemVariants}>
                 <div>
-                  <div className="flex items-center space-x-3 p-4 rounded-lg hover:bg-card/50 transition-colors">
+                  <div className="flex items-center space-x-3 rounded-lg p-4 transition-colors hover:bg-card/50">
                     <Checkbox
                       id="privacy"
                       checked={privacyChecked}
                       onCheckedChange={setPrivacyChecked}
-                      className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                      className="data-[state=checked]:text-primary-foreground data-[state=checked]:bg-primary"
                     />
                     <div className="text-base">
                       <Label htmlFor="privacy" className="inline cursor-pointer">
@@ -1005,19 +1004,19 @@ const Welcome = ({ welcomeData, onComplete }) => {
                           e.preventDefault();
                           window.electron.openURL("https://ascendara.app/privacy");
                         }}
-                        className="text-primary hover:underline inline"
+                        className="inline text-primary hover:underline"
                       >
                         {t("welcome.privacyPolicy")}
                       </button>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-3 p-4 rounded-lg hover:bg-card/50 transition-colors">
+                  <div className="flex items-center space-x-3 rounded-lg p-4 transition-colors hover:bg-card/50">
                     <Checkbox
                       id="terms"
                       checked={termsChecked}
                       onCheckedChange={setTermsChecked}
-                      className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                      className="data-[state=checked]:text-primary-foreground data-[state=checked]:bg-primary"
                     />
                     <div className="text-base">
                       <Label htmlFor="terms" className="inline cursor-pointer">
@@ -1029,7 +1028,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                           e.preventDefault();
                           window.electron.openURL("https://ascendara.app/terms");
                         }}
-                        className="text-primary hover:underline inline"
+                        className="inline text-primary hover:underline"
                       >
                         {t("welcome.termsOfService")}
                       </button>
@@ -1054,15 +1053,15 @@ const Welcome = ({ welcomeData, onComplete }) => {
           {step === "language" && (
             <motion.div
               key="language"
-              className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative z-10 bg-gradient-to-b from-background to-background/80"
+              className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-background to-background/80 p-8 text-center"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
-              <motion.div className="text-center mb-12" variants={itemVariants}>
-                <Globe2 className="w-16 h-16 mx-auto mb-6 text-primary animate-pulse" />
-                <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <motion.div className="mb-12 text-center" variants={itemVariants}>
+                <Globe2 className="mx-auto mb-6 h-16 w-16 animate-pulse text-primary" />
+                <h1 className="mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-4xl font-bold text-transparent">
                   <AnimatePresence mode="wait">
                     <motion.span
                       key={currentLangIndex}
@@ -1070,7 +1069,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.5 }}
-                      className="text-4xl block mb-2 text-foreground/80"
+                      className="mb-2 block text-4xl text-foreground/80"
                     >
                       {langPreferenceMessages[currentLangIndex].text}
                     </motion.span>
@@ -1079,17 +1078,17 @@ const Welcome = ({ welcomeData, onComplete }) => {
               </motion.div>
 
               <motion.div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 max-w-5xl w-full"
+                className="mb-12 grid w-full max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
                 variants={itemVariants}
               >
                 {SUPPORTED_LANGUAGES.map(lang => (
                   <motion.button
                     key={lang.id}
                     onClick={() => handleLanguageSelect(lang.id)}
-                    className={`p-6 rounded-2xl transition-all duration-300 flex items-center space-x-4 ${
+                    className={`flex items-center space-x-4 rounded-2xl p-6 transition-all duration-300 ${
                       language === lang.id
-                        ? "bg-gradient-to-br from-primary/15 via-primary/10 to-transparent border-2 border-primary scale-105 shadow-lg shadow-primary/10"
-                        : "bg-card/40 border border-primary/10 hover:border-primary/30 hover:bg-card/60 hover:scale-102"
+                        ? "scale-105 border-2 border-primary bg-gradient-to-br from-primary/15 via-primary/10 to-transparent shadow-lg shadow-primary/10"
+                        : "hover:scale-102 border border-primary/10 bg-card/40 hover:border-primary/30 hover:bg-card/60"
                     }`}
                     whileHover={{ scale: language === lang.id ? 1.05 : 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -1103,7 +1102,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
               <motion.div className="flex justify-center" variants={itemVariants}>
                 <Button
                   size="lg"
-                  className="w-full bg-primary hover:bg-primary/90 text-secondary"
+                  className="w-full bg-primary text-secondary hover:bg-primary/90"
                   onClick={handleNext}
                   disabled={!language}
                 >
@@ -1112,7 +1111,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
               </motion.div>
 
               <motion.p
-                className="text-sm text-muted-foreground mt-6"
+                className="mt-6 text-sm text-muted-foreground"
                 variants={itemVariants}
               >
                 {t("welcome.youCanChangeThisLater")}
@@ -1123,14 +1122,14 @@ const Welcome = ({ welcomeData, onComplete }) => {
           {step === "directory" && (
             <motion.div
               key="directory"
-              className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative z-10"
+              className="relative z-10 flex min-h-screen flex-col items-center justify-center p-8 text-center"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
-              <motion.div className="text-center mb-8" variants={itemVariants}>
-                <h2 className="text-3xl font-bold mb-2 text-primary">
+              <motion.div className="mb-8 text-center" variants={itemVariants}>
+                <h2 className="mb-2 text-3xl font-bold text-primary">
                   {t("welcome.chooseDownloadLocation")}
                 </h2>
                 <p className="text-lg text-muted-foreground">
@@ -1138,7 +1137,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 </p>
               </motion.div>
               <motion.div
-                className="space-y-6 mb-12 max-w-2xl bg-card/30 p-6 rounded-lg"
+                className="mb-12 max-w-2xl space-y-6 rounded-lg bg-card/30 p-6"
                 variants={itemVariants}
               >
                 <div className="flex items-center space-x-4">
@@ -1147,7 +1146,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                     value={downloadDirectory}
                     readOnly
                     placeholder={t("welcome.selectADirectory")}
-                    className="flex-1 bg-background/50 border border-primary/10 rounded-lg px-4 py-2 text-primary-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    className="text-primary-foreground flex-1 rounded-lg border border-primary/10 bg-background/50 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                   />
                   <Button className="text-secondary" onClick={handleSelectDirectory}>
                     {t("welcome.browse")}
@@ -1155,16 +1154,16 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 </div>
 
                 {warningMessage && (
-                  <p className="text-red-500 text-sm">{warningMessage}</p>
+                  <p className="text-sm text-red-500">{warningMessage}</p>
                 )}
 
-                <div className="text-left space-y-4 mt-6">
+                <div className="mt-6 space-y-4 text-left">
                   <div className="flex items-start space-x-3">
-                    <PackageOpen className="w-5 h-5 text-primary mt-1" />
+                    <PackageOpen className="mt-1 h-5 w-5 text-primary" />
                     <p>{t("welcome.thisIsWhereAllYourDownloadedGamesWillBeStored")}</p>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <Shield className="w-5 h-5 text-primary mt-1" />
+                    <Shield className="mt-1 h-5 w-5 text-primary" />
                     <p>
                       {t("welcome.makeSureYouHaveEnoughDiskSpaceInTheSelectedLocation")}
                     </p>
@@ -1177,7 +1176,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   size="lg"
                   onClick={handleNext}
                   disabled={!downloadDirectory}
-                  className="px-8 py-6 text-lg font-semibold bg-primary hover:bg-primary/90 text-secondary"
+                  className="bg-primary px-8 py-6 text-lg font-semibold text-secondary hover:bg-primary/90"
                 >
                   {t("welcome.continue")}
                 </Button>
@@ -1188,14 +1187,14 @@ const Welcome = ({ welcomeData, onComplete }) => {
           {step === "extension" && (
             <motion.div
               key="extension"
-              className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative z-10"
+              className="relative z-10 flex min-h-screen flex-col items-center justify-center p-8 text-center"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
               <motion.div
-                className="flex items-center justify-center mb-8"
+                className="mb-8 flex items-center justify-center"
                 variants={itemVariants}
               >
                 <h2 className="text-4xl font-bold text-primary">
@@ -1203,33 +1202,33 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 </h2>
               </motion.div>
               <motion.p
-                className="text-xl mb-8 max-w-2xl text-foreground/80"
+                className="mb-8 max-w-2xl text-xl text-foreground/80"
                 variants={itemVariants}
               >
                 {t("welcome.getTheAscendaraDownloadHandlerExtension")}
               </motion.p>
 
               <motion.div
-                className="space-y-6 mb-12 max-w-2xl bg-card/30 p-6 rounded-lg"
+                className="mb-12 max-w-2xl space-y-6 rounded-lg bg-card/30 p-6"
                 variants={itemVariants}
               >
-                <h3 className="text-lg font-semibold mb-4">{t("welcome.howItWorks")}</h3>
+                <h3 className="mb-4 text-lg font-semibold">{t("welcome.howItWorks")}</h3>
                 <div className="space-y-4 text-left">
                   <div className="flex items-start space-x-3">
-                    <span className="text-primary font-semibold">1.</span>
+                    <span className="font-semibold text-primary">1.</span>
                     <p>{t("welcome.clickTheExtensionIcon")}</p>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <span className="text-primary font-semibold">2.</span>
+                    <span className="font-semibold text-primary">2.</span>
                     <p>{t("welcome.whenYouClickADownloadLink")}</p>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <span className="text-primary font-semibold">3.</span>
+                    <span className="font-semibold text-primary">3.</span>
                     <p>{t("welcome.startTheDownload")}</p>
                   </div>
                 </div>
 
-                <div className="mt-8 p-4 bg-primary/5 rounded-md">
+                <div className="mt-8 rounded-md bg-primary/5 p-4">
                   <p className="text-sm text-foreground/70">
                     {t("welcome.theExtensionBlocksKnownProviders")}
                   </p>
@@ -1245,7 +1244,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   onClick={() =>
                     window.electron.openURL("https://ascendara.app/extension")
                   }
-                  className="px-8 py-6 text-lg font-semibold bg-primary hover:bg-primary/90 text-secondary"
+                  className="bg-primary px-8 py-6 text-lg font-semibold text-secondary hover:bg-primary/90"
                 >
                   {t("welcome.getTheExtension")}
                 </Button>
@@ -1253,7 +1252,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   variant="outline"
                   onClick={handleNext}
                   size="lg"
-                  className="px-8 py-6 text-lg font-semibold hover:bg-primary/10 text-primary"
+                  className="px-8 py-6 text-lg font-semibold text-primary hover:bg-primary/10"
                 >
                   {t("welcome.continue")}
                 </Button>
@@ -1262,30 +1261,30 @@ const Welcome = ({ welcomeData, onComplete }) => {
           )}
 
           {step === "theme" && (
-            <div className="min-h-screen bg-background relative overflow-y-auto flex items-center justify-center py-8">
+            <div className="relative flex min-h-screen items-center justify-center overflow-y-auto bg-background py-8">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-background" />
-              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/10 to-transparent" />
+              <div className="absolute left-0 top-0 h-32 w-full bg-gradient-to-b from-primary/10 to-transparent" />
 
               <motion.div
-                className="w-full max-w-4xl mx-auto px-6 relative z-10 py-4"
+                className="relative z-10 mx-auto w-full max-w-4xl px-6 py-4"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
               >
-                <motion.div className="text-center mb-8" variants={itemVariants}>
-                  <h2 className="text-3xl font-bold mb-4 text-primary">
+                <motion.div className="mb-8 text-center" variants={itemVariants}>
+                  <h2 className="mb-4 text-3xl font-bold text-primary">
                     {t("welcome.chooseYourTheme")}
                   </h2>
-                  <p className="text-lg text-muted-foreground mb-8">
+                  <p className="mb-8 text-lg text-muted-foreground">
                     {t("welcome.personalizeYourExperience")}
                   </p>
                 </motion.div>
 
-                <motion.div className="flex justify-center mb-6" variants={itemVariants}>
-                  <div className="bg-card/30 p-1 rounded-lg inline-flex">
+                <motion.div className="mb-6 flex justify-center" variants={itemVariants}>
+                  <div className="inline-flex rounded-lg bg-card/30 p-1">
                     <button
                       onClick={() => setShowingLightThemes(true)}
-                      className={`px-4 py-2 rounded-md transition-all ${
+                      className={`rounded-md px-4 py-2 transition-all ${
                         showingLightThemes
                           ? "bg-primary text-secondary"
                           : "hover:bg-primary/10"
@@ -1295,7 +1294,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                     </button>
                     <button
                       onClick={() => setShowingLightThemes(false)}
-                      className={`px-4 py-2 rounded-md transition-all ${
+                      className={`rounded-md px-4 py-2 transition-all ${
                         !showingLightThemes
                           ? "bg-primary text-secondary"
                           : "hover:bg-primary/10"
@@ -1307,7 +1306,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 </motion.div>
 
                 <motion.div
-                  className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8"
+                  className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3"
                   variants={itemVariants}
                 >
                   {themes
@@ -1328,7 +1327,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   <Button
                     size="lg"
                     onClick={handleNext}
-                    className="px-8 py-6 text-lg bg-primary hover:bg-primary/90 text-secondary"
+                    className="bg-primary px-8 py-6 text-lg text-secondary hover:bg-primary/90"
                   >
                     {t("welcome.continue")}
                   </Button>
@@ -1340,14 +1339,14 @@ const Welcome = ({ welcomeData, onComplete }) => {
           {step === "analytics" && (
             <motion.div
               key="analytics"
-              className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative z-10"
+              className="relative z-10 flex min-h-screen flex-col items-center justify-center p-8 text-center"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
-              <motion.div className="text-center mb-8" variants={itemVariants}>
-                <h2 className="text-3xl font-bold mb-2 text-primary">
+              <motion.div className="mb-8 text-center" variants={itemVariants}>
+                <h2 className="mb-2 text-3xl font-bold text-primary">
                   {t("welcome.analytics")}
                 </h2>
                 <p className="text-lg text-muted-foreground">
@@ -1356,23 +1355,23 @@ const Welcome = ({ welcomeData, onComplete }) => {
               </motion.div>
 
               <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-4xl w-full"
+                className="mb-12 grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-2"
                 variants={itemVariants}
               >
                 {/* Share Analytics Option */}
-                <div className="p-6 rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 hover:border-primary/30 transition-colors">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-2 rounded-lg bg-primary/20">
-                      <Rocket className="w-6 h-6 text-primary" />
+                <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 transition-colors hover:border-primary/30">
+                  <div className="mb-4 flex items-center space-x-3">
+                    <div className="rounded-lg bg-primary/20 p-2">
+                      <Rocket className="h-6 w-6 text-primary" />
                     </div>
                     <h3 className="text-xl font-semibold text-primary">
                       {t("welcome.shareAndImprove")}
                     </h3>
                   </div>
-                  <div className="space-y-4 mb-6">
+                  <div className="mb-6 space-y-4">
                     {analyticsFeatures.map(feature => (
                       <div key={feature.title} className="flex items-start space-x-2">
-                        <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                         <div className="text-left">
                           <p className="font-medium text-muted-foreground">
                             {feature.title}
@@ -1383,7 +1382,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   </div>
                   <Button
                     size="lg"
-                    className="w-full bg-primary hover:bg-primary/90 text-secondary"
+                    className="w-full bg-primary text-secondary hover:bg-primary/90"
                     onClick={() => handleAnalyticsChoice(true)}
                   >
                     {t("welcome.shareAnonymousData")}
@@ -1391,22 +1390,22 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 </div>
 
                 {/* Privacy Option */}
-                <div className="p-6 rounded-xl bg-card/30 border border-border flex flex-col">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-2 rounded-lg bg-muted">
-                      <Shield className="w-6 h-6 text-muted-foreground" />
+                <div className="flex flex-col rounded-xl border border-border bg-card/30 p-6">
+                  <div className="mb-4 flex items-center space-x-3">
+                    <div className="rounded-lg bg-muted p-2">
+                      <Shield className="h-6 w-6 text-muted-foreground" />
                     </div>
                     <h3 className="text-xl font-semibold text-muted-foreground">
                       {t("welcome.stayPrivate")}
                     </h3>
                   </div>
-                  <p className="text-muted-foreground mb-6 text-left">
+                  <p className="mb-6 text-left text-muted-foreground">
                     {t("welcome.optOutOfSharingAnonymousUsageData")}
                   </p>
                   <Button
                     variant="outline"
                     size="lg"
-                    className="w-full text-muted-foreground mt-auto"
+                    className="mt-auto w-full text-muted-foreground"
                     onClick={() => handleAnalyticsChoice(false)}
                   >
                     {t("welcome.continueWithoutSharing")}
@@ -1415,18 +1414,18 @@ const Welcome = ({ welcomeData, onComplete }) => {
               </motion.div>
 
               <motion.p
-                className="text-sm text-muted-foreground max-w-2xl"
+                className="max-w-2xl text-sm text-muted-foreground"
                 variants={itemVariants}
               >
                 {t("welcome.ascendaraNeverCollectsPersonalInfo")} &nbsp;
                 <span
-                  className="text-primary hover:underline cursor-pointer"
+                  className="cursor-pointer text-primary hover:underline"
                   onClick={() =>
                     window.electron.openURL("https://ascendara.app/analytics")
                   }
                 >
                   {t("common.learnMore")}{" "}
-                  <ExternalLink className="inline-block mb-1 h-3 w-3" />
+                  <ExternalLink className="mb-1 inline-block h-3 w-3" />
                 </span>
               </motion.p>
             </motion.div>
@@ -1435,14 +1434,14 @@ const Welcome = ({ welcomeData, onComplete }) => {
           {step === "updates" && (
             <motion.div
               key="updates"
-              className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative z-10"
+              className="relative z-10 flex min-h-screen flex-col items-center justify-center p-8 text-center"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
               <motion.div
-                className="flex items-center justify-center mb-8"
+                className="mb-8 flex items-center justify-center"
                 variants={itemVariants}
               >
                 <h2 className="text-4xl font-bold text-primary">
@@ -1450,30 +1449,30 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 </h2>
               </motion.div>
               <motion.p
-                className="text-xl mb-8 max-w-2xl text-foreground/80"
+                className="mb-8 max-w-2xl text-xl text-foreground/80"
                 variants={itemVariants}
               >
                 {t("welcome.chooseHowYouWantToReceiveUpdates")}
               </motion.p>
 
               <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-4xl w-full"
+                className="mb-12 grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-2"
                 variants={itemVariants}
               >
                 {/* Auto Update Option */}
-                <div className="p-6 rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 hover:border-primary/30 transition-colors">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-2 rounded-lg bg-primary/20">
-                      <Download className="w-6 h-6 text-primary" />
+                <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 transition-colors hover:border-primary/30">
+                  <div className="mb-4 flex items-center space-x-3">
+                    <div className="rounded-lg bg-primary/20 p-2">
+                      <Download className="h-6 w-6 text-primary" />
                     </div>
                     <h3 className="text-xl font-semibold text-primary">
                       {t("welcome.automaticUpdates")}
                     </h3>
                   </div>
-                  <div className="space-y-4 mb-6">
+                  <div className="mb-6 space-y-4">
                     {features.map(feature => (
                       <div key={feature.title} className="flex items-start space-x-2">
-                        <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                         <div className="text-left">
                           <p className="font-medium text-primary">{feature.title}</p>
                           <p className="text-sm text-foreground/70">
@@ -1485,7 +1484,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   </div>
                   <Button
                     size="lg"
-                    className="w-full bg-primary hover:bg-primary/90 text-secondary"
+                    className="w-full bg-primary text-secondary hover:bg-primary/90"
                     onClick={() => handleUpdateChoice(true)}
                   >
                     {t("welcome.enableAutoUpdates")}
@@ -1493,22 +1492,22 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 </div>
 
                 {/* Manual Update Option */}
-                <div className="p-6 rounded-xl bg-card/30 border border-border flex flex-col">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-2 rounded-lg bg-muted">
-                      <Shield className="w-6 h-6 text-muted-foreground" />
+                <div className="flex flex-col rounded-xl border border-border bg-card/30 p-6">
+                  <div className="mb-4 flex items-center space-x-3">
+                    <div className="rounded-lg bg-muted p-2">
+                      <Shield className="h-6 w-6 text-muted-foreground" />
                     </div>
                     <h3 className="text-xl font-semibold text-muted-foreground">
                       {t("welcome.manualUpdates")}
                     </h3>
                   </div>
-                  <p className="text-muted-foreground mb-6 text-left">
+                  <p className="mb-6 text-left text-muted-foreground">
                     {t("welcome.chooseWhenToUpdateAscendaraYourself")}
                   </p>
                   <Button
                     variant="outline"
                     size="lg"
-                    className="w-full text-muted-foreground mt-auto"
+                    className="mt-auto w-full text-muted-foreground"
                     onClick={() => handleUpdateChoice(false)}
                   >
                     {t("welcome.neverAutomaticallyUpdate")}
@@ -1517,7 +1516,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
               </motion.div>
 
               <motion.p
-                className="text-sm text-muted-foreground max-w-2xl"
+                className="max-w-2xl text-sm text-muted-foreground"
                 variants={itemVariants}
               >
                 {t("welcome.youCanChangeThisSettingLater")}
@@ -1528,21 +1527,21 @@ const Welcome = ({ welcomeData, onComplete }) => {
           {step === "dependencies" && (
             <motion.div
               key="dependencies"
-              className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative z-10"
+              className="relative z-10 flex min-h-screen flex-col items-center justify-center p-8 text-center"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
               <motion.div
-                className="flex items-center justify-center mb-8"
+                className="mb-8 flex items-center justify-center"
                 variants={itemVariants}
               >
                 <h2 className="text-4xl font-bold text-primary">
                   {t("welcome.essentialDependencies")}
                 </h2>
               </motion.div>
-              <motion.div className="space-y-6 mb-12 max-w-2xl" variants={itemVariants}>
+              <motion.div className="mb-12 max-w-2xl space-y-6" variants={itemVariants}>
                 <p className="text-xl text-foreground/80">
                   {t("welcome.dependenciesDesc")}
                 </p>
@@ -1563,7 +1562,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                         <button
                           type="button"
                           onClick={() => window.electron.openURL(dep.url)}
-                          className="font-medium hover:text-primary transition-colors"
+                          className="font-medium transition-colors hover:text-primary"
                         >
                           {dep.name}
                         </button>
@@ -1575,7 +1574,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
               </motion.div>
 
               {isInstalling ? (
-                <motion.div className="space-y-4 w-full max-w-md" variants={itemVariants}>
+                <motion.div className="w-full max-w-md space-y-4" variants={itemVariants}>
                   <p className="text-lg text-foreground/80">
                     {t("welcome.installingDependencies")} {progress}/{totalDependencies}
                   </p>
@@ -1596,7 +1595,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                     variant="outline"
                     size="lg"
                     onClick={() => setShowDepsAlert(true)}
-                    className="px-8 py-6 text-muted-foreground hover:text-primary transition-colors"
+                    className="px-8 py-6 text-muted-foreground transition-colors hover:text-primary"
                   >
                     {t("welcome.installDependencies")}
                   </Button>
@@ -1616,7 +1615,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
 
                     <button
                       onClick={() => handleExit(false)}
-                      className="text-sm text-foreground/60 hover:text-primary transition-colors"
+                      className="text-sm text-foreground/60 transition-colors hover:text-primary"
                     >
                       {t("welcome.skipTheTour")}
                     </button>
@@ -1628,14 +1627,14 @@ const Welcome = ({ welcomeData, onComplete }) => {
           {step === "installationComplete" && (
             <motion.div
               key="installationComplete"
-              className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative z-10"
+              className="relative z-10 flex min-h-screen flex-col items-center justify-center p-8 text-center"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
               <motion.div
-                className="flex items-center justify-center mb-8"
+                className="mb-8 flex items-center justify-center"
                 variants={itemVariants}
               >
                 <h2 className="text-4xl font-bold text-primary">
@@ -1643,7 +1642,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 </h2>
               </motion.div>
               <motion.p
-                className="text-xl mb-8 max-w-2xl text-foreground/80"
+                className="mb-8 max-w-2xl text-xl text-foreground/80"
                 variants={itemVariants}
               >
                 {t("welcome.allRequiredDependenciesHaveBeenInstalled")}
@@ -1659,7 +1658,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 </Button>
                 <button
                   onClick={() => handleExit(false)}
-                  className="text-sm text-foreground/60 hover:text-primary transition-colors"
+                  className="text-sm text-foreground/60 transition-colors hover:text-primary"
                 >
                   {t("welcome.skipTour")}
                 </button>

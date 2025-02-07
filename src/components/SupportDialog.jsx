@@ -80,22 +80,22 @@ const SupportDialog = ({ onClose }) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
-          className="bg-card rounded-lg shadow-xl p-6 max-w-lg w-full mx-4 relative"
+          className="relative mx-4 w-full max-w-lg rounded-lg bg-card p-6 shadow-xl"
         >
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+            className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
           >
             <X size={20} />
           </button>
 
           <div className="space-y-6">
-            <div className="text-center space-y-2">
+            <div className="space-y-2 text-center">
               <h2 className="text-2xl font-bold text-foreground">
                 {t("app.supportDialog.title")}
               </h2>
@@ -109,7 +109,7 @@ const SupportDialog = ({ onClose }) => {
                   onMouseEnter={() => setHoveredStar(value)}
                   onMouseLeave={() => setHoveredStar(0)}
                   onClick={() => handleStarClick(value)}
-                  className="transition-transform hover:scale-110 px-1"
+                  className="px-1 transition-transform hover:scale-110"
                 >
                   <Star
                     size={32}
@@ -126,22 +126,22 @@ const SupportDialog = ({ onClose }) => {
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={handleDonate}
-                className="flex items-center justify-center gap-2 bg-primary/80 text-secondary-foreground rounded-lg px-4 py-3 hover:bg-primary/90 transition-colors"
+                className="text-secondary-foreground flex items-center justify-center gap-2 rounded-lg bg-primary/80 px-4 py-3 transition-colors hover:bg-primary/90"
               >
                 <DollarSign size={20} />
                 {t("app.supportDialog.donate")}
               </button>
               <button
                 onClick={handleFeedback}
-                className="flex items-center justify-center gap-2 bg-secondary text-primary rounded-lg px-4 py-3 hover:bg-secondary/90 transition-colors"
+                className="flex items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-3 text-primary transition-colors hover:bg-secondary/90"
               >
                 <MessageCircle size={20} />
                 {t("app.supportDialog.feedback")}
               </button>
             </div>
 
-            <div className="text-center text-sm text-muted-foreground bg-primary/40 rounded-lg p-4 space-y-3 pt-2">
-              <p className="italic px-8">{t("app.supportDialog.note")}</p>
+            <div className="space-y-3 rounded-lg bg-primary/40 p-4 pt-2 text-center text-sm text-muted-foreground">
+              <p className="px-8 italic">{t("app.supportDialog.note")}</p>
               <div className="flex justify-center">
                 <img
                   src="https://cdn.ascendara.app/files/signature.svg"

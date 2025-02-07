@@ -190,7 +190,7 @@ const ReportIssue = ({ isOpen, onClose }) => {
           <AlertDialogAction
             onClick={handleSubmit}
             disabled={isLoading}
-            className="bg-primary hover:bg-primary/90 text-secondary"
+            className="bg-primary text-secondary hover:bg-primary/90"
           >
             {isLoading ? (
               <>

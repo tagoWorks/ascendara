@@ -349,35 +349,35 @@ const Search = memo(() => {
   return (
     <div className="flex flex-col bg-background">
       <div className="flex-1 p-8 pb-24">
-        <div className="max-w-[1400px] mx-auto">
+        <div className="mx-auto max-w-[1400px]">
           {apiMetadata && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+            <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
               <span>
                 {apiMetadata.games.toLocaleString()} {t("search.gamesIndexed")}
               </span>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <InfoIcon className="w-4 h-4 cursor-pointer hover:text-foreground transition-colors" />
+                  <InfoIcon className="h-4 w-4 cursor-pointer transition-colors hover:text-foreground" />
                 </AlertDialogTrigger>
                 <AlertDialogContent>
-                  <AlertDialogCancel className="absolute top-2 right-2 cursor-pointer text-foreground transition-colors">
-                    <X className="w-4 h-4" />
+                  <AlertDialogCancel className="absolute right-2 top-2 cursor-pointer text-foreground transition-colors">
+                    <X className="h-4 w-4" />
                   </AlertDialogCancel>
                   <AlertDialogHeader>
                     <AlertDialogTitle className="text-2xl font-bold text-foreground">
                       {t("search.indexedInformation")}
                     </AlertDialogTitle>
-                    <div className="space-y-2 mt-4 text-sm text-muted-foreground">
+                    <div className="mt-4 space-y-2 text-sm text-muted-foreground">
                       <p>
                         {t("search.indexedInformationDescription")}{" "}
                         <a
                           onClick={() =>
                             window.electron.openURL("https://ascendara.app/dmca")
                           }
-                          className="text-primary hover:underline cursor-pointer"
+                          className="cursor-pointer text-primary hover:underline"
                         >
                           {t("common.learnMore")}{" "}
-                          <ExternalLink className="inline-block mb-1 h-3 w-3" />
+                          <ExternalLink className="mb-1 inline-block h-3 w-3" />
                         </a>
                       </p>
 
@@ -397,10 +397,10 @@ const Search = memo(() => {
                           variant="outline"
                           onClick={handleRefreshIndex}
                           disabled={isRefreshing}
-                          className="w-full flex items-center justify-center gap-2"
+                          className="flex w-full items-center justify-center gap-2"
                         >
                           <RefreshCw
-                            className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+                            className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
                           />
                           {isRefreshing
                             ? t("search.refreshingIndex")
@@ -417,7 +417,7 @@ const Search = memo(() => {
           <div className="space-y-6">
             <div className="flex items-center gap-4">
               <div className="relative flex-1">
-                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <SearchIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder={t("search.placeholder")}
                   value={searchQuery}
@@ -425,7 +425,7 @@ const Search = memo(() => {
                   className="pl-10"
                 />
                 {isIndexUpdating && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-yellow-500">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 transform text-yellow-500">
                     <AlertTriangle size={20} />
                   </div>
                 )}
@@ -434,12 +434,12 @@ const Search = memo(() => {
                 <SheetTrigger asChild>
                   <Button
                     variant="secondary"
-                    className="flex items-center gap-2 hover:bg-accent border-0"
+                    className="flex items-center gap-2 border-0 hover:bg-accent"
                   >
-                    <SlidersHorizontal className="w-4 h-4" />
+                    <SlidersHorizontal className="h-4 w-4" />
                     {t("search.filters")}
                     {(showDLC || showOnline || selectedCategories.length > 0) && (
-                      <span className="w-2 h-2 rounded-full bg-primary" />
+                      <span className="h-2 w-2 rounded-full bg-primary" />
                     )}
                   </Button>
                 </SheetTrigger>
@@ -451,10 +451,10 @@ const Search = memo(() => {
                   </SheetHeader>
                   <div className="mt-6 space-y-4">
                     <div className="flex items-center">
-                      <div className="flex items-center gap-2 w-full">
-                        <Gift className="w-4 h-4 text-primary" />
+                      <div className="flex w-full items-center gap-2">
+                        <Gift className="h-4 w-4 text-primary" />
                         <Label
-                          className={`text-foreground cursor-pointer ${showDLC ? "font-bold" : ""}`}
+                          className={`cursor-pointer text-foreground ${showDLC ? "font-bold" : ""}`}
                           onClick={() => setShowDLC(prev => !prev)}
                         >
                           {t("search.showDLC")}
@@ -462,10 +462,10 @@ const Search = memo(() => {
                       </div>
                     </div>
                     <div className="flex items-center">
-                      <div className="flex items-center gap-2 w-full">
-                        <Gamepad2 className="w-4 h-4 text-primary" />
+                      <div className="flex w-full items-center gap-2">
+                        <Gamepad2 className="h-4 w-4 text-primary" />
                         <Label
-                          className={`text-foreground cursor-pointer ${showOnline ? "font-bold" : ""}`}
+                          className={`cursor-pointer text-foreground ${showOnline ? "font-bold" : ""}`}
                           onClick={() => setShowOnline(prev => !prev)}
                         >
                           {t("search.showOnline")}
@@ -490,7 +490,7 @@ const Search = memo(() => {
                           <RadioGroupItem value="weight-desc" id="weight-desc" />
                           <Label
                             htmlFor="weight-desc"
-                            className="text-sm text-muted-foreground hover:text-foreground cursor-pointer"
+                            className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
                           >
                             {t("search.mostPopular")}
                           </Label>
@@ -499,7 +499,7 @@ const Search = memo(() => {
                           <RadioGroupItem value="weight-asc" id="weight-asc" />
                           <Label
                             htmlFor="weight-asc"
-                            className="text-sm text-muted-foreground hover:text-foreground cursor-pointer"
+                            className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
                           >
                             {t("search.leastPopular")}
                           </Label>
@@ -508,7 +508,7 @@ const Search = memo(() => {
                           <RadioGroupItem value="name-asc" id="name-asc" />
                           <Label
                             htmlFor="name-asc"
-                            className="text-sm text-muted-foreground hover:text-foreground cursor-pointer"
+                            className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
                           >
                             {t("search.alphabeticalAZ")}
                           </Label>
@@ -517,7 +517,7 @@ const Search = memo(() => {
                           <RadioGroupItem value="name-desc" id="name-desc" />
                           <Label
                             htmlFor="name-desc"
-                            className="text-sm text-muted-foreground hover:text-foreground cursor-pointer"
+                            className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
                           >
                             {t("search.alphabeticalZA")}
                           </Label>
@@ -541,24 +541,24 @@ const Search = memo(() => {
               </Sheet>
               {isRefreshing && (
                 <div className="flex items-center gap-2">
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <RefreshCw className="h-4 w-4 animate-spin" />
                 </div>
               )}
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {[...Array(8)].map((_, i) => (
                   <Card key={i} className="h-[300px] animate-pulse" />
                 ))}
               </div>
             ) : displayedGames.length === 0 ? (
-              <div className="text-center py-12">
+              <div className="py-12 text-center">
                 <p className="text-lg text-muted-foreground">{t("search.noResults")}</p>
               </div>
             ) : (
               <div className="relative">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                   {displayedGames.map(game => (
                     <GameCard
                       key={game.imgID || game.id || `${game.game}-${game.version}`}
@@ -569,10 +569,10 @@ const Search = memo(() => {
                 </div>
                 {hasMore && (
                   <div ref={loaderRef} className="flex justify-center py-8">
-                    <div className="space-x-2 flex items-center">
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                    <div className="flex items-center space-x-2">
+                      <div className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]"></div>
+                      <div className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]"></div>
+                      <div className="h-2 w-2 animate-bounce rounded-full bg-primary"></div>
                     </div>
                   </div>
                 )}
@@ -594,7 +594,7 @@ const Search = memo(() => {
               The search index is currently being updated. Search results may be
               incomplete or inconsistent during this time. Please try again later.
             </p>
-            <div className="flex justify-end mt-4">
+            <div className="mt-4 flex justify-end">
               <AlertDialogCancel className="text-muted-foreground">
                 Dismiss
               </AlertDialogCancel>

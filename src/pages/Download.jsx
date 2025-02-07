@@ -657,7 +657,7 @@ export default function DownloadPage() {
 
   if (!gameData) {
     return (
-      <div className="container max-w-7xl mx-auto p-6">
+      <div className="container mx-auto max-w-7xl p-6">
         <AlertDialog variant="destructive">
           <AlertDialogDescription>{t("download.noGameData")}</AlertDialogDescription>
         </AlertDialog>
@@ -685,12 +685,12 @@ export default function DownloadPage() {
 
   return (
     <div
-      className="container max-w-7xl mx-auto flex flex-col min-h-screen fade-in"
+      className="container mx-auto flex min-h-screen max-w-7xl flex-col fade-in"
       style={{ transform: "scale(0.95)", transformOrigin: "top center" }}
     >
       <div className="w-full max-w-6xl">
         <div
-          className="text-center text-muted-foreground font-bold"
+          className="text-center font-bold text-muted-foreground"
           style={{
             animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
           }}
@@ -698,16 +698,16 @@ export default function DownloadPage() {
           {t("download.pressEscToGoBack")}
         </div>
 
-        <div className="flex flex-col gap-4 mt-4">
+        <div className="mt-4 flex flex-col gap-4">
           {/* Game Header Section */}
           <div className="flex items-start gap-4">
             <img
               src={cachedImage || `https://api.ascendara.app/v2/image/${gameData.imgID}`}
               alt={gameData.game}
-              className="w-64 h-36 object-cover rounded-lg"
+              className="h-36 w-64 rounded-lg object-cover"
             />
             <div className="flex flex-col">
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">{gameData.game}</h1>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -773,7 +773,7 @@ export default function DownloadPage() {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
 
-                      <AlertDialogFooter className="gap-2 mt-4">
+                      <AlertDialogFooter className="mt-4 gap-2">
                         <AlertDialogCancel
                           onClick={() => {
                             setReportReason("");
@@ -804,8 +804,8 @@ export default function DownloadPage() {
 
               <div className="flex items-center gap-2">
                 {gameData.emulator && (
-                  <span className="text-sm bg-yellow-500/10 text-yellow-500 px-2 py-0.5 rounded flex items-center">
-                    <CircleSlash className="h-4 w-4 mr-1" />{" "}
+                  <span className="flex items-center rounded bg-yellow-500/10 px-2 py-0.5 text-sm text-yellow-500">
+                    <CircleSlash className="mr-1 h-4 w-4" />{" "}
                     {t("download.gameNeedsEmulator")}&nbsp;
                     <a
                       onClick={() =>
@@ -813,17 +813,17 @@ export default function DownloadPage() {
                           "https://ascendara.app/docs/troubleshooting/emulators"
                         )
                       }
-                      className="hover:underline cursor-pointer"
+                      className="cursor-pointer hover:underline"
                     >
                       {t("common.learnMore")}{" "}
-                      <ExternalLink className="inline-block mb-1 h-3 w-3" />
+                      <ExternalLink className="mb-1 inline-block h-3 w-3" />
                     </a>
                   </span>
                 )}
                 {gameData.category?.includes("Virtual Reality") && (
-                  <span className="text-sm bg-purple-500/10 text-foreground px-2 py-0.5 rounded flex items-center">
+                  <span className="flex items-center rounded bg-purple-500/10 px-2 py-0.5 text-sm text-foreground">
                     <svg
-                      className="text-foreground p-0.5"
+                      className="p-0.5 text-foreground"
                       width="20"
                       height="20"
                       viewBox="0 0 24 24"
@@ -852,9 +852,9 @@ export default function DownloadPage() {
                 )}
               </div>
 
-              <div className="flex items-center mt-4 gap-2 mb-2">
+              <div className="mb-2 mt-4 flex items-center gap-2">
                 {gameData.version && (
-                  <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded">
+                  <span className="rounded bg-primary/10 px-2 py-0.5 text-sm text-primary">
                     {gameData.version}
                   </span>
                 )}
@@ -862,7 +862,7 @@ export default function DownloadPage() {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span className="text-sm bg-green-500/10 text-green-500 px-2 py-0.5 rounded flex items-center gap-1">
+                        <span className="flex items-center gap-1 rounded bg-green-500/10 px-2 py-0.5 text-sm text-green-500">
                           {t("download.online")}
                           <InfoIcon className="h-4 w-4" />
                         </span>
@@ -877,7 +877,7 @@ export default function DownloadPage() {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span className="text-sm bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded flex items-center gap-1">
+                        <span className="flex items-center gap-1 rounded bg-blue-500/10 px-2 py-0.5 text-sm text-blue-500">
                           {t("download.allDlc")}
                           <InfoIcon className="h-4 w-4" />
                         </span>
@@ -897,7 +897,7 @@ export default function DownloadPage() {
 
           {/* DMCA Notice Banner */}
           <div
-            className="w-full p-3 bg-primary/10 rounded-lg border border-primary/20 cursor-pointer hover:bg-primary/15 transition-colors"
+            className="w-full cursor-pointer rounded-lg border border-primary/20 bg-primary/10 p-3 transition-colors hover:bg-primary/15"
             onClick={() => window.electron.openURL("https://ascendara.app/dmca")}
           >
             <div className="flex items-center justify-between">
@@ -905,7 +905,7 @@ export default function DownloadPage() {
                 <MessageSquareWarning className="h-5 w-5 text-primary" />
                 <span className="text-sm font-medium">{t("download.dmcaNotice")}</span>
               </div>
-              <span className="text-sm text-primary hover:underline flex items-center gap-1">
+              <span className="flex items-center gap-1 text-sm text-primary hover:underline">
                 {t("common.learnMore")} <ExternalLink size={16} />
               </span>
             </div>
@@ -915,15 +915,15 @@ export default function DownloadPage() {
 
           {/* Download Options Section */}
           {selectedProvider === "gofile" ? (
-            <div className="max-w-xl mx-auto">
+            <div className="mx-auto max-w-xl">
               <div className="flex flex-col items-center space-y-8 py-2">
-                <div className="w-full flex justify-between items-center">
-                  <h2 className="text-xl font-semibold flex items-center gap-2 grid">
+                <div className="flex w-full items-center justify-between">
+                  <h2 className="flex grid items-center gap-2 text-xl font-semibold">
                     <span className="flex items-center gap-1">
-                      Seamless <Zap className="w-5 h-5 text-primary" />
+                      Seamless <Zap className="h-5 w-5 text-primary" />
                     </span>
-                    <span className="flex items-center gap-1 text-muted-foreground text-sm">
-                      (GoFile <BadgeCheckIcon className="w-4 h-4" />)
+                    <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                      (GoFile <BadgeCheckIcon className="h-4 w-4" />)
                     </span>
                   </h2>
                   <Button
@@ -937,7 +937,7 @@ export default function DownloadPage() {
                   </Button>
                 </div>
 
-                <div className="text-center space-y-4 w-full max-w-md">
+                <div className="w-full max-w-md space-y-4 text-center">
                   <h3 className="text-2xl font-semibold">
                     {t("download.downloadOptions.gofileInstructions.thanks")}
                   </h3>
@@ -950,7 +950,7 @@ export default function DownloadPage() {
                   <Button
                     onClick={() => handleDownload()}
                     disabled={isStartingDownload || !gameData}
-                    className="w-full text-secondary h-12 text-lg"
+                    className="h-12 w-full text-lg text-secondary"
                   >
                     {isStartingDownload ? (
                       <>
@@ -969,7 +969,7 @@ export default function DownloadPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Left Column - Download Options */}
               <div className="space-y-6">
                 <div className="space-y-3">
@@ -989,7 +989,7 @@ export default function DownloadPage() {
                               placeholder={t("download.downloadOptions.selectProvider")}
                             />
                           </SelectTrigger>
-                          <SelectContent className="bg-background border-border">
+                          <SelectContent className="border-border bg-background">
                             {providers.map(provider => {
                               let displayName;
                               switch (provider.toLowerCase()) {
@@ -1050,9 +1050,9 @@ export default function DownloadPage() {
                       <div className="space-y-3">
                         <div>
                           <Label>{t("download.downloadOptions.downloadLink")}</Label>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="mt-1 flex items-center gap-2">
                             <div
-                              className="flex-1 bg-muted p-2 rounded-md text-sm flex items-center justify-between group cursor-pointer hover:bg-muted/80 transition-colors"
+                              className="group flex flex-1 cursor-pointer items-center justify-between rounded-md bg-muted p-2 text-sm transition-colors hover:bg-muted/80"
                               onClick={handleCopyLink}
                             >
                               <span>
@@ -1063,7 +1063,7 @@ export default function DownloadPage() {
                               {showCopySuccess ? (
                                 <CheckIcon className="h-4 w-4 text-green-500" />
                               ) : (
-                                <CopyIcon className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <CopyIcon className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
                               )}
                             </div>
                             <Button
@@ -1085,7 +1085,7 @@ export default function DownloadPage() {
                               className={!isValidLink ? "border-red-500" : ""}
                             />
                             {!isValidLink && (
-                              <p className="text-red-500 text-sm mt-1">
+                              <p className="mt-1 text-sm text-red-500">
                                 {t("download.downloadOptions.invalidLink")}{" "}
                                 {selectedProvider}
                               </p>
@@ -1115,7 +1115,7 @@ export default function DownloadPage() {
                         </div>
                         {!useAscendara && (
                           <p
-                            className="text-xs text-muted-foreground hover:underline cursor-pointer"
+                            className="cursor-pointer text-xs text-muted-foreground hover:underline"
                             onClick={() =>
                               window.electron.openURL("https://ascendara.app/extension")
                             }
@@ -1167,10 +1167,10 @@ export default function DownloadPage() {
               <div className="space-y-3">
                 {selectedProvider && selectedProvider !== "gofile" && (
                   <>
-                    <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+                    <div className="rounded-lg border-l-4 border-red-500 bg-red-50 p-4">
                       <div className="flex">
                         <div className="ml-3">
-                          <p className="text-lg font-bold text-red-700 inline-flex items-center gap-2">
+                          <p className="inline-flex items-center gap-2 text-lg font-bold text-red-700">
                             <TriangleAlert strokeWidth={2.3} className="text-red-400" />
                             {t("download.protectYourself.warningTitle")}
                           </p>
@@ -1183,7 +1183,7 @@ export default function DownloadPage() {
                                 "https://ascendara.app/protect-yourself"
                               )
                             }
-                            className="mt-2 inline-block flex items-center gap-1 text-sm text-red-700 hover:text-red-900 cursor-pointer hover:underline"
+                            className="mt-2 inline-block flex cursor-pointer items-center gap-1 text-sm text-red-700 hover:text-red-900 hover:underline"
                           >
                             {t("download.protectYourself.learnHow")}{" "}
                             <ExternalLink size={16} />
@@ -1199,8 +1199,8 @@ export default function DownloadPage() {
                 {selectedProvider ? (
                   <div>
                     {selectedProvider === "gofile" ? (
-                      <div className="flex flex-col items-center justify-center space-y-6 mt-8">
-                        <div className="text-center space-y-2 max-w-md">
+                      <div className="mt-8 flex flex-col items-center justify-center space-y-6">
+                        <div className="max-w-md space-y-2 text-center">
                           <h2 className="text-2xl font-semibold">
                             {t("download.downloadOptions.gofileInstructions.thanks")}
                           </h2>
@@ -1213,7 +1213,7 @@ export default function DownloadPage() {
                           <Button
                             onClick={() => handleDownload()}
                             disabled={isStartingDownload || !gameData}
-                            className="w-full text-secondary h-12 text-lg"
+                            className="h-12 w-full text-lg text-secondary"
                           >
                             {isStartingDownload ? (
                               <>
@@ -1233,7 +1233,7 @@ export default function DownloadPage() {
                     ) : (
                       <div>
                         {useAscendara ? (
-                          <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                          <ol className="list-inside list-decimal space-y-2 text-sm text-muted-foreground">
                             <li>
                               {t("download.downloadOptions.handlerInstructions.step1")}
                             </li>
@@ -1245,7 +1245,7 @@ export default function DownloadPage() {
                             </li>
                           </ol>
                         ) : (
-                          <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                          <ol className="list-inside list-decimal space-y-2 text-sm text-muted-foreground">
                             <li>
                               {t("download.downloadOptions.manualInstructions.step1")}
                             </li>

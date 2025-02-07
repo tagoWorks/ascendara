@@ -22,10 +22,10 @@ function Layout() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <MenuBar className="fixed top-0 left-0 right-0 z-50" />
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <MenuBar className="fixed left-0 right-0 top-0 z-50" />
       <div className="h-16" />
-      <main className="flex-1 pb-24 px-4 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto px-4 pb-24">
         <Outlet />
         {showTour && <Tour onClose={handleCloseTour} />}
       </main>

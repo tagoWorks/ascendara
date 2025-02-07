@@ -453,7 +453,7 @@ function Settings() {
   const getDependencyStatusInfo = useMemo(() => {
     if (!dependencyStatus) {
       return {
-        icon: <CircleAlert className="w-5 h-5 text-muted-foreground" />,
+        icon: <CircleAlert className="h-5 w-5 text-muted-foreground" />,
         text: t("settings.checkingDependencies"),
         color: "text-muted-foreground",
       };
@@ -464,19 +464,19 @@ function Settings() {
 
     if (installedCount === totalCount) {
       return {
-        icon: <CircleCheck className="w-5 h-5 text-green-500" />,
+        icon: <CircleCheck className="h-5 w-5 text-green-500" />,
         text: t("settings.allDependenciesInstalled"),
         color: "text-green-500",
       };
     } else if (installedCount === 0) {
       return {
-        icon: <AlertCircle className="w-5 h-5 text-red-500" />,
+        icon: <AlertCircle className="h-5 w-5 text-red-500" />,
         text: t("settings.noDependenciesInstalled"),
         color: "text-red-500",
       };
     } else {
       return {
-        icon: <AlertCircle className="w-5 h-5 text-yellow-500" />,
+        icon: <AlertCircle className="h-5 w-5 text-yellow-500" />,
         text: t("settings.someDependenciesMissing", {
           installed: installedCount,
           total: totalCount,
@@ -489,9 +489,9 @@ function Settings() {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="space-y-4 text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           <p className="text-muted-foreground">Loading settings...</p>
         </div>
       </div>
@@ -500,25 +500,25 @@ function Settings() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-7xl mx-auto p-4 md:p-8">
-        <div className="flex items-center gap-4 mb-6">
+      <div className="container mx-auto max-w-7xl p-4 md:p-8">
+        <div className="mb-6 flex items-center gap-4">
           <h1 className="text-3xl font-bold text-primary">{t("settings.title")}</h1>
           <Separator orientation="vertical" className="h-8" />
           <p className="text-muted-foreground">{t("settings.configure")}</p>
           <div
             onClick={() => window.electron.openURL("https://ascendara.app/changelog")}
-            className="ml-auto flex items-center gap-2 text-sm text-muted-foreground cursor-pointer"
+            className="ml-auto flex cursor-pointer items-center gap-2 text-sm text-muted-foreground"
           >
             <span>Version {version}</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           {/* Left Column - Core Settings */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="space-y-6 lg:col-span-8">
             {/* General Settings Card */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 text-primary">
+              <h2 className="mb-4 text-xl font-semibold text-primary">
                 {t("settings.general")}
               </h2>
               <div className="space-y-6">
@@ -574,7 +574,7 @@ function Settings() {
 
                   <div>
                     {isDownloaderRunning && (
-                      <div className="mt-2 mb-4 flex items-center gap-2 text-red-600 dark:text-red-500 p-2 rounded-md border border-red-400 bg-red-50">
+                      <div className="mb-4 mt-2 flex items-center gap-2 rounded-md border border-red-400 bg-red-50 p-2 text-red-600 dark:text-red-500">
                         <CircleAlert size={14} />
                         <p className="text-sm">
                           {t("settings.downloaderRunningWarning")}
@@ -595,7 +595,7 @@ function Settings() {
                         </p>
                       </div>
                     )}
-                    <div className="flex gap-2 mt-2">
+                    <div className="mt-2 flex gap-2">
                       <Input
                         id="downloadPath"
                         disabled={isDownloaderRunning}
@@ -678,7 +678,7 @@ function Settings() {
                           }}
                           className="mt-1"
                         />
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           {t("settings.customThreadCountDesc")}
                         </p>
                       </div>
@@ -701,26 +701,26 @@ function Settings() {
 
             {/* Game Sources Card */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 text-primary">
+              <h2 className="mb-4 text-xl font-semibold text-primary">
                 {t("settings.gameSources")}
               </h2>
-              <p className="text-sm text-muted-foreground mb-6">
+              <p className="mb-6 text-sm text-muted-foreground">
                 {t("settings.gameSourcesDescription")}
               </p>
 
               <div className="space-y-6">
                 {/* Source Status Section */}
                 <div>
-                  <h3 className="text-sm font-medium mb-3">
+                  <h3 className="mb-3 text-sm font-medium">
                     {t("settings.sourceStatus")}
                   </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <p className="mb-4 text-sm text-muted-foreground">
                     {t("settings.sourceStatusDescription")}
                   </p>
 
                   <div className="space-y-4">
                     {/* SteamRip Status */}
-                    <div className="flex items-center justify-between p-4 rounded-lg border">
+                    <div className="flex items-center justify-between rounded-lg border p-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <Label className="font-medium">SteamRip</Label>
@@ -744,7 +744,7 @@ function Settings() {
                           }
                         >
                           {t("common.learnMore")}{" "}
-                          <ExternalLink className="inline-block ml-1 h-3 w-3" />
+                          <ExternalLink className="ml-1 inline-block h-3 w-3" />
                         </Button>
                       </div>
                     </div>
@@ -755,7 +755,7 @@ function Settings() {
 
                 {/* Source Information */}
                 <div>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-sm font-medium">{t("settings.sourceInfo")}</h3>
                     <Button
                       variant="outline"
@@ -765,7 +765,7 @@ function Settings() {
                       className="flex items-center gap-2"
                     >
                       <RefreshCw
-                        className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+                        className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
                       />
                       {isRefreshing
                         ? t("search.refreshingIndex")
@@ -794,7 +794,7 @@ function Settings() {
 
             {/* Theme Settings Card */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 text-primary">
+              <h2 className="mb-4 text-xl font-semibold text-primary">
                 {t("settings.theme")}
               </h2>
               <div className="space-y-6">
@@ -836,12 +836,12 @@ function Settings() {
           </div>
 
           {/* Right Column - Additional Settings */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="space-y-6 lg:col-span-4">
             {/* Analytics Card */}
             <Card className="p-6">
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-xl font-semibold mb-4 text-primary">
+                  <h2 className="mb-4 text-xl font-semibold text-primary">
                     {t("settings.ascendaraAnalytics")}
                   </h2>
                   <div className="space-y-4">
@@ -851,13 +851,13 @@ function Settings() {
                         <p className="text-sm text-muted-foreground">
                           {t("settings.ascendaraAnalyticsDescription")}{" "}
                           <a
-                            className="text-primary cursor-pointer hover:underline"
+                            className="cursor-pointer text-primary hover:underline"
                             onClick={() =>
                               window.electron.openURL("https://ascendara.app/analytics")
                             }
                           >
                             {t("common.learnMore")}{" "}
-                            <ExternalLink className="inline-block mb-1 h-3 w-3" />
+                            <ExternalLink className="mb-1 inline-block h-3 w-3" />
                           </a>
                         </p>
                       </div>
@@ -875,13 +875,13 @@ function Settings() {
 
             {/* Language Settings Card */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 text-primary">
+              <h2 className="mb-4 text-xl font-semibold text-primary">
                 {t("settings.languageSettings")}
               </h2>
               <div className="space-y-6">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <Languages className="w-5 h-5 text-primary" />
+                    <Languages className="h-5 w-5 text-primary" />
                     <p className="text-sm text-muted-foreground">
                       {t("settings.languageSettingsDescription")}
                     </p>
@@ -919,7 +919,7 @@ function Settings() {
 
             {/* Install Game Dependencies Card */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 text-primary">
+              <h2 className="mb-4 text-xl font-semibold text-primary">
                 {t("settings.installGameDependencies")}
               </h2>
               <div className="space-y-2">
@@ -938,7 +938,7 @@ function Settings() {
                   <div className="flex items-center justify-between">
                     <Button
                       onClick={() => navigate("/dependencies")}
-                      className="text-secondary w-full flex items-center gap-2"
+                      className="flex w-full items-center gap-2 text-secondary"
                     >
                       {t("settings.manageDependencies")}
                     </Button>
@@ -952,7 +952,7 @@ function Settings() {
               <Card className="p-6">
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-semibold mb-4 text-primary flex items-center gap-2">
+                    <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-primary">
                       <CircleAlert size={20} />
                       Developer Tools
                     </h2>
@@ -1012,24 +1012,24 @@ function Settings() {
             )}
 
             {/* Notice Card */}
-            <Card className="p-6 border-yellow-500/50 bg-yellow-500/5">
+            <Card className="border-yellow-500/50 bg-yellow-500/5 p-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-3 text-yellow-500">
-                  <Hand className="w-5 h-5 scale-x-[-1]" />
-                  <h2 className="text-lg font-semibold mb-0">
+                  <Hand className="h-5 w-5 scale-x-[-1]" />
+                  <h2 className="mb-0 text-lg font-semibold">
                     {t("settings.warningTitle")}
                   </h2>
                 </div>
 
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm leading-relaxed text-muted-foreground">
                   {t("settings.warningDescription")}
                 </p>
 
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm leading-relaxed text-muted-foreground">
                   {t("settings.warningSupportDevelopers")}
                 </p>
 
-                <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
+                <div className="flex items-center gap-2 pt-2 text-sm text-muted-foreground">
                   <span>{t("settings.warningSupportDevelopersCallToAction")}</span>
                 </div>
               </div>
@@ -1069,12 +1069,11 @@ function ThemeButton({ theme, currentTheme, onSelect }) {
       </div>
 
       <div
-        className={`absolute bottom-0 left-0 right-0 p-3 
-        ${colors.bg} bg-opacity-80 backdrop-blur-sm`}
+        className={`absolute bottom-0 left-0 right-0 p-3 ${colors.bg} bg-opacity-80 backdrop-blur-sm`}
       >
         <div className="flex items-center justify-between">
           <span className={`font-medium ${colors.text}`}>{theme.name}</span>
-          <div className={`w-3 h-3 rounded-full ${colors.primary}`} />
+          <div className={`h-3 w-3 rounded-full ${colors.primary}`} />
         </div>
       </div>
     </button>

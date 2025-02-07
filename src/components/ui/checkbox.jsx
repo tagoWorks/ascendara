@@ -24,10 +24,10 @@ const Checkbox = forwardRef(
           }
         }}
         className={cn(
-          "relative h-5 w-5 rounded-md cursor-pointer select-none",
+          "relative h-5 w-5 cursor-pointer select-none rounded-md",
           "border-2 transition-colors duration-200",
           checked ? "border-primary bg-primary/10" : "border-primary/40 bg-transparent",
-          disabled && "opacity-50 cursor-not-allowed",
+          disabled && "cursor-not-allowed opacity-50",
           className
         )}
         {...props}

@@ -109,13 +109,13 @@ const UserSettingsDialog = () => {
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="w-9 h-9">
+        <Button variant="ghost" size="icon" className="h-9 w-9">
           <Pencil className="h-4 w-4" />
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent className="sm:max-w-[425px]">
         <AlertDialogHeader>
-          <div className="fixed items-center justify-center top-4 right-4">
+          <div className="fixed right-4 top-4 items-center justify-center">
             <X
               className="h-5 w-5 cursor-pointer text-foreground"
               onClick={() => setIsOpen(false)}
@@ -132,10 +132,10 @@ const UserSettingsDialog = () => {
                   "https://ascendara.app/docs/features/overview#username-customization"
                 )
               }
-              className="text-sm text-muted-foreground hover:text-primary cursor-pointer"
+              className="cursor-pointer text-sm text-muted-foreground hover:text-primary"
             >
               {t("common.learnMore")}{" "}
-              <ExternalLink className="inline-block mb-1 h-3 w-3" />
+              <ExternalLink className="mb-1 inline-block h-3 w-3" />
             </a>
           </AlertDialogDescription>
         </AlertDialogHeader>

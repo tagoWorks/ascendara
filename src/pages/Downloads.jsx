@@ -154,9 +154,9 @@ const Downloads = () => {
   };
 
   return (
-    <div className="container max-w-7xl mx-auto p-4 md:p-8 min-h-screen">
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-4 mb-6">
+    <div className="container mx-auto min-h-screen max-w-7xl p-4 md:p-8">
+      <div className="mb-8 flex items-center justify-between">
+        <div className="mb-6 flex items-center gap-4">
           <h1 className="text-3xl font-bold text-primary">
             {t("downloads.activeDownloads")}
           </h1>
@@ -196,9 +196,9 @@ const Downloads = () => {
         {downloadingGames.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
-              <Download className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">{t("downloads.noDownloads")}</h3>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              <Download className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+              <h3 className="mb-2 text-lg font-medium">{t("downloads.noDownloads")}</h3>
+              <p className="mx-auto max-w-md text-sm text-muted-foreground">
                 {t("downloads.noDownloadsMessage")}
               </p>
             </CardContent>
@@ -380,7 +380,7 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
   }, [hasError, wasReported]);
 
   return (
-    <Card className="w-full mb-4">
+    <Card className="mb-4 w-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="space-y-1">
           <h3 className="font-semibold leading-none">{game.game}</h3>
@@ -427,11 +427,11 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
 
       <CardContent>
         {hasError ? (
-          <div className="space-y-4 p-4 bg-destructive/5 rounded-lg border border-destructive/20">
+          <div className="bg-destructive/5 border-destructive/20 space-y-4 rounded-lg border p-4">
             <div className="flex items-start space-x-3">
-              <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-              <div className="space-y-2 flex-1">
-                <div className="font-medium text-destructive">
+              <AlertCircle className="text-destructive mt-0.5 h-5 w-5 flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="text-destructive font-medium">
                   {t("downloads.downloadError")}
                 </div>
                 {(downloadingData.message === "content_type_error" && (
@@ -444,10 +444,10 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                           "https://ascendara.app/docs/troubleshooting/common-issues#download-issues"
                         )
                       }
-                      className="text-primary cursor-pointer hover:underline"
+                      className="cursor-pointer text-primary hover:underline"
                     >
                       {t("common.learnMore")}{" "}
-                      <ExternalLink className="inline-block mb-1 h-3 w-3" />
+                      <ExternalLink className="mb-1 inline-block h-3 w-3" />
                     </a>
                   </p>
                 )) ||
@@ -461,10 +461,10 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                             "https://ascendara.app/docs/troubleshooting/common-issues#download-issues"
                           )
                         }
-                        className="text-primary cursor-pointer hover:underline"
+                        className="cursor-pointer text-primary hover:underline"
                       >
                         {t("common.learnMore")}{" "}
-                        <ExternalLink className="inline-block mb-1 h-3 w-3" />
+                        <ExternalLink className="mb-1 inline-block h-3 w-3" />
                       </a>
                     </p>
                   )) || (
@@ -510,7 +510,7 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                     {t("common.retry")}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="mt-2 text-xs text-muted-foreground">
                   {t("downloads.errorHelp")}
                 </p>
               </div>
@@ -519,7 +519,7 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
         ) : (
           <>
             {isDownloading && (
-              <div className="space-y-2 ">
+              <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-muted-foreground">
                     {downloadingData.progressCompleted}%
@@ -539,11 +539,11 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
               </div>
             )}
             {(isExtracting || isUpdating) && (
-              <div className="space-y-2 mt-2">
+              <div className="mt-2 space-y-2">
                 <div className="relative overflow-hidden rounded-full">
                   <Progress value={undefined} className="bg-muted/30" />
                   <div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent rounded-full"
+                    className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-primary/20 to-transparent"
                     style={{
                       animation: "shimmer 3s infinite ease-in-out",
                       backgroundSize: "200% 100%",
@@ -552,8 +552,8 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                     }}
                   />
                 </div>
-                <div className="flex flex-col items-center justify-center text-sm text-muted-foreground mt-1">
-                  <span className="text-lg font-semibold flex items-center gap-2">
+                <div className="mt-1 flex flex-col items-center justify-center text-sm text-muted-foreground">
+                  <span className="flex items-center gap-2 text-lg font-semibold">
                     <Loader className="h-4 w-4 animate-spin" />
                     {isExtracting ? t("downloads.extracting") : t("downloads.updating")}
                   </span>

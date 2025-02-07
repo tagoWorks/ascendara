@@ -556,8 +556,8 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <div className="max-w-md w-full space-y-4 text-center">
+        <div className="flex min-h-screen items-center justify-center bg-background p-4">
+          <div className="w-full max-w-md space-y-4 text-center">
             <h2 className="text-2xl font-bold text-primary">
               {i18n.t("app.crashScreen.title")}
             </h2>
@@ -566,7 +566,7 @@ class ErrorBoundary extends React.Component {
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 text-secondary-foreground"
+              className="text-primary-foreground text-secondary-foreground inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
             >
               {i18n.t("app.crashScreen.reload")}
             </button>
@@ -585,7 +585,7 @@ function ToasterWithTheme() {
   return (
     <Toaster
       position="top-right"
-      className="!bg-card !text-card-foreground !border-border"
+      className="!border-border !bg-card !text-card-foreground"
       toastOptions={{
         style: {
           background: "rgb(var(--color-card))",

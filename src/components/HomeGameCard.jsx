@@ -60,7 +60,7 @@ const HomeGameCard = memo(({ game }) => {
   return (
     <Card
       ref={cardRef}
-      className="overflow-hidden group hover:shadow-xl transition-all duration-300 animate-in fade-in-50 cursor-pointer relative rounded-xl"
+      className="group relative cursor-pointer overflow-hidden rounded-xl transition-all duration-300 animate-in fade-in-50 hover:shadow-xl"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
@@ -68,21 +68,21 @@ const HomeGameCard = memo(({ game }) => {
       <CardContent className="p-0">
         <AspectRatio ratio={16 / 9}>
           {loading ? (
-            <Skeleton className="w-full h-full bg-muted" />
+            <Skeleton className="h-full w-full bg-muted" />
           ) : (
-            <div className="relative w-full h-full">
+            <div className="relative h-full w-full">
               {cachedImage ? (
                 <img
                   src={cachedImage}
                   alt={sanitizeText(game.title || game.game)}
-                  className={`w-full h-full object-cover transition-transform duration-300 ${
+                  className={`h-full w-full object-cover transition-transform duration-300 ${
                     isHovered ? "scale-110" : "scale-100"
                   }`}
                 />
               ) : (
-                <div className="w-full h-full bg-muted flex items-center justify-center">
+                <div className="flex h-full w-full items-center justify-center bg-muted">
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                    <ImageOff className="w-8 h-8" />
+                    <ImageOff className="h-8 w-8" />
                     <span className="text-sm">Unable to Load</span>
                   </div>
                 </div>
@@ -93,28 +93,28 @@ const HomeGameCard = memo(({ game }) => {
                 }`}
               >
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="mb-2 flex items-center gap-2">
                     {isDLC && (
                       <Badge
                         variant="outline"
-                        className="bg-black/50 text-white border-primary/50 hover:bg-black/70"
+                        className="border-primary/50 bg-black/50 text-white hover:bg-black/70"
                       >
-                        <Gift className="w-3 h-3 mr-1 text-primary" />
+                        <Gift className="mr-1 h-3 w-3 text-primary" />
                         {t("download.allDlc")}
                       </Badge>
                     )}
                     {isOnline && (
                       <Badge
                         variant="outline"
-                        className="bg-black/50 text-white border-primary/50 hover:bg-black/70"
+                        className="border-primary/50 bg-black/50 text-white hover:bg-black/70"
                       >
-                        <Globe className="w-3 h-3 mr-1 text-primary" />
+                        <Globe className="mr-1 h-3 w-3 text-primary" />
                         {t("download.online")}
                       </Badge>
                     )}
                   </div>
                   <h3
-                    className={`text-lg font-semibold text-white line-clamp-2 transition-transform duration-300 ${
+                    className={`line-clamp-2 text-lg font-semibold text-white transition-transform duration-300 ${
                       isHovered ? "translate-x-2" : "translate-x-0"
                     }`}
                   >

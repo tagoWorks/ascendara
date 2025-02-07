@@ -116,15 +116,15 @@ const Navigation = memo(({ items }) => {
   }, []);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-6 z-40 pointer-events-none select-none">
-      <div className="max-w-xl mx-auto nav-container relative" style={navStyle}>
-        <div className="bg-background/80 backdrop-blur-lg rounded-2xl border border-border shadow-lg p-3 flex items-center justify-center gap-2 pointer-events-auto relative">
+    <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-40 select-none p-6">
+      <div className="nav-container relative mx-auto max-w-xl" style={navStyle}>
+        <div className="pointer-events-auto relative flex items-center justify-center gap-2 rounded-2xl border border-border bg-background/80 p-3 shadow-lg backdrop-blur-lg">
           <div
-            className="absolute -top-2 -left-2 w-4 h-4 cursor-nw-resize pointer-events-auto"
+            className="pointer-events-auto absolute -left-2 -top-2 h-4 w-4 cursor-nw-resize"
             onMouseDown={e => handleMouseDown(e, true)}
           />
           <div
-            className="absolute -top-2 -right-2 w-4 h-4 cursor-ne-resize pointer-events-auto"
+            className="pointer-events-auto absolute -right-2 -top-2 h-4 w-4 cursor-ne-resize"
             onMouseDown={e => handleMouseDown(e, false)}
           />
 
@@ -134,35 +134,28 @@ const Navigation = memo(({ items }) => {
                 to={item.path}
                 onMouseEnter={() => handleMouseEnter(item)}
                 onMouseLeave={handleMouseLeave}
-                className={`relative group flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300
-                  ${
-                    isActive(item.path)
-                      ? "bg-primary text-background scale-110 z-10"
-                      : "hover:bg-secondary text-muted-foreground hover:text-foreground"
-                  }
-                  ${hoveredItem === item.path ? "scale-110 z-10" : "scale-100 z-0"}
-                `}
+                className={`group relative flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300 ${
+                  isActive(item.path)
+                    ? "z-10 scale-110 bg-primary text-background"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                } ${hoveredItem === item.path ? "z-10 scale-110" : "z-0 scale-100"} `}
               >
                 <div
-                  className={`absolute inset-0 rounded-xl bg-gradient-to-br ${item.color} opacity-0 
-                  ${isActive(item.path) || hoveredItem === item.path ? "opacity-100" : ""}
-                  transition-opacity duration-300`}
+                  className={`absolute inset-0 rounded-xl bg-gradient-to-br ${item.color} opacity-0 ${isActive(item.path) || hoveredItem === item.path ? "opacity-100" : ""} transition-opacity duration-300`}
                 />
-                <item.icon className="w-5 h-5 relative z-10" />
+                <item.icon className="relative z-10 h-5 w-5" />
                 <div
-                  className={`absolute -top-10 bg-background/95 border border-border rounded-lg px-3 py-1.5 
-                  text-sm font-medium whitespace-nowrap transform transition-all duration-300 text-foreground
-                  ${
+                  className={`absolute -top-10 transform whitespace-nowrap rounded-lg border border-border bg-background/95 px-3 py-1.5 text-sm font-medium text-foreground transition-all duration-300 ${
                     hoveredItem === item.path
-                      ? "opacity-100 translate-y-0"
-                      : "opacity-0 translate-y-2 pointer-events-none"
+                      ? "translate-y-0 opacity-100"
+                      : "pointer-events-none translate-y-2 opacity-0"
                   }`}
                 >
                   {item.label}
-                  <ChevronRight className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 rotate-90 w-4 h-4 text-border" />
+                  <ChevronRight className="absolute -bottom-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-90 transform text-border" />
                 </div>
               </Link>
-              {index === 3 && <div className="w-px h-8 bg-border/50" />}
+              {index === 3 && <div className="h-8 w-px bg-border/50" />}
             </React.Fragment>
           ))}
         </div>

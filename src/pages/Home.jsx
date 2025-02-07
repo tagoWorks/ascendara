@@ -473,7 +473,7 @@ const Home = memo(() => {
 
   return loading ? (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-7xl mx-auto p-4 md:p-8">
+      <div className="container mx-auto max-w-7xl p-4 md:p-8">
         <div className="space-y-12">
           <Skeleton className="h-96 w-full rounded-2xl" />
           <Skeleton className="h-48 w-full" />
@@ -483,11 +483,11 @@ const Home = memo(() => {
     </div>
   ) : (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-7xl mx-auto p-4 md:p-8">
+      <div className="container mx-auto max-w-7xl p-4 md:p-8">
         {showTour && <Tour onClose={handleCloseTour} />}
 
         <div className="space-y-12">
-          <div className="relative group">
+          <div className="group relative">
             <div className="overflow-hidden rounded-2xl shadow-lg">
               <div
                 className={`flex transition-transform duration-500 ${isDragging ? "transition-none" : ""}`}
@@ -511,12 +511,12 @@ const Home = memo(() => {
                   >
                     <div className="relative aspect-[21/9]">
                       {!carouselImages[game.imgID] ? (
-                        <Skeleton className="absolute inset-0 w-full h-full bg-muted animate-pulse" />
+                        <Skeleton className="absolute inset-0 h-full w-full animate-pulse bg-muted" />
                       ) : (
                         <img
                           src={carouselImages[game.imgID]}
                           alt={game.game}
-                          className="w-full h-full object-cover"
+                          className="h-full w-full object-cover"
                           draggable="false"
                           loading={
                             index === currentSlide ||
@@ -526,19 +526,19 @@ const Home = memo(() => {
                           }
                         />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none">
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
                         <div className="absolute bottom-0 left-0 right-0 p-6">
-                          <div className="flex items-center gap-2 text-white/80 mb-2">
+                          <div className="mb-2 flex items-center gap-2 text-white/80">
                             {game.category?.slice(0, 3).map((cat, idx) => (
                               <span
                                 key={cat + idx}
-                                className="px-2 py-1 text-xs rounded-full bg-white/10"
+                                className="rounded-full bg-white/10 px-2 py-1 text-xs"
                               >
                                 {cat}
                               </span>
                             ))}
                           </div>
-                          <h2 className="text-2xl font-bold text-white mb-2">
+                          <h2 className="mb-2 text-2xl font-bold text-white">
                             {game.game}
                           </h2>
                         </div>
@@ -549,13 +549,13 @@ const Home = memo(() => {
               </div>
             </div>
 
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
               {carouselGames.map((_, index) => (
                 <button
                   key={index}
-                  className={`w-2 h-2 rounded-full transition-all ${
+                  className={`h-2 w-2 rounded-full transition-all ${
                     index === currentSlide
-                      ? "bg-white w-4"
+                      ? "w-4 bg-white"
                       : "bg-white/50 hover:bg-white/70"
                   }`}
                   onClick={() => {
@@ -568,27 +568,27 @@ const Home = memo(() => {
 
             <button
               onClick={handlePrevSlide}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 z-10"
+              className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
               aria-label="Previous slide"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="h-6 w-6" />
             </button>
             <button
               onClick={handleNextSlide}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 z-10"
+              className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
               aria-label="Next slide"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="h-6 w-6" />
             </button>
           </div>
 
           {recentGames.length > 0 && (
             <section className="space-y-8">
-              <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <Clock className="w-6 h-6 text-primary" />
+              <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+                <Clock className="h-6 w-6 text-primary" />
                 {t("home.recentGames")}
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {recentGames.map((game, index) => (
                   <RecentGameCard
                     key={`recent-${game.game}-${index}`}
@@ -601,18 +601,18 @@ const Home = memo(() => {
           )}
 
           <section className="space-y-8">
-            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Sword className="w-6 h-6 text-primary" />
+            <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+              <Sword className="h-6 w-6 text-primary" />
               {t("home.topGames")}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {loading
                 ? Array(4)
                     .fill(0)
                     .map((_, i) => (
                       <div key={i} className="animate-pulse">
                         <AspectRatio ratio={16 / 9}>
-                          <Skeleton className="w-full h-full" />
+                          <Skeleton className="h-full w-full" />
                         </AspectRatio>
                       </div>
                     ))
@@ -621,11 +621,11 @@ const Home = memo(() => {
           </section>
 
           <section className="space-y-8">
-            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Globe className="w-6 h-6 text-primary" />
+            <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+              <Globe className="h-6 w-6 text-primary" />
               {t("home.onlineGames")}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {onlineGames.map(game => (
                 <HomeGameCard key={game.game} game={game} />
               ))}
@@ -633,11 +633,11 @@ const Home = memo(() => {
           </section>
 
           <section className="space-y-8">
-            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Flame className="w-6 h-6 text-primary" />
+            <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+              <Flame className="h-6 w-6 text-primary" />
               {t("home.actionGames")}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {actionGames.map(game => (
                 <HomeGameCard key={game.game} game={game} />
               ))}
@@ -645,15 +645,15 @@ const Home = memo(() => {
           </section>
 
           <section className="space-y-8">
-            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Flame className="w-6 h-6 text-primary" />
+            <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+              <Flame className="h-6 w-6 text-primary" />
               {t("home.popularCategories")}
             </h2>
             <div className="space-y-8">
               {Object.keys(popularCategories).map((category, index) => (
                 <div key={category} className="space-y-4">
                   <h3 className="text-xl font-semibold text-foreground">{category}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 h-full">
+                  <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                     {popularCategories[category].map((game, index) => (
                       <HomeGameCard key={`${category}-${game.id || index}`} game={game} />
                     ))}
@@ -663,7 +663,7 @@ const Home = memo(() => {
             </div>
           </section>
 
-          <div className="text-center text-muted-foreground/50 py-8">
+          <div className="py-8 text-center text-muted-foreground/50">
             <p className="text-sm">{t("home.footerNote")}</p>
           </div>
         </div>

@@ -219,7 +219,7 @@ function Tour({ onClose }) {
 
   return (
     <div className="fixed inset-0 z-[200]">
-      <div className="absolute inset-0 bg-black/40 pointer-events-auto z-[201]" />
+      <div className="pointer-events-auto absolute inset-0 z-[201] bg-black/40" />
 
       {/* Spotlight */}
       <AnimatePresence mode="wait">
@@ -244,7 +244,7 @@ function Tour({ onClose }) {
                 duration: 0.3,
               }}
               exit={{ opacity: 0 }}
-              className="absolute pointer-events-none will-change-transform z-[202]"
+              className="pointer-events-none absolute z-[202] will-change-transform"
               style={{
                 boxShadow:
                   "0 0 0 9999px rgba(0, 0, 0, 0.65), inset 0 0 0 9999px rgba(255, 255, 255, 0.1)",
@@ -282,17 +282,17 @@ function Tour({ onClose }) {
                   transform: "translateZ(0)",
                   WebkitTransform: "translateZ(0)",
                 }}
-                className="absolute pointer-events-none will-change-transform z-[203]"
+                className="pointer-events-none absolute z-[203] will-change-transform"
               >
                 <div
-                  className="absolute top-0 left-0 w-10 h-10 bg-white rounded-lg"
+                  className="absolute left-0 top-0 h-10 w-10 rounded-lg bg-white"
                   style={{
                     transform: `translate(-${navScale * 20}px, -${navScale * 20}px)`,
                     transition: "transform 100ms ease",
                   }}
                 />
                 <div
-                  className="absolute top-0 right-0 w-10 h-10 bg-white rounded-lg"
+                  className="absolute right-0 top-0 h-10 w-10 rounded-lg bg-white"
                   style={{
                     transform: `translate(${navScale * 20}px, -${navScale * 20}px)`,
                     transition: "transform 100ms ease",
@@ -305,31 +305,31 @@ function Tour({ onClose }) {
       </AnimatePresence>
 
       {/* Content */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto z-[203]">
+      <div className="pointer-events-auto absolute left-1/2 top-1/2 z-[203] -translate-x-1/2 -translate-y-1/2">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-background border border-border rounded-xl p-6 shadow-lg max-w-md"
+          className="max-w-md rounded-xl border border-border bg-background p-6 shadow-lg"
         >
-          <h2 className="text-xl font-bold mb-2">{steps[currentStep].title}</h2>
+          <h2 className="mb-2 text-xl font-bold">{steps[currentStep].title}</h2>
           <p
-            className="text-muted-foreground mb-4 pointer-events-auto"
+            className="pointer-events-auto mb-4 text-muted-foreground"
             dangerouslySetInnerHTML={{ __html: steps[currentStep].content }}
           />
 
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <button
               onClick={prevStep}
               className={`flex items-center gap-1 ${currentStep === 0 ? "invisible" : ""}`}
             >
-              <ChevronLeft className="w-4 h-4" /> {t("common.prev")}
+              <ChevronLeft className="h-4 w-4" /> {t("common.prev")}
             </button>
             <button onClick={nextStep} className="flex items-center gap-1 text-primary">
               {currentStep === steps.length - 1 ? t("common.finish") : t("common.next")}
               {currentStep === steps.length - 1 ? (
-                <Rocket className="w-4 h-4 ml-2" />
+                <Rocket className="ml-2 h-4 w-4" />
               ) : (
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="h-4 w-4" />
               )}
             </button>
           </div>

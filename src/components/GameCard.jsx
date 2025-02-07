@@ -68,15 +68,15 @@ const GameCard = memo(function GameCard({ game, compact }) {
 
   if (compact) {
     return (
-      <div className="flex gap-4 hover:bg-secondary/50 p-2 rounded-lg transition-colors cursor-pointer">
+      <div className="flex cursor-pointer gap-4 rounded-lg p-2 transition-colors hover:bg-secondary/50">
         <img
           src={cachedImage || game.banner || game.image}
           alt={game.title || game.game}
-          className="w-[120px] h-[68px] object-cover rounded-lg"
+          className="h-[68px] w-[120px] rounded-lg object-cover"
         />
         <div>
           <h3 className="font-medium text-foreground">{sanitizeText(game.game)}</h3>
-          <div className="flex flex-wrap gap-1 mt-1">
+          <div className="mt-1 flex flex-wrap gap-1">
             {categories.map(cat => (
               <span key={cat} className="text-xs text-muted-foreground">
                 {cat}
@@ -89,48 +89,48 @@ const GameCard = memo(function GameCard({ game, compact }) {
   }
 
   return (
-    <Card className="overflow-hidden group hover:shadow-lg transition-all duration-300 animate-in fade-in-50 bg-card text-card-foreground flex flex-col min-h-[400px]">
-      <CardContent className="p-0 flex-1">
+    <Card className="group flex min-h-[400px] flex-col overflow-hidden bg-card text-card-foreground transition-all duration-300 animate-in fade-in-50 hover:shadow-lg">
+      <CardContent className="flex-1 p-0">
         <div className="relative">
           <AspectRatio ratio={16 / 9}>
-            {loading && <Skeleton className="absolute inset-0 w-full h-full bg-muted" />}
+            {loading && <Skeleton className="absolute inset-0 h-full w-full bg-muted" />}
             {cachedImage && (
               <img
                 src={cachedImage}
                 alt={game.game}
-                className={`w-full h-full object-cover transition-opacity duration-300 ${
+                className={`h-full w-full object-cover transition-opacity duration-300 ${
                   loading ? "opacity-0" : "opacity-100"
                 }`}
               />
             )}
           </AspectRatio>
-          <div className="absolute top-2 right-2 flex gap-2">
+          <div className="absolute right-2 top-2 flex gap-2">
             {game.dlc && (
-              <div className="px-2.5 py-1.5 rounded-md bg-background/95 backdrop-blur-sm border border-border/50 shadow-sm flex items-center gap-1.5">
-                <Gift className="w-3.5 h-3.5 text-primary" />
+              <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-background/95 px-2.5 py-1.5 shadow-sm backdrop-blur-sm">
+                <Gift className="h-3.5 w-3.5 text-primary" />
                 <span className="text-xs font-medium">{t("gameCard.dlc")}</span>
               </div>
             )}
             {game.online && (
-              <div className="px-2.5 py-1.5 rounded-md bg-background/95 backdrop-blur-sm border border-border/50 shadow-sm flex items-center gap-1.5">
-                <Gamepad2 className="w-3.5 h-3.5 text-primary" />
+              <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-background/95 px-2.5 py-1.5 shadow-sm backdrop-blur-sm">
+                <Gamepad2 className="h-3.5 w-3.5 text-primary" />
                 <span className="text-xs font-medium">{t("gameCard.online")}</span>
               </div>
             )}
           </div>
         </div>
-        <div className="p-4 h-full">
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="font-semibold text-lg line-clamp-1 text-foreground">
+        <div className="h-full p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <h3 className="line-clamp-1 text-lg font-semibold text-foreground">
               {sanitizeText(game.game)}
             </h3>
           </div>
-          <div className="flex flex-wrap gap-1 mb-2">
+          <div className="mb-2 flex flex-wrap gap-1">
             {categories.map((cat, index) => (
               <Badge
                 key={`${cat}-${index}`}
                 variant="secondary"
-                className="text-xs bg-secondary text-secondary-foreground animate-in fade-in-50 slide-in-from-left-3"
+                className="text-secondary-foreground bg-secondary text-xs animate-in fade-in-50 slide-in-from-left-3"
               >
                 {cat}
               </Badge>
@@ -138,7 +138,7 @@ const GameCard = memo(function GameCard({ game, compact }) {
             {!showAllTags && gameCategories.length > 3 && (
               <Badge
                 variant="outline"
-                className="text-xs border-muted-foreground text-muted-foreground cursor-pointer hover:bg-accent transition-colors"
+                className="cursor-pointer border-muted-foreground text-xs text-muted-foreground transition-colors hover:bg-accent"
                 onClick={e => {
                   e.stopPropagation();
                   setShowAllTags(true);
@@ -150,7 +150,7 @@ const GameCard = memo(function GameCard({ game, compact }) {
             {showAllTags && (
               <Badge
                 variant="outline"
-                className="text-xs border-muted-foreground text-muted-foreground cursor-pointer hover:bg-accent transition-colors animate-in fade-in-50"
+                className="cursor-pointer border-muted-foreground text-xs text-muted-foreground transition-colors animate-in fade-in-50 hover:bg-accent"
                 onClick={e => {
                   e.stopPropagation();
                   setShowAllTags(false);
@@ -173,22 +173,22 @@ const GameCard = memo(function GameCard({ game, compact }) {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between items-center p-4">
+      <CardFooter className="flex items-center justify-between p-4">
         <Button
           variant="secondary"
           size="sm"
-          className="w-full font-medium bg-accent hover:bg-accent/90 text-accent-foreground"
+          className="w-full bg-accent font-medium text-accent-foreground hover:bg-accent/90"
           onClick={handleDownload}
           disabled={isInstalled || isLoading}
         >
           {isLoading ? (
-            <Loader className="w-4 h-4 mr-2 animate-spin" />
+            <Loader className="mr-2 h-4 w-4 animate-spin" />
           ) : isInstalled ? (
-            <Gamepad2 className="w-4 h-4 mr-2" />
+            <Gamepad2 className="mr-2 h-4 w-4" />
           ) : Object.keys(game.download_links || {}).includes("gofile") ? (
-            <Zap className="w-4 h-4 mr-2" />
+            <Zap className="mr-2 h-4 w-4" />
           ) : (
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="mr-2 h-4 w-4" />
           )}
           {isLoading
             ? t("gameCard.loading")

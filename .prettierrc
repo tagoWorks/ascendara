@@ -14,5 +14,6 @@
         "jsonRecursiveSort": true
       }
     }
-  ]
+  ],
+  "plugins": ["prettier-plugin-tailwindcss"]
 }

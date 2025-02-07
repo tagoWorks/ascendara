@@ -404,10 +404,10 @@ const Library = () => {
                     "https://ascendara.app/docs/troubleshooting/common-issues#executable-not-found-launch-error"
                   );
                 }}
-                className="hover:underline cursor-pointer"
+                className="cursor-pointer hover:underline"
               >
                 {t("common.learnMore")}{" "}
-                <ExternalLink className="inline-block mb-1 h-3 w-3" />
+                <ExternalLink className="mb-1 inline-block h-3 w-3" />
               </span>
             </p>
             <p>{errorMessage}</p>
@@ -422,7 +422,7 @@ const Library = () => {
             {t("common.cancel")}
           </Button>
           <Button
-            className="text-secondary bg-primary"
+            className="bg-primary text-secondary"
             onClick={async () => {
               const exePath =
                 await window.electron.ipcRenderer.invoke("open-file-dialog");
@@ -445,7 +445,7 @@ const Library = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-foreground">{t("library.loadingGames")}</div>
       </div>
     );
@@ -453,43 +453,43 @@ const Library = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-7xl mx-auto p-4 md:p-8">
+      <div className="container mx-auto max-w-7xl p-4 md:p-8">
         {error && (
-          <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-lg">
+          <div className="bg-destructive/10 text-destructive mb-4 rounded-lg p-4">
             {error}
           </div>
         )}
-        <div className="flex flex-col gap-6 mb-8">
+        <div className="mb-8 flex flex-col gap-6">
           <div className="flex flex-col gap-6">
-            <div className="flex flex-row justify-between items-start">
+            <div className="flex flex-row items-start justify-between">
               {/* Left side: Title and Search */}
               <div className="flex-1">
-                <div className="flex items-center mb-4">
-                  <h1 className="text-3xl font-bold text-primary tracking-tight">
+                <div className="mb-4 flex items-center">
+                  <h1 className="text-3xl font-bold tracking-tight text-primary">
                     {t("library.pageTitle")}
                   </h1>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center justify-center w-6 h-6 rounded-full ml-2 mb-2 bg-muted hover:bg-muted/80 cursor-help">
+                        <div className="mb-2 ml-2 flex h-6 w-6 cursor-help items-center justify-center rounded-full bg-muted hover:bg-muted/80">
                           <span className="text-sm font-medium">?</span>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent
                         side="bottom"
-                        className="p-4 space-y-2 text-secondary"
+                        className="space-y-2 p-4 text-secondary"
                       >
                         <div className="flex items-center gap-2">
-                          <Gamepad2 className="w-4 h-4" />{" "}
+                          <Gamepad2 className="h-4 w-4" />{" "}
                           <span>{t("library.iconLegend.onlineFix")}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Gift className="w-4 h-4" />{" "}
+                          <Gift className="h-4 w-4" />{" "}
                           <span>{t("library.iconLegend.allDlcs")}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <svg
-                            className="text-secondary w-4 h-4"
+                            className="h-4 w-4 text-secondary"
                             width="20"
                             height="20"
                             viewBox="0 0 24 24"
@@ -526,19 +526,19 @@ const Library = () => {
                     onChange={e => setSearchQuery(e.target.value)}
                     className="pr-8"
                   />
-                  <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 </div>
               </div>
 
               {/* Right side: Storage Info and Settings */}
               <div className="flex items-start gap-4">
                 {storageInfo && (
-                  <div className="bg-secondary/10 rounded-lg p-3 min-w-[250px]">
+                  <div className="min-w-[250px] rounded-lg bg-secondary/10 p-3">
                     <div className="space-y-3">
                       {/* Username section */}
-                      <div className="flex items-center justify-between pb-2 border-b border-secondary/20">
+                      <div className="flex items-center justify-between border-b border-secondary/20 pb-2">
                         <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-primary" />
+                          <User className="h-4 w-4 text-primary" />
                           <span className="text-sm font-medium">
                             {username || "Guest"}
                           </span>
@@ -548,9 +548,9 @@ const Library = () => {
 
                       {/* Storage section */}
                       <div>
-                        <div className="flex justify-between items-center mb-1">
+                        <div className="mb-1 flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <HardDrive className="w-4 h-4 text-primary" />
+                            <HardDrive className="h-4 w-4 text-primary" />
                             <span className="text-sm text-muted-foreground">
                               {t("library.availableSpace")}
                             </span>
@@ -559,9 +559,9 @@ const Library = () => {
                             {formatBytes(storageInfo.freeSpace)}
                           </span>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <SquareLibrary className="w-4 h-4 text-primary" />
+                            <SquareLibrary className="h-4 w-4 text-primary" />
                             <span className="text-sm text-muted-foreground">
                               {t("library.gamesInLibrary")}
                             </span>
@@ -575,7 +575,7 @@ const Library = () => {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             <AlertDialog
               key="add-game-dialog"
               open={isAddGameOpen}
@@ -584,7 +584,7 @@ const Library = () => {
               <AlertDialogTrigger asChild>
                 <AddGameCard />
               </AlertDialogTrigger>
-              <AlertDialogContent className="sm:max-w-[425px] bg-background border-border">
+              <AlertDialogContent className="border-border bg-background sm:max-w-[425px]">
                 <AlertDialogHeader className="space-y-2">
                   <AlertDialogTitle className="text-2xl font-bold text-foreground">
                     {t("library.addGame")}
@@ -593,7 +593,7 @@ const Library = () => {
                     {t("library.addGameDescription2")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <div className="py-4 max-h-[60vh] overflow-y-auto">
+                <div className="max-h-[60vh] overflow-y-auto py-4">
                   <AddGameForm
                     onSuccess={() => {
                       setIsAddGameOpen(false);
@@ -644,7 +644,7 @@ const Library = () => {
               <AlertDialogFooter>
                 <Button
                   variant="outline"
-                  className="text-primary text-xs"
+                  className="text-xs text-primary"
                   onClick={() => {
                     setShowVrWarning(false);
                     window.electron.openURL(
@@ -691,7 +691,7 @@ const Library = () => {
                 {isUninstalling ? (
                   <div className="w-full">
                     <Progress className="w-full" value={undefined} />
-                    <p className="text-sm text-muted-foreground mt-2 text-center">
+                    <p className="mt-2 text-center text-sm text-muted-foreground">
                       {t("library.uninstallingGame")}{" "}
                       {gameToDelete?.game || gameToDelete?.name}...
                     </p>
@@ -707,7 +707,7 @@ const Library = () => {
                     </Button>
                     <Button
                       onClick={() => handleDeleteGame(gameToDelete)}
-                      className="text-secondary hover:text-secondary-foreground"
+                      className="hover:text-secondary-foreground text-secondary"
                     >
                       {gameToDelete?.isCustom
                         ? t("library.removeGame")
@@ -731,16 +731,16 @@ const AddGameCard = React.forwardRef((props, ref) => {
       ref={ref}
       className={cn(
         "group relative overflow-hidden transition-colors",
-        "border-2 border-dashed border-muted hover:border-primary cursor-pointer"
+        "cursor-pointer border-2 border-dashed border-muted hover:border-primary"
       )}
       {...props}
     >
-      <CardContent className="p-6 flex flex-col items-center justify-center h-full min-h-[280px] text-muted-foreground group-hover:text-primary">
+      <CardContent className="flex h-full min-h-[280px] flex-col items-center justify-center p-6 text-muted-foreground group-hover:text-primary">
         <div className="rounded-full bg-muted p-6 group-hover:bg-primary/10">
-          <Plus className="w-8 h-8" />
+          <Plus className="h-8 w-8" />
         </div>
-        <h3 className="mt-4 font-semibold text-lg">{t("library.addGame")}</h3>
-        <p className="text-sm text-center mt-2">{t("library.addGameDescription1")}</p>
+        <h3 className="mt-4 text-lg font-semibold">{t("library.addGame")}</h3>
+        <p className="mt-2 text-center text-sm">{t("library.addGameDescription1")}</p>
       </CardContent>
     </Card>
   );
@@ -848,7 +848,7 @@ const InstalledGameCard = ({
     <Card
       className={cn(
         "group relative overflow-hidden transition-all duration-200",
-        "hover:shadow-lg hover:-translate-y-1",
+        "hover:-translate-y-1 hover:shadow-lg",
         isSelected && "ring-2 ring-primary",
         "cursor-pointer"
       )}
@@ -857,10 +857,10 @@ const InstalledGameCard = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       <CardContent className="p-0">
-        <div className="aspect-[4/3] relative">
-          <img src={imageData} alt={game.game} className="w-full h-full object-cover" />
+        <div className="relative aspect-[4/3]">
+          <img src={imageData} alt={game.game} className="h-full w-full object-cover" />
           {isUninstalling && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
               <div className="w-full max-w-[200px] space-y-2 px-4">
                 <div className="relative overflow-hidden">
                   <Progress value={undefined} />
@@ -888,15 +888,15 @@ const InstalledGameCard = ({
           <div
             className={cn(
               "absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent",
-              "opacity-0 group-hover:opacity-100 transition-opacity",
+              "opacity-0 transition-opacity group-hover:opacity-100",
               "flex flex-col justify-end p-4 text-secondary"
             )}
           >
-            <div className="absolute top-4 right-4">
+            <div className="absolute right-4 top-4">
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white hover:text-primary hover:bg-white/20"
+                className="text-white hover:bg-white/20 hover:text-primary"
                 onClick={e => {
                   e.stopPropagation();
                   onToggleFavorite(game.game || game.name);
@@ -904,7 +904,7 @@ const InstalledGameCard = ({
               >
                 <Heart
                   className={cn(
-                    "w-6 h-6",
+                    "h-6 w-6",
                     isFavorite ? "fill-primary text-primary" : "fill-none text-white"
                   )}
                 />
@@ -924,17 +924,17 @@ const InstalledGameCard = ({
                 >
                   {isLaunching ? (
                     <>
-                      <Loader className="w-4 h-4 animate-spin" />
+                      <Loader className="h-4 w-4 animate-spin" />
                       {t("library.launching")}
                     </>
                   ) : isRunning ? (
                     <>
-                      <StopCircle className="w-4 h-4" />
+                      <StopCircle className="h-4 w-4" />
                       {t("library.running")}
                     </>
                   ) : (
                     <>
-                      <Play className="w-4 h-4" />
+                      <Play className="h-4 w-4" />
                       {t("library.play")}
                     </>
                   )}
@@ -944,15 +944,15 @@ const InstalledGameCard = ({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between items-center p-4">
-        <div className="flex-1 min-w-0">
+      <CardFooter className="flex items-center justify-between p-4">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-foreground truncate">{game.game}</h3>
-            {game.online && <Gamepad2 className="w-4 h-4 text-muted-foreground" />}
-            {game.dlc && <Gift className="w-4 h-4 text-muted-foreground" />}
+            <h3 className="truncate font-semibold text-foreground">{game.game}</h3>
+            {game.online && <Gamepad2 className="h-4 w-4 text-muted-foreground" />}
+            {game.dlc && <Gift className="h-4 w-4 text-muted-foreground" />}
             {game.isVr && (
               <svg
-                className="text-foreground p-0.5"
+                className="p-0.5 text-foreground"
                 width="20"
                 height="20"
                 viewBox="0 0 24 24"
@@ -977,7 +977,7 @@ const InstalledGameCard = ({
             )}
             {executableExists === true && (
               <AlertTriangle
-                className="w-4 h-4 text-yellow-500"
+                className="h-4 w-4 text-yellow-500"
                 title={t("library.executableNotFound")}
               />
             )}
@@ -989,12 +989,12 @@ const InstalledGameCard = ({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" onClick={e => e.stopPropagation()}>
-              <MoreVertical className="w-4 h-4" />
+              <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={onOpenDirectory}>
-              <FolderOpen className="w-4 h-4 mr-2" />
+              <FolderOpen className="mr-2 h-4 w-4" />
               {t("library.openGameDirectory")}
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -1010,7 +1010,7 @@ const InstalledGameCard = ({
                 }
               }}
             >
-              <Monitor className="w-4 h-4 mr-2" />
+              <Monitor className="mr-2 h-4 w-4" />
               {t("library.createShortcut")}
             </DropdownMenuItem>
             {!game.isCustom && (
@@ -1027,7 +1027,7 @@ const InstalledGameCard = ({
                   }
                 }}
               >
-                <Pencil className="w-4 h-4 mr-2" />
+                <Pencil className="mr-2 h-4 w-4" />
                 {t("library.changeExecutable")}
               </DropdownMenuItem>
             )}
@@ -1038,7 +1038,7 @@ const InstalledGameCard = ({
               }}
               className="text-destructive"
             >
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 className="mr-2 h-4 w-4" />
               {game.isCustom
                 ? t("library.removeGameFromLibrary")
                 : t("library.uninstallGame")}
@@ -1133,16 +1133,16 @@ const AddGameForm = ({ onSuccess }) => {
     <div className="space-y-6">
       <div className="space-y-4">
         <div>
-          <h4 className="text-sm font-medium text-foreground mb-2">
+          <h4 className="mb-2 text-sm font-medium text-foreground">
             {t("library.gameExecutable")}
           </h4>
           <Button
             type="button"
             variant="outline"
-            className="w-full justify-start text-left text-primary font-normal bg-background hover:bg-accent truncate"
+            className="w-full justify-start truncate bg-background text-left font-normal text-primary hover:bg-accent"
             onClick={handleChooseExecutable}
           >
-            <FolderOpen className="w-4 h-4 mr-2 flex-shrink-0" />
+            <FolderOpen className="mr-2 h-4 w-4 flex-shrink-0" />
             <span className="truncate">
               {formData.executable || t("library.chooseExecutableFile")}
             </span>
@@ -1157,7 +1157,7 @@ const AddGameForm = ({ onSuccess }) => {
             id="name"
             value={formData.name}
             onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            className="bg-background border-input text-foreground"
+            className="border-input bg-background text-foreground"
           />
         </div>
 
@@ -1187,7 +1187,7 @@ const AddGameForm = ({ onSuccess }) => {
               value={formData.version}
               onChange={e => setFormData(prev => ({ ...prev, version: e.target.value }))}
               placeholder={t("library.versionPlaceholder")}
-              className="bg-background border-input text-foreground"
+              className="border-input bg-background text-foreground"
             />
           )}
         </div>
@@ -1222,12 +1222,12 @@ const AddGameForm = ({ onSuccess }) => {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="relative flex-grow">
-              <SearchIcon className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <SearchIcon className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
               <Input
                 id="coverSearch"
                 value={coverSearch.query}
                 onChange={e => handleCoverSearch(e.target.value)}
-                className="pl-8 bg-background border-input text-foreground"
+                className="border-input bg-background pl-8 text-foreground"
                 placeholder={t("library.searchGameCover")}
                 minLength={minSearchLength}
               />
@@ -1236,12 +1236,12 @@ const AddGameForm = ({ onSuccess }) => {
 
           {/* Cover Search Results */}
           {coverSearch.query.length < minSearchLength ? (
-            <div className="text-center text-sm text-muted-foreground py-2">
+            <div className="py-2 text-center text-sm text-muted-foreground">
               {t("library.enterMoreChars", { count: minSearchLength })}
             </div>
           ) : coverSearch.isLoading ? (
             <div className="flex justify-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
             </div>
           ) : coverSearch.results.length > 0 ? (
             <div className="grid grid-cols-3 gap-4">
@@ -1261,16 +1261,16 @@ const AddGameForm = ({ onSuccess }) => {
                   <img
                     src={gameService.getImageUrl(cover.imgID)}
                     alt={cover.title}
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <p className="text-white text-sm text-center px-2">{cover.title}</p>
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity hover:opacity-100">
+                    <p className="px-2 text-center text-sm text-white">{cover.title}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center text-sm text-muted-foreground py-2">
+            <div className="py-2 text-center text-sm text-muted-foreground">
               {t("library.noResultsFound")}
             </div>
           )}
@@ -1278,11 +1278,11 @@ const AddGameForm = ({ onSuccess }) => {
           {/* Selected Cover Preview */}
           {coverSearch.selectedCover && (
             <div className="mt-4 flex justify-center">
-              <div className="relative aspect-video w-64 rounded-lg overflow-hidden border-2 border-primary">
+              <div className="relative aspect-video w-64 overflow-hidden rounded-lg border-2 border-primary">
                 <img
                   src={gameService.getImageUrl(coverSearch.selectedCover.imgID)}
                   alt={coverSearch.selectedCover.title}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                 />
               </div>
             </div>
@@ -1297,7 +1297,7 @@ const AddGameForm = ({ onSuccess }) => {
         <Button
           onClick={handleSubmit}
           disabled={!formData.executable || !formData.name}
-          className="bg-primary text-secondary "
+          className="bg-primary text-secondary"
         >
           {t("library.addGame")}
         </Button>

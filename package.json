@@ -81,6 +81,7 @@
     "html-to-image": "^1.11.11",
     "postcss": "^8.4.21",
     "prettier": "^3.4.2",
+    "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwindcss": "^3.4.16",
     "vite": "^4.1.4",
     "wait-on": "^8.0.1"

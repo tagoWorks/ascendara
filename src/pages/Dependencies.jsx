@@ -95,7 +95,7 @@ const Dependencies = () => {
           ...prevStatus,
           [label]: {
             installed: false,
-            icon: <Loader className="w-5 h-5 animate-spin" />,
+            icon: <Loader className="h-5 w-5 animate-spin" />,
           },
         }));
       } else if (status === "finished") {
@@ -112,7 +112,7 @@ const Dependencies = () => {
             ...prevStatus,
             [label]: {
               installed: true,
-              icon: <CircleCheck className="w-5 h-5 text-green-500" />,
+              icon: <CircleCheck className="h-5 w-5 text-green-500" />,
             },
           };
           const allInstalled = Object.values(updatedStatus).every(dep => dep.installed);
@@ -128,7 +128,7 @@ const Dependencies = () => {
           ...prevStatus,
           [label]: {
             installed: false,
-            icon: <XCircle className="w-5 h-5 text-red-500" />,
+            icon: <XCircle className="h-5 w-5 text-red-500" />,
           },
         }));
       }
@@ -160,7 +160,7 @@ const Dependencies = () => {
         const label = executableToLabelMap[dep](t);
         updatedStatus[label] = {
           installed: false,
-          icon: <Loader className="w-5 h-5 animate-spin" />,
+          icon: <Loader className="h-5 w-5 animate-spin" />,
         };
       });
       return updatedStatus;
@@ -180,17 +180,17 @@ const Dependencies = () => {
   const getStatusInfo = installed => {
     if (installed === undefined || installed === null) {
       return {
-        icon: <CircleAlert className="w-5 h-5 text-muted-foreground" />,
+        icon: <CircleAlert className="h-5 w-5 text-muted-foreground" />,
         status: "checking",
       };
     }
     return installed
       ? {
-          icon: <CircleCheck className="w-5 h-5 text-green-500" />,
+          icon: <CircleCheck className="h-5 w-5 text-green-500" />,
           status: "installed",
         }
       : {
-          icon: <AlertCircle className="w-5 h-5 text-red-500" />,
+          icon: <AlertCircle className="h-5 w-5 text-red-500" />,
           status: "missing",
         };
   };
@@ -250,42 +250,42 @@ const Dependencies = () => {
       </AlertDialog>
 
       <motion.div
-        className="fixed inset-0 flex items-center justify-center bg-background/95 backdrop-blur-sm z-50"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
         exit="exit"
       >
         <motion.div
-          className="flex flex-col items-center max-w-4xl w-full px-8"
+          className="flex w-full max-w-4xl flex-col items-center px-8"
           variants={itemVariants}
         >
-          <div className="w-full mb-8">
+          <div className="mb-8 w-full">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate("/settings")}
-              className="hover:bg-accent hover:text-accent-foreground rounded-full"
+              className="rounded-full hover:bg-accent hover:text-accent-foreground"
             >
               <ArrowLeft className="h-6 w-6" />
             </Button>
           </div>
           <motion.div
-            className="flex items-center justify-center mb-8"
+            className="mb-8 flex items-center justify-center"
             variants={itemVariants}
           >
             <h2 className="text-4xl font-bold text-primary">
               {t("settings.installGameDependencies")}
             </h2>
           </motion.div>
-          <motion.div className="space-y-6 w-full" variants={itemVariants}>
-            <p className="text-xl text-foreground/80 text-center">
+          <motion.div className="w-full space-y-6" variants={itemVariants}>
+            <p className="text-center text-xl text-foreground/80">
               {t("settings.reinstallDependenciesDesc")}
             </p>
             {isInstalling && (
-              <div className="w-full bg-secondary rounded-full h-2 mb-4">
+              <div className="mb-4 h-2 w-full rounded-full bg-secondary">
                 <div
-                  className="bg-primary h-2 rounded-full transition-all duration-500"
+                  className="h-2 rounded-full bg-primary transition-all duration-500"
                   style={{ width: `${(progress / totalDependencies) * 100}%` }}
                 />
               </div>
@@ -294,14 +294,14 @@ const Dependencies = () => {
               {dependencies.map(dep => (
                 <div
                   key={dep.name}
-                  className="flex items-start space-x-3 p-4 bg-card rounded-lg border"
+                  className="flex items-start space-x-3 rounded-lg border bg-card p-4"
                 >
                   {dependencyStatus?.[dep.name]?.icon}
                   <div>
                     <button
                       type="button"
                       onClick={() => window.electron.openURL(dep.url)}
-                      className="font-medium hover:text-primary transition-colors"
+                      className="font-medium transition-colors hover:text-primary"
                     >
                       {dep.name}
                     </button>
@@ -310,7 +310,7 @@ const Dependencies = () => {
                 </div>
               ))}
             </div>
-            <div className="flex justify-center mt-8">
+            <div className="mt-8 flex justify-center">
               <Button
                 onClick={() => setShowConfirmDialog(true)}
                 className="text-secondary"

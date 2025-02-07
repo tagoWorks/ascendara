@@ -41,7 +41,7 @@ function CategoryFilter({
           <Badge
             key={category}
             variant={selectedCategories.includes(category) ? "default" : "outline"}
-            className="cursor-pointer hover:opacity-80 transition-opacity"
+            className="cursor-pointer transition-opacity hover:opacity-80"
             onClick={() => toggleCategory(category)}
           >
             {category}

@@ -36,7 +36,7 @@ const UpdateOverlay = () => {
       >
         <Loader className="animate-spin text-primary" />
         <h2
-          className={`text-2xl font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}
+          className={`mb-2 text-2xl font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}
         >
           {t("app.loading.installingUpdate")}
         </h2>
