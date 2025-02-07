@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect } from "react";
-import { Badge } from "../components/ui/badge";
-import { ScrollArea } from "../components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 function CategoryFilter({
   selectedCategories,

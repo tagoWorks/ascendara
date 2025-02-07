@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useMemo, memo, useCallback, useRef } from "react";
-import { Input } from "../components/ui/input";
-import { Card } from "../components/ui/card";
-import { Button } from "../components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "../components/ui/sheet";
-import { Label } from "../components/ui/label";
-import { Separator } from "../components/ui/separator";
-import { useLanguage } from "../contexts/LanguageContext";
-import GameCard from "../components/GameCard";
-import CategoryFilter from "../components/CategoryFilter";
+} from "@/components/ui/sheet";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { useLanguage } from "@/context/LanguageContext";
+import GameCard from "@/components/GameCard";
+import CategoryFilter from "@/components/CategoryFilter";
 import {
   Search as SearchIcon,
   SlidersHorizontal,
@@ -25,13 +25,13 @@ import {
   AlertTriangle,
   X,
 } from "lucide-react";
-import gameService from "../services/gameService";
+import gameService from "@/services/gameService";
 import {
   subscribeToStatus,
   getCurrentStatus,
   startStatusCheck,
-} from "../services/serverStatus";
-import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
+} from "@/services/serverStatus";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -39,9 +39,9 @@ import {
   AlertDialogCancel,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "../components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
-import imageCacheService from "../services/imageCacheService";
+import imageCacheService from "@/services/imageCacheService";
 
 // Module-level cache with timestamp
 let gamesCache = {

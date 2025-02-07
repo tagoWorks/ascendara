@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import imageCacheService from "../services/imageCacheService";
+import imageCacheService from "@/services/imageCacheService";
 
 // Track which images are currently being loaded to prevent duplicate requests
 const loadingImages = new Map();

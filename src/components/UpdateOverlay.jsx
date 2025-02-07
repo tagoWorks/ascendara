@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { useTheme } from "../contexts/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useTranslation } from "react-i18next";
 import { Loader } from "lucide-react";
 

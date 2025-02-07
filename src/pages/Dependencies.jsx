@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
-import { Button } from "../components/ui/button";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   CircleCheck,
@@ -21,7 +21,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },

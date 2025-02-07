@@ -1,35 +1,34 @@
-import React, { useState, useEffect, useRef } from "react";
+import ContextMenu from "@/components/ContextMenu";
+import Layout from "@/components/Layout";
+import SupportDialog from "@/components/SupportDialog";
+import UpdateOverlay from "@/components/UpdateOverlay";
+import { LanguageProvider } from "@/context/LanguageContext";
+import { ThemeProvider, useTheme } from "@/context/ThemeContext";
+import { analytics } from "@/services/analyticsService";
+import gameService from "@/services/gameService";
+import { checkForUpdates } from "@/services/updateCheckingService";
+import { AnimatePresence, motion } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
+  Navigate,
+  Route,
   HashRouter as Router,
   Routes,
-  Route,
-  Navigate,
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { ThemeProvider } from "./contexts/ThemeContext";
-import { LanguageProvider } from "./contexts/LanguageContext";
-import Layout from "./components/Layout";
-import Home from "./pages/Home";
-import Search from "./pages/Search";
-import Library from "./pages/Library";
-import Downloads from "./pages/Downloads";
-import Settings from "./pages/Settings";
-import Dependencies from "./pages/Dependencies";
-import Welcome from "./pages/Welcome";
-import DownloadPage from "./pages/Download";
-import { AnimatePresence, motion } from "framer-motion";
-import { useTheme } from "./contexts/ThemeContext";
-import "./Index.css";
 import { Toaster, toast } from "sonner";
-import UpdateOverlay from "./components/UpdateOverlay";
-import { analytics } from "./services/analyticsService";
-import gameService from "./services/gameService";
-import ContextMenu from "./components/ContextMenu";
-import { useTranslation } from "react-i18next";
+import Dependencies from "./pages/Dependencies";
+import DownloadPage from "./pages/Download";
+import Downloads from "./pages/Downloads";
+import Home from "./pages/Home";
+import Library from "./pages/Library";
+import Search from "./pages/Search";
+import Settings from "./pages/Settings";
+import Welcome from "./pages/Welcome";
 import i18n from "./i18n";
-import { checkForUpdates } from "./services/updateCheckingService";
-import SupportDialog from "./components/SupportDialog";
+import "./index.css";
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -43,8 +42,9 @@ const ScrollToTop = () => {
 };
 
 const AppRoutes = () => {
-  const { t, i18n } = useTranslation();
-  const [shouldShowWelcome, setShouldShowWelcome] = useState(null);
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [showWelcome, setShowWelcome] = useState(null);
   const [isNewInstall, setIsNewInstall] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -53,7 +53,6 @@ const AppRoutes = () => {
   const [showSupportDialog, setShowSupportDialog] = useState(false);
   const location = useLocation();
   const hasChecked = useRef(false);
-  const navigate = useNavigate();
   const loadStartTime = useRef(Date.now());
   const hasShownUpdateNotification = useRef(false);
   const hasShownUpdateReadyNotification = useRef(false);
@@ -93,13 +92,13 @@ const AppRoutes = () => {
       console.log("Is V7:", isV7);
 
       setIsNewInstall(isNew);
-      setShouldShowWelcome(isNew || !isV7);
+      setShowWelcome(isNew || !isV7);
 
       console.log("Welcome check:", { isNew, isV7, shouldShow: isNew || !isV7 });
       return { isNew, isV7 };
     } catch (error) {
       console.error("Error checking welcome status:", error);
-      setShouldShowWelcome(false);
+      setShowWelcome(false);
       return null;
     } finally {
       await ensureMinLoadingTime();
@@ -121,7 +120,7 @@ const AppRoutes = () => {
       }
     } else {
       const isV7 = await window.electron.isV7();
-      setShouldShowWelcome(!isV7);
+      setShowWelcome(!isV7);
       setWelcomeData({ isNew: false, isV7 });
     }
     return hasLaunched;
@@ -255,7 +254,7 @@ const AppRoutes = () => {
         console.error("Error in app initialization:", error);
         await ensureMinLoadingTime();
         setIsLoading(false);
-        setShouldShowWelcome(false);
+        setShowWelcome(false);
       }
     };
 
@@ -291,7 +290,7 @@ const AppRoutes = () => {
 
   const handleWelcomeComplete = async (withTour = false) => {
     setWelcomeData({ isNew: false, isV7: true });
-    setShouldShowWelcome(false);
+    setShowWelcome(false);
 
     if (withTour) {
       navigate("/?tour=true", { replace: true });
@@ -313,20 +312,20 @@ const AppRoutes = () => {
   useEffect(() => {
     console.log("State update:", {
       isLoading,
-      shouldShowWelcome,
+      showWelcome,
       isNewInstall,
       welcomeData,
     });
-  }, [isLoading, shouldShowWelcome, isNewInstall, welcomeData]);
+  }, [isLoading, showWelcome, isNewInstall, welcomeData]);
   console.log("AppRoutes render - Current state:", {
-    shouldShowWelcome,
+    showWelcome,
     location: location?.pathname,
     isLoading,
   });
 
   // Version check effect
   useEffect(() => {
-    if (shouldShowWelcome) return;
+    if (showWelcome) return;
     let isSubscribed = true;
 
     const checkVersionAndSetupUpdates = async () => {
@@ -385,7 +384,7 @@ const AppRoutes = () => {
       isSubscribed = false;
       window.electron.removeUpdateReadyListener(updateReadyHandler);
     };
-  }, [shouldShowWelcome]);
+  }, [showWelcome]);
 
   if (isInstalling) {
     return <UpdateOverlay />;
@@ -428,17 +427,17 @@ const AppRoutes = () => {
     );
   }
 
-  if (shouldShowWelcome === null) {
-    console.log("Rendering null - shouldShowWelcome is null");
+  if (showWelcome === null) {
+    console.log("Rendering null - showWelcome is null");
     return null;
   }
 
-  if (location.pathname === "/welcome" && !shouldShowWelcome) {
+  if (location.pathname === "/welcome" && !showWelcome) {
     console.log("Redirecting from welcome to home");
     return <Navigate to="/" replace />;
   }
 
-  if (location.pathname === "/" && shouldShowWelcome) {
+  if (location.pathname === "/" && showWelcome) {
     console.log("Redirecting from home to welcome");
     return <Navigate to="/welcome" replace />;
   }
@@ -447,7 +446,7 @@ const AppRoutes = () => {
 
   return (
     <>
-      {shouldShowWelcome ? (
+      {showWelcome ? (
         <Welcome
           isNewInstall={isNewInstall}
           welcomeData={welcomeData}

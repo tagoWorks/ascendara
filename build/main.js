@@ -1926,6 +1926,10 @@ function createWindow() {
   }
 
   mainWindow.setMinimumSize(1600, 800);
+
+  mainWindow.webContents.setWindowOpenHandler(info => {
+    return { action: "deny" };
+  });
 }
 
 // Window visibility control functions

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquareText, TriangleAlert } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
+import { useLanguage } from "@/context/LanguageContext";
 import ReportIssue from "./ReportIssue";
 import "./ContextMenu.css";
 

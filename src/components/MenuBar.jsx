@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { subscribeToStatus, getCurrentStatus } from "../services/serverStatus";
+import { subscribeToStatus, getCurrentStatus } from "@/services/serverStatus";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -9,9 +9,9 @@ import {
   AlertDialogFooter,
 } from "./ui/alert-dialog";
 import { AlertTriangle, WifiOff, Hammer, X, Minus, Download } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
-import { checkForUpdates } from "../services/updateCheckingService";
-import { exportToSvg } from "../lib/exportToSvg";
+import { useLanguage } from "@/context/LanguageContext";
+import { checkForUpdates } from "@/services/updateCheckingService";
+import { exportToSvg } from "@/lib/exportToSvg";
 
 const MenuBar = () => {
   const { t } = useLanguage();

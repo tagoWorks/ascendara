@@ -1,12 +1,12 @@
+import { getCurrentStatus } from "./serverStatus";
+import { sanitizeText } from "@/lib/utils";
+
 const API_URL = "https://api.ascendara.app";
 const CACHE_KEY = "ascendara_games_cache";
 const CACHE_TIMESTAMP_KEY = "local_ascendara_games_timestamp";
 const METADATA_CACHE_KEY = "local_ascendara_metadata_cache";
 const LAST_UPDATED_KEY = "local_ascendara_last_updated";
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
-
-import { getCurrentStatus } from "./serverStatus";
-import { sanitizeText } from "../lib/utils";
 
 // Memory cache to avoid localStorage reads
 let memoryCache = {

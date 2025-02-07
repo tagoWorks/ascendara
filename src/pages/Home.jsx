@@ -1,15 +1,15 @@
 import React, { useState, useEffect, memo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Skeleton } from "../components/ui/skeleton";
-import HomeGameCard from "../components/HomeGameCard";
-import RecentGameCard from "../components/RecentGameCard";
-import { useTheme } from "../contexts/ThemeContext";
-import { useLanguage } from "../contexts/LanguageContext";
+import { Skeleton } from "@/components/ui/skeleton";
+import HomeGameCard from "@/components/HomeGameCard";
+import RecentGameCard from "@/components/RecentGameCard";
+import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { Sword, Flame, Globe, ChevronLeft, ChevronRight, Clock } from "lucide-react";
-import gameService from "../services/gameService";
-import Tour from "../components/Tour";
-import imageCacheService from "../services/imageCacheService";
-import recentGamesService from "../services/recentGamesService";
+import gameService from "@/services/gameService";
+import Tour from "@/components/Tour";
+import imageCacheService from "@/services/imageCacheService";
+import recentGamesService from "@/services/recentGamesService";
 
 // Module-level caches that persist during runtime
 let gamesCache = null;

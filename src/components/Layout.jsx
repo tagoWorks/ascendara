@@ -3,7 +3,7 @@ import { Outlet, useSearchParams } from "react-router-dom";
 import Navigation from "./Navigation";
 import MenuBar from "./MenuBar";
 import Tour from "./Tour";
-import { useTheme } from "../contexts/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
 
 function Layout() {
   const [searchParams, setSearchParams] = useSearchParams();

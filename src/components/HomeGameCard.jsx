@@ -3,9 +3,9 @@ import { Card, CardContent } from "./ui/card";
 import { AspectRatio } from "./ui/aspect-ratio";
 import { Skeleton } from "./ui/skeleton";
 import { useNavigate } from "react-router-dom";
-import { sanitizeText } from "../lib/utils";
-import { useLanguage } from "../contexts/LanguageContext";
-import { useImageLoader } from "../hooks/useImageLoader";
+import { sanitizeText } from "@/lib/utils";
+import { useLanguage } from "@/context/LanguageContext";
+import { useImageLoader } from "@/hooks/useImageLoader";
 import { Badge } from "./ui/badge";
 import { Globe, Gift, ImageOff } from "lucide-react";
 

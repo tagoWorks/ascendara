@@ -1,14 +1,14 @@
 import React, { useState, memo, useCallback, useEffect, useMemo, useRef } from "react";
-import { Card, CardContent, CardFooter } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Download, Gift, Gamepad2, Zap, Loader } from "lucide-react";
-import { AspectRatio } from "../components/ui/aspect-ratio";
-import { Skeleton } from "../components/ui/skeleton";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "../contexts/LanguageContext";
-import { sanitizeText } from "../lib/utils";
-import { useImageLoader } from "../hooks/useImageLoader";
+import { useLanguage } from "@/context/LanguageContext";
+import { sanitizeText } from "@/lib/utils";
+import { useImageLoader } from "@/hooks/useImageLoader";
 
 const GameCard = memo(function GameCard({ game, compact }) {
   const navigate = useNavigate();
