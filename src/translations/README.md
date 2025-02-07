@@ -13,6 +13,9 @@ Here is a list of the languages that have been translated:
 - Portuguese (pt)
 - Russian (ru)
 - Japanese (ja)
+- Italian (it)
+- German (de)
+- French (fr)
 
 Text may not be 100% accurate.
 

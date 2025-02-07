@@ -206,6 +206,18 @@
       "downloadStarted": "Download started successfully",
       "reportFailed": "Failed to submit report",
       "reportSubmitted": "Report submitted successfully"
+    },
+    "timemachine": {
+      "title": "Ascendara Timemachine",
+      "description": "Select a previous version of {game}",
+      "loading": "Loading previous versions...",
+      "noVersions": "No previous versions found",
+      "loadError": "Failed to load version history",
+      "versionChanged": "Version Changed",
+      "versionChangedDesc": "Switched to version {version} from {date}",
+      "unknownVersion": "Unknown Version",
+      "unknownDate": "Unknown Date",
+      "cancel": "Cancel"
     }
   },
   "downloads": {
@@ -376,7 +388,8 @@
       "description": "This is a virtual reality game and may require you to launch the game through SteamVR or your Meta Quest app. Running the game directly may cause your headset to not connect to the game.",
       "learnMore": "Learn More About Running VR Games",
       "title": "VR Games and Ascendara"
-    }
+    },
+    "coverSearchError": "Error searching for image"
   },
   "search": {
     "alphabeticalAZ": "Alphabetical A-Z",
@@ -501,7 +514,9 @@
     "warningDescription": "Ascendara is designed as a testing platform for video games, allowing users to evaluate gameplay, performance, and compatibility before making a purchase decision. Ascendara strongly encourages users to support game developers by purchasing games they enjoy.",
     "warningSupportDevelopers": "Game developers invest significant time, resources, and creativity into creating the experiences we all enjoy. Your purchase directly supports their ability to continue making great games and sustains the gaming industry.",
     "warningSupportDevelopersCallToAction": "Please support the developers by purchasing games you enjoy.",
-    "warningTitle": "Hey there, please read this!"
+    "warningTitle": "Hey there, please read this!",
+    "showOldDownloadLinks": "Ascendara Timemachine",
+    "showOldDownloadLinksDescription": "Be able to fetch old download links for games. Some games may not be able to download."
   },
   "tour": {
     "downloads": {

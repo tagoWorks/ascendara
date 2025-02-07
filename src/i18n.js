@@ -9,6 +9,9 @@ import ja from "./translations/ja.json";
 import pt from "./translations/pt.json";
 import ru from "./translations/ru.json";
 import zhCN from "./translations/zh-CN.json";
+import it from "./translations/it.json";
+import de from "./translations/de.json";
+import fr from "./translations/fr.json";
 
 // Available languages with their labels
 export const languages = {
@@ -21,6 +24,9 @@ export const languages = {
   pt: { name: "Portuguese", nativeName: "Português" },
   ru: { name: "Russian", nativeName: "Русский" },
   "zh-CN": { name: "Chinese (Simplified)", nativeName: "简体中文" },
+  it: { name: "Italian", nativeName: "Italiano" },
+  de: { name: "German", nativeName: "Deutsch" },
+  fr: { name: "French", nativeName: "Français" },
 };
 
 // Function to check if a language is supported
@@ -51,6 +57,9 @@ i18n.use(initReactI18next).init({
     pt: { translation: pt },
     ru: { translation: ru },
     "zh-CN": { translation: zhCN },
+    it: { translation: it },
+    de: { translation: de },
+    fr: { translation: fr },
   },
   fallbackLng: "en",
   interpolation: {

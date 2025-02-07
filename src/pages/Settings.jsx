@@ -51,12 +51,15 @@ const themes = [
 const languages = [
   { id: "en", name: "English", icon: "🇺🇸" },
   { id: "es", name: "Español", icon: "🇪🇸" },
+  { id: "fr", name: "Français", icon: "🇫🇷" },
+  { id: "it", name: "Italiano", icon: "🇮🇹" },
+  { id: "de", name: "Deutsch", icon: "🇩🇪" },
+  { id: "pt", name: "Português", icon: "🇵🇹" },
+  { id: "ru", name: "Русский", icon: "🇷🇺" },
   { id: "zh-CN", name: "中文", icon: "🇨🇳" },
   { id: "ar", name: "العربية", icon: "🇸🇦" },
   { id: "hi", name: "हिन्दी", icon: "🇮🇳" },
   { id: "bn", name: "বাংলা", icon: "🇧🇩" },
-  { id: "pt", name: "Português", icon: "🇵🇹" },
-  { id: "ru", name: "Русский", icon: "🇷🇺" },
   { id: "ja", name: "日本語", icon: "🇯🇵" },
 ];
 

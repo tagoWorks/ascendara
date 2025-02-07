@@ -62,6 +62,9 @@ function getLanguageFlag(langId) {
     pt: "🇵🇹",
     ru: "🇷🇺",
     ja: "🇯🇵",
+    it: "🇮🇹",
+    de: "🇩🇪",
+    fr: "🇫🇷",
   };
   return flagMap[langId] || "🌐";
 }
@@ -319,6 +322,9 @@ const Welcome = ({ welcomeData, onComplete }) => {
       { text: "আপনার পছন্দের ভাষা কি?", lang: "bn" },
       { text: "Qual é a sua língua preferida?", lang: "pt" },
       { text: "Какой язык вы предпочитаете?", lang: "ru" },
+      { text: "Quale è la tua lingua preferita?", lang: "it" },
+      { text: "Welche Sprache bevorzugst du?", lang: "de" },
+      { text: "Quelle est votre langue préférée?", lang: "fr" },
     ],
     []
   );
