@@ -1,8 +1,8 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import enOriginal from "./translations/en-original.json";
 import ar from "./translations/ar.json";
 import bn from "./translations/bn.json";
+import en from "./translations/en.json";
 import es from "./translations/es.json";
 import hi from "./translations/hi.json";
 import ja from "./translations/ja.json";
@@ -42,7 +42,7 @@ export const getClosestSupportedLanguage = lang => {
 // Initialize i18next with all translations
 i18n.use(initReactI18next).init({
   resources: {
-    en: { translation: enOriginal },
+    en: { translation: en },
     ar: { translation: ar },
     bn: { translation: bn },
     es: { translation: es },
