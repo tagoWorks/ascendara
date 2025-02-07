@@ -1,13 +1,13 @@
-import React, { memo, useState, useCallback, useRef, useEffect } from 'react';
+import React, { memo, useState, useCallback, useRef, useEffect } from "react";
 import { Card, CardContent } from "./ui/card";
 import { AspectRatio } from "./ui/aspect-ratio";
-import { Skeleton } from './ui/skeleton';
-import { useNavigate } from 'react-router-dom';
-import { sanitizeText } from '../lib/utils';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useImageLoader } from '../hooks/useImageLoader';
-import { Badge } from './ui/badge';
-import { Globe, Gift, ImageOff } from 'lucide-react';
+import { Skeleton } from "./ui/skeleton";
+import { useNavigate } from "react-router-dom";
+import { sanitizeText } from "../lib/utils";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useImageLoader } from "../hooks/useImageLoader";
+import { Badge } from "./ui/badge";
+import { Globe, Gift, ImageOff } from "lucide-react";
 
 const HomeGameCard = memo(({ game }) => {
   const navigate = useNavigate();
@@ -25,8 +25,8 @@ const HomeGameCard = memo(({ game }) => {
         setIsVisible(entry.isIntersecting);
       },
       {
-        rootMargin: '50px 0px',
-        threshold: 0.1
+        rootMargin: "50px 0px",
+        threshold: 0.1,
       }
     );
 
@@ -35,19 +35,19 @@ const HomeGameCard = memo(({ game }) => {
   }, []);
 
   const handleClick = useCallback(() => {
-    const container = document.querySelector('.page-container');
+    const container = document.querySelector(".page-container");
     if (container) {
-      container.classList.add('fade-out');
+      container.classList.add("fade-out");
     }
 
     setTimeout(() => {
-      navigate('/download', { 
-        state: { 
+      navigate("/download", {
+        state: {
           gameData: {
             ...game,
-            download_links: game.download_links || {}
-          }
-        }
+            download_links: game.download_links || {},
+          },
+        },
       });
     }, 300);
   }, [navigate, game]);
@@ -58,7 +58,7 @@ const HomeGameCard = memo(({ game }) => {
   const isOnline = game.online;
 
   return (
-    <Card 
+    <Card
       ref={cardRef}
       className="overflow-hidden group hover:shadow-xl transition-all duration-300 animate-in fade-in-50 cursor-pointer relative rounded-xl"
       onMouseEnter={() => setIsHovered(true)}
@@ -76,7 +76,7 @@ const HomeGameCard = memo(({ game }) => {
                   src={cachedImage}
                   alt={sanitizeText(game.title || game.game)}
                   className={`w-full h-full object-cover transition-transform duration-300 ${
-                    isHovered ? 'scale-110' : 'scale-100'
+                    isHovered ? "scale-110" : "scale-100"
                   }`}
                 />
               ) : (
@@ -87,27 +87,37 @@ const HomeGameCard = memo(({ game }) => {
                   </div>
                 </div>
               )}
-              <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent transition-opacity duration-300 ${
-                isHovered ? 'opacity-100' : 'opacity-80'
-              }`}>
+              <div
+                className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent transition-opacity duration-300 ${
+                  isHovered ? "opacity-100" : "opacity-80"
+                }`}
+              >
                 <div className="absolute bottom-0 left-0 right-0 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     {isDLC && (
-                      <Badge variant="outline" className="bg-black/50 text-white border-primary/50 hover:bg-black/70">
+                      <Badge
+                        variant="outline"
+                        className="bg-black/50 text-white border-primary/50 hover:bg-black/70"
+                      >
                         <Gift className="w-3 h-3 mr-1 text-primary" />
-                        {t('download.allDlc')}
+                        {t("download.allDlc")}
                       </Badge>
                     )}
                     {isOnline && (
-                      <Badge variant="outline" className="bg-black/50 text-white border-primary/50 hover:bg-black/70">
+                      <Badge
+                        variant="outline"
+                        className="bg-black/50 text-white border-primary/50 hover:bg-black/70"
+                      >
                         <Globe className="w-3 h-3 mr-1 text-primary" />
-                        {t('download.online')}
+                        {t("download.online")}
                       </Badge>
                     )}
                   </div>
-                  <h3 className={`text-lg font-semibold text-white line-clamp-2 transition-transform duration-300 ${
-                    isHovered ? 'translate-x-2' : 'translate-x-0'
-                  }`}>
+                  <h3
+                    className={`text-lg font-semibold text-white line-clamp-2 transition-transform duration-300 ${
+                      isHovered ? "translate-x-2" : "translate-x-0"
+                    }`}
+                  >
                     {sanitizeText(game.title || game.game)}
                   </h3>
                 </div>
@@ -120,6 +130,6 @@ const HomeGameCard = memo(({ game }) => {
   );
 });
 
-HomeGameCard.displayName = 'HomeGameCard';
+HomeGameCard.displayName = "HomeGameCard";
 
 export default HomeGameCard;

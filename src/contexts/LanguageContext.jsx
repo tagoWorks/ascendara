@@ -1,5 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import i18n, { loadLanguageAsync, languages, getClosestSupportedLanguage } from '../i18n';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import i18n, { loadLanguageAsync, languages, getClosestSupportedLanguage } from "../i18n";
 
 const LanguageContext = createContext();
 
@@ -23,9 +29,11 @@ export function LanguageProvider({ children }) {
             // Then update our state
             setLanguage(targetLang);
           } else {
-            console.warn(`Failed to load language ${targetLang}, falling back to English`);
-            await i18n.changeLanguage('en');
-            setLanguage('en');
+            console.warn(
+              `Failed to load language ${targetLang}, falling back to English`
+            );
+            await i18n.changeLanguage("en");
+            setLanguage("en");
           }
         } else {
           // No language in settings, initialize with browser language
@@ -35,15 +43,15 @@ export function LanguageProvider({ children }) {
             await i18n.changeLanguage(browserLang);
             setLanguage(browserLang);
           } else {
-            await i18n.changeLanguage('en');
-            setLanguage('en');
+            await i18n.changeLanguage("en");
+            setLanguage("en");
           }
         }
       } catch (error) {
-        console.error('Error loading language from settings:', error);
+        console.error("Error loading language from settings:", error);
         // Fall back to English on error
-        await i18n.changeLanguage('en');
-        setLanguage('en');
+        await i18n.changeLanguage("en");
+        setLanguage("en");
       }
     };
     initLanguage();
@@ -51,13 +59,13 @@ export function LanguageProvider({ children }) {
 
   // Subscribe to i18next language changes
   useEffect(() => {
-    const handleLanguageChanged = (lng) => {
+    const handleLanguageChanged = lng => {
       setLanguage(lng);
     };
 
-    i18n.on('languageChanged', handleLanguageChanged);
+    i18n.on("languageChanged", handleLanguageChanged);
     return () => {
-      i18n.off('languageChanged', handleLanguageChanged);
+      i18n.off("languageChanged", handleLanguageChanged);
     };
   }, []);
 
@@ -66,24 +74,24 @@ export function LanguageProvider({ children }) {
     document.documentElement.lang = language;
   }, [language]);
 
-  const changeLanguage = useCallback(async (newLanguage) => {
+  const changeLanguage = useCallback(async newLanguage => {
     try {
       const success = await loadLanguageAsync(newLanguage);
       if (success) {
         // Change i18n's language
         await i18n.changeLanguage(newLanguage);
-        
+
         // Save to electron settings
         const settings = await window.electron.getSettings();
         await window.electron.saveSettings({
           ...settings,
-          language: newLanguage
+          language: newLanguage,
         });
       } else {
         throw new Error(`Failed to load language ${newLanguage}`);
       }
     } catch (error) {
-      console.error('Error updating language:', error);
+      console.error("Error updating language:", error);
       // Revert to previous language on error
       setLanguage(prevLang => {
         i18n.changeLanguage(prevLang);
@@ -97,20 +105,16 @@ export function LanguageProvider({ children }) {
     language,
     changeLanguage,
     languages,
-    t: i18n.t.bind(i18n)
+    t: i18n.t.bind(i18n),
   };
 
-  return (
-    <LanguageContext.Provider value={value}>
-      {children}
-    </LanguageContext.Provider>
-  );
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+    throw new Error("useLanguage must be used within a LanguageProvider");
   }
   return context;
 }

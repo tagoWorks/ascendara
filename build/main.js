@@ -3,10 +3,10 @@
  *                    Ascendara
  *    The best way to test games before you buy them.
  *       =====================================
- * 
+ *
  * This is the main process file for Ascendara, built with Electron.
  * It handles core functionality including:
- * 
+ *
  * - Application lifecycle management
  * - Game installation and launching
  * - Discord Rich Presence integration
@@ -15,34 +15,28 @@
  * - File system operations and game directory management
  * - Error handling and crash reporting
  * - Protocol handling for custom URL schemes
- * 
+ *
  *  Start development by first setting the isDev variable to true, then run `npm run start`.
  *  Build the app from source to an executable by setting isDev to false and running `npm run dist`.
  *  Note: This will run the execute.py script to build the the index files, then build the app.
- * 
+ *
  *  Learn more about developing Ascendara at https://ascendara.app/docs/developer/overview
- * 
+ *
  **/
-
 
 let isDev = false;
 
-
-
-
-
-
 const CURRENT_VERSION = "7.6.9";
-const { app, BrowserWindow, ipcMain, dialog, shell, protocol } = require('electron');
-const { Client } = require('discord-rpc');
-const disk = require('diskusage');
-const path = require('path');
-const axios = require('axios');
-const unzipper = require('unzipper');
-const fs = require('fs-extra');
-const os = require('os')
-const { spawn } = require('child_process');
-require("dotenv").config()
+const { app, BrowserWindow, ipcMain, dialog, shell, protocol } = require("electron");
+const { Client } = require("discord-rpc");
+const disk = require("diskusage");
+const path = require("path");
+const axios = require("axios");
+const unzipper = require("unzipper");
+const fs = require("fs-extra");
+const os = require("os");
+const { spawn } = require("child_process");
+require("dotenv").config();
 
 let has_launched = false;
 let is_latest = true;
@@ -53,9 +47,9 @@ let rpc;
 let config;
 
 try {
-    config = require('./config.prod.js');
+  config = require("./config.prod.js");
 } catch (e) {
-    config = {};
+  config = {};
 }
 const APIKEY = process.env.AUTHORIZATION || config.AUTHORIZATION;
 const analyticsAPI = process.env.ASCENDARA_API_KEY || config.ASCENDARA_API_KEY;
@@ -63,37 +57,37 @@ const imageKey = process.env.IMAGE_KEY || config.IMAGE_KEY;
 const clientId = process.env.DISCKEY || config.DISCKEY;
 
 // Initialize Discord RPC
-rpc = new Client({ transport: 'ipc' });
+rpc = new Client({ transport: "ipc" });
 
-rpc.on('ready', () => {
+rpc.on("ready", () => {
   rpc.setActivity({
-    state: 'Browsing Menus...',
-    largeImageKey: 'ascendara',
-    largeImageText: 'Ascendara'
+    state: "Browsing Menus...",
+    largeImageKey: "ascendara",
+    largeImageText: "Ascendara",
   });
 
-  console.log('Discord RPC is ready');
+  console.log("Discord RPC is ready");
 });
 
 rpc.login({ clientId }).catch(console.error);
 
 // Handle app ready event
 app.whenReady().then(() => {
-  console.log('App ready, creating window');
+  console.log("App ready, creating window");
   createWindow();
 
   // Check for protocol URL in argv
   const protocolUrl = process.argv.find(arg => {
-    console.log('Checking arg:', arg);
-    return arg.startsWith('ascendara://');
+    console.log("Checking arg:", arg);
+    return arg.startsWith("ascendara://");
   });
-  
+
   if (protocolUrl) {
-    console.log('Found protocol URL in argv:', protocolUrl);
+    console.log("Found protocol URL in argv:", protocolUrl);
     handleProtocolUrl(protocolUrl);
   }
 
-  app.on('activate', () => {
+  app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
@@ -101,14 +95,15 @@ app.whenReady().then(() => {
 });
 
 async function checkVersionAndUpdate() {
-
   try {
-    const response = await axios.get('https://api.ascendara.app/');
+    const response = await axios.get("https://api.ascendara.app/");
     const latest_version = response.data.appVer;
-    
+
     is_latest = latest_version === CURRENT_VERSION;
-    console.log(`Version check: Current=${CURRENT_VERSION}, Latest=${latest_version}, Is Latest=${is_latest}`);
-    
+    console.log(
+      `Version check: Current=${CURRENT_VERSION}, Latest=${latest_version}, Is Latest=${is_latest}`
+    );
+
     if (!is_latest) {
       const settings = await getSettings();
       if (settings.autoUpdate && !updateDownloadInProgress) {
@@ -118,14 +113,14 @@ async function checkVersionAndUpdate() {
         // Show update available notification
         notificationShown = true; // Ensure notification is only shown once
         BrowserWindow.getAllWindows().forEach(window => {
-          window.webContents.send('update-available');
+          window.webContents.send("update-available");
         });
       }
     }
-    
+
     return is_latest;
   } catch (error) {
-    console.error('Error checking version:', error);
+    console.error("Error checking version:", error);
     return true;
   }
 }
@@ -136,24 +131,23 @@ async function downloadUpdateInBackground() {
 
   try {
     // Set downloadingUpdate to true in timestamp
-    const timestampPath = path.join(os.homedir(), 'timestamp.ascendara.json');
+    const timestampPath = path.join(os.homedir(), "timestamp.ascendara.json");
     let timestamp = {};
     if (fs.existsSync(timestampPath)) {
-      timestamp = JSON.parse(fs.readFileSync(timestampPath, 'utf8'));
+      timestamp = JSON.parse(fs.readFileSync(timestampPath, "utf8"));
     }
     timestamp.downloadingUpdate = true;
     fs.writeFileSync(timestampPath, JSON.stringify(timestamp, null, 2));
 
     // Custom headers for app identification
     const headers = {
-      'X-Ascendara-Client': 'app',
-      'X-Ascendara-Version': CURRENT_VERSION
+      "X-Ascendara-Client": "app",
+      "X-Ascendara-Version": CURRENT_VERSION,
     };
 
-
     const updateUrl = `https://lfs.ascendara.app/download?update`;
-    const tempDir = path.join(os.tmpdir(), 'ascendarainstaller');
-    const installerPath = path.join(tempDir, 'AscendaraInstaller.exe');
+    const tempDir = path.join(os.tmpdir(), "ascendarainstaller");
+    const installerPath = path.join(tempDir, "AscendaraInstaller.exe");
 
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir);
@@ -161,17 +155,17 @@ async function downloadUpdateInBackground() {
     const mainWindow = BrowserWindow.getAllWindows()[0];
     const response = await axios({
       url: updateUrl,
-      method: 'GET',
-      responseType: 'arraybuffer',
+      method: "GET",
+      responseType: "arraybuffer",
       headers,
-      onDownloadProgress: (progressEvent) => {
+      onDownloadProgress: progressEvent => {
         const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-        mainWindow.webContents.send('update-download-progress', progress);
-      }
+        mainWindow.webContents.send("update-download-progress", progress);
+      },
     });
 
     fs.writeFileSync(installerPath, Buffer.from(response.data));
-    
+
     updateDownloaded = true;
     updateDownloadInProgress = false;
 
@@ -181,81 +175,79 @@ async function downloadUpdateInBackground() {
 
     // Notify that update is ready
     BrowserWindow.getAllWindows().forEach(window => {
-      window.webContents.send('update-ready');
+      window.webContents.send("update-ready");
     });
   } catch (error) {
-    console.error('Error downloading update:', error);
+    console.error("Error downloading update:", error);
     updateDownloadInProgress = false;
-    
+
     // Notify about the error
     BrowserWindow.getAllWindows().forEach(window => {
-      window.webContents.send('update-error', error.message);
+      window.webContents.send("update-error", error.message);
     });
   }
 }
 
-
-
 let electronDl;
-const TIMESTAMP_FILE = path.join(os.homedir(), 'timestamp.ascendara.json');
+const TIMESTAMP_FILE = path.join(os.homedir(), "timestamp.ascendara.json");
 
 (async () => {
-  electronDl = await import('electron-dl');
+  electronDl = await import("electron-dl");
 })();
 const downloadProcesses = new Map();
 const goFileProcesses = new Map();
 const retryDownloadProcesses = new Map();
 const runGameProcesses = new Map();
-const appDirectory = path.join(path.dirname(app.getPath('exe')));
-console.log(appDirectory)
+const appDirectory = path.join(path.dirname(app.getPath("exe")));
+console.log(appDirectory);
 
 let apiKeyOverride = null;
 
-ipcMain.handle('override-api-key', (event, newApiKey) => {
+ipcMain.handle("override-api-key", (event, newApiKey) => {
   apiKeyOverride = newApiKey;
-  console.log('API Key overridden:', apiKeyOverride);
+  console.log("API Key overridden:", apiKeyOverride);
 });
 
-ipcMain.handle('get-api-key', () => {
+ipcMain.handle("get-api-key", () => {
   return apiKeyOverride || APIKEY;
 });
 
 // Handle external urls
-ipcMain.handle('open-url', async (event, url) => {
+ipcMain.handle("open-url", async (event, url) => {
   shell.openExternal(url);
 });
 
-ipcMain.handle('get-version', () => CURRENT_VERSION);
+ipcMain.handle("get-version", () => CURRENT_VERSION);
 
 // Check if any game is downloading
-ipcMain.handle('is-downloader-running', async () => {
+ipcMain.handle("is-downloader-running", async () => {
   try {
     // Get settings to find download directory
-    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-    const data = fs.readFileSync(filePath, 'utf8');
+    const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
     if (!settings.downloadDirectory) return false;
 
     // Read games data
-    const gamesFilePath = path.join(settings.downloadDirectory, 'games.json');
-    const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, 'utf8'));
-    
+    const gamesFilePath = path.join(settings.downloadDirectory, "games.json");
+    const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, "utf8"));
+
     // Simply check if any game has downloadingData key
     return Object.values(gamesData).some(game => game.downloadingData);
   } catch (error) {
-    console.error('Error checking downloader status:', error);
+    console.error("Error checking downloader status:", error);
     return false;
   }
 });
 
-ipcMain.handle('delete-game-directory', async (event, game) => {
+ipcMain.handle("delete-game-directory", async (event, game) => {
   try {
-    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+    const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
     try {
-      const data = fs.readFileSync(filePath, 'utf8');
+      const data = fs.readFileSync(filePath, "utf8");
       const settings = JSON.parse(data);
       if (!settings.downloadDirectory) {
-        console.error('Download directory not set');
+        console.error("Download directory not set");
         return;
       }
       const downloadDirectory = settings.downloadDirectory;
@@ -263,36 +255,36 @@ ipcMain.handle('delete-game-directory', async (event, game) => {
       try {
         // First ensure all file handles are closed by attempting to read the directory
         const files = await fs.promises.readdir(gameDirectory, { withFileTypes: true });
-        
+
         // Delete all contents first
         for (const file of files) {
           const fullPath = path.join(gameDirectory, file.name);
           await fs.promises.rm(fullPath, { recursive: true, force: true });
         }
-        
+
         // Then remove the empty directory itself
         await fs.promises.rmdir(gameDirectory);
-        console.log('Game directory and files deleted successfully');
+        console.log("Game directory and files deleted successfully");
       } catch (error) {
-        console.error('Error deleting the game directory:', error);
+        console.error("Error deleting the game directory:", error);
         throw error; // Propagate the error to handle it in the caller
       }
     } catch (error) {
-      console.error('Error reading the settings file:', error);
+      console.error("Error reading the settings file:", error);
     }
   } catch (error) {
-    console.error('Error deleting the game directory:', error);
+    console.error("Error deleting the game directory:", error);
   }
-});   
+});
 
-ipcMain.handle('stop-download', async (event, game) => {
+ipcMain.handle("stop-download", async (event, game) => {
   try {
     // Kill any running downloader processes for this game
-    const processNames = ['AscendaraDownloader.exe', 'AscendaraGofileHelper.exe'];
-    
+    const processNames = ["AscendaraDownloader.exe", "AscendaraGofileHelper.exe"];
+
     for (const processName of processNames) {
-      const killProcess = spawn('taskkill', ['/f', '/im', processName]);
-      await new Promise((resolve) => killProcess.on('close', resolve));
+      const killProcess = spawn("taskkill", ["/f", "/im", processName]);
+      await new Promise(resolve => killProcess.on("close", resolve));
     }
 
     // Wait for processes to fully terminate and release file handles
@@ -301,7 +293,7 @@ ipcMain.handle('stop-download', async (event, game) => {
     // Try to delete directory multiple times in case file handles are still being released
     let attempts = 0;
     const maxAttempts = 3;
-    
+
     while (attempts < maxAttempts) {
       try {
         await deleteGameDirectory(game.game);
@@ -316,18 +308,18 @@ ipcMain.handle('stop-download', async (event, game) => {
       }
     }
   } catch (error) {
-    console.error('Error stopping download:', error);
+    console.error("Error stopping download:", error);
     return false;
   }
 });
 
-const deleteGameDirectory = async (game) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+const deleteGameDirectory = async game => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
     if (!settings.downloadDirectory) {
-      console.error('Download directory not set');
+      console.error("Download directory not set");
       return;
     }
     const downloadDirectory = settings.downloadDirectory;
@@ -335,32 +327,32 @@ const deleteGameDirectory = async (game) => {
     try {
       // First ensure all file handles are closed by attempting to read the directory
       const files = await fs.promises.readdir(gameDirectory, { withFileTypes: true });
-      
+
       // Delete all contents first
       for (const file of files) {
         const fullPath = path.join(gameDirectory, file.name);
         await fs.promises.rm(fullPath, { recursive: true, force: true });
       }
-      
+
       // Then remove the empty directory itself
       await fs.promises.rmdir(gameDirectory);
-      console.log('Game directory and files deleted successfully');
+      console.log("Game directory and files deleted successfully");
     } catch (error) {
-      console.error('Error deleting the game directory:', error);
+      console.error("Error deleting the game directory:", error);
       throw error; // Propagate the error to handle it in the caller
     }
   } catch (error) {
-    console.error('Error reading the settings file:', error);
+    console.error("Error reading the settings file:", error);
   }
 };
 
-ipcMain.handle('get-game-image', async (event, game) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("get-game-image", async (event, game) => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
     if (!settings.downloadDirectory) {
-      console.error('Download directory not set');
+      console.error("Download directory not set");
       return null;
     }
     const downloadDirectory = settings.downloadDirectory;
@@ -372,24 +364,28 @@ ipcMain.handle('get-game-image', async (event, game) => {
     const imageFiles = fs.readdirSync(gameDirectory);
 
     for (const file of imageFiles) {
-      if (file === 'header.ascendara.jpg' || file === 'header.ascendara.png' || file === 'header.jpeg') {
+      if (
+        file === "header.ascendara.jpg" ||
+        file === "header.ascendara.png" ||
+        file === "header.jpeg"
+      ) {
         const imagePath = path.join(gameDirectory, file);
         const imageBuffer = fs.readFileSync(imagePath);
-        return imageBuffer.toString('base64');
+        return imageBuffer.toString("base64");
       }
     }
 
     return null;
   } catch (error) {
-    console.error('Error reading the settings file:', error);
+    console.error("Error reading the settings file:", error);
     return null;
   }
 });
 
-ipcMain.handle('can-create-files', async (event, directory) => {
+ipcMain.handle("can-create-files", async (event, directory) => {
   try {
-    const filePath = path.join(directory, 'test.txt');
-    fs.writeFileSync(filePath, 'test');
+    const filePath = path.join(directory, "test.txt");
+    fs.writeFileSync(filePath, "test");
     fs.unlinkSync(filePath);
     return true;
   } catch (error) {
@@ -399,110 +395,136 @@ ipcMain.handle('can-create-files', async (event, directory) => {
 
 // Sanitize directory name to remove problematic characters
 function sanitizeDirectoryName(name) {
-  return name.replace(/[<>:"\/\\|?*']/g, '');
+  return name.replace(/[<>:"\/\\|?*']/g, "");
 }
 
 // Download the file
-ipcMain.handle('download-file', async (event, link, game, online, dlc, isVr, version, imgID, size) => {
-  console.log(`Downloading file: ${link}, game: ${game}, online: ${online}, dlc: ${dlc}, isVr: ${isVr}, version: ${version}, size: ${size}`);
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-  try {
-    const data = fs.readFileSync(filePath, 'utf8');
-    const settings = JSON.parse(data);
-    if (!settings.downloadDirectory) {
-      console.error('Download directory not set');
-      return;
-    }
-    const gamesDirectory = settings.downloadDirectory;
-    const sanitizedGameName = sanitizeDirectoryName(game);
-    const gameDirectory = path.join(gamesDirectory, sanitizedGameName);
-    
-    if (!fs.existsSync(gameDirectory)) {
-      fs.mkdirSync(gameDirectory, { recursive: true });
-    }
+ipcMain.handle(
+  "download-file",
+  async (event, link, game, online, dlc, isVr, version, imgID, size) => {
+    console.log(
+      `Downloading file: ${link}, game: ${game}, online: ${online}, dlc: ${dlc}, isVr: ${isVr}, version: ${version}, size: ${size}`
+    );
+    const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
+    try {
+      const data = fs.readFileSync(filePath, "utf8");
+      const settings = JSON.parse(data);
+      if (!settings.downloadDirectory) {
+        console.error("Download directory not set");
+        return;
+      }
+      const gamesDirectory = settings.downloadDirectory;
+      const sanitizedGameName = sanitizeDirectoryName(game);
+      const gameDirectory = path.join(gamesDirectory, sanitizedGameName);
 
-    const imageLink = `https://api.ascendara.app/v2/image/${imgID}`;
-    axios({
-      url: imageLink,
-      method: 'GET',
-      responseType: 'arraybuffer'
-    }).then(response => {
-      const imageBuffer = Buffer.from(response.data);
-      const mimeType = response.headers['content-type'];
-      const extension = getExtensionFromMimeType(mimeType);
-      const downloadPath = path.join(gameDirectory, `header.ascendara${extension}`);
-      const writer = fs.createWriteStream(downloadPath);
+      if (!fs.existsSync(gameDirectory)) {
+        fs.mkdirSync(gameDirectory, { recursive: true });
+      }
 
-      writer.write(imageBuffer);
-      writer.end();
-
-      writer.on('finish', () => {
-        console.log('Image downloaded successfully');
-        let executablePath;
-        let spawnCommand;
-
-        if (link.includes('gofile.io')) {
-          executablePath = isDev 
-            ? path.join('./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe')
-            : path.join(appDirectory, '/resources/AscendaraGofileHelper.exe');
-          spawnCommand = ["https://" + link, game, online, dlc, isVr, version, size, gamesDirectory];
-        } else {
-          executablePath = isDev
-            ? path.join('./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe')
-            : path.join(appDirectory, '/resources/AscendaraDownloader.exe');
-          spawnCommand = [link, game, online, dlc, isVr, version, size, gamesDirectory];
-          console.log(spawnCommand)
-        }
-
-        spawn(executablePath, spawnCommand, {
-          detached: true,
-          stdio: 'ignore',
-          windowsHide: false
-        }).unref();
-
-        // Send download stats
-        axios.post('https://api.ascendara.app/stats/download', {
-          game: game,
-        })
+      const imageLink = `https://api.ascendara.app/v2/image/${imgID}`;
+      axios({
+        url: imageLink,
+        method: "GET",
+        responseType: "arraybuffer",
+      })
         .then(response => {
-          console.log('Download counter incremented successfully');
+          const imageBuffer = Buffer.from(response.data);
+          const mimeType = response.headers["content-type"];
+          const extension = getExtensionFromMimeType(mimeType);
+          const downloadPath = path.join(gameDirectory, `header.ascendara${extension}`);
+          const writer = fs.createWriteStream(downloadPath);
+
+          writer.write(imageBuffer);
+          writer.end();
+
+          writer.on("finish", () => {
+            console.log("Image downloaded successfully");
+            let executablePath;
+            let spawnCommand;
+
+            if (link.includes("gofile.io")) {
+              executablePath = isDev
+                ? path.join(
+                    "./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe"
+                  )
+                : path.join(appDirectory, "/resources/AscendaraGofileHelper.exe");
+              spawnCommand = [
+                "https://" + link,
+                game,
+                online,
+                dlc,
+                isVr,
+                version,
+                size,
+                gamesDirectory,
+              ];
+            } else {
+              executablePath = isDev
+                ? path.join("./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe")
+                : path.join(appDirectory, "/resources/AscendaraDownloader.exe");
+              spawnCommand = [
+                link,
+                game,
+                online,
+                dlc,
+                isVr,
+                version,
+                size,
+                gamesDirectory,
+              ];
+              console.log(spawnCommand);
+            }
+
+            spawn(executablePath, spawnCommand, {
+              detached: true,
+              stdio: "ignore",
+              windowsHide: false,
+            }).unref();
+
+            // Send download stats
+            axios
+              .post("https://api.ascendara.app/stats/download", {
+                game: game,
+              })
+              .then(response => {
+                console.log("Download counter incremented successfully");
+              })
+              .catch(error => {
+                console.error("Error incrementing download counter:", error);
+              });
+          });
+
+          writer.on("error", err => {
+            console.error("Error downloading the image:", err);
+          });
         })
         .catch(error => {
-          console.error('Error incrementing download counter:', error);
+          console.error("Error during image download request:", error);
         });
-      });
-
-      writer.on('error', (err) => {
-        console.error('Error downloading the image:', err);
-      });
-    }).catch(error => {
-      console.error('Error during image download request:', error);
-    });
-
-  } catch (error) {
-    console.error('Error reading the settings file:', error);
+    } catch (error) {
+      console.error("Error reading the settings file:", error);
+    }
   }
-});
+);
 
 function getExtensionFromMimeType(mimeType) {
   switch (mimeType) {
-    case 'image/jpeg':
-      return '.jpg';
-    case 'image/png':
-      return '.png';
+    case "image/jpeg":
+      return ".jpg";
+    case "image/png":
+      return ".png";
     default:
-      return '';
+      return "";
   }
 }
 
-
-ipcMain.handle('check-retry-extract', async (event, game) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("check-retry-extract", async (event, game) => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
     if (!settings.downloadDirectory) {
-      console.error('Download directory not set');
+      console.error("Download directory not set");
       return;
     }
     const downloadDirectory = settings.downloadDirectory;
@@ -514,91 +536,90 @@ ipcMain.handle('check-retry-extract', async (event, game) => {
     }
     return files.length > 1;
   } catch (error) {
-    console.error('Error reading the settings file:', error);
+    console.error("Error reading the settings file:", error);
     return;
   }
 });
 
-
-
-ipcMain.handle('retry-extract', async (event, game, online, dlc, version) => { 
+ipcMain.handle("retry-extract", async (event, game, online, dlc, version) => {
   console.log(`Retrying extract: ${game}`);
   const result = await dialog.showOpenDialog({
-    properties: ['openFile', 'openDirectory']
+    properties: ["openFile", "openDirectory"],
   });
 
   if (result.canceled) {
     return null;
   } else {
     console.log(`Selected paths: ${result.filePaths}`);
-    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+    const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
     try {
-      const data = fs.readFileSync(filePath, 'utf8');
+      const data = fs.readFileSync(filePath, "utf8");
       const settings = JSON.parse(data);
       if (!settings.downloadDirectory) {
-        console.error('Download directory not set');
+        console.error("Download directory not set");
         return;
-      } 
+      }
       const downloadDirectory = settings.downloadDirectory;
       const gameDirectory = path.join(downloadDirectory, game);
       const selectedPaths = result.filePaths;
-      
-      selectedPaths.forEach((selectedPath) => {
+
+      selectedPaths.forEach(selectedPath => {
         const itemName = path.basename(selectedPath);
         const executablePath = isDev
-          ? path.join('./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe')
-          : path.join(appDirectory, '/resources/AscendaraDownloader.exe');
-        console.log(`Calling ${executablePath} with arguments: ${selectedPath}, ${game}, ${online}, ${dlc}, ${version}, ${gameDirectory}, ${itemName}`);
+          ? path.join("./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe")
+          : path.join(appDirectory, "/resources/AscendaraDownloader.exe");
+        console.log(
+          `Calling ${executablePath} with arguments: ${selectedPath}, ${game}, ${online}, ${dlc}, ${version}, ${gameDirectory}, ${itemName}`
+        );
         const downloadProcess = spawn(executablePath, [
-          "retryfolder", 
-          game, 
-          online, 
-          dlc, 
-          version, 
-          gameDirectory, 
-          itemName
+          "retryfolder",
+          game,
+          online,
+          dlc,
+          version,
+          gameDirectory,
+          itemName,
         ]);
 
         downloadProcesses.set(game, downloadProcess);
 
-        downloadProcess.stdout.on('data', (data) => {
+        downloadProcess.stdout.on("data", data => {
           console.log(`stdout: ${data}`);
         });
 
-        downloadProcess.stderr.on('data', (data) => {
+        downloadProcess.stderr.on("data", data => {
           console.error(`stderr: ${data}`);
         });
 
-        downloadProcess.on('close', (code) => {
+        downloadProcess.on("close", code => {
           console.log(`child process exited with code ${code}`);
         });
-        
+
         // Store the download process
         downloadProcesses.set(game, downloadProcess);
       });
 
       return; // Return after setting the downloadProcess
     } catch (error) {
-      console.error('Error reading the settings file:', error);
+      console.error("Error reading the settings file:", error);
       return;
     }
   }
 });
 
 // Return dev status
-ipcMain.handle('is-dev', () => {
+ipcMain.handle("is-dev", () => {
   return isDev;
 });
 
-
 // Retry the game download
-ipcMain.handle('retry-download', async (event, link, game, online, dlc, version) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("retry-download", async (event, link, game, online, dlc, version) => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
     if (!settings.downloadDirectory) {
-      console.error('Download directory not set');
+      console.error("Download directory not set");
       return;
     }
     const gamesDirectory = settings.downloadDirectory;
@@ -607,49 +628,55 @@ ipcMain.handle('retry-download', async (event, link, game, online, dlc, version)
     let executablePath;
     let spawnCommand;
 
-    if (link.includes('gofile.io')) {
-      executablePath = isDev 
-        ? path.join(appDirectory, '/binaries/AscendaraGofileHelper/dist/AscendaraGofileHelper.exe')
-        : path.join(appDirectory, '/resources/AscendaraGofileHelper.exe');
-      spawnCommand = ["https://" + link, game, online, dlc, version, '0', gamesDirectory];
+    if (link.includes("gofile.io")) {
+      executablePath = isDev
+        ? path.join(
+            appDirectory,
+            "/binaries/AscendaraGofileHelper/dist/AscendaraGofileHelper.exe"
+          )
+        : path.join(appDirectory, "/resources/AscendaraGofileHelper.exe");
+      spawnCommand = ["https://" + link, game, online, dlc, version, "0", gamesDirectory];
     } else {
       executablePath = isDev
-        ? path.join(appDirectory, '/binaries/AscendaraDownloader/dist/AscendaraDownloader.exe')
-        : path.join(appDirectory, '/resources/AscendaraDownloader.exe');
-      spawnCommand = [link, game, online, dlc, version, '0', gamesDirectory];
+        ? path.join(
+            appDirectory,
+            "/binaries/AscendaraDownloader/dist/AscendaraDownloader.exe"
+          )
+        : path.join(appDirectory, "/resources/AscendaraDownloader.exe");
+      spawnCommand = [link, game, online, dlc, version, "0", gamesDirectory];
     }
 
     const downloadProcess = spawn(executablePath, spawnCommand);
     retryDownloadProcesses.set(game, downloadProcess);
 
-    downloadProcess.stdout.on('data', (data) => {
+    downloadProcess.stdout.on("data", data => {
       console.log(`stdout: ${data}`);
     });
 
-    downloadProcess.stderr.on('data', (data) => {
+    downloadProcess.stderr.on("data", data => {
       console.error(`stderr: ${data}`);
     });
 
-    downloadProcess.on('close', (code) => {
+    downloadProcess.on("close", code => {
       console.log(`Download process exited with code ${code}`);
       retryDownloadProcesses.delete(game);
     });
 
     return true;
   } catch (error) {
-    console.error('Error retrying download:', error);
+    console.error("Error retrying download:", error);
     return false;
   }
 });
 
 // Download game cover
-ipcMain.handle('download-game-cover', async (event, { imgID, gameName }) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("download-game-cover", async (event, { imgID, gameName }) => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
     if (!settings.downloadDirectory) {
-      throw new Error('Download directory not set');
+      throw new Error("Download directory not set");
     }
 
     const gameDirectory = path.join(settings.downloadDirectory, gameName);
@@ -660,24 +687,24 @@ ipcMain.handle('download-game-cover', async (event, { imgID, gameName }) => {
     const imageUrl = `https://api.ascendara.app/v2/image/${imgID}`;
     const response = await axios({
       url: imageUrl,
-      method: 'GET',
-      responseType: 'arraybuffer'
+      method: "GET",
+      responseType: "arraybuffer",
     });
 
-    const imagePath = path.join(gameDirectory, 'header.ascendara.jpg');
+    const imagePath = path.join(gameDirectory, "header.ascendara.jpg");
     fs.writeFileSync(imagePath, Buffer.from(response.data));
 
     // Update games.json with the new image path
-    const gamesJsonPath = path.join(settings.downloadDirectory, 'games.json');
+    const gamesJsonPath = path.join(settings.downloadDirectory, "games.json");
     let gamesData = { games: [] };
-    
+
     try {
-      const existingData = fs.readFileSync(gamesJsonPath, 'utf8');
+      const existingData = fs.readFileSync(gamesJsonPath, "utf8");
       gamesData = JSON.parse(existingData);
     } catch (error) {
       // File doesn't exist or is invalid, use default empty object
     }
-    
+
     // Update the image path if the game exists
     const gameIndex = gamesData.games.findIndex(g => g.game === gameName);
     if (gameIndex >= 0) {
@@ -686,14 +713,14 @@ ipcMain.handle('download-game-cover', async (event, { imgID, gameName }) => {
     }
 
     // Return the image as base64 for preview
-    return Buffer.from(response.data).toString('base64');
+    return Buffer.from(response.data).toString("base64");
   } catch (error) {
-    console.error('Error downloading game cover:', error);
+    console.error("Error downloading game cover:", error);
     throw error;
   }
 });
 
-ipcMain.handle('is-new', () => {
+ipcMain.handle("is-new", () => {
   const filePath = TIMESTAMP_FILE;
   try {
     fs.accessSync(filePath);
@@ -703,50 +730,49 @@ ipcMain.handle('is-new', () => {
   }
 });
 
-ipcMain.handle('is-v7', () => {
+ipcMain.handle("is-v7", () => {
   try {
-    const data = fs.readFileSync(TIMESTAMP_FILE, 'utf8');
+    const data = fs.readFileSync(TIMESTAMP_FILE, "utf8");
     const timestamp = JSON.parse(data);
-    return timestamp.hasOwnProperty('v7') && timestamp.v7 === true;
+    return timestamp.hasOwnProperty("v7") && timestamp.v7 === true;
   } catch (error) {
     return false; // If there's an error, assume not v7
   }
 });
 
-ipcMain.handle('set-v7', () => {
-  const filePath = path.join(os.homedir(), 'timestamp.ascendara.json');
+ipcMain.handle("set-v7", () => {
+  const filePath = path.join(os.homedir(), "timestamp.ascendara.json");
   try {
     let timestamp = {
       timestamp: Date.now(),
-      v7: true
+      v7: true,
     };
 
     // If file exists, update it while preserving the original timestamp
     if (fs.existsSync(filePath)) {
-      const existingData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      const existingData = JSON.parse(fs.readFileSync(filePath, "utf8"));
       timestamp.timestamp = existingData.timestamp;
     }
 
     fs.writeFileSync(filePath, JSON.stringify(timestamp, null, 2));
     return true;
   } catch (error) {
-    console.error('Error setting v7:', error);
+    console.error("Error setting v7:", error);
     return false;
   }
 });
 
-ipcMain.handle('create-timestamp', () => {
-  const filePath = path.join(os.homedir(), 'timestamp.ascendara.json');
+ipcMain.handle("create-timestamp", () => {
+  const filePath = path.join(os.homedir(), "timestamp.ascendara.json");
   const timestamp = {
     timestamp: Date.now(),
-    v7: true
+    v7: true,
   };
-  console.log(timestamp)
+  console.log(timestamp);
   fs.writeFileSync(filePath, JSON.stringify(timestamp, null, 2));
 });
 
-
-ipcMain.handle('has-launched', () => {
+ipcMain.handle("has-launched", () => {
   const result = has_launched;
   if (!has_launched) {
     has_launched = true;
@@ -754,94 +780,93 @@ ipcMain.handle('has-launched', () => {
   return result;
 });
 
-ipcMain.handle('update-launch-count', () => {
+ipcMain.handle("update-launch-count", () => {
   try {
-    const timestampPath = path.join(os.homedir(), 'timestamp.ascendara.json');
+    const timestampPath = path.join(os.homedir(), "timestamp.ascendara.json");
     let timestamp = {};
-    
+
     if (fs.existsSync(timestampPath)) {
-      timestamp = JSON.parse(fs.readFileSync(timestampPath, 'utf8'));
+      timestamp = JSON.parse(fs.readFileSync(timestampPath, "utf8"));
     }
-    
+
     timestamp.launchCount = (timestamp.launchCount || 0) + 1;
     fs.writeFileSync(timestampPath, JSON.stringify(timestamp, null, 2));
-    
+
     return timestamp.launchCount;
   } catch (error) {
-    console.error('Error updating launch count:', error);
+    console.error("Error updating launch count:", error);
     return 1;
   }
 });
 
-ipcMain.handle('delete-installer', () => {
-    // check ascnedarainstaller tempfile and delete if exists
-    const filePath = path.join(app.getPath('temp'), 'ascendarainstaller.exe');
-    try {
-      fs.unlinkSync(filePath);
-    }
-    catch (error) {
-      console.error(error);
-    }
+ipcMain.handle("delete-installer", () => {
+  // check ascnedarainstaller tempfile and delete if exists
+  const filePath = path.join(app.getPath("temp"), "ascendarainstaller.exe");
+  try {
+    fs.unlinkSync(filePath);
+  } catch (error) {
+    console.error(error);
+  }
 });
 
-ipcMain.handle('get-analytics-key', () => {
-    return analyticsAPI;
+ipcMain.handle("get-analytics-key", () => {
+  return analyticsAPI;
 });
 
-ipcMain.handle('get-image-key', () => {
-    return imageKey;
+ipcMain.handle("get-image-key", () => {
+  return imageKey;
 });
 
-ipcMain.handle('set-timestamp-value', async (event, key, value) => {
+ipcMain.handle("set-timestamp-value", async (event, key, value) => {
   const filePath = TIMESTAMP_FILE;
   try {
     let timestamp = {};
     if (fs.existsSync(filePath)) {
-      timestamp = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      timestamp = JSON.parse(fs.readFileSync(filePath, "utf8"));
     }
     timestamp[key] = value;
     fs.writeFileSync(filePath, JSON.stringify(timestamp, null, 2));
   } catch (error) {
-    console.error('Error setting timestamp value:', error);
+    console.error("Error setting timestamp value:", error);
   }
 });
 
-ipcMain.handle('get-timestamp-value', async (event, key) => {
+ipcMain.handle("get-timestamp-value", async (event, key) => {
   const filePath = TIMESTAMP_FILE;
   try {
     let timestamp = {};
     if (fs.existsSync(filePath)) {
-      timestamp = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      timestamp = JSON.parse(fs.readFileSync(filePath, "utf8"));
     }
     return timestamp[key];
   } catch (error) {
-    console.error('Error getting timestamp value:', error);
+    console.error("Error getting timestamp value:", error);
     return null;
   }
 });
 
 // Read the settings JSON file and send it to the renderer process
-ipcMain.handle('get-settings', () => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("get-settings", () => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
     let settings = {};
-    
+
     // Try to read existing settings
     if (fs.existsSync(filePath)) {
-      const data = fs.readFileSync(filePath, 'utf8');
+      const data = fs.readFileSync(filePath, "utf8");
       settings = JSON.parse(data);
     }
-    
+
     // Define default settings
     const defaultSettings = {
-      downloadDirectory: settings.downloadDirectory || '',
+      downloadDirectory: settings.downloadDirectory || "",
       viewOldDownloadLinks: false,
       seeInappropriateContent: false,
       autoCreateShortcuts: true,
       sendAnalytics: true,
       autoUpdate: true,
-      language: 'en',
-      theme: 'purple',
+      language: "en",
+      theme: "purple",
       threadCount: 4,
     };
 
@@ -851,10 +876,10 @@ ipcMain.handle('get-settings', () => {
       ...settings,
       enabledSources: {
         ...defaultSettings.enabledSources,
-        ...(settings.enabledSources || {})
+        ...(settings.enabledSources || {}),
       },
       // Ensure download directory is preserved from existing settings
-      downloadDirectory: settings.downloadDirectory || defaultSettings.downloadDirectory
+      downloadDirectory: settings.downloadDirectory || defaultSettings.downloadDirectory,
     };
 
     // Save merged settings only if file doesn't exist
@@ -864,17 +889,17 @@ ipcMain.handle('get-settings', () => {
 
     return mergedSettings;
   } catch (error) {
-    console.error('Error reading settings:', error);
+    console.error("Error reading settings:", error);
     // Return default settings if there's an error
     const defaultSettings = {
-      downloadDirectory: '',
+      downloadDirectory: "",
       viewOldDownloadLinks: false,
       seeInappropriateContent: false,
       autoCreateShortcuts: true,
       sendAnalytics: true,
       autoUpdate: true,
-      language: 'en',
-      theme: 'purple',
+      language: "en",
+      theme: "purple",
       threadCount: 4,
     };
     return defaultSettings;
@@ -882,148 +907,171 @@ ipcMain.handle('get-settings', () => {
 });
 
 // Save the settings JSON file
-ipcMain.handle('save-settings', async (event, options, directory) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("save-settings", async (event, options, directory) => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
     let settings = {};
     try {
-      const data = fs.readFileSync(filePath, 'utf8');
+      const data = fs.readFileSync(filePath, "utf8");
       settings = JSON.parse(data);
     } catch (error) {
       // File doesn't exist or is invalid, use empty settings object
     }
 
     // Ensure language is saved as a string
-    if (options && typeof options.language === 'object') {
+    if (options && typeof options.language === "object") {
       options.language = String(options.language);
     }
-    
+
     // If directory is provided, update the download directory
     if (directory) {
       options.downloadDirectory = directory;
     }
 
     fs.writeFileSync(filePath, JSON.stringify(options, null, 2));
-    event.sender.send('settings-changed', options);
+    event.sender.send("settings-changed", options);
     return true;
   } catch (error) {
-    console.error('Error saving settings:', error);
+    console.error("Error saving settings:", error);
     return false;
   }
 });
 
 let isInstalling = false;
 
-ipcMain.handle('install-dependencies', async (event) => {
-    if (isInstalling) {
-        return { success: false, message: 'Installation already in progress' };
+ipcMain.handle("install-dependencies", async event => {
+  if (isInstalling) {
+    return { success: false, message: "Installation already in progress" };
+  }
+
+  isInstalling = true;
+
+  try {
+    const tempDir = path.join(os.tmpdir(), "ascendaradependencies");
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
     }
 
-    isInstalling = true;
+    const zipUrl = "https://cdn.ascendara.app/files/deps.zip";
+    const zipPath = path.join(tempDir, "deps.zip");
+    const res = await fetch(zipUrl);
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    fs.writeFileSync(zipPath, buffer);
 
-    try {
-        const tempDir = path.join(os.tmpdir(), 'ascendaradependencies');
-        if (!fs.existsSync(tempDir)) {
-            fs.mkdirSync(tempDir);
-        }
+    await fs
+      .createReadStream(zipPath)
+      .pipe(unzipper.Extract({ path: tempDir }))
+      .promise();
 
-        const zipUrl = 'https://cdn.ascendara.app/files/deps.zip';
-        const zipPath = path.join(tempDir, 'deps.zip');
-        const res = await fetch(zipUrl);
-        const arrayBuffer = await res.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        fs.writeFileSync(zipPath, buffer);
+    const files = fs.readdirSync(tempDir);
+    const executables = files.filter(file => path.extname(file) === ".exe");
+    const msis = files.filter(file => path.extname(file) === ".msi");
 
-        await fs.createReadStream(zipPath)
-            .pipe(unzipper.Extract({ path: tempDir }))
-            .promise();
+    for (const executable of executables) {
+      const exePath = path.join(tempDir, executable);
 
-        const files = fs.readdirSync(tempDir);
-        const executables = files.filter(file => path.extname(file) === '.exe');
-        const msis = files.filter(file => path.extname(file) === '.msi');
+      // Notify the renderer that installation has started
+      event.sender.send("dependency-installation-status", {
+        name: executable,
+        status: "starting",
+      });
 
-        for (const executable of executables) {
-            const exePath = path.join(tempDir, executable);
-            
-            // Notify the renderer that installation has started
-            event.sender.send('dependency-installation-status', { name: executable, status: 'starting' });
+      // Check if the file is executable
+      fs.chmodSync(exePath, "755");
 
-            // Check if the file is executable
-            fs.chmodSync(exePath, '755');
-
-            // Run the executable with elevated privileges
-            await new Promise((resolve, reject) => {
-                console.log(`Starting installation of: ${executable}`);
-                const process = spawn('powershell.exe', ['-Command', `Start-Process -FilePath "${exePath}" -Verb RunAs -Wait`], { shell: true });
-                process.on('error', (error) => {
-                    reject(error);
-                });
-                process.on('exit', (code) => {
-                    if (code === 0) {
-                        console.log(`Finished installing: ${executable}`);
-                        // Notify the renderer that installation has finished
-                        event.sender.send('dependency-installation-status', { name: executable, status: 'finished' });
-                        resolve();
-                    } else {
-                        console.error(`Failed to install: ${executable}`);
-                        // Notify the renderer that installation has failed
-                        event.sender.send('dependency-installation-status', { name: executable, status: 'failed' });
-                        reject(new Error(`Process exited with code ${code}`));
-                    }
-                });
-            });
-        }
-
-        // Handle .msi files
-        for (const msi of msis) {
-            const msiPath = path.join(tempDir, msi);
-            // Notify the renderer that installation has started
-            event.sender.send('dependency-installation-status', { name: msi, status: 'starting' });
-
-            await new Promise((resolve, reject) => {
-                console.log(`Starting installation of: ${msi}`);
-                const process = spawn(msiPath, [], { 
-                    detached: true, 
-                    shell: true, 
-                    stdio: 'ignore', // Ignore stdio to prevent output
-                    windowsHide: true // Hide the command prompt window
-                });
-                process.on('error', (error) => {
-                    reject(error);
-                });
-                process.on('exit', (code) => {
-                    if (code === 0) {
-                        console.log(`Finished installing: ${msi}`);
-                        // Notify the renderer that installation has finished
-                        event.sender.send('dependency-installation-status', { name: msi, status: 'finished' });
-                        resolve();
-                    } else {
-                        console.error(`Failed to install: ${msi}`);
-                        // Notify the renderer that installation has failed
-                        event.sender.send('dependency-installation-status', { name: msi, status: 'failed' });
-                        reject(new Error(`Process exited with code ${code}`));
-                    }
-                });
-            });
-        }
-
-        // Clean up
-        fs.rm(tempDir, { recursive: true, force: true }, (err) => {
-            if (err) {
-                console.error('Error removing temp directory:', err);
-            } else {
-                console.log('Temp directory removed successfully');
-            }
+      // Run the executable with elevated privileges
+      await new Promise((resolve, reject) => {
+        console.log(`Starting installation of: ${executable}`);
+        const process = spawn(
+          "powershell.exe",
+          ["-Command", `Start-Process -FilePath "${exePath}" -Verb RunAs -Wait`],
+          { shell: true }
+        );
+        process.on("error", error => {
+          reject(error);
         });
-
-        console.log('All installations complete');
-        return { success: true, message: 'All dependencies installed successfully' };
-    } catch (error) {
-        console.error('An error occurred:', error);
-        return { success: false, message: error.message };
-    } finally {
-        isInstalling = false;
+        process.on("exit", code => {
+          if (code === 0) {
+            console.log(`Finished installing: ${executable}`);
+            // Notify the renderer that installation has finished
+            event.sender.send("dependency-installation-status", {
+              name: executable,
+              status: "finished",
+            });
+            resolve();
+          } else {
+            console.error(`Failed to install: ${executable}`);
+            // Notify the renderer that installation has failed
+            event.sender.send("dependency-installation-status", {
+              name: executable,
+              status: "failed",
+            });
+            reject(new Error(`Process exited with code ${code}`));
+          }
+        });
+      });
     }
+
+    // Handle .msi files
+    for (const msi of msis) {
+      const msiPath = path.join(tempDir, msi);
+      // Notify the renderer that installation has started
+      event.sender.send("dependency-installation-status", {
+        name: msi,
+        status: "starting",
+      });
+
+      await new Promise((resolve, reject) => {
+        console.log(`Starting installation of: ${msi}`);
+        const process = spawn(msiPath, [], {
+          detached: true,
+          shell: true,
+          stdio: "ignore", // Ignore stdio to prevent output
+          windowsHide: true, // Hide the command prompt window
+        });
+        process.on("error", error => {
+          reject(error);
+        });
+        process.on("exit", code => {
+          if (code === 0) {
+            console.log(`Finished installing: ${msi}`);
+            // Notify the renderer that installation has finished
+            event.sender.send("dependency-installation-status", {
+              name: msi,
+              status: "finished",
+            });
+            resolve();
+          } else {
+            console.error(`Failed to install: ${msi}`);
+            // Notify the renderer that installation has failed
+            event.sender.send("dependency-installation-status", {
+              name: msi,
+              status: "failed",
+            });
+            reject(new Error(`Process exited with code ${code}`));
+          }
+        });
+      });
+    }
+
+    // Clean up
+    fs.rm(tempDir, { recursive: true, force: true }, err => {
+      if (err) {
+        console.error("Error removing temp directory:", err);
+      } else {
+        console.log("Temp directory removed successfully");
+      }
+    });
+
+    console.log("All installations complete");
+    return { success: true, message: "All dependencies installed successfully" };
+  } catch (error) {
+    console.error("An error occurred:", error);
+    return { success: false, message: error.message };
+  } finally {
+    isInstalling = false;
+  }
 });
 
 /**
@@ -1032,21 +1080,20 @@ ipcMain.handle('install-dependencies', async (event) => {
  * @returns {Promise<boolean>} - Whether the file exists
  */
 async function checkFileExists(filePath) {
-  return new Promise((resolve) => {
-    const { exec } = require('child_process');
+  return new Promise(resolve => {
+    const { exec } = require("child_process");
     const command = `powershell -Command "Test-Path '${filePath}'"`;
-    
+
     exec(command, (error, stdout) => {
       if (error) {
-        console.error('Error checking file:', error);
+        console.error("Error checking file:", error);
         resolve(false);
         return;
       }
-      resolve(stdout.trim().toLowerCase() === 'true');
+      resolve(stdout.trim().toLowerCase() === "true");
     });
   });
 }
-
 
 /**
  * Check if a dependency is installed by looking up its registry key
@@ -1055,12 +1102,12 @@ async function checkFileExists(filePath) {
  * @returns {Promise<boolean>} - Whether the dependency is installed
  */
 async function checkRegistryKey(registryKey, valueName) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     try {
-      const Registry = require('winreg');
+      const Registry = require("winreg");
       const regKey = new Registry({
         hive: Registry.HKLM,
-        key: registryKey.replace('HKLM\\', '\\')
+        key: registryKey.replace("HKLM\\", "\\"),
       });
 
       regKey.valueExists(valueName, (err, exists) => {
@@ -1071,7 +1118,7 @@ async function checkRegistryKey(registryKey, valueName) {
         }
       });
     } catch (error) {
-      console.error('Error checking registry:', error);
+      console.error("Error checking registry:", error);
       resolve(false);
     }
   });
@@ -1079,35 +1126,35 @@ async function checkRegistryKey(registryKey, valueName) {
 
 // Registry paths for dependencies
 const DEPENDENCY_REGISTRY_PATHS = {
-  'dotNetFx40_Full_x86_x64.exe': {
-    key: 'HKLM\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full',
-    value: 'Install',
-    name: '.NET Framework 4.0',
-    checkType: 'registry'
+  "dotNetFx40_Full_x86_x64.exe": {
+    key: "HKLM\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full",
+    value: "Install",
+    name: ".NET Framework 4.0",
+    checkType: "registry",
   },
-  'dxwebsetup.exe': {
-    key: 'HKLM\\SOFTWARE\\Microsoft\\DirectX',
-    value: 'Version',
-    name: 'DirectX',
-    checkType: 'registry'
+  "dxwebsetup.exe": {
+    key: "HKLM\\SOFTWARE\\Microsoft\\DirectX",
+    value: "Version",
+    name: "DirectX",
+    checkType: "registry",
   },
-  'oalinst.exe': {
-    filePath: 'C:\\Windows\\System32\\OpenAL32.dll',
-    name: 'OpenAL',
-    checkType: 'file'
+  "oalinst.exe": {
+    filePath: "C:\\Windows\\System32\\OpenAL32.dll",
+    name: "OpenAL",
+    checkType: "file",
   },
-  'VC_redist.x64.exe': {
-    key: 'HKLM\\SOFTWARE\\Microsoft\\DevDiv\\VC\\Servicing\\14.0\\RuntimeMinimum',
-    value: 'Install',
-    name: 'Visual C++ Redistributable',
-    checkType: 'registry'
+  "VC_redist.x64.exe": {
+    key: "HKLM\\SOFTWARE\\Microsoft\\DevDiv\\VC\\Servicing\\14.0\\RuntimeMinimum",
+    value: "Install",
+    name: "Visual C++ Redistributable",
+    checkType: "registry",
   },
-  'xnafx40_redist.msi': {
-    key: 'HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\XNA\\Framework\\v4.0',
-    value: 'Installed',
-    name: 'XNA Framework',
-    checkType: 'registry'
-  }
+  "xnafx40_redist.msi": {
+    key: "HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\XNA\\Framework\\v4.0",
+    value: "Installed",
+    name: "XNA Framework",
+    checkType: "registry",
+  },
 };
 
 /**
@@ -1117,12 +1164,16 @@ const DEPENDENCY_REGISTRY_PATHS = {
  */
 async function checkDependencyInstalled(depInfo) {
   let isInstalled;
-  if (depInfo.checkType === 'file') {
+  if (depInfo.checkType === "file") {
     isInstalled = await checkFileExists(depInfo.filePath);
-    console.log(`File check for ${depInfo.name}: ${isInstalled ? 'Found' : 'Not found'} at ${depInfo.filePath}`);
+    console.log(
+      `File check for ${depInfo.name}: ${isInstalled ? "Found" : "Not found"} at ${depInfo.filePath}`
+    );
   } else {
     isInstalled = await checkRegistryKey(depInfo.key, depInfo.value);
-    console.log(`Registry check for ${depInfo.name}: ${isInstalled ? 'Found' : 'Not found'} at ${depInfo.key}`);
+    console.log(
+      `Registry check for ${depInfo.name}: ${isInstalled ? "Found" : "Not found"} at ${depInfo.key}`
+    );
   }
   return isInstalled;
 }
@@ -1133,44 +1184,48 @@ async function checkDependencyInstalled(depInfo) {
  */
 async function checkGameDependencies() {
   const results = [];
-  
+
   for (const [file, info] of Object.entries(DEPENDENCY_REGISTRY_PATHS)) {
     const isInstalled = await checkDependencyInstalled(info);
     results.push({
       name: info.name,
       file: file,
-      installed: isInstalled
+      installed: isInstalled,
     });
   }
-  
+
   return results;
 }
 
 // Handle IPC call to check dependencies
-ipcMain.handle('check-game-dependencies', async () => {
+ipcMain.handle("check-game-dependencies", async () => {
   return await checkGameDependencies();
 });
 
-ipcMain.handle('get-games', async () => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("get-games", async () => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
     if (!settings.downloadDirectory) {
-      console.error('Download directory not set');
+      console.error("Download directory not set");
       return [];
     }
     const downloadDirectory = settings.downloadDirectory;
     // Get all subdirectories in the download directory
-    const subdirectories = await fs.promises.readdir(downloadDirectory, { withFileTypes: true });
-    const gameDirectories = subdirectories.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
+    const subdirectories = await fs.promises.readdir(downloadDirectory, {
+      withFileTypes: true,
+    });
+    const gameDirectories = subdirectories
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => dirent.name);
 
     // Read {game}.ascendara.json from each subdirectory
     const games = await Promise.all(
-      gameDirectories.map(async (dir) => {
+      gameDirectories.map(async dir => {
         const gameInfoPath = path.join(downloadDirectory, dir, `${dir}.ascendara.json`);
         try {
-          const gameInfoData = await fs.promises.readFile(gameInfoPath, 'utf8');
+          const gameInfoData = await fs.promises.readFile(gameInfoPath, "utf8");
           return JSON.parse(gameInfoData);
         } catch (error) {
           const errorKey = `${dir}_${error.code}`;
@@ -1183,36 +1238,36 @@ ipcMain.handle('get-games', async () => {
     );
     return games.filter(game => game !== null);
   } catch (error) {
-    console.error('Error reading the settings file:', error);
+    console.error("Error reading the settings file:", error);
     return [];
   }
 });
 
 async function getSettings() {
   try {
-    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-    console.log('Reading settings from:', filePath);
-    
+    const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
+    console.log("Reading settings from:", filePath);
+
     if (!fs.existsSync(filePath)) {
-      console.log('Settings file does not exist');
+      console.log("Settings file does not exist");
       return { autoUpdate: true };
     }
-    
-    const data = fs.readFileSync(filePath, 'utf8');
-    console.log('Raw settings data:', data);
-    
+
+    const data = fs.readFileSync(filePath, "utf8");
+    console.log("Raw settings data:", data);
+
     const settings = JSON.parse(data);
-    console.log('Parsed settings:', settings);
+    console.log("Parsed settings:", settings);
     return settings;
   } catch (error) {
-    console.error('Error reading settings:', error);
+    console.error("Error reading settings:", error);
     return { autoUpdate: true }; // Default settings if there's an error
   }
 }
 
-ipcMain.handle('update-ascendara', async () => {
+ipcMain.handle("update-ascendara", async () => {
   if (is_latest) return;
-  
+
   if (!updateDownloaded) {
     try {
       if (downloadUpdatePromise) {
@@ -1221,24 +1276,24 @@ ipcMain.handle('update-ascendara', async () => {
         await downloadUpdateInBackground();
       }
     } catch (error) {
-      console.error('Error during update download:', error);
+      console.error("Error during update download:", error);
       return;
     }
   }
-  
+
   if (updateDownloaded) {
-    const tempDir = path.join(os.tmpdir(), 'ascendarainstaller');
-    const installerPath = path.join(tempDir, 'AscendaraInstaller.exe');
-    
+    const tempDir = path.join(os.tmpdir(), "ascendarainstaller");
+    const installerPath = path.join(tempDir, "AscendaraInstaller.exe");
+
     if (!fs.existsSync(installerPath)) {
-      console.error('Installer not found at:', installerPath);
+      console.error("Installer not found at:", installerPath);
       return;
     }
-    
-    const installerProcess = spawn(installerPath, [], { 
-      detached: true, 
-      stdio: 'ignore',
-      shell: true 
+
+    const installerProcess = spawn(installerPath, [], {
+      detached: true,
+      stdio: "ignore",
+      shell: true,
     });
 
     installerProcess.unref();
@@ -1246,132 +1301,140 @@ ipcMain.handle('update-ascendara', async () => {
   }
 });
 
-ipcMain.handle('check-for-updates', async () => {
+ipcMain.handle("check-for-updates", async () => {
   if (isDev) return true;
   try {
     return await checkVersionAndUpdate();
   } catch (error) {
-    console.error('Error checking for updates:', error);
+    console.error("Error checking for updates:", error);
     return true;
   }
 });
 
-ipcMain.handle('uninstall-ascendara', async () => {
+ipcMain.handle("uninstall-ascendara", async () => {
   const executablePath = process.execPath;
   const executableDir = path.dirname(executablePath);
   const uninstallerPath = path.join(executableDir + "\\Uninstall Ascendara.exe");
-  const timestampFilePath = path.join(app.getPath('home'), 'timestamp.ascendara.json');
+  const timestampFilePath = path.join(app.getPath("home"), "timestamp.ascendara.json");
   try {
     fs.unlinkSync(timestampFilePath);
   } catch (error) {
-    console.error('Error deleting timestamp file:', error);
+    console.error("Error deleting timestamp file:", error);
   }
-  const settingsFilePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+  const settingsFilePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
     fs.unlinkSync(settingsFilePath);
   } catch (error) {
-    console.error('Error deleting settings file:', error);
+    console.error("Error deleting settings file:", error);
   }
   shell.openExternal("https://ascendara.app/uninstall");
-  const process = spawn('powershell.exe', ['-Command', `Start-Process -FilePath "${uninstallerPath}" -Verb RunAs -Wait`], { shell: true });
-  process.on('error', (error) => {
+  const process = spawn(
+    "powershell.exe",
+    ["-Command", `Start-Process -FilePath "${uninstallerPath}" -Verb RunAs -Wait`],
+    { shell: true }
+  );
+  process.on("error", error => {
     reject(error);
   });
 });
 
 // Save the custom game
-ipcMain.handle('save-custom-game', async (event, game, online, dlc, version, executable, imgID) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-  try {
-    const data = fs.readFileSync(filePath, 'utf8');
-    const settings = JSON.parse(data);
-    if (!settings.downloadDirectory) {
-      console.error('Download directory not set');
-      return;
-    }
-    const downloadDirectory = settings.downloadDirectory;
-    const gamesFilePath = path.join(downloadDirectory, 'games.json');
-    const gameDirectory = path.join(downloadDirectory, game);
-
-    // Create game directory if it doesn't exist
-    if (!fs.existsSync(gameDirectory)) {
-      fs.mkdirSync(gameDirectory, { recursive: true });
-    }
-
-    // Download and save the cover image if imgID is provided
-    if (imgID) {
-      const imageLink = `https://api.ascendara.app/v2/image/${imgID}`;
-      try {
-        const response = await axios({
-          url: imageLink,
-          method: 'GET',
-          responseType: 'arraybuffer'
-        });
-        const imageBuffer = Buffer.from(response.data);
-        const mimeType = response.headers['content-type'];
-        const extension = getExtensionFromMimeType(mimeType);
-        const downloadPath = path.join(gameDirectory, `header.ascendara${extension}`);
-        await fs.promises.writeFile(downloadPath, imageBuffer);
-        console.log('Cover image downloaded successfully');
-      } catch (error) {
-        console.error('Error downloading cover image:', error);
-      }
-    }
-
+ipcMain.handle(
+  "save-custom-game",
+  async (event, game, online, dlc, version, executable, imgID) => {
+    const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
     try {
-      await fs.promises.access(gamesFilePath, fs.constants.F_OK);
-    } catch (error) {
-      await fs.promises.mkdir(downloadDirectory, { recursive: true });
-      await fs.promises.writeFile(gamesFilePath, JSON.stringify({ games: [] }, null, 2));
-    }
-    const gamesData = JSON.parse(await fs.promises.readFile(gamesFilePath, 'utf8'));
-    const newGame = {
-      game: game,
-      online: online,
-      dlc: dlc,
-      version: version,
-      executable: executable,
-      isRunning: false
-    };
-    gamesData.games.push(newGame);
-    await fs.promises.writeFile(gamesFilePath, JSON.stringify(gamesData, null, 2));
-  } catch (error) {
-    console.error('Error reading the settings file:', error);
-  }
-});
+      const data = fs.readFileSync(filePath, "utf8");
+      const settings = JSON.parse(data);
+      if (!settings.downloadDirectory) {
+        console.error("Download directory not set");
+        return;
+      }
+      const downloadDirectory = settings.downloadDirectory;
+      const gamesFilePath = path.join(downloadDirectory, "games.json");
+      const gameDirectory = path.join(downloadDirectory, game);
 
-ipcMain.handle('get-custom-games', () => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+      // Create game directory if it doesn't exist
+      if (!fs.existsSync(gameDirectory)) {
+        fs.mkdirSync(gameDirectory, { recursive: true });
+      }
+
+      // Download and save the cover image if imgID is provided
+      if (imgID) {
+        const imageLink = `https://api.ascendara.app/v2/image/${imgID}`;
+        try {
+          const response = await axios({
+            url: imageLink,
+            method: "GET",
+            responseType: "arraybuffer",
+          });
+          const imageBuffer = Buffer.from(response.data);
+          const mimeType = response.headers["content-type"];
+          const extension = getExtensionFromMimeType(mimeType);
+          const downloadPath = path.join(gameDirectory, `header.ascendara${extension}`);
+          await fs.promises.writeFile(downloadPath, imageBuffer);
+          console.log("Cover image downloaded successfully");
+        } catch (error) {
+          console.error("Error downloading cover image:", error);
+        }
+      }
+
+      try {
+        await fs.promises.access(gamesFilePath, fs.constants.F_OK);
+      } catch (error) {
+        await fs.promises.mkdir(downloadDirectory, { recursive: true });
+        await fs.promises.writeFile(
+          gamesFilePath,
+          JSON.stringify({ games: [] }, null, 2)
+        );
+      }
+      const gamesData = JSON.parse(await fs.promises.readFile(gamesFilePath, "utf8"));
+      const newGame = {
+        game: game,
+        online: online,
+        dlc: dlc,
+        version: version,
+        executable: executable,
+        isRunning: false,
+      };
+      gamesData.games.push(newGame);
+      await fs.promises.writeFile(gamesFilePath, JSON.stringify(gamesData, null, 2));
+    } catch (error) {
+      console.error("Error reading the settings file:", error);
+    }
+  }
+);
+
+ipcMain.handle("get-custom-games", () => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
     if (!settings.downloadDirectory) {
-      console.error('Download directory not set');
+      console.error("Download directory not set");
       return [];
     }
     const downloadDirectory = settings.downloadDirectory;
-    const gamesFilePath = path.join(downloadDirectory, 'games.json');
+    const gamesFilePath = path.join(downloadDirectory, "games.json");
     try {
-      const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, 'utf8'));
+      const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, "utf8"));
       return gamesData.games;
     } catch (error) {
-      if (error.code === 'ENOENT') {
+      if (error.code === "ENOENT") {
         return [];
       } else {
         throw error;
       }
     }
   } catch (error) {
-    console.error('Error reading the settings file:', error);
+    console.error("Error reading the settings file:", error);
     return [];
   }
 });
 
-
-
-ipcMain.handle('open-directory-dialog', async (event) => {
+ipcMain.handle("open-directory-dialog", async event => {
   const result = await dialog.showOpenDialog({
-    properties: ['openDirectory']
+    properties: ["openDirectory"],
   });
 
   if (result.canceled) {
@@ -1382,12 +1445,10 @@ ipcMain.handle('open-directory-dialog', async (event) => {
 });
 
 // Open the file dialog
-ipcMain.handle('open-file-dialog', async (event) => {
+ipcMain.handle("open-file-dialog", async event => {
   const result = await dialog.showOpenDialog({
-    properties: ['openFile',],
-    filters:[
-      { name: 'Executable Files', extensions: ['exe'] }
-    ]
+    properties: ["openFile"],
+    filters: [{ name: "Executable Files", extensions: ["exe"] }],
   });
 
   if (result.canceled) {
@@ -1398,95 +1459,96 @@ ipcMain.handle('open-file-dialog', async (event) => {
 });
 
 // Get the download directory
-ipcMain.handle('get-download-directory', () => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("get-download-directory", () => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
     return settings.downloadDirectory;
   } catch (error) {
-    console.error('Error reading the settings file:', error);
-    return '';
+    console.error("Error reading the settings file:", error);
+    return "";
   }
 });
 
-ipcMain.handle('open-game-directory', (event, game, isCustom) => {
+ipcMain.handle("open-game-directory", (event, game, isCustom) => {
   if (game === "local") {
     const executablePath = process.execPath;
     const executableDir = path.dirname(executablePath);
     shell.openPath(executableDir);
   } else {
-  if (!isCustom) {
-    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-    try {
-      const data = fs.readFileSync(filePath, 'utf8');
-      const settings = JSON.parse(data);
-      if (!settings.downloadDirectory) {
-        console.error('Download directory not set');
-        return;
+    if (!isCustom) {
+      const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
+      try {
+        const data = fs.readFileSync(filePath, "utf8");
+        const settings = JSON.parse(data);
+        if (!settings.downloadDirectory) {
+          console.error("Download directory not set");
+          return;
+        }
+        const downloadDirectory = settings.downloadDirectory;
+        const gameDirectory = path.join(downloadDirectory, game);
+        shell.openPath(gameDirectory);
+      } catch (error) {
+        console.error("Error reading the settings file:", error);
       }
-      const downloadDirectory = settings.downloadDirectory;
-      const gameDirectory = path.join(downloadDirectory, game);
-      shell.openPath(gameDirectory);
-    } catch (error) {
-      console.error('Error reading the settings file:', error);
+    } else {
+      const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
+      try {
+        const data = fs.readFileSync(filePath, "utf8");
+        const settings = JSON.parse(data);
+        if (!settings.downloadDirectory) {
+          console.error("Download directory not set");
+          return;
+        }
+        const downloadDirectory = settings.downloadDirectory;
+        const gamesFilePath = path.join(downloadDirectory, "games.json");
+        const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, "utf8"));
+        const gameInfo = gamesData.games.find(g => g.game === game);
+        if (gameInfo) {
+          const executablePath = gameInfo.executable;
+          const executableDir = path.dirname(executablePath);
+          shell.openPath(executableDir);
+        } else {
+          console.error(`Game not found in games.json: ${game}`);
+        }
+      } catch (error) {
+        console.error("Error reading the settings file:", error);
+      }
     }
-  } else {
-    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-    try {
-      const data = fs.readFileSync(filePath, 'utf8');
-      const settings = JSON.parse(data);
-      if (!settings.downloadDirectory) {
-        console.error('Download directory not set');
-        return;
-      }
-      const downloadDirectory = settings.downloadDirectory;
-      const gamesFilePath = path.join(downloadDirectory, 'games.json');
-      const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, 'utf8'));
-      const gameInfo = gamesData.games.find((g) => g.game === game);
-      if (gameInfo) {
-        const executablePath = gameInfo.executable;
-        const executableDir = path.dirname(executablePath);
-        shell.openPath(executableDir);
-      } else {
-        console.error(`Game not found in games.json: ${game}`);
-      }
-    } catch (error) {
-      console.error('Error reading the settings file:', error);
-    }
-  }}
+  }
 });
 
 // Modify the game executable
-ipcMain.handle('modify-game-executable', (event, game, executable) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("modify-game-executable", (event, game, executable) => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
-    if (!settings.downloadDirectory) { 
-      console.error('Download directory not set');
+    if (!settings.downloadDirectory) {
+      console.error("Download directory not set");
       return;
     }
     const downloadDirectory = settings.downloadDirectory;
     const gameDirectory = path.join(downloadDirectory, game);
     const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
-    const gameInfoData = fs.readFileSync(gameInfoPath, 'utf8');
+    const gameInfoData = fs.readFileSync(gameInfoPath, "utf8");
     const gameInfo = JSON.parse(gameInfoData);
     gameInfo.executable = executable;
     fs.writeFileSync(gameInfoPath, JSON.stringify(gameInfo, null, 2));
   } catch (error) {
-    console.error('Error reading the settings file:', error);
+    console.error("Error reading the settings file:", error);
   }
 });
 
-ipcMain.handle('play-game', async (event, game, isCustom = false) => {
+ipcMain.handle("play-game", async (event, game, isCustom = false) => {
   try {
-    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-    const data = fs.readFileSync(filePath, 'utf8');
+    const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
-    
+
     if (!settings.downloadDirectory) {
-      throw new Error('Download directory not set');
+      throw new Error("Download directory not set");
     }
 
     let executable;
@@ -1495,19 +1557,18 @@ ipcMain.handle('play-game', async (event, game, isCustom = false) => {
     if (!isCustom) {
       gameDirectory = path.join(settings.downloadDirectory, game);
       const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
-      
+
       if (!fs.existsSync(gameInfoPath)) {
         throw new Error(`Game info file not found: ${gameInfoPath}`);
       }
 
-      const gameInfoData = fs.readFileSync(gameInfoPath, 'utf8');
+      const gameInfoData = fs.readFileSync(gameInfoPath, "utf8");
       const gameInfo = JSON.parse(gameInfoData);
 
-      
       if (!gameInfo.executable) {
-        throw new Error('Executable path not found in game info');
+        throw new Error("Executable path not found in game info");
       }
-      
+
       // Check if the executable path is already absolute
       if (path.isAbsolute(gameInfo.executable)) {
         executable = gameInfo.executable;
@@ -1515,13 +1576,13 @@ ipcMain.handle('play-game', async (event, game, isCustom = false) => {
         executable = path.join(gameDirectory, gameInfo.executable);
       }
     } else {
-      const gamesPath = path.join(settings.downloadDirectory, 'games.json');
+      const gamesPath = path.join(settings.downloadDirectory, "games.json");
       if (!fs.existsSync(gamesPath)) {
-        throw new Error('Custom games file not found');
+        throw new Error("Custom games file not found");
       }
 
-      const gamesData = JSON.parse(fs.readFileSync(gamesPath, 'utf8'));
-      const gameInfo = gamesData.games.find((g) => g.game === game);
+      const gamesData = JSON.parse(fs.readFileSync(gamesPath, "utf8"));
+      const gameInfo = gamesData.games.find(g => g.game === game);
 
       if (!gameInfo || !gameInfo.executable) {
         throw new Error(`Game not found in games.json: ${game}`);
@@ -1538,36 +1599,35 @@ ipcMain.handle('play-game', async (event, game, isCustom = false) => {
 
     // Check if game is already running
     if (runGameProcesses.has(game)) {
-      throw new Error('Game is already running');
+      throw new Error("Game is already running");
     }
 
-  
-    const handlerPath = path.join(appDirectory, '/resources/AscendaraGameHandler.exe')
+    const handlerPath = path.join(appDirectory, "/resources/AscendaraGameHandler.exe");
 
     if (!fs.existsSync(handlerPath)) {
-      throw new Error('Game handler not found');
-    };
+      throw new Error("Game handler not found");
+    }
 
-    console.log('Launching game:', {
+    console.log("Launching game:", {
       handlerPath,
       executable,
       isCustom: isCustom.toString(),
-      gameDirectory
+      gameDirectory,
     });
 
     const runGame = spawn(handlerPath, [executable, isCustom.toString()], {
       detached: false,
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
-      cwd: gameDirectory
+      cwd: gameDirectory,
     });
 
     // Log any output for debugging
-    runGame.stdout.on('data', (data) => {
+    runGame.stdout.on("data", data => {
       console.log(`Game handler output: ${data}`);
     });
 
-    runGame.stderr.on('data', (data) => {
+    runGame.stderr.on("data", data => {
       console.error(`Game handler error: ${data}`);
     });
 
@@ -1581,22 +1641,22 @@ ipcMain.handle('play-game', async (event, game, isCustom = false) => {
       fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
 
       // Update games.json
-      const gamesPath = path.join(settings.downloadDirectory, 'games.json');
+      const gamesPath = path.join(settings.downloadDirectory, "games.json");
       if (fs.existsSync(gamesPath)) {
-        const games = JSON.parse(fs.readFileSync(gamesPath, 'utf8'));
+        const games = JSON.parse(fs.readFileSync(gamesPath, "utf8"));
         if (games[game]) {
           games[game].running = true;
           fs.writeFileSync(gamesPath, JSON.stringify(games, null, 2));
         }
       }
     } catch (error) {
-      console.error('Error updating game running status:', error);
+      console.error("Error updating game running status:", error);
     }
 
     // Set up error handler
-    runGame.on('error', (error) => {
+    runGame.on("error", error => {
       console.error(`Failed to start game ${game}:`, error);
-      event.sender.send('game-launch-error', { game, error: error.message });
+      event.sender.send("game-launch-error", { game, error: error.message });
       runGameProcesses.delete(game);
       showWindow();
     });
@@ -1605,19 +1665,19 @@ ipcMain.handle('play-game', async (event, game, isCustom = false) => {
     await new Promise(resolve => setTimeout(resolve, 500));
 
     // If no immediate errors, consider it a success
-    event.sender.send('game-launch-success', { game });
+    event.sender.send("game-launch-success", { game });
     hideWindow();
 
     // Create shortcut and mark game as launched if it's the first time
     if (!isCustom) {
       const gameInfoPath = path.join(gameDirectory, `${game}.ascendara.json`);
-      const gameInfo = JSON.parse(fs.readFileSync(gameInfoPath, 'utf8'));
+      const gameInfo = JSON.parse(fs.readFileSync(gameInfoPath, "utf8"));
       if (!gameInfo.hasBeenLaunched && settings.autoCreateShortcuts) {
         await createGameShortcut({
           game: game,
           name: game,
           executable: executable,
-          custom: false
+          custom: false,
         });
         gameInfo.hasBeenLaunched = true;
         fs.writeFileSync(gameInfoPath, JSON.stringify(gameInfo, null, 2));
@@ -1626,169 +1686,171 @@ ipcMain.handle('play-game', async (event, game, isCustom = false) => {
 
     // Update Discord Rich Presence
     rpc.setActivity({
-      details: 'Playing a Game',
+      details: "Playing a Game",
       state: `${game}`,
       startTimestamp: new Date(),
-      largeImageKey: 'ascendara',
-      largeImageText: 'Ascendara',
+      largeImageKey: "ascendara",
+      largeImageText: "Ascendara",
       buttons: [
         {
-          label: 'Play on Ascendara',
-          url: 'https://ascendara.app/'
-        }
-      ]
+          label: "Play on Ascendara",
+          url: "https://ascendara.app/",
+        },
+      ],
     });
 
-    runGame.on('exit', (code) => {
+    runGame.on("exit", code => {
       console.log(`Game ${game} exited with code ${code}`);
-      
+
       // Update game status to not running in JSON files
       try {
         // Update settings.json
-        const settings = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        const settings = JSON.parse(fs.readFileSync(filePath, "utf8"));
         if (settings.runningGames) {
           delete settings.runningGames[game];
           fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
         }
 
         // Update games.json
-        const gamesPath = path.join(settings.downloadDirectory, 'games.json');
+        const gamesPath = path.join(settings.downloadDirectory, "games.json");
         if (fs.existsSync(gamesPath)) {
-          const games = JSON.parse(fs.readFileSync(gamesPath, 'utf8'));
+          const games = JSON.parse(fs.readFileSync(gamesPath, "utf8"));
           if (games[game]) {
             games[game].running = false;
             fs.writeFileSync(gamesPath, JSON.stringify(games, null, 2));
           }
         }
       } catch (error) {
-        console.error('Error updating game running status:', error);
+        console.error("Error updating game running status:", error);
       }
 
       runGameProcesses.delete(game);
       showWindow();
-      
+
       // Update Discord RPC
       rpc.setActivity({
-        state: 'Browsing Menus...',
-        largeImageKey: 'ascendara',
-        largeImageText: 'Ascendara'
+        state: "Browsing Menus...",
+        largeImageKey: "ascendara",
+        largeImageText: "Ascendara",
       });
     });
 
     return true;
   } catch (error) {
-    console.error('Error launching game:', error);
-    event.sender.send('game-launch-error', { game, error: error.message });
+    console.error("Error launching game:", error);
+    event.sender.send("game-launch-error", { game, error: error.message });
     return false;
   }
 });
 
 // Stop the game
-ipcMain.handle('stop-game', (event, game) => {
+ipcMain.handle("stop-game", (event, game) => {
   const runGame = runGameProcesses.get(game);
   if (runGame) {
     runGame.kill();
-   
-    rpc.setActivity({
-      state: 'Browsing Menus...',
-      largeImageKey: 'ascendara',
-      largeImageText: 'Ascendara'
-    });
 
+    rpc.setActivity({
+      state: "Browsing Menus...",
+      largeImageKey: "ascendara",
+      largeImageText: "Ascendara",
+    });
   }
 });
 
 // Check if the game is running
-ipcMain.handle('is-game-running', async (event, game) => {
+ipcMain.handle("is-game-running", async (event, game) => {
   const runGame = runGameProcesses.get(game);
   return runGame ? true : false;
 });
 
 // Get the required libraries
-ipcMain.handle('required-libraries', async (event, game) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("required-libraries", async (event, game) => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
-    if (!settings.downloadDirectory) {  
-      console.error('Download directory not set');
+    if (!settings.downloadDirectory) {
+      console.error("Download directory not set");
       return;
     }
     const downloadDirectory = settings.downloadDirectory;
     const gameDirectory = path.join(downloadDirectory, game);
     const gameLibsPath = path.join(gameDirectory, `_CommonRedist`);
     shell.openPath(gameLibsPath);
-    } 
-    catch (error) {
-    console.error('Error reading the settings file:', error);
+  } catch (error) {
+    console.error("Error reading the settings file:", error);
   }
 });
 
 // Delete the game
-ipcMain.handle('delete-game', async (event, game) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("delete-game", async (event, game) => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
     if (game === "local") {
-      const timestampFilePath = path.join(app.getPath('home'), 'timestamp.ascendara.json');
+      const timestampFilePath = path.join(
+        app.getPath("home"),
+        "timestamp.ascendara.json"
+      );
       fs.unlinkSync(timestampFilePath);
       return;
     }
 
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
     if (!settings.downloadDirectory) {
-      console.error('Download directory not set');
+      console.error("Download directory not set");
       return;
     }
     const downloadDirectory = settings.downloadDirectory;
     const gameDirectory = path.join(downloadDirectory, game);
     fs.rmSync(gameDirectory, { recursive: true, force: true });
   } catch (error) {
-    console.error('Error reading the settings file:', error);
+    console.error("Error reading the settings file:", error);
   }
 });
 
 // Remove the game
-ipcMain.handle('remove-game', async (event, game) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("remove-game", async (event, game) => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
     if (!settings.downloadDirectory) {
-      console.error('Download directory not set');
+      console.error("Download directory not set");
       return;
     }
     const downloadDirectory = settings.downloadDirectory;
-    const gamesFilePath = path.join(downloadDirectory, 'games.json');
-    const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, 'utf8'));
-    const gameIndex = gamesData.games.findIndex((g) => g.game === game);
+    const gamesFilePath = path.join(downloadDirectory, "games.json");
+    const gamesData = JSON.parse(fs.readFileSync(gamesFilePath, "utf8"));
+    const gameIndex = gamesData.games.findIndex(g => g.game === game);
     if (gameIndex !== -1) {
       gamesData.games.splice(gameIndex, 1);
       fs.writeFileSync(gamesFilePath, JSON.stringify(gamesData, null, 2));
     }
   } catch (error) {
-    console.error('Error reading the settings file:', error);
+    console.error("Error reading the settings file:", error);
   }
 });
 
 // Download finished
-ipcMain.handle('download-finished', async (event, game) => {
-    const meiFolders = await fs.readdir(gameDirectory);
-    for (const folder of meiFolders) {
-      if (folder.startsWith('_MEI')) {
-        const meiFolderPath = path.join(gameDirectory, folder);
-        await fs.remove(meiFolderPath);
-      }
-    }});
+ipcMain.handle("download-finished", async (event, game) => {
+  const meiFolders = await fs.readdir(gameDirectory);
+  for (const folder of meiFolders) {
+    if (folder.startsWith("_MEI")) {
+      const meiFolderPath = path.join(gameDirectory, folder);
+      await fs.remove(meiFolderPath);
+    }
+  }
+});
 
 // Minimize the window
-ipcMain.handle('minimize-window', () => {
+ipcMain.handle("minimize-window", () => {
   const win = BrowserWindow.getFocusedWindow();
   if (win) win.minimize();
 });
 
 // Maximize the window
-ipcMain.handle('maximize-window', () => {
+ipcMain.handle("maximize-window", () => {
   const win = BrowserWindow.getFocusedWindow();
   if (win) {
     if (win.isMaximized()) {
@@ -1800,30 +1862,34 @@ ipcMain.handle('maximize-window', () => {
 });
 
 // Close the window
-ipcMain.handle('close-window', () => {
+ipcMain.handle("close-window", () => {
   const win = BrowserWindow.getFocusedWindow();
   if (win) win.close();
 });
 
-const ERROR_COUNTS_FILE = path.join(app.getPath('userData'), 'error-counts.json');
+const ERROR_COUNTS_FILE = path.join(app.getPath("userData"), "error-counts.json");
 
 function getErrorCounts() {
   try {
     if (fs.existsSync(ERROR_COUNTS_FILE)) {
-      const data = fs.readFileSync(ERROR_COUNTS_FILE, 'utf8');
+      const data = fs.readFileSync(ERROR_COUNTS_FILE, "utf8");
       return new Map(Object.entries(JSON.parse(data)));
     }
   } catch (error) {
-    console.error('Error reading error counts:', error);
+    console.error("Error reading error counts:", error);
   }
   return new Map();
 }
 
 function saveErrorCounts(counts) {
   try {
-    fs.writeFileSync(ERROR_COUNTS_FILE, JSON.stringify(Object.fromEntries(counts)), 'utf8');
+    fs.writeFileSync(
+      ERROR_COUNTS_FILE,
+      JSON.stringify(Object.fromEntries(counts)),
+      "utf8"
+    );
   } catch (error) {
-    console.error('Error saving error counts:', error);
+    console.error("Error saving error counts:", error);
   }
 }
 
@@ -1841,22 +1907,22 @@ function shouldLogError(errorKey) {
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    title: 'Ascendara',
-    icon: path.join(__dirname, 'icon.ico'),
+    title: "Ascendara",
+    icon: path.join(__dirname, "icon.ico"),
     width: 1600,
     height: 800,
     frame: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, "preload.js"),
       nodeIntegration: true,
       contextIsolation: true,
-    }
+    },
   });
 
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.loadURL("http://localhost:5173");
   } else {
-    mainWindow.loadFile(path.join(__dirname, 'index.html'));
+    mainWindow.loadFile(path.join(__dirname, "index.html"));
   }
 
   mainWindow.setMinimumSize(1600, 800);
@@ -1868,7 +1934,7 @@ let isHandlingProtocolUrl = false;
 function hideWindow() {
   // Don't hide window if handling protocol URL
   if (isHandlingProtocolUrl) {
-    console.log('Skipping window hide during protocol URL handling');
+    console.log("Skipping window hide during protocol URL handling");
     return;
   }
   BrowserWindow.getAllWindows().forEach(window => {
@@ -1882,45 +1948,45 @@ function showWindow() {
   });
 }
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
     app.quit();
   }
 });
 
-app.on('activate', () => {
+app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
 });
 
-ipcMain.handle('welcome-complete', (event) => {
+ipcMain.handle("welcome-complete", event => {
   // Notify all windows
   BrowserWindow.getAllWindows().forEach(window => {
-    window.webContents.send('welcome-complete');
+    window.webContents.send("welcome-complete");
   });
 });
 
-ipcMain.handle('check-v7-welcome', async () => {
+ipcMain.handle("check-v7-welcome", async () => {
   try {
-    const v7Path = path.join(app.getPath('userData'), 'v7.json');
+    const v7Path = path.join(app.getPath("userData"), "v7.json");
     return !fs.existsSync(v7Path);
   } catch (error) {
-    console.error('Error checking v7 welcome:', error);
+    console.error("Error checking v7 welcome:", error);
     return false;
   }
 });
 
-ipcMain.handle('get-asset-path', (event, filename) => {
+ipcMain.handle("get-asset-path", (event, filename) => {
   let assetPath;
   if (!app.isPackaged) {
     // In development
-    assetPath = path.join(__dirname, '..', 'public', filename);
+    assetPath = path.join(__dirname, "..", "public", filename);
   } else {
     // In production
-    assetPath = path.join(process.resourcesPath, 'public', filename);
+    assetPath = path.join(process.resourcesPath, "public", filename);
   }
-  
+
   if (!fs.existsSync(assetPath)) {
     console.error(`Asset not found: ${assetPath}`);
     return null;
@@ -1928,70 +1994,70 @@ ipcMain.handle('get-asset-path', (event, filename) => {
 
   // Return the raw file data as base64
   const imageBuffer = fs.readFileSync(assetPath);
-  return `data:image/png;base64,${imageBuffer.toString('base64')}`;
+  return `data:image/png;base64,${imageBuffer.toString("base64")}`;
 });
 
-ipcMain.handle('clear-cache', async () => {
+ipcMain.handle("clear-cache", async () => {
   try {
     const mainWindow = BrowserWindow.getAllWindows()[0];
     if (mainWindow) {
       // Clear all browser data including cache, cookies, storage etc.
       await mainWindow.webContents.session.clearStorageData({
         storages: [
-          'appcache',
-          'cookies',
-          'filesystem',
-          'indexdb',
-          'localstorage',
-          'shadercache',
-          'websql',
-          'serviceworkers',
-          'cachestorage'
-        ]
+          "appcache",
+          "cookies",
+          "filesystem",
+          "indexdb",
+          "localstorage",
+          "shadercache",
+          "websql",
+          "serviceworkers",
+          "cachestorage",
+        ],
       });
-      
+
       // Clear HTTP cache specifically
       await mainWindow.webContents.session.clearCache();
-      
+
       return true;
     }
     return false;
   } catch (error) {
-    console.error('Error clearing cache:', error);
+    console.error("Error clearing cache:", error);
     return false;
   }
 });
 
-ipcMain.handle('get-drive-space', async (event, directory) => {
-    try {
-        const { available } = await disk.check(directory);
-        console.log(`Available space on ${directory}: ${available} bytes`);
-        return { freeSpace: available };
-    } catch (error) {
-        console.error('Error getting drive space:', error);
-        return { freeSpace: 0 };
-    }
+ipcMain.handle("get-drive-space", async (event, directory) => {
+  try {
+    const { available } = await disk.check(directory);
+    console.log(`Available space on ${directory}: ${available} bytes`);
+    return { freeSpace: available };
+  } catch (error) {
+    console.error("Error getting drive space:", error);
+    return { freeSpace: 0 };
+  }
 });
 
-ipcMain.handle('get-platform', () => process.platform);
+ipcMain.handle("get-platform", () => process.platform);
 
-ipcMain.on('settings-changed', () => {
-    BrowserWindow.getAllWindows().forEach(window => {
-        window.webContents.send('settings-updated')
-    })
-})
+ipcMain.on("settings-changed", () => {
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send("settings-updated");
+  });
+});
 
-ipcMain.handle('is-update-downloaded', () => {
+ipcMain.handle("is-update-downloaded", () => {
   return updateDownloaded;
 });
 
-ipcMain.handle('save-game-image', async (event, gameName, imageBase64) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("save-game-image", async (event, gameName, imageBase64) => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
     if (!settings.downloadDirectory) {
-      console.error('Download directory not set');
+      console.error("Download directory not set");
       return false;
     }
 
@@ -1999,40 +2065,40 @@ ipcMain.handle('save-game-image', async (event, gameName, imageBase64) => {
     if (!fs.existsSync(gameDirectory)) {
       fs.mkdirSync(gameDirectory, { recursive: true });
     }
-    const imagePath = path.join(gameDirectory, 'header.ascendara.jpg');
-    const imageBuffer = Buffer.from(imageBase64, 'base64');
+    const imagePath = path.join(gameDirectory, "header.ascendara.jpg");
+    const imageBuffer = Buffer.from(imageBase64, "base64");
     fs.writeFileSync(imagePath, imageBuffer);
-    
+
     return true;
   } catch (error) {
-    console.error('Error saving game image:', error);
+    console.error("Error saving game image:", error);
     return false;
   }
 });
 
-ipcMain.handle('read-file', async (event, filePath) => {
+ipcMain.handle("read-file", async (event, filePath) => {
   try {
-    return fs.readFileSync(filePath, 'utf8');
+    return fs.readFileSync(filePath, "utf8");
   } catch (error) {
-    console.error('Error reading file:', error);
+    console.error("Error reading file:", error);
     throw error;
   }
 });
 
-ipcMain.handle('write-file', async (event, filePath, content) => {
+ipcMain.handle("write-file", async (event, filePath, content) => {
   try {
     fs.writeFileSync(filePath, content);
     return true;
   } catch (error) {
-    console.error('Error writing file:', error);
+    console.error("Error writing file:", error);
     throw error;
   }
 });
 
-ipcMain.handle('launch-game', async (event, game) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("launch-game", async (event, game) => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
     const gameData = settings.games[game];
 
@@ -2040,15 +2106,18 @@ ipcMain.handle('launch-game', async (event, game) => {
     await validateGameExecutable(gameData);
 
     const gameProcess = spawn(gameData.executable, [], {
-      cwd: path.dirname(gameData.executable)
+      cwd: path.dirname(gameData.executable),
     });
 
     let hasError = false;
-    
-    gameProcess.on('error', async (error) => {
+
+    gameProcess.on("error", async error => {
       hasError = true;
-      await showErrorDialog('Game Launch Error', `Failed to launch game: ${error.message}`);
-      console.error('Game process error:', error);
+      await showErrorDialog(
+        "Game Launch Error",
+        `Failed to launch game: ${error.message}`
+      );
+      console.error("Game process error:", error);
     });
 
     // Wait a short moment to catch immediate launch errors
@@ -2057,8 +2126,8 @@ ipcMain.handle('launch-game', async (event, game) => {
     // Only hide if no immediate errors occurred
     if (!hasError) {
       hideWindow();
-      
-      gameProcess.on('close', (code) => {
+
+      gameProcess.on("close", code => {
         showWindow();
         if (code !== 0) {
           console.log(`Game process exited with code ${code}`);
@@ -2068,8 +2137,8 @@ ipcMain.handle('launch-game', async (event, game) => {
 
     return true;
   } catch (error) {
-    await showErrorDialog('Game Launch Error', `Failed to launch game: ${error.message}`);
-    console.error('Error launching game:', error);
+    await showErrorDialog("Game Launch Error", `Failed to launch game: ${error.message}`);
+    console.error("Error launching game:", error);
     return false;
   }
 });
@@ -2078,52 +2147,56 @@ async function showErrorDialog(title, message) {
   const window = BrowserWindow.getFocusedWindow();
   if (window) {
     await dialog.showMessageBox(window, {
-      type: 'error',
+      type: "error",
       title: title,
       message: message,
-      buttons: ['OK']
+      buttons: ["OK"],
     });
   }
 }
 
 async function validateGameExecutable(gameData) {
   if (!gameData || !gameData.executable) {
-    throw new Error('Game executable not found');
+    throw new Error("Game executable not found");
   }
-  
+
   if (!fs.existsSync(gameData.executable)) {
-    throw new Error('Game executable file does not exist');
+    throw new Error("Game executable file does not exist");
   }
-  
+
   const stats = await fs.promises.stat(gameData.executable);
   if (!stats.isFile()) {
-    throw new Error('Game executable path is not a file');
+    throw new Error("Game executable path is not a file");
   }
 }
 
 // Create game shortcut
 async function createGameShortcut(game) {
   try {
-    console.log('Creating shortcut for game:', game);
-    const shortcutPath = path.join(os.homedir(), 'Desktop', `${game.game || game.name}.lnk`);
-    
+    console.log("Creating shortcut for game:", game);
+    const shortcutPath = path.join(
+      os.homedir(),
+      "Desktop",
+      `${game.game || game.name}.lnk`
+    );
+
     // Get game executable path
     const exePath = game.executable;
     const gameName = game.game || game.name;
     const isCustom = !!game.custom;
-    
+
     if (!exePath || !fs.existsSync(exePath)) {
       throw new Error(`Game executable not found: ${exePath}`);
     }
-    
+
     // Get game handler path
-    const handlerPath = path.join(appDirectory, '/resources/AscendaraGameHandler.exe');
-    console.log('Handler path:', handlerPath);
-    
+    const handlerPath = path.join(appDirectory, "/resources/AscendaraGameHandler.exe");
+    console.log("Handler path:", handlerPath);
+
     if (!fs.existsSync(handlerPath)) {
       throw new Error(`Game handler not found at: ${handlerPath}`);
     }
-    
+
     // PowerShell script to create shortcut
     const psScript = `
       $WScriptShell = New-Object -ComObject WScript.Shell
@@ -2134,43 +2207,47 @@ async function createGameShortcut(game) {
       $Shortcut.IconLocation = "${exePath},0"
       $Shortcut.Save()
     `;
-    
+
     // Save PowerShell script to temp file
-    const psPath = path.join(os.tmpdir(), 'createShortcut.ps1');
+    const psPath = path.join(os.tmpdir(), "createShortcut.ps1");
     fs.writeFileSync(psPath, psScript);
-    
+
     // Execute PowerShell script
     await new Promise((resolve, reject) => {
-      const process = spawn('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-File', psPath], { windowsHide: true });
-      
-      process.on('error', (error) => {
+      const process = spawn(
+        "powershell.exe",
+        ["-ExecutionPolicy", "Bypass", "-File", psPath],
+        { windowsHide: true }
+      );
+
+      process.on("error", error => {
         reject(error);
       });
-      process.on('exit', (code) => {
+      process.on("exit", code => {
         fs.unlinkSync(psPath); // Clean up temp file
         if (code === 0) resolve();
         else reject(new Error(`Process exited with code ${code}`));
       });
     });
-    
+
     return true;
   } catch (error) {
-    console.error('Error creating shortcut:', error);
+    console.error("Error creating shortcut:", error);
     return false;
   }
 }
 
 // Handle shortcut creation request
-ipcMain.handle('create-game-shortcut', async (event, game) => {
+ipcMain.handle("create-game-shortcut", async (event, game) => {
   return await createGameShortcut(game);
 });
 
-ipcMain.handle('check-file-exists', async (event, execPath) => {
+ipcMain.handle("check-file-exists", async (event, execPath) => {
   try {
-    const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-    const data = fs.readFileSync(filePath, 'utf8');
+    const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
+    const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
-    
+
     if (!settings.downloadDirectory) {
       return false;
     }
@@ -2184,37 +2261,36 @@ ipcMain.handle('check-file-exists', async (event, execPath) => {
 
     return fs.existsSync(executable);
   } catch (error) {
-    console.error('Error checking executable:', error);
+    console.error("Error checking executable:", error);
     return false;
   }
 });
 
 function launchCrashReporter(errorCode, errorMessage) {
   try {
-    const crashReporterPath = path.join('.', 'AscendaraCrashReporter.exe');
+    const crashReporterPath = path.join(".", "AscendaraCrashReporter.exe");
     if (fs.existsSync(crashReporterPath)) {
-      spawn(
-        crashReporterPath,
-        ["mainapp", errorCode.toString(), errorMessage],
-        { detached: true, stdio: 'ignore' }
-      ).unref();
+      spawn(crashReporterPath, ["mainapp", errorCode.toString(), errorMessage], {
+        detached: true,
+        stdio: "ignore",
+      }).unref();
     } else {
       console.error(`Crash reporter not found at: ${crashReporterPath}`);
     }
   } catch (error) {
-    console.error('Failed to launch crash reporter:', error);
+    console.error("Failed to launch crash reporter:", error);
   }
 }
 
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  launchCrashReporter(1000, error.message || 'Unknown error occurred');
+process.on("uncaughtException", error => {
+  console.error("Uncaught Exception:", error);
+  launchCrashReporter(1000, error.message || "Unknown error occurred");
   app.quit();
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  launchCrashReporter(1002, reason?.message || 'Unhandled promise rejection');
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  launchCrashReporter(1002, reason?.message || "Unhandled promise rejection");
   app.quit();
 });
 
@@ -2226,14 +2302,14 @@ const URL_DEBOUNCE_TIME = 2000; // 2 seconds
 
 function handleProtocolUrl(url) {
   if (!url) return;
-  
+
   // Ensure proper URL format
   const cleanUrl = url.trim();
-  if (!cleanUrl.startsWith('ascendara://')) return;
+  if (!cleanUrl.startsWith("ascendara://")) return;
 
   // Get the main window
   const mainWindow = BrowserWindow.getAllWindows()[0];
-  
+
   // If no window exists, store URL and create window
   if (!mainWindow) {
     pendingUrls.add(cleanUrl);
@@ -2251,26 +2327,26 @@ function handleProtocolUrl(url) {
 
     // Only send if it's a new URL or enough time has passed
     const currentTime = Date.now();
-    if (cleanUrl !== lastHandledUrl || (currentTime - lastHandleTime) > URL_DEBOUNCE_TIME) {
+    if (cleanUrl !== lastHandledUrl || currentTime - lastHandleTime > URL_DEBOUNCE_TIME) {
       lastHandledUrl = cleanUrl;
       lastHandleTime = currentTime;
-      
+
       // Check if this is a game URL
-      if (cleanUrl.includes('game')) {
+      if (cleanUrl.includes("game")) {
         try {
           // Extract the ID, removing any query parameters
-          const imageId = cleanUrl.split('?').pop().replace('/', '');
+          const imageId = cleanUrl.split("?").pop().replace("/", "");
           if (imageId) {
-            console.log('Sending game URL to renderer with imageId:', imageId);
-            mainWindow.webContents.send('protocol-game-url', { imageId });
+            console.log("Sending game URL to renderer with imageId:", imageId);
+            mainWindow.webContents.send("protocol-game-url", { imageId });
           }
         } catch (error) {
-          console.error('Error parsing game URL:', error);
+          console.error("Error parsing game URL:", error);
         }
       } else {
         // Handle existing download protocol
-        console.log('Sending download URL to renderer:', cleanUrl);
-        mainWindow.webContents.send('protocol-download-url', cleanUrl);
+        console.log("Sending download URL to renderer:", cleanUrl);
+        mainWindow.webContents.send("protocol-download-url", cleanUrl);
       }
     }
 
@@ -2279,16 +2355,16 @@ function handleProtocolUrl(url) {
       isHandlingProtocolUrl = false;
     }, 1000);
   } catch (error) {
-    console.error('Error handling protocol URL:', error);
+    console.error("Error handling protocol URL:", error);
     isHandlingProtocolUrl = false;
   }
-  
+
   // Clear pending URLs since we've handled this one
   pendingUrls.clear();
 }
 
 // Register IPC handler for renderer to request pending URLs
-ipcMain.handle('get-pending-urls', () => {
+ipcMain.handle("get-pending-urls", () => {
   const urls = Array.from(pendingUrls);
   pendingUrls.clear();
   return urls;
@@ -2298,23 +2374,25 @@ ipcMain.handle('get-pending-urls', () => {
 const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {
-  console.log('Another instance is running, quitting this instance');
+  console.log("Another instance is running, quitting this instance");
   app.quit();
 } else {
   // Register protocol handler
   if (process.defaultApp || isDev) {
-    app.setAsDefaultProtocolClient('ascendara', process.execPath, [path.resolve(process.argv[1])]);
+    app.setAsDefaultProtocolClient("ascendara", process.execPath, [
+      path.resolve(process.argv[1]),
+    ]);
   } else {
-    app.setAsDefaultProtocolClient('ascendara');
+    app.setAsDefaultProtocolClient("ascendara");
   }
 
   // Handle second instance
-  app.on('second-instance', (event, commandLine, workingDirectory) => {
-    console.log('Second instance detected with args:', commandLine);
-    
+  app.on("second-instance", (event, commandLine, workingDirectory) => {
+    console.log("Second instance detected with args:", commandLine);
+
     // Check for protocol URL
-    const protocolUrl = commandLine.find(arg => arg.startsWith('ascendara://'));
-    
+    const protocolUrl = commandLine.find(arg => arg.startsWith("ascendara://"));
+
     if (protocolUrl) {
       handleProtocolUrl(protocolUrl);
     } else {
@@ -2328,7 +2406,7 @@ if (!gotTheLock) {
   });
 
   // Handle protocol URLs
-  app.on('open-url', (event, url) => {
+  app.on("open-url", (event, url) => {
     event.preventDefault();
     handleProtocolUrl(url);
   });
@@ -2336,64 +2414,70 @@ if (!gotTheLock) {
   // Setup on app ready
   app.whenReady().then(() => {
     // Register protocol handler
-    protocol.registerHttpProtocol('ascendara', (request, callback) => {
+    protocol.registerHttpProtocol("ascendara", (request, callback) => {
       handleProtocolUrl(request.url);
     });
 
     // Check first instance protocol URL
-    const protocolUrl = process.argv.find(arg => arg.startsWith('ascendara://'));
+    const protocolUrl = process.argv.find(arg => arg.startsWith("ascendara://"));
     if (protocolUrl) {
       handleProtocolUrl(protocolUrl);
     }
   });
 
   // Cleanup on app quit
-  app.on('window-all-closed', () => {
+  app.on("window-all-closed", () => {
     pendingUrls.clear();
-    if (process.platform !== 'darwin') {
+    if (process.platform !== "darwin") {
       app.quit();
     }
   });
 
   // Handle activation
-  app.on('activate', () => {
+  app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
   });
 }
 
-ipcMain.handle('get-launch-count', () => {
+ipcMain.handle("get-launch-count", () => {
   try {
-    const timestampPath = path.join(os.homedir(), 'timestamp.ascendara.json');
+    const timestampPath = path.join(os.homedir(), "timestamp.ascendara.json");
     if (fs.existsSync(timestampPath)) {
-      const timestamp = JSON.parse(fs.readFileSync(timestampPath, 'utf8'));
+      const timestamp = JSON.parse(fs.readFileSync(timestampPath, "utf8"));
       return timestamp.launchCount || 0;
     }
     return 0;
   } catch (error) {
-    console.error('Error reading launch count:', error);
+    console.error("Error reading launch count:", error);
     return 0;
   }
 });
 
-ipcMain.handle('get-local-crack-directory', () => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-  const steamEmuPathGoldberg = path.join(os.homedir(), 'AppData', 'Roaming', 'Goldberg SteamEmu Saves', 'settings');
-  
+ipcMain.handle("get-local-crack-directory", () => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
+  const steamEmuPathGoldberg = path.join(
+    os.homedir(),
+    "AppData",
+    "Roaming",
+    "Goldberg SteamEmu Saves",
+    "settings"
+  );
+
   let settings;
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = fs.readFileSync(filePath, "utf8");
     settings = JSON.parse(data);
   } catch (error) {
-    console.error('Error reading local crack settings:', error);
+    console.error("Error reading local crack settings:", error);
     settings = {};
   }
 
   if (!settings.crackDirectory) {
     settings.crackDirectory = steamEmuPathGoldberg;
   }
-  
+
   if (!settings.crackUsernamePath) {
     settings.crackUsernamePath = steamEmuPathGoldberg;
   }
@@ -2401,72 +2485,72 @@ ipcMain.handle('get-local-crack-directory', () => {
   try {
     fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
   } catch (error) {
-    console.error('Error writing local crack settings:', error);
+    console.error("Error writing local crack settings:", error);
     return null;
   }
 
   return settings.crackDirectory;
 });
 
-ipcMain.handle('get-system-username', () => {
+ipcMain.handle("get-system-username", () => {
   try {
     return os.userInfo().username;
   } catch (error) {
-    console.error('Error getting system username:', error);
+    console.error("Error getting system username:", error);
     return null;
   }
 });
 
-ipcMain.handle('set-local-crack-directory', (event, directory) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("set-local-crack-directory", (event, directory) => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
     let settings = {};
     if (fs.existsSync(filePath)) {
-      settings = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      settings = JSON.parse(fs.readFileSync(filePath, "utf8"));
     }
     settings.crackDirectory = directory;
     fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
     return true;
   } catch (error) {
-    console.error('Error setting crack directory:', error);
+    console.error("Error setting crack directory:", error);
     return false;
   }
 });
 
-ipcMain.handle('get-local-crack-username', () => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
-  const settings = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+ipcMain.handle("get-local-crack-username", () => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
+  const settings = JSON.parse(fs.readFileSync(filePath, "utf8"));
   const steamEmuPathGoldberg = settings.crackUsernamePath;
 
   try {
     if (fs.existsSync(steamEmuPathGoldberg)) {
-      const accountNamePath = path.join(steamEmuPathGoldberg, 'account_name.txt');
+      const accountNamePath = path.join(steamEmuPathGoldberg, "account_name.txt");
       if (fs.existsSync(accountNamePath)) {
-        const accountName = fs.readFileSync(accountNamePath, 'utf8').trim();
+        const accountName = fs.readFileSync(accountNamePath, "utf8").trim();
         return accountName;
       }
     }
   } catch (error) {
-    console.error('Error reading local crack username:', error);
+    console.error("Error reading local crack username:", error);
   }
   return null;
 });
 
-ipcMain.handle('set-local-crack-username', (event, username) => {
-  const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
+ipcMain.handle("set-local-crack-username", (event, username) => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
-    const settings = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    const settings = JSON.parse(fs.readFileSync(filePath, "utf8"));
     const steamEmuPathGoldberg = settings.crackUsernamePath;
-    
+
     if (!fs.existsSync(steamEmuPathGoldberg)) {
       fs.mkdirSync(steamEmuPathGoldberg, { recursive: true });
     }
 
-    const accountNamePath = path.join(steamEmuPathGoldberg, 'account_name.txt');
+    const accountNamePath = path.join(steamEmuPathGoldberg, "account_name.txt");
     fs.writeFileSync(accountNamePath, username);
     return true;
   } catch (error) {
-    console.error('Error setting crack username:', error);
+    console.error("Error setting crack username:", error);
     return false;
   }
 });

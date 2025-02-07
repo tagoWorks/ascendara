@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet, useSearchParams } from 'react-router-dom';
-import Navigation from './Navigation';
-import MenuBar from './MenuBar';
-import Tour from './Tour';
-import { useTheme } from '../contexts/ThemeContext';
+import React, { useState, useEffect } from "react";
+import { Outlet, useSearchParams } from "react-router-dom";
+import Navigation from "./Navigation";
+import MenuBar from "./MenuBar";
+import Tour from "./Tour";
+import { useTheme } from "../contexts/ThemeContext";
 
 function Layout() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -11,7 +11,7 @@ function Layout() {
   const { theme, resolvedTheme } = useTheme();
 
   useEffect(() => {
-    if (searchParams.get('tour') === 'true') {
+    if (searchParams.get("tour") === "true") {
       setShowTour(true);
     }
   }, [searchParams]);
