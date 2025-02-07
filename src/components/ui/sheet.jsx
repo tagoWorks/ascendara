@@ -2,8 +2,7 @@ import * as React from "react";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva } from "class-variance-authority";
 import { X } from "lucide-react";
-
-import { cn } from "../../lib/utils";
+import { cn } from "@/lib/utils";
 
 const Sheet = ({ children, ...props }) => (
   <SheetPrimitive.Root modal={true} {...props}>

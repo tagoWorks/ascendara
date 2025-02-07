@@ -1,50 +1,50 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Button } from "../components/ui/button";
 import {
   AlertDialog,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-  AlertDialogCancel,
-} from "../components/ui/alert-dialog";
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "../components/ui/tooltip";
-import { Switch } from "../components/ui/switch";
-import { Separator } from "../components/ui/separator";
-import { Label } from "../components/ui/label";
-import { Input } from "../components/ui/input";
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
-  SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
-} from "../components/ui/select";
-import { Textarea } from "../components/ui/textarea";
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Loader,
-  InfoIcon,
-  CopyIcon,
-  CheckIcon,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useLanguage } from "@/context/LanguageContext";
+import { sanitizeText } from "@/lib/utils";
+import imageCacheService from "@/services/imageCacheService";
+import {
   BadgeCheckIcon,
-  TriangleAlert,
-  ExternalLink,
-  MessageSquareWarning,
+  CheckIcon,
   CircleSlash,
+  CopyIcon,
+  ExternalLink,
+  InfoIcon,
+  Loader,
+  MessageSquareWarning,
+  TriangleAlert,
   Zap,
 } from "lucide-react";
-import imageCacheService from "../services/imageCacheService";
+import React, { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useLanguage } from "../contexts/LanguageContext";
-import { sanitizeText } from "../lib/utils";
 
 const isValidURL = (url, provider) => {
   const trimmedUrl = url.trim();
@@ -918,7 +918,7 @@ export default function DownloadPage() {
             <div className="mx-auto max-w-xl">
               <div className="flex flex-col items-center space-y-8 py-2">
                 <div className="flex w-full items-center justify-between">
-                  <h2 className="flex grid items-center gap-2 text-xl font-semibold">
+                  <h2 className="flex items-center gap-2 text-xl font-semibold">
                     <span className="flex items-center gap-1">
                       Seamless <Zap className="h-5 w-5 text-primary" />
                     </span>
@@ -1183,7 +1183,7 @@ export default function DownloadPage() {
                                 "https://ascendara.app/protect-yourself"
                               )
                             }
-                            className="mt-2 inline-block flex cursor-pointer items-center gap-1 text-sm text-red-700 hover:text-red-900 hover:underline"
+                            className="mt-2 flex cursor-pointer items-center gap-1 text-sm text-red-700 hover:text-red-900 hover:underline"
                           >
                             {t("download.protectYourself.learnHow")}{" "}
                             <ExternalLink size={16} />

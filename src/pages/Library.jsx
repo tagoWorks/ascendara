@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Card, CardContent, CardFooter } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Switch } from "../components/ui/switch";
-import { Label } from "../components/ui/label";
-import { useLanguage } from "../contexts/LanguageContext";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import {
   MoreVertical,
   Play,
@@ -32,7 +32,7 @@ import {
   Heart,
   SquareLibrary,
 } from "lucide-react";
-import { cn } from "../lib/utils";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -41,21 +41,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "../components/ui/alert-dialog";
-import { Separator } from "../components/ui/separator";
-import { Progress } from "../components/ui/progress";
-import recentGamesService from "../services/recentGamesService";
+} from "@/components/ui/alert-dialog";
+import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
+import recentGamesService from "@/services/recentGamesService";
 import {
   TooltipProvider,
   Tooltip,
   TooltipTrigger,
   TooltipContent,
-} from "../components/ui/tooltip";
-import imageCacheService from "../services/imageCacheService";
-import gameService from "../services/gameService";
+} from "@/components/ui/tooltip";
+import imageCacheService from "@/services/imageCacheService";
+import gameService from "@/services/gameService";
 import fs from "fs";
 import { toast } from "sonner";
-import UserSettingsDialog from "../components/UserSettingsDialog";
+import UserSettingsDialog from "@/components/UserSettingsDialog";
 
 const Library = () => {
   const [games, setGames] = useState([]);

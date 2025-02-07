@@ -1,9 +1,9 @@
 import React, { useState, useEffect, memo, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "../components/ui/button";
-import { Checkbox } from "../components/ui/checkbox";
-import { Label } from "../components/ui/label";
-import { Progress } from "../components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import {
   Rocket,
   Shield,
@@ -29,10 +29,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../components/ui/alert-dialog";
-import { useLanguage } from "../contexts/LanguageContext";
-import { languages } from "../i18n";
-import { useTheme } from "../contexts/ThemeContext";
+} from "@/components/ui/alert-dialog";
+import { useLanguage } from "@/context/LanguageContext";
+import { languages } from "@/i18n";
+import { useTheme } from "@/context/ThemeContext";
 import { useTranslation } from "react-i18next";
 
 const executableToLabelMap = {

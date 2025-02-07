@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "./ui/card";
-import { cn } from "../lib/utils";
-import { sanitizeText } from "../lib/utils";
+import { cn } from "@/lib/utils";
+import { sanitizeText } from "@/lib/utils";
 import { Play } from "lucide-react";
 import { Button } from "./ui/button";
 import { AspectRatio } from "./ui/aspect-ratio";

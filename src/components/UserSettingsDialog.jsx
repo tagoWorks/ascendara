@@ -12,7 +12,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { ExternalLink, Pencil, X } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
 
 const UserSettingsDialog = () => {

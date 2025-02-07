@@ -1,7 +1,7 @@
 import React, { useState, useEffect, memo, useCallback, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useTheme } from "../contexts/ThemeContext";
-import { useLanguage } from "../contexts/LanguageContext";
+import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { Home, Search, Library, Settings, Download, ChevronRight } from "lucide-react";
 
 const Navigation = memo(({ items }) => {

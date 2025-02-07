@@ -1,20 +1,20 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { useTheme } from "../contexts/ThemeContext";
-import { useLanguage } from "../contexts/LanguageContext";
-import { Switch } from "../components/ui/switch";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Card } from "../components/ui/card";
-import { Separator } from "../components/ui/separator";
+import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../components/ui/select";
+} from "@/components/ui/select";
 import {
   ShieldAlert,
   Languages,
@@ -27,7 +27,7 @@ import {
   AlertCircle,
   ExternalLink,
 } from "lucide-react";
-import gameService from "../services/gameService";
+import gameService from "@/services/gameService";
 import { useNavigate } from "react-router-dom";
 
 const themes = [
