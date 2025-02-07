@@ -1,10 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
-import { Button } from '../components/ui/button';
-import { toast } from 'sonner';
-import { CircleCheck, AlertCircle, CircleAlert, ArrowLeft, Loader, XCircle } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
+import { Button } from "../components/ui/button";
+import { toast } from "sonner";
+import {
+  CircleCheck,
+  AlertCircle,
+  CircleAlert,
+  ArrowLeft,
+  Loader,
+  XCircle,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,14 +28,14 @@ const containerVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, staggerChildren: 0.1 }
+    transition: { duration: 0.6, staggerChildren: 0.1 },
   },
-  exit: { opacity: 0, y: -20, transition: { duration: 0.4 } }
+  exit: { opacity: 0, y: -20, transition: { duration: 0.4 } },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
+  visible: { opacity: 1, y: 0 },
 };
 
 const Dependencies = () => {
@@ -42,19 +49,19 @@ const Dependencies = () => {
   const totalDependencies = 5;
 
   const executableToLabelMap = {
-    'dotNetFx40_Full_x86_x64.exe': t => '.NET Framework 4.0',
-    'dxwebsetup.exe': t => 'DirectX',
-    'oalinst.exe': t => 'OpenAL',
-    'VC_redist.x64.exe': t => 'Visual C++ Redistributable',
-    'xnafx40_redist.msi': t => 'XNA Framework',
+    "dotNetFx40_Full_x86_x64.exe": t => ".NET Framework 4.0",
+    "dxwebsetup.exe": t => "DirectX",
+    "oalinst.exe": t => "OpenAL",
+    "VC_redist.x64.exe": t => "Visual C++ Redistributable",
+    "xnafx40_redist.msi": t => "XNA Framework",
   };
 
   // Check dependency status
   const checkDependencies = useCallback(async () => {
     try {
       const status = await window.electron.checkGameDependencies();
-      console.log('Initial dependency status:', status);
-      
+      console.log("Initial dependency status:", status);
+
       const mappedStatus = {};
       status.forEach(dep => {
         const label = executableToLabelMap[dep.file](t);
@@ -63,11 +70,11 @@ const Dependencies = () => {
           mappedStatus[label] = getStatusInfo(dep.installed);
         }
       });
-      
-      console.log('Final mapped status:', mappedStatus);
+
+      console.log("Final mapped status:", mappedStatus);
       setDependencyStatus(mappedStatus);
     } catch (error) {
-      console.error('Failed to check dependencies:', error);
+      console.error("Failed to check dependencies:", error);
     }
   }, [t]);
 
@@ -82,13 +89,16 @@ const Dependencies = () => {
 
       console.log(`Received status for ${label}: ${status}`);
 
-      if (status === 'starting') {
+      if (status === "starting") {
         console.log(`Starting installation of: ${label}`);
         setDependencyStatus(prevStatus => ({
           ...prevStatus,
-          [label]: { installed: false, icon: <Loader className="w-5 h-5 animate-spin" /> },
+          [label]: {
+            installed: false,
+            icon: <Loader className="h-5 w-5 animate-spin" />,
+          },
         }));
-      } else if (status === 'finished') {
+      } else if (status === "finished") {
         console.log(`Finished installing: ${label}`);
         setCompletedDeps(prev => {
           if (!prev.has(label)) {
@@ -100,28 +110,40 @@ const Dependencies = () => {
         setDependencyStatus(prevStatus => {
           const updatedStatus = {
             ...prevStatus,
-            [label]: { installed: true, icon: <CircleCheck className="w-5 h-5 text-green-500" /> },
+            [label]: {
+              installed: true,
+              icon: <CircleCheck className="h-5 w-5 text-green-500" />,
+            },
           };
           const allInstalled = Object.values(updatedStatus).every(dep => dep.installed);
           if (allInstalled) {
             setIsInstalling(false);
           }
-          console.log('Updated dependency status:', updatedStatus);
+          console.log("Updated dependency status:", updatedStatus);
           return updatedStatus;
         });
-      } else if (status === 'failed') {
+      } else if (status === "failed") {
         console.error(`Failed to install: ${label}`);
         setDependencyStatus(prevStatus => ({
           ...prevStatus,
-          [label]: { installed: false, icon: <XCircle className="w-5 h-5 text-red-500" /> },
+          [label]: {
+            installed: false,
+            icon: <XCircle className="h-5 w-5 text-red-500" />,
+          },
         }));
       }
     };
 
-    window.electron.ipcRenderer.on('dependency-installation-status', handleDependencyStatus);
+    window.electron.ipcRenderer.on(
+      "dependency-installation-status",
+      handleDependencyStatus
+    );
 
     return () => {
-      window.electron.ipcRenderer.off('dependency-installation-status', handleDependencyStatus);
+      window.electron.ipcRenderer.off(
+        "dependency-installation-status",
+        handleDependencyStatus
+      );
     };
   }, [t]);
 
@@ -130,70 +152,75 @@ const Dependencies = () => {
     setProgress(0);
     setCompletedDeps(new Set());
     setShowConfirmDialog(false);
-    
+
     // Set all dependencies to loading state
     setDependencyStatus(prevStatus => {
       const updatedStatus = { ...prevStatus };
       Object.keys(executableToLabelMap).forEach(dep => {
         const label = executableToLabelMap[dep](t);
-        updatedStatus[label] = { installed: false, icon: <Loader className="w-5 h-5 animate-spin" /> };
+        updatedStatus[label] = {
+          installed: false,
+          icon: <Loader className="h-5 w-5 animate-spin" />,
+        };
       });
       return updatedStatus;
     });
 
     try {
       await window.electron.installDependencies();
-      toast.success(t('settings.reinstallSuccess'));
+      toast.success(t("settings.reinstallSuccess"));
       await checkDependencies();
     } catch (error) {
-      console.error('Failed to install dependencies:', error);
-      toast.error(t('settings.reinstallError'));
+      console.error("Failed to install dependencies:", error);
+      toast.error(t("settings.reinstallError"));
       setIsInstalling(false);
     }
   };
 
-  const getStatusInfo = (installed) => {
+  const getStatusInfo = installed => {
     if (installed === undefined || installed === null) {
       return {
-        icon: <CircleAlert className="w-5 h-5 text-muted-foreground" />,
-        status: 'checking'
+        icon: <CircleAlert className="h-5 w-5 text-muted-foreground" />,
+        status: "checking",
       };
     }
-    return installed ? {
-      icon: <CircleCheck className="w-5 h-5 text-green-500" />,
-      status: 'installed'
-    } : {
-      icon: <AlertCircle className="w-5 h-5 text-red-500" />,
-      status: 'missing'
-    };
+    return installed
+      ? {
+          icon: <CircleCheck className="h-5 w-5 text-green-500" />,
+          status: "installed",
+        }
+      : {
+          icon: <AlertCircle className="h-5 w-5 text-red-500" />,
+          status: "missing",
+        };
   };
 
   const dependencies = [
-    { 
-      name: '.NET Framework 4.0', 
-      desc: t('welcome.requiredForModernGames'),
-      url: 'https://dotnet.microsoft.com/download/dotnet-framework/net40'
+    {
+      name: ".NET Framework 4.0",
+      desc: t("welcome.requiredForModernGames"),
+      url: "https://dotnet.microsoft.com/download/dotnet-framework/net40",
     },
-    { 
-      name: 'DirectX', 
-      desc: t('welcome.graphicsAndMultimedia'),
-      url: 'https://www.microsoft.com/en-us/download/details.aspx?id=35'
+    {
+      name: "DirectX",
+      desc: t("welcome.graphicsAndMultimedia"),
+      url: "https://www.microsoft.com/en-us/download/details.aspx?id=35",
     },
-    { 
-      name: 'OpenAL', 
-      desc: t('welcome.audioProcessing'),
-      url: 'https://www.openal.org/downloads/'
+    {
+      name: "OpenAL",
+      desc: t("welcome.audioProcessing"),
+      url: "https://www.openal.org/downloads/",
     },
-    { 
-      name: 'Visual C++ Redistributable', 
-      desc: t('welcome.runtimeComponents'),
-      url: 'https://aka.ms/vs/17/release/vc_redist.x64.exe'
+    {
+      name: "Visual C++ Redistributable",
+      desc: t("welcome.runtimeComponents"),
+      url: "https://aka.ms/vs/17/release/vc_redist.x64.exe",
     },
-    { 
-      name: 'XNA Framework', 
-      desc: t('welcome.gameDevelopmentFramework'),
-      url: 'https://www.microsoft.com/en-us/download/details.aspx?id=20914'
-    }
+    {
+      name: "XNA Framework",
+      desc: t("welcome.gameDevelopmentFramework"),
+      url: "https://www.microsoft.com/en-us/download/details.aspx?id=20914",
+    },
   ];
 
   return (
@@ -201,63 +228,80 @@ const Dependencies = () => {
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('welcome.installDependencies')}</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">
+              {t("welcome.installDependencies")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {t('welcome.youWillReceiveAdminPrompts')}
+              {t("welcome.youWillReceiveAdminPrompts")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="text-primary" >{t('welcome.cancel')}</AlertDialogCancel>
-            <AlertDialogAction className="bg-primary text-secondary" onClick={handleInstallDependencies}>{t('welcome.continue')}</AlertDialogAction>
+            <AlertDialogCancel className="text-primary">
+              {t("welcome.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-primary text-secondary"
+              onClick={handleInstallDependencies}
+            >
+              {t("welcome.continue")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <motion.div
-        className="fixed inset-0 flex items-center justify-center bg-background/95 backdrop-blur-sm z-50"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
         exit="exit"
       >
-        <motion.div className="flex flex-col items-center max-w-4xl w-full px-8" variants={itemVariants}>
-          <div className="w-full mb-8">
+        <motion.div
+          className="flex w-full max-w-4xl flex-col items-center px-8"
+          variants={itemVariants}
+        >
+          <div className="mb-8 w-full">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate('/settings')}
-              className="hover:bg-accent hover:text-accent-foreground rounded-full"
+              onClick={() => navigate("/settings")}
+              className="rounded-full hover:bg-accent hover:text-accent-foreground"
             >
               <ArrowLeft className="h-6 w-6" />
             </Button>
           </div>
-          <motion.div className="flex items-center justify-center mb-8" variants={itemVariants}>
-            <h2 className="text-4xl font-bold text-primary">{t('settings.installGameDependencies')}</h2>
-          </motion.div>
-          <motion.div 
-            className="space-y-6 w-full"
+          <motion.div
+            className="mb-8 flex items-center justify-center"
             variants={itemVariants}
           >
-            <p className="text-xl text-foreground/80 text-center">
-              {t('settings.reinstallDependenciesDesc')}
+            <h2 className="text-4xl font-bold text-primary">
+              {t("settings.installGameDependencies")}
+            </h2>
+          </motion.div>
+          <motion.div className="w-full space-y-6" variants={itemVariants}>
+            <p className="text-center text-xl text-foreground/80">
+              {t("settings.reinstallDependenciesDesc")}
             </p>
             {isInstalling && (
-              <div className="w-full bg-secondary rounded-full h-2 mb-4">
-                <div 
-                  className="bg-primary h-2 rounded-full transition-all duration-500"
+              <div className="mb-4 h-2 w-full rounded-full bg-secondary">
+                <div
+                  className="h-2 rounded-full bg-primary transition-all duration-500"
                   style={{ width: `${(progress / totalDependencies) * 100}%` }}
                 />
               </div>
             )}
             <div className="grid grid-cols-2 gap-4 text-left text-muted-foreground">
-              {dependencies.map((dep) => (
-                <div key={dep.name} className="flex items-start space-x-3 p-4 bg-card rounded-lg border">
+              {dependencies.map(dep => (
+                <div
+                  key={dep.name}
+                  className="flex items-start space-x-3 rounded-lg border bg-card p-4"
+                >
                   {dependencyStatus?.[dep.name]?.icon}
                   <div>
                     <button
                       type="button"
                       onClick={() => window.electron.openURL(dep.url)}
-                      className="font-medium hover:text-primary transition-colors"
+                      className="font-medium transition-colors hover:text-primary"
                     >
                       {dep.name}
                     </button>
@@ -266,7 +310,7 @@ const Dependencies = () => {
                 </div>
               ))}
             </div>
-            <div className="flex justify-center mt-8">
+            <div className="mt-8 flex justify-center">
               <Button
                 onClick={() => setShowConfirmDialog(true)}
                 className="text-secondary"
@@ -275,10 +319,10 @@ const Dependencies = () => {
                 {isInstalling ? (
                   <>
                     <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    {t('welcome.installingDependencies')}
+                    {t("welcome.installingDependencies")}
                   </>
                 ) : (
-                  t('settings.reinstallDependencies')
+                  t("settings.reinstallDependencies")
                 )}
               </Button>
             </div>

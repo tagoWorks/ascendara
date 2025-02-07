@@ -1,22 +1,15 @@
-import React, { useState, useEffect, memo, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect, memo, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Skeleton } from "../components/ui/skeleton";
-import HomeGameCard from '../components/HomeGameCard';
-import RecentGameCard from '../components/RecentGameCard';
-import { useTheme } from '../contexts/ThemeContext';
-import { useLanguage } from '../contexts/LanguageContext';
-import { 
-  Sword,
-  Flame,
-  Globe,
-  ChevronLeft,
-  ChevronRight,
-  Clock
-} from 'lucide-react';
-import gameService from '../services/gameService';
-import Tour from '../components/Tour';
-import imageCacheService from '../services/imageCacheService';
-import recentGamesService from '../services/recentGamesService';
+import HomeGameCard from "../components/HomeGameCard";
+import RecentGameCard from "../components/RecentGameCard";
+import { useTheme } from "../contexts/ThemeContext";
+import { useLanguage } from "../contexts/LanguageContext";
+import { Sword, Flame, Globe, ChevronLeft, ChevronRight, Clock } from "lucide-react";
+import gameService from "../services/gameService";
+import Tour from "../components/Tour";
+import imageCacheService from "../services/imageCacheService";
+import recentGamesService from "../services/recentGamesService";
 
 // Module-level caches that persist during runtime
 let gamesCache = null;
@@ -55,20 +48,20 @@ const Home = memo(() => {
         if (gamesCache && carouselGamesCache) {
           setApiGames(gamesCache);
           setCarouselGames(carouselGamesCache);
-          
+
           // Still need to get installed games as they might have changed
           const installedGames = await window.electron.getGames();
           const customGames = await window.electron.getCustomGames();
-          
+
           const actuallyInstalledGames = [
             ...(installedGames || []).map(game => ({
               ...game,
-              isCustom: false
+              isCustom: false,
             })),
             ...(customGames || []).map(game => ({
               ...game,
-              isCustom: true
-            }))
+              isCustom: true,
+            })),
           ];
 
           setInstalledGames(actuallyInstalledGames);
@@ -79,36 +72,35 @@ const Home = memo(() => {
         // Fetch fresh data if no cache
         const [gamesData, carouselGames] = await Promise.all([
           gameService.getAllGames(),
-          gameService.getRandomTopGames()
+          gameService.getRandomTopGames(),
         ]);
         const games = gamesData.games || [];
-        
+
         // Update caches
         gamesCache = games;
         carouselGamesCache = carouselGames;
-        
+
         // Get actually installed games from electron
         const installedGames = await window.electron.getGames();
         const customGames = await window.electron.getCustomGames();
-        
+
         // Combine installed and custom games
         const actuallyInstalledGames = [
           ...(installedGames || []).map(game => ({
             ...game,
-            isCustom: false
+            isCustom: false,
           })),
           ...(customGames || []).map(game => ({
             ...game,
-            isCustom: true
-          }))
+            isCustom: true,
+          })),
         ];
 
         setApiGames(games);
         setInstalledGames(actuallyInstalledGames);
         setCarouselGames(carouselGames);
-        
       } catch (error) {
-        console.error('Error loading games:', error);
+        console.error("Error loading games:", error);
       } finally {
         setLoading(false);
       }
@@ -118,7 +110,7 @@ const Home = memo(() => {
   }, []);
 
   useEffect(() => {
-    if (searchParams.get('tour') === 'true') {
+    if (searchParams.get("tour") === "true") {
       setShowTour(true);
     }
   }, [searchParams]);
@@ -126,9 +118,7 @@ const Home = memo(() => {
   useEffect(() => {
     if (!autoPlay) return;
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => 
-        prev === carouselGames.length - 1 ? 0 : prev + 1
-      );
+      setCurrentSlide(prev => (prev === carouselGames.length - 1 ? 0 : prev + 1));
     }, 5000);
     return () => clearInterval(timer);
   }, [autoPlay, carouselGames]);
@@ -151,7 +141,7 @@ const Home = memo(() => {
           if (imageUrl) {
             setCarouselImages(prev => ({
               ...prev,
-              [game.imgID]: imageUrl
+              [game.imgID]: imageUrl,
             }));
           }
         } catch (error) {
@@ -173,8 +163,13 @@ const Home = memo(() => {
 
   useEffect(() => {
     // Get game sections first
-    const { topGames: topSection, onlineGames: onlineSection, actionGames: actionSection, usedGames } = getGameSections(apiGames);
-    
+    const {
+      topGames: topSection,
+      onlineGames: onlineSection,
+      actionGames: actionSection,
+      usedGames,
+    } = getGameSections(apiGames);
+
     // Then get popular categories, passing the used games set
     const popularCats = getPopularCategories(apiGames, usedGames);
 
@@ -185,9 +180,9 @@ const Home = memo(() => {
     setPopularCategories(popularCats);
   }, [apiGames]);
 
-  const getGameSections = (games) => {
+  const getGameSections = games => {
     if (!Array.isArray(games)) return { topGames: [], onlineGames: [], actionGames: [] };
-    
+
     // Create a shared Set to track used games across all sections
     const usedGames = new Set();
 
@@ -196,7 +191,7 @@ const Home = memo(() => {
       .filter(game => parseInt(game.weight || 0) > 30)
       .sort((a, b) => parseInt(b.weight || 0) - parseInt(a.weight || 0))
       .slice(0, 6);
-    
+
     // Add top games to used set
     topGamesSection.forEach(game => usedGames.add(game.game));
 
@@ -205,20 +200,23 @@ const Home = memo(() => {
       .filter(game => game.online && !usedGames.has(game.game))
       .sort((a, b) => parseInt(b.weight || 0) - parseInt(a.weight || 0))
       .slice(0, 6);
-    
+
     // Add online games to used set
     onlineGamesSection.forEach(game => usedGames.add(game.game));
 
     // Get action games, excluding used ones
     const actionGamesSection = games
-      .filter(game => 
-        Array.isArray(game.category) && 
-        game.category.some(cat => ['Action', 'Adventure', 'Fighting', 'Shooter'].includes(cat)) &&
-        !usedGames.has(game.game)
+      .filter(
+        game =>
+          Array.isArray(game.category) &&
+          game.category.some(cat =>
+            ["Action", "Adventure", "Fighting", "Shooter"].includes(cat)
+          ) &&
+          !usedGames.has(game.game)
       )
       .sort((a, b) => parseInt(b.weight || 0) - parseInt(a.weight || 0))
       .slice(0, 6);
-    
+
     // Add action games to used set
     actionGamesSection.forEach(game => usedGames.add(game.game));
 
@@ -226,22 +224,23 @@ const Home = memo(() => {
       topGames: topGamesSection,
       onlineGames: onlineGamesSection,
       actionGames: actionGamesSection,
-      usedGames // Return the set of used games for use in getPopularCategories
+      usedGames, // Return the set of used games for use in getPopularCategories
     };
   };
 
-  const getPopularCategories = (games, usedGames = new Set()) => { 
+  const getPopularCategories = (games, usedGames = new Set()) => {
     if (!Array.isArray(games)) return {};
-    
+
     const categories = {};
-    
+
     // Helper function to get unique games for a category
-    const getUniqueGamesForCategory = (category, count = 4) => { 
+    const getUniqueGamesForCategory = (category, count = 4) => {
       return games
-        .filter(game => 
-          game.category?.includes(category) && 
-          !usedGames.has(game.game) &&
-          parseInt(game.weight || 0) > 20
+        .filter(
+          game =>
+            game.category?.includes(category) &&
+            !usedGames.has(game.game) &&
+            parseInt(game.weight || 0) > 20
         )
         .sort((a, b) => parseInt(b.weight || 0) - parseInt(a.weight || 0))
         .slice(0, count)
@@ -253,17 +252,17 @@ const Home = memo(() => {
 
     // Get games for each category
     const popularCategories = [
-      'Action',
-      'Adventure',
-      'RPG',
-      'Simulation',
-      'Strategy',
-      'Sports'
+      "Action",
+      "Adventure",
+      "RPG",
+      "Simulation",
+      "Strategy",
+      "Sports",
     ];
 
     popularCategories.forEach(category => {
       const categoryGames = getUniqueGamesForCategory(category);
-      if (categoryGames.length >= 2) { 
+      if (categoryGames.length >= 2) {
         categories[category] = categoryGames;
       }
     });
@@ -271,35 +270,38 @@ const Home = memo(() => {
     return categories;
   };
 
-  const handleImageIntersect = useCallback(async (imgID) => {
-    if (!imgID || carouselImages[imgID]) return;
-    
-    try {
-      const src = await imageCacheService.getImage(imgID);
-      if (src) {
-        setCarouselImages(prev => ({
-          ...prev,
-          [imgID]: src
-        }));
-      }
-    } catch (error) {
-      console.error('Error loading carousel image:', error);
-    }
-  }, [carouselImages]);
+  const handleImageIntersect = useCallback(
+    async imgID => {
+      if (!imgID || carouselImages[imgID]) return;
 
-  const getRecentGames = async (games) => {
+      try {
+        const src = await imageCacheService.getImage(imgID);
+        if (src) {
+          setCarouselImages(prev => ({
+            ...prev,
+            [imgID]: src,
+          }));
+        }
+      } catch (error) {
+        console.error("Error loading carousel image:", error);
+      }
+    },
+    [carouselImages]
+  );
+
+  const getRecentGames = async games => {
     const recentlyPlayed = recentGamesService.getRecentGames();
-    
+
     try {
       // Get actually installed games from electron
       const installedGames = await window.electron.getGames();
       const customGames = await window.electron.getCustomGames();
-      
+
       // Combine installed and custom games
       const actuallyInstalledGames = [
         ...(installedGames || []).map(game => ({
           ...game,
-          isCustom: false
+          isCustom: false,
         })),
         ...(customGames || []).map(game => ({
           name: game.game,
@@ -308,36 +310,40 @@ const Home = memo(() => {
           online: game.online,
           dlc: game.dlc,
           executable: game.executable,
-          isCustom: true
-        }))
+          isCustom: true,
+        })),
       ];
-      
+
       // Filter out games that are no longer installed and merge with full game details
       return recentlyPlayed
-        .filter(recentGame => actuallyInstalledGames.some(g => g.game === recentGame.game))
+        .filter(recentGame =>
+          actuallyInstalledGames.some(g => g.game === recentGame.game)
+        )
         .map(recentGame => {
-          const gameDetails = games.find(g => g.game === recentGame.game) || actuallyInstalledGames.find(g => g.game === recentGame.game);
+          const gameDetails =
+            games.find(g => g.game === recentGame.game) ||
+            actuallyInstalledGames.find(g => g.game === recentGame.game);
           return {
             ...gameDetails,
-            lastPlayed: recentGame.lastPlayed
+            lastPlayed: recentGame.lastPlayed,
           };
         });
     } catch (error) {
-      console.error('Error getting installed games:', error);
+      console.error("Error getting installed games:", error);
       return [];
     }
   };
 
-  const handlePlayGame = async (game) => {
+  const handlePlayGame = async game => {
     try {
       await window.electron.playGame(game.game || game.name, game.isCustom);
-      
+
       // Get and cache the game image
       const imageBase64 = await window.electron.getGameImage(game.game || game.name);
       if (imageBase64) {
         await imageCacheService.getImage(game.imgID);
       }
-      
+
       // Update recently played
       recentGamesService.addRecentGame({
         game: game.game || game.name,
@@ -346,20 +352,20 @@ const Home = memo(() => {
         version: game.version,
         isCustom: game.isCustom,
         online: game.online,
-        dlc: game.dlc
+        dlc: game.dlc,
       });
     } catch (error) {
-      console.error('Error playing game:', error);
+      console.error("Error playing game:", error);
     }
   };
 
   const handlePrevSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev === 0 ? carouselGames.length - 1 : prev - 1));
+    setCurrentSlide(prev => (prev === 0 ? carouselGames.length - 1 : prev - 1));
     setAutoPlay(false);
   }, [carouselGames]);
 
   const handleNextSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev === carouselGames.length - 1 ? 0 : prev + 1));
+    setCurrentSlide(prev => (prev === carouselGames.length - 1 ? 0 : prev + 1));
     setAutoPlay(false);
   }, [carouselGames]);
 
@@ -368,22 +374,25 @@ const Home = memo(() => {
     setSearchParams({});
   }, [setSearchParams]);
 
-  const handleCarouselGameClick = useCallback((game) => {
-    const container = document.querySelector('.page-container');
-    if (container) {
-      container.classList.add('fade-out');
-    }
-    
-    setTimeout(() => {
-      navigate('/download', { 
-        state: { 
-          gameData: game
-        }
-      });
-    }, 300);
-  }, [navigate]);
+  const handleCarouselGameClick = useCallback(
+    game => {
+      const container = document.querySelector(".page-container");
+      if (container) {
+        container.classList.add("fade-out");
+      }
 
-  const handleTouchStart = useCallback((e) => {
+      setTimeout(() => {
+        navigate("/download", {
+          state: {
+            gameData: game,
+          },
+        });
+      }, 300);
+    },
+    [navigate]
+  );
+
+  const handleTouchStart = useCallback(e => {
     setTouchStart(e.touches[0].clientX);
     setTouchEnd(e.touches[0].clientX);
     setIsDragging(true);
@@ -391,12 +400,15 @@ const Home = memo(() => {
     setAutoPlay(false);
   }, []);
 
-  const handleTouchMove = useCallback((e) => {
-    if (!isDragging) return;
-    setTouchEnd(e.touches[0].clientX);
-    const offset = e.touches[0].clientX - dragStart;
-    setDragOffset(offset);
-  }, [isDragging, dragStart]);
+  const handleTouchMove = useCallback(
+    e => {
+      if (!isDragging) return;
+      setTouchEnd(e.touches[0].clientX);
+      const offset = e.touches[0].clientX - dragStart;
+      setDragOffset(offset);
+    },
+    [isDragging, dragStart]
+  );
 
   const handleTouchEnd = useCallback(() => {
     setIsDragging(false);
@@ -413,46 +425,55 @@ const Home = memo(() => {
     setDragOffset(0);
   }, [touchStart, touchEnd]);
 
-  const handleMouseDown = useCallback((e) => {
+  const handleMouseDown = useCallback(e => {
     setIsDragging(true);
     setDragStart(e.clientX);
     setAutoPlay(false);
     e.preventDefault();
   }, []);
 
-  const handleMouseMove = useCallback((e) => {
-    if (!isDragging) return;
-    const offset = e.clientX - dragStart;
-    setDragOffset(offset);
-    e.preventDefault();
-  }, [isDragging, dragStart]);
+  const handleMouseMove = useCallback(
+    e => {
+      if (!isDragging) return;
+      const offset = e.clientX - dragStart;
+      setDragOffset(offset);
+      e.preventDefault();
+    },
+    [isDragging, dragStart]
+  );
 
-  const handleMouseUp = useCallback((e) => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    const diff = dragStart - e.clientX;
-    const threshold = window.innerWidth * 0.2;
+  const handleMouseUp = useCallback(
+    e => {
+      if (!isDragging) return;
+      setIsDragging(false);
+      const diff = dragStart - e.clientX;
+      const threshold = window.innerWidth * 0.2;
 
-    if (Math.abs(diff) > threshold) {
-      if (diff > 0) {
-        handleNextSlide();
-      } else {
-        handlePrevSlide();
+      if (Math.abs(diff) > threshold) {
+        if (diff > 0) {
+          handleNextSlide();
+        } else {
+          handlePrevSlide();
+        }
       }
-    }
-    setDragOffset(0);
-    e.preventDefault();
-  }, [isDragging, dragStart]);
+      setDragOffset(0);
+      e.preventDefault();
+    },
+    [isDragging, dragStart]
+  );
 
-  const handleMouseLeave = useCallback((e) => {
-    if (isDragging) {
-      handleMouseUp(e);
-    }
-  }, [isDragging, handleMouseUp]);
+  const handleMouseLeave = useCallback(
+    e => {
+      if (isDragging) {
+        handleMouseUp(e);
+      }
+    },
+    [isDragging, handleMouseUp]
+  );
 
   return loading ? (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-7xl mx-auto p-4 md:p-8">
+      <div className="container mx-auto max-w-7xl p-4 md:p-8">
         <div className="space-y-12">
           <Skeleton className="h-96 w-full rounded-2xl" />
           <Skeleton className="h-48 w-full" />
@@ -462,17 +483,17 @@ const Home = memo(() => {
     </div>
   ) : (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-7xl mx-auto p-4 md:p-8">
+      <div className="container mx-auto max-w-7xl p-4 md:p-8">
         {showTour && <Tour onClose={handleCloseTour} />}
-        
+
         <div className="space-y-12">
-          <div className="relative group">
+          <div className="group relative">
             <div className="overflow-hidden rounded-2xl shadow-lg">
-              <div 
-                className={`flex transition-transform duration-500 ${isDragging ? 'transition-none' : ''}`}
-                style={{ 
+              <div
+                className={`flex transition-transform duration-500 ${isDragging ? "transition-none" : ""}`}
+                style={{
                   transform: `translateX(calc(-${currentSlide * 100}% + ${dragOffset}px))`,
-                  cursor: isDragging ? 'grabbing' : 'grab'
+                  cursor: isDragging ? "grabbing" : "grab",
                 }}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
@@ -483,36 +504,43 @@ const Home = memo(() => {
                 onMouseLeave={handleMouseLeave}
               >
                 {carouselGames.map((game, index) => (
-                  <div 
-                    key={game.game} 
-                    className="min-w-full select-none" 
+                  <div
+                    key={game.game}
+                    className="min-w-full select-none"
                     onClick={() => !isDragging && handleCarouselGameClick(game)}
                   >
                     <div className="relative aspect-[21/9]">
                       {!carouselImages[game.imgID] ? (
-                        <Skeleton className="absolute inset-0 w-full h-full bg-muted animate-pulse" />
+                        <Skeleton className="absolute inset-0 h-full w-full animate-pulse bg-muted" />
                       ) : (
-                        <img 
+                        <img
                           src={carouselImages[game.imgID]}
                           alt={game.game}
-                          className="w-full h-full object-cover"
+                          className="h-full w-full object-cover"
                           draggable="false"
-                          loading={index === currentSlide || index === (currentSlide + 1) % carouselGames.length ? "eager" : "lazy"}
+                          loading={
+                            index === currentSlide ||
+                            index === (currentSlide + 1) % carouselGames.length
+                              ? "eager"
+                              : "lazy"
+                          }
                         />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none">
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
                         <div className="absolute bottom-0 left-0 right-0 p-6">
-                          <div className="flex items-center gap-2 text-white/80 mb-2">
+                          <div className="mb-2 flex items-center gap-2 text-white/80">
                             {game.category?.slice(0, 3).map((cat, idx) => (
                               <span
                                 key={cat + idx}
-                                className="px-2 py-1 text-xs rounded-full bg-white/10"
+                                className="rounded-full bg-white/10 px-2 py-1 text-xs"
                               >
                                 {cat}
                               </span>
                             ))}
                           </div>
-                          <h2 className="text-2xl font-bold text-white mb-2">{game.game}</h2>
+                          <h2 className="mb-2 text-2xl font-bold text-white">
+                            {game.game}
+                          </h2>
                         </div>
                       </div>
                     </div>
@@ -521,14 +549,14 @@ const Home = memo(() => {
               </div>
             </div>
 
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
               {carouselGames.map((_, index) => (
                 <button
                   key={index}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    index === currentSlide 
-                      ? 'bg-white w-4' 
-                      : 'bg-white/50 hover:bg-white/70'
+                  className={`h-2 w-2 rounded-full transition-all ${
+                    index === currentSlide
+                      ? "w-4 bg-white"
+                      : "bg-white/50 hover:bg-white/70"
                   }`}
                   onClick={() => {
                     setCurrentSlide(index);
@@ -538,32 +566,32 @@ const Home = memo(() => {
               ))}
             </div>
 
-            <button 
+            <button
               onClick={handlePrevSlide}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 z-10"
+              className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
               aria-label="Previous slide"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="h-6 w-6" />
             </button>
-            <button 
+            <button
               onClick={handleNextSlide}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 z-10"
+              className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
               aria-label="Next slide"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="h-6 w-6" />
             </button>
           </div>
 
           {recentGames.length > 0 && (
             <section className="space-y-8">
-              <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <Clock className="w-6 h-6 text-primary" />
-                {t('home.recentGames')}
+              <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+                <Clock className="h-6 w-6 text-primary" />
+                {t("home.recentGames")}
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {recentGames.map((game, index) => (
-                  <RecentGameCard 
-                    key={`recent-${game.game}-${index}`} 
+                  <RecentGameCard
+                    key={`recent-${game.game}-${index}`}
                     game={game}
                     onPlay={handlePlayGame}
                   />
@@ -573,77 +601,61 @@ const Home = memo(() => {
           )}
 
           <section className="space-y-8">
-            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Sword className="w-6 h-6 text-primary" />
-              {t('home.topGames')}
+            <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+              <Sword className="h-6 w-6 text-primary" />
+              {t("home.topGames")}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {loading ? (
-                Array(4).fill(0).map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <AspectRatio ratio={16 / 9}>
-                      <Skeleton className="w-full h-full" />
-                    </AspectRatio>
-                  </div>
-                ))
-              ) : (
-                topGames.map(game => (
-                  <HomeGameCard 
-                    key={game.game} 
-                    game={game}
-                  />
-                ))
-              )}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {loading
+                ? Array(4)
+                    .fill(0)
+                    .map((_, i) => (
+                      <div key={i} className="animate-pulse">
+                        <AspectRatio ratio={16 / 9}>
+                          <Skeleton className="h-full w-full" />
+                        </AspectRatio>
+                      </div>
+                    ))
+                : topGames.map(game => <HomeGameCard key={game.game} game={game} />)}
             </div>
           </section>
 
           <section className="space-y-8">
-            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Globe className="w-6 h-6 text-primary" />
-              {t('home.onlineGames')}
+            <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+              <Globe className="h-6 w-6 text-primary" />
+              {t("home.onlineGames")}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {onlineGames.map((game) => (
-                <HomeGameCard 
-                  key={game.game} 
-                  game={game}
-                />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {onlineGames.map(game => (
+                <HomeGameCard key={game.game} game={game} />
               ))}
             </div>
           </section>
 
           <section className="space-y-8">
-            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Flame className="w-6 h-6 text-primary" />
-              {t('home.actionGames')}
+            <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+              <Flame className="h-6 w-6 text-primary" />
+              {t("home.actionGames")}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {actionGames.map((game) => (
-                <HomeGameCard 
-                  key={game.game} 
-                  game={game}
-                />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {actionGames.map(game => (
+                <HomeGameCard key={game.game} game={game} />
               ))}
             </div>
           </section>
 
           <section className="space-y-8">
-            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Flame className="w-6 h-6 text-primary" />
-              {t('home.popularCategories')}
+            <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+              <Flame className="h-6 w-6 text-primary" />
+              {t("home.popularCategories")}
             </h2>
             <div className="space-y-8">
               {Object.keys(popularCategories).map((category, index) => (
                 <div key={category} className="space-y-4">
-                  <h3 className="text-xl font-semibold text-foreground">
-                    {category}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 h-full">
+                  <h3 className="text-xl font-semibold text-foreground">{category}</h3>
+                  <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                     {popularCategories[category].map((game, index) => (
-                      <HomeGameCard 
-                        key={`${category}-${game.id || index}`} 
-                        game={game}
-                      />
+                      <HomeGameCard key={`${category}-${game.id || index}`} game={game} />
                     ))}
                   </div>
                 </div>
@@ -651,10 +663,8 @@ const Home = memo(() => {
             </div>
           </section>
 
-          <div className="text-center text-muted-foreground/50 py-8">
-            <p className="text-sm">
-              {t('home.footerNote')}
-            </p>
+          <div className="py-8 text-center text-muted-foreground/50">
+            <p className="text-sm">{t("home.footerNote")}</p>
           </div>
         </div>
       </div>

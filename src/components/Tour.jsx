@@ -1,77 +1,84 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Rocket } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronRight, ChevronLeft, Rocket } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
-const getSteps = (t) => [
+const getSteps = t => [
   {
-    title: t('tour.title'),
-    content: t('tour.welcome'),
-    spotlight: null
+    title: t("tour.title"),
+    content: t("tour.welcome"),
+    spotlight: null,
   },
   {
-    title: t('tour.serverStatus.title'),
-    content: t('tour.serverStatus.content'),
+    title: t("tour.serverStatus.title"),
+    content: t("tour.serverStatus.content"),
     spotlight: "div[title='Server Status']",
-    position: "bottom"
+    position: "bottom",
   },
   {
-    title: t('tour.navigationBar.title'),
-    content: t('tour.navigationBar.content'),
-    spotlight: ".nav-container",
-    position: "bottom"
-  },
-  {
-    title: t('tour.resizing.title'),
-    content: t('tour.resizing.content'),
+    title: t("tour.navigationBar.title"),
+    content: t("tour.navigationBar.content"),
     spotlight: ".nav-container",
     position: "bottom",
-    showResizeHint: true
   },
   {
-    title: t('tour.searchDownload.title'),
-    content: t('tour.searchDownload.content'),
+    title: t("tour.resizing.title"),
+    content: t("tour.resizing.content"),
+    spotlight: ".nav-container",
+    position: "bottom",
+    showResizeHint: true,
+  },
+  {
+    title: t("tour.searchDownload.title"),
+    content: t("tour.searchDownload.content"),
     spotlight: "a[href='/search']",
     position: "right",
-    navigateTo: "/search"
+    navigateTo: "/search",
   },
   {
-    title: t('tour.gameLibrary.title'),
-    content: t('tour.gameLibrary.content'),
+    title: t("tour.gameLibrary.title"),
+    content: t("tour.gameLibrary.content"),
     spotlight: "a[href='/library']",
     position: "right",
-    navigateTo: "/library"
+    navigateTo: "/library",
   },
   {
-    title: t('tour.downloads.title'),
-    content: t('tour.downloads.content'),
+    title: t("tour.downloads.title"),
+    content: t("tour.downloads.content"),
     spotlight: "a[href='/downloads']",
     position: "right",
-    navigateTo: "/downloads"
+    navigateTo: "/downloads",
   },
   {
-    title: t('tour.settings.title'),
-    content: t('tour.settings.content'),
+    title: t("tour.settings.title"),
+    content: t("tour.settings.content"),
     spotlight: "a[href='/settings']",
     position: "right",
-    navigateTo: "/settings"
+    navigateTo: "/settings",
   },
   {
-    title: t('tour.final.title'),
-    content: t('tour.final.content'),
+    title: t("tour.final.title"),
+    content: t("tour.final.content"),
     spotlight: null,
-    showDonateButton: true
-  }
+    showDonateButton: true,
+  },
 ];
 
 function Tour({ onClose }) {
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
-  const [spotlightPosition, setSpotlightPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [spotlightPosition, setSpotlightPosition] = useState({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
   const resizeIntervalRef = useRef(null);
   const originalSize = useRef(null);
-  const [navScale, setNavScale] = useState(parseFloat(localStorage.getItem('navSize') || '100') / 100);
+  const [navScale, setNavScale] = useState(
+    parseFloat(localStorage.getItem("navSize") || "100") / 100
+  );
   const spotlightRef = useRef(null);
   const rafRef = useRef(null);
   const navigate = useNavigate();
@@ -84,17 +91,17 @@ function Tour({ onClose }) {
         const element = document.querySelector(step.spotlight);
         if (element) {
           const rect = element.getBoundingClientRect();
-          
+
           if (rafRef.current) {
             cancelAnimationFrame(rafRef.current);
           }
-          
+
           rafRef.current = requestAnimationFrame(() => {
             setSpotlightPosition({
               x: rect.x,
               y: rect.y,
               width: rect.width,
-              height: rect.height
+              height: rect.height,
             });
           });
         }
@@ -102,12 +109,12 @@ function Tour({ onClose }) {
     };
 
     updateSpotlight();
-    
+
     const debouncedResize = debounce(updateSpotlight, 16);
-    window.addEventListener('resize', debouncedResize);
-    
+    window.addEventListener("resize", debouncedResize);
+
     return () => {
-      window.removeEventListener('resize', debouncedResize);
+      window.removeEventListener("resize", debouncedResize);
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }
@@ -116,13 +123,13 @@ function Tour({ onClose }) {
 
   useEffect(() => {
     if (steps[currentStep].showResizeHint) {
-      originalSize.current = localStorage.getItem('navSize') || '100';
+      originalSize.current = localStorage.getItem("navSize") || "100";
       let increasing = true;
-      
+
       resizeIntervalRef.current = setInterval(() => {
-        const currentSize = parseFloat(localStorage.getItem('navSize') || '100');
+        const currentSize = parseFloat(localStorage.getItem("navSize") || "100");
         let newSize;
-        
+
         if (increasing) {
           newSize = currentSize + 0.2;
           if (newSize >= 100) increasing = false;
@@ -130,16 +137,16 @@ function Tour({ onClose }) {
           newSize = currentSize - 0.2;
           if (newSize <= 95) increasing = true;
         }
-        
-        localStorage.setItem('navSize', newSize.toString());
-        window.dispatchEvent(new CustomEvent('navResize'));
+
+        localStorage.setItem("navSize", newSize.toString());
+        window.dispatchEvent(new CustomEvent("navResize"));
       }, 25);
     } else {
       if (resizeIntervalRef.current) {
         clearInterval(resizeIntervalRef.current);
         if (originalSize.current) {
-          localStorage.setItem('navSize', originalSize.current);
-          window.dispatchEvent(new CustomEvent('navResize'));
+          localStorage.setItem("navSize", originalSize.current);
+          window.dispatchEvent(new CustomEvent("navResize"));
         }
       }
     }
@@ -148,8 +155,8 @@ function Tour({ onClose }) {
       if (resizeIntervalRef.current) {
         clearInterval(resizeIntervalRef.current);
         if (originalSize.current) {
-          localStorage.setItem('navSize', originalSize.current);
-          window.dispatchEvent(new CustomEvent('navResize'));
+          localStorage.setItem("navSize", originalSize.current);
+          window.dispatchEvent(new CustomEvent("navResize"));
         }
       }
     };
@@ -157,12 +164,12 @@ function Tour({ onClose }) {
 
   useEffect(() => {
     const handleNavResize = () => {
-      const newScale = parseFloat(localStorage.getItem('navSize') || '100') / 100;
+      const newScale = parseFloat(localStorage.getItem("navSize") || "100") / 100;
       setNavScale(newScale);
     };
 
-    window.addEventListener('navResize', handleNavResize);
-    return () => window.removeEventListener('navResize', handleNavResize);
+    window.addEventListener("navResize", handleNavResize);
+    return () => window.removeEventListener("navResize", handleNavResize);
   }, []);
 
   useEffect(() => {
@@ -187,12 +194,12 @@ function Tour({ onClose }) {
       }
     } else {
       if (originalSize.current) {
-        localStorage.setItem('navSize', originalSize.current);
-        window.dispatchEvent(new CustomEvent('navResize'));
+        localStorage.setItem("navSize", originalSize.current);
+        window.dispatchEvent(new CustomEvent("navResize"));
       }
       onClose();
       setTimeout(() => {
-        navigate('/');
+        navigate("/");
       }, 100);
     }
   };
@@ -212,7 +219,7 @@ function Tour({ onClose }) {
 
   return (
     <div className="fixed inset-0 z-[200]">
-      <div className="absolute inset-0 bg-black/40 pointer-events-auto z-[201]" />
+      <div className="pointer-events-auto absolute inset-0 z-[201] bg-black/40" />
 
       {/* Spotlight */}
       <AnimatePresence mode="wait">
@@ -222,72 +229,73 @@ function Tour({ onClose }) {
             <motion.div
               ref={spotlightRef}
               initial={{ opacity: 0 }}
-              animate={{ 
+              animate={{
                 opacity: 1,
                 left: spotlightPosition.x - 20,
                 top: spotlightPosition.y - 20,
                 width: spotlightPosition.width + 40,
                 height: spotlightPosition.height + 40,
               }}
-              transition={{ 
-                type: "spring", 
+              transition={{
+                type: "spring",
                 stiffness: 300,
                 damping: 30,
                 mass: 1,
-                duration: 0.3
+                duration: 0.3,
               }}
               exit={{ opacity: 0 }}
-              className="absolute pointer-events-none will-change-transform z-[202]"
+              className="pointer-events-none absolute z-[202] will-change-transform"
               style={{
-                boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.65), inset 0 0 0 9999px rgba(255, 255, 255, 0.1)',
-                borderRadius: '16px',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-                transform: 'translateZ(0)',
-                WebkitTransform: 'translateZ(0)',
-                background: 'transparent',
-                border: '2px solid rgba(255, 255, 255, 0.1)'
+                boxShadow:
+                  "0 0 0 9999px rgba(0, 0, 0, 0.65), inset 0 0 0 9999px rgba(255, 255, 255, 0.1)",
+                borderRadius: "16px",
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
+                transform: "translateZ(0)",
+                WebkitTransform: "translateZ(0)",
+                background: "transparent",
+                border: "2px solid rgba(255, 255, 255, 0.1)",
               }}
             />
             {/* Resize indicators */}
             {steps[currentStep].showResizeHint && (
               <motion.div
                 initial={{ opacity: 0 }}
-                animate={{ 
+                animate={{
                   opacity: 1,
                   left: spotlightPosition.x,
                   top: spotlightPosition.y,
                   width: spotlightPosition.width,
                   scale: navScale,
                 }}
-                transition={{ 
+                transition={{
                   type: "spring",
                   stiffness: 300,
                   damping: 30,
                   mass: 0.5,
-                  duration: 0.2
+                  duration: 0.2,
                 }}
                 style={{
-                  transformOrigin: 'bottom center',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  transform: 'translateZ(0)',
-                  WebkitTransform: 'translateZ(0)'
+                  transformOrigin: "bottom center",
+                  backfaceVisibility: "hidden",
+                  WebkitBackfaceVisibility: "hidden",
+                  transform: "translateZ(0)",
+                  WebkitTransform: "translateZ(0)",
                 }}
-                className="absolute pointer-events-none will-change-transform z-[203]"
+                className="pointer-events-none absolute z-[203] will-change-transform"
               >
-                <div 
-                  className="absolute top-0 left-0 w-10 h-10 bg-white rounded-lg"
+                <div
+                  className="absolute left-0 top-0 h-10 w-10 rounded-lg bg-white"
                   style={{
-                    transform: `translate(-${(navScale) * 20}px, -${(navScale) * 20}px)`,
-                    transition: 'transform 100ms ease'
+                    transform: `translate(-${navScale * 20}px, -${navScale * 20}px)`,
+                    transition: "transform 100ms ease",
                   }}
                 />
-                <div 
-                  className="absolute top-0 right-0 w-10 h-10 bg-white rounded-lg"
+                <div
+                  className="absolute right-0 top-0 h-10 w-10 rounded-lg bg-white"
                   style={{
-                    transform: `translate(${(navScale) * 20}px, -${(navScale) * 20}px)`,
-                    transition: 'transform 100ms ease'
+                    transform: `translate(${navScale * 20}px, -${navScale * 20}px)`,
+                    transition: "transform 100ms ease",
                   }}
                 />
               </motion.div>
@@ -297,34 +305,31 @@ function Tour({ onClose }) {
       </AnimatePresence>
 
       {/* Content */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto z-[203]">
+      <div className="pointer-events-auto absolute left-1/2 top-1/2 z-[203] -translate-x-1/2 -translate-y-1/2">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-background border border-border rounded-xl p-6 shadow-lg max-w-md"
+          className="max-w-md rounded-xl border border-border bg-background p-6 shadow-lg"
         >
-          <h2 className="text-xl font-bold mb-2">{steps[currentStep].title}</h2>
-          <p 
-            className="text-muted-foreground mb-4 pointer-events-auto"
+          <h2 className="mb-2 text-xl font-bold">{steps[currentStep].title}</h2>
+          <p
+            className="pointer-events-auto mb-4 text-muted-foreground"
             dangerouslySetInnerHTML={{ __html: steps[currentStep].content }}
           />
 
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <button
               onClick={prevStep}
-              className={`flex items-center gap-1 ${currentStep === 0 ? 'invisible' : ''}`}
+              className={`flex items-center gap-1 ${currentStep === 0 ? "invisible" : ""}`}
             >
-              <ChevronLeft className="w-4 h-4" /> {t('common.prev')}
+              <ChevronLeft className="h-4 w-4" /> {t("common.prev")}
             </button>
-            <button
-              onClick={nextStep}
-              className="flex items-center gap-1 text-primary"
-            >
-              {currentStep === steps.length - 1 ? t('common.finish') : t('common.next')} 
+            <button onClick={nextStep} className="flex items-center gap-1 text-primary">
+              {currentStep === steps.length - 1 ? t("common.finish") : t("common.next")}
               {currentStep === steps.length - 1 ? (
-                <Rocket className="w-4 h-4 ml-2" />
+                <Rocket className="ml-2 h-4 w-4" />
               ) : (
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="h-4 w-4" />
               )}
             </button>
           </div>

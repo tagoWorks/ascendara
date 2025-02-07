@@ -10,8 +10,8 @@
     </p>
 </div>
 
-
 ### ⚠️ Development Branch Notice
+
 This branch contains features that are still in development and is intended for testing purposes. For production use, please refer to the [main branch](https://github.com/tagoWorks/ascendara/tree/main).
 
 ## 🖥️ System Requirements
@@ -25,6 +25,7 @@ This branch contains features that are still in development and is intended for 
 ## 🛠️ Development Setup
 
 ### Prerequisites
+
 Before building, ensure you have all required dependencies. [View full requirements](https://ascendara.app/docs/developer/build-from-source#prerequisites).
 
 ### Quick Start
@@ -32,11 +33,13 @@ Before building, ensure you have all required dependencies. [View full requireme
 > ⚠️ **Note:** Some API features like reporting and analytics services will not work on the public version of the app. Additionally, you will not be able to run games in development mode. Check the [Developer Docs](https://ascendara.app/docs/developer/build-from-source#important-limitations) for more information.
 
 1. **Clone the Repository**
+
    ```sh
    git clone https://github.com/tagoWorks/ascendara.git
    ```
 
 2. **Install Dependencies**
+
    ```sh
    npm install -r
    ```
@@ -49,6 +52,7 @@ Before building, ensure you have all required dependencies. [View full requireme
 ## 🗺️ Development Roadmap
 
 ### 🎯 Current Goals
+
 - [ ] Add planned sources (FitGirl, Xatab, Dodi)
 - [ ] Add semi-support for Linux, and macOS
 - [ ] Endpoint for known games that have weird installation paths, issues, etc.
@@ -58,6 +62,7 @@ Before building, ensure you have all required dependencies. [View full requireme
 - [ ] Improved download management (pausing, resuming)
 
 ### ✅ Completed Features
+
 - [x] Complete UI overhaul (V7)
 - [x] Automatic shortcut creation
 - [x] Enhanced search algorithms
@@ -82,11 +87,13 @@ If you are looking to contribute to Ascendara, you are in the right place!
 Licensed under [CC BY-NC 1.0 Universal](./LICENSE) - 2025 tagoWorks
 
 ### Get in Touch
+
 - Email: [santiago@tago.works](mailto:santiago@tago.works)
 - Website: [tago.works](https://tago.works)
 - Discord: [Join our community](https://ascendara.app/discord)
 
 ---
+
 <div align="center">
     <sub>Built with 💖 by <a href="https://tago.works">tago</a></sub>
 </div>

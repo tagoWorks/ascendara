@@ -1,12 +1,12 @@
-const API_URL = 'https://api.ascendara.app';
-const CACHE_KEY = 'ascendara_games_cache';
-const CACHE_TIMESTAMP_KEY = 'local_ascendara_games_timestamp';
-const METADATA_CACHE_KEY = 'local_ascendara_metadata_cache';
-const LAST_UPDATED_KEY = 'local_ascendara_last_updated';
+const API_URL = "https://api.ascendara.app";
+const CACHE_KEY = "ascendara_games_cache";
+const CACHE_TIMESTAMP_KEY = "local_ascendara_games_timestamp";
+const METADATA_CACHE_KEY = "local_ascendara_metadata_cache";
+const LAST_UPDATED_KEY = "local_ascendara_last_updated";
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
-import { getCurrentStatus } from './serverStatus';
-import { sanitizeText } from '../lib/utils';
+import { getCurrentStatus } from "./serverStatus";
+import { sanitizeText } from "../lib/utils";
 
 // Memory cache to avoid localStorage reads
 let memoryCache = {
@@ -14,7 +14,7 @@ let memoryCache = {
   metadata: null,
   timestamp: null,
   lastUpdated: null,
-  imageIdMap: null // New cache for image ID lookups
+  imageIdMap: null, // New cache for image ID lookups
 };
 
 const gameService = {
@@ -31,7 +31,7 @@ const gameService = {
       if (age < CACHE_DURATION) {
         return {
           games: memoryCache.games,
-          metadata: memoryCache.metadata
+          metadata: memoryCache.metadata,
         };
       }
     }
@@ -40,24 +40,24 @@ const gameService = {
     const cachedGames = localStorage.getItem(CACHE_KEY);
     const cachedMetadata = localStorage.getItem(METADATA_CACHE_KEY);
     const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
-    
+
     if (cachedGames && cachedMetadata && timestamp) {
       const age = now - parseInt(timestamp);
       if (age < CACHE_DURATION) {
         const parsedGames = JSON.parse(cachedGames);
         const parsedMetadata = JSON.parse(cachedMetadata);
-        
+
         // Update memory cache
         memoryCache = {
           games: parsedGames,
           metadata: parsedMetadata,
           timestamp: parseInt(timestamp),
-          lastUpdated: localStorage.getItem(LAST_UPDATED_KEY)
+          lastUpdated: localStorage.getItem(LAST_UPDATED_KEY),
         };
 
         return {
           games: parsedGames,
-          metadata: parsedMetadata
+          metadata: parsedMetadata,
         };
       }
     }
@@ -70,7 +70,7 @@ const gameService = {
           const parsedMetadata = JSON.parse(cachedMetadata);
           return { games: parsedGames, metadata: parsedMetadata };
         }
-        throw new Error('Server is not available');
+        throw new Error("Server is not available");
       }
 
       const data = await this.fetchDataFromAPI();
@@ -82,7 +82,7 @@ const gameService = {
         const parsedMetadata = JSON.parse(cachedMetadata);
         return { games: parsedGames, metadata: parsedMetadata };
       }
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
       return { games: [], metadata: null };
     }
   },
@@ -93,13 +93,13 @@ const gameService = {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    
+
     // Sanitize game titles
     if (data.games) {
       data.games = data.games.map(game => ({
         ...game,
         name: sanitizeText(game.name),
-        game: sanitizeText(game.game)
+        game: sanitizeText(game.game),
       }));
     }
 
@@ -109,15 +109,15 @@ const gameService = {
         apiversion: data.metadata?.apiversion,
         games: data.games?.length,
         getDate: data.metadata?.getDate,
-        source: data.metadata?.source
-      }
+        source: data.metadata?.source,
+      },
     };
   },
 
   async updateCache(data) {
     try {
       const now = Date.now();
-      
+
       // Create image ID map for efficient lookups
       const imageIdMap = new Map();
       data.games.forEach(game => {
@@ -132,7 +132,7 @@ const gameService = {
         metadata: data.metadata,
         timestamp: now,
         lastUpdated: data.metadata?.getDate,
-        imageIdMap // Store the map in memory cache
+        imageIdMap, // Store the map in memory cache
       };
 
       // Update localStorage cache
@@ -143,7 +143,7 @@ const gameService = {
         localStorage.setItem(LAST_UPDATED_KEY, data.metadata.getDate);
       }
     } catch (error) {
-      console.error('Error updating cache:', error);
+      console.error("Error updating cache:", error);
     }
   },
 
@@ -157,11 +157,12 @@ const gameService = {
     if (!games || !games.length) return [];
 
     // Filter games with high weights and images
-    const validGames = games.filter(game => game.weight >= 7 && game.imgID)
+    const validGames = games
+      .filter(game => game.weight >= 7 && game.imgID)
       .map(game => ({
         ...game,
         name: sanitizeText(game.name),
-        game: sanitizeText(game.game)
+        game: sanitizeText(game.game),
       }));
 
     // Shuffle and return requested number of games
@@ -172,33 +173,33 @@ const gameService = {
   async searchGames(query) {
     const { games } = await this.getCachedData();
     const searchTerm = query.toLowerCase();
-    return games.filter(game => 
-      game.title?.toLowerCase().includes(searchTerm) || 
-      game.game?.toLowerCase().includes(searchTerm) ||
-      game.description?.toLowerCase().includes(searchTerm)
+    return games.filter(
+      game =>
+        game.title?.toLowerCase().includes(searchTerm) ||
+        game.game?.toLowerCase().includes(searchTerm) ||
+        game.description?.toLowerCase().includes(searchTerm)
     );
   },
 
   async getGamesByCategory(category) {
     const { games } = await this.getCachedData();
-    return games.filter(game => 
-      game.category && 
-      Array.isArray(game.category) && 
-      game.category.includes(category)
+    return games.filter(
+      game =>
+        game.category && Array.isArray(game.category) && game.category.includes(category)
     );
   },
-  
+
   getImageUrl(imgID) {
     return `${API_URL}/v2/image/${imgID}`;
   },
-  
+
   async searchGameCovers(query) {
     if (!query.trim()) {
       return [];
     }
 
     const searchTerm = query.toLowerCase();
-    
+
     // First try memory cache
     if (memoryCache.games) {
       return memoryCache.games
@@ -207,7 +208,7 @@ const gameService = {
         .map(game => ({
           id: game.game,
           title: game.game,
-          imgID: game.imgID
+          imgID: game.imgID,
         }));
     }
 
@@ -220,26 +221,26 @@ const gameService = {
           // Update memory cache for future searches
           memoryCache.games = games;
           memoryCache.timestamp = Date.now();
-          
+
           return games
             .filter(game => game.game?.toLowerCase().includes(searchTerm))
             .slice(0, 20)
             .map(game => ({
               id: game.game,
               title: game.game,
-              imgID: game.imgID
+              imgID: game.imgID,
             }));
         }
       }
     } catch (cacheError) {
-      console.error('Error using cached data:', cacheError);
+      console.error("Error using cached data:", cacheError);
     }
 
     // Only if no cache is available, make an API request
     try {
       const response = await fetch(`${API_URL}/json/games`);
       const data = await response.json();
-      
+
       if (data?.games?.length) {
         // Update caches in background
         setTimeout(() => {
@@ -254,11 +255,11 @@ const gameService = {
           .map(game => ({
             id: game.game,
             title: game.game,
-            imgID: game.imgID
+            imgID: game.imgID,
           }));
       }
     } catch (error) {
-      console.error('Error searching game covers:', error);
+      console.error("Error searching game covers:", error);
     }
 
     return [];
@@ -267,15 +268,15 @@ const gameService = {
   async checkMetadataUpdate() {
     try {
       const response = await fetch(`${API_URL}/json/games`, {
-        method: 'HEAD'  // Only get headers to check Last-Modified
+        method: "HEAD", // Only get headers to check Last-Modified
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const lastModified = response.headers.get('Last-Modified');
+      const lastModified = response.headers.get("Last-Modified");
       return lastModified || null;
     } catch (error) {
-      console.error('Error checking metadata:', error);
+      console.error("Error checking metadata:", error);
       return null;
     }
   },
@@ -294,7 +295,7 @@ const gameService = {
               imageIdMap.set(game.imgID, {
                 ...game,
                 // Ensure download_links exists, even if empty
-                download_links: game.download_links || {}
+                download_links: game.download_links || {},
               });
             }
           });
@@ -309,13 +310,13 @@ const gameService = {
         return null;
       }
 
-      console.log('Found game with download links:', game.download_links);
+      console.log("Found game with download links:", game.download_links);
       return game;
     } catch (error) {
-      console.error('Error finding game by image ID:', error);
+      console.error("Error finding game by image ID:", error);
       return null;
     }
-  }
+  },
 };
 
 export default gameService;

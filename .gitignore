@@ -25,9 +25,6 @@ exports.txt
 # Environment
 .env
 
-# IDE
-/.vscode
-
 # OS files
 *.bat
 build/config.prod.js

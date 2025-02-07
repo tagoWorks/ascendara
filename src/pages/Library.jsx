@@ -1,23 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Card, 
-  CardContent,
-  CardFooter 
-} from "../components/ui/card";
+import React, { useState, useEffect, useRef } from "react";
+import { Card, CardContent, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Switch } from "../components/ui/switch";
 import { Label } from "../components/ui/label";
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage } from "../contexts/LanguageContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
-import { 
-  MoreVertical, 
-  Play, 
+import {
+  MoreVertical,
+  Play,
   Plus,
   FolderOpen,
   ExternalLink,
@@ -34,9 +30,9 @@ import {
   StopCircle,
   AlertTriangle,
   Heart,
-  SquareLibrary
-} from 'lucide-react';
-import { cn } from '../lib/utils';
+  SquareLibrary,
+} from "lucide-react";
+import { cn } from "../lib/utils";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -48,13 +44,18 @@ import {
 } from "../components/ui/alert-dialog";
 import { Separator } from "../components/ui/separator";
 import { Progress } from "../components/ui/progress";
-import recentGamesService from '../services/recentGamesService';
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../components/ui/tooltip';
-import imageCacheService from '../services/imageCacheService';
-import gameService from '../services/gameService';
-import fs from 'fs';
-import { toast } from 'sonner';
-import UserSettingsDialog from '../components/UserSettingsDialog';
+import recentGamesService from "../services/recentGamesService";
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "../components/ui/tooltip";
+import imageCacheService from "../services/imageCacheService";
+import gameService from "../services/gameService";
+import fs from "fs";
+import { toast } from "sonner";
+import UserSettingsDialog from "../components/UserSettingsDialog";
 
 const Library = () => {
   const [games, setGames] = useState([]);
@@ -75,17 +76,17 @@ const Library = () => {
   const [storageInfo, setStorageInfo] = useState(null);
   const [username, setUsername] = useState(null);
   const [errorGame, setErrorGame] = useState(null);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [favorites, setFavorites] = useState(() => {
-    const savedFavorites = localStorage.getItem('game-favorites');
+    const savedFavorites = localStorage.getItem("game-favorites");
     return savedFavorites ? JSON.parse(savedFavorites) : [];
   });
   const errorTimeoutRef = useRef(null);
   const { t } = useLanguage();
 
   useEffect(() => {
-    localStorage.setItem('game-favorites', JSON.stringify(favorites));
+    localStorage.setItem("game-favorites", JSON.stringify(favorites));
   }, [favorites]);
 
   useEffect(() => {
@@ -100,7 +101,7 @@ const Library = () => {
     styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
   }, []);
 
-  const toggleFavorite = (gameName) => {
+  const toggleFavorite = gameName => {
     setFavorites(prev => {
       const newFavorites = prev.includes(gameName)
         ? prev.filter(name => name !== gameName)
@@ -115,16 +116,16 @@ const Library = () => {
       setUsername(username);
       return username;
     } catch (error) {
-      console.error('Error fetching username:', error);
+      console.error("Error fetching username:", error);
       return null;
     }
   };
 
-  const formatBytes = (bytes) => {
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    if (bytes === 0) return '0 Byte';
+  const formatBytes = bytes => {
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    if (bytes === 0) return "0 Byte";
     const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
-    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
   };
 
   const fetchStorageInfo = async () => {
@@ -135,24 +136,27 @@ const Library = () => {
         setStorageInfo({ freeSpace });
       }
     } catch (error) {
-      console.error('Error fetching storage info:', error);
+      console.error("Error fetching storage info:", error);
     }
   };
 
   const loadGames = async () => {
     try {
       // Get games from main process
-      const installedGames = await window.electron.ipcRenderer.invoke('get-games');
-      const customGames = await window.electron.ipcRenderer.invoke('get-custom-games');
+      const installedGames = await window.electron.ipcRenderer.invoke("get-games");
+      const customGames = await window.electron.ipcRenderer.invoke("get-custom-games");
 
       // Filter out games that are currently downloading
       const filteredInstalledGames = installedGames.filter(game => {
         const { downloadingData } = game;
-        return !downloadingData || !(
-          downloadingData.downloading ||
-          downloadingData.extracting ||
-          downloadingData.updating ||
-          downloadingData.error
+        return (
+          !downloadingData ||
+          !(
+            downloadingData.downloading ||
+            downloadingData.extracting ||
+            downloadingData.updating ||
+            downloadingData.error
+          )
         );
       });
 
@@ -160,7 +164,7 @@ const Library = () => {
       const allGames = [
         ...(filteredInstalledGames || []).map(game => ({
           ...game,
-          isCustom: false
+          isCustom: false,
         })),
         ...(customGames || []).map(game => ({
           name: game.game,
@@ -171,15 +175,15 @@ const Library = () => {
           isVr: game.isVr,
           executable: game.executable,
           isCustom: true,
-          custom: true
-        }))
+          custom: true,
+        })),
       ];
 
       setGames(allGames);
       setLoading(false);
     } catch (error) {
-      console.error('Error loading games:', error);
-      setError('Failed to load games');
+      console.error("Error loading games:", error);
+      setError("Failed to load games");
       setLoading(false);
     }
   };
@@ -212,13 +216,19 @@ const Library = () => {
     loadGames();
 
     // Set up event listeners
-    window.electron.ipcRenderer.on('game-launch-error', handleGameLaunchError);
-    window.electron.ipcRenderer.on('game-launch-success', handleGameLaunchSuccess);
+    window.electron.ipcRenderer.on("game-launch-error", handleGameLaunchError);
+    window.electron.ipcRenderer.on("game-launch-success", handleGameLaunchSuccess);
 
     return () => {
       // Clean up event listeners
-      window.electron.ipcRenderer.removeListener('game-launch-error', handleGameLaunchError);
-      window.electron.ipcRenderer.removeListener('game-launch-success', handleGameLaunchSuccess);
+      window.electron.ipcRenderer.removeListener(
+        "game-launch-error",
+        handleGameLaunchError
+      );
+      window.electron.ipcRenderer.removeListener(
+        "game-launch-success",
+        handleGameLaunchSuccess
+      );
       if (errorTimeoutRef.current) {
         clearTimeout(errorTimeoutRef.current);
       }
@@ -242,7 +252,7 @@ const Library = () => {
       const bName = b.game || b.name;
       const aFavorite = favorites.includes(aName);
       const bFavorite = favorites.includes(bName);
-      
+
       // If both are favorites or both are not favorites, sort alphabetically
       if (aFavorite === bFavorite) {
         return aName.localeCompare(bName);
@@ -255,20 +265,23 @@ const Library = () => {
       return (game.game || game.name).toLowerCase().includes(searchLower);
     });
 
-  const handlePlayGame = async (game, forcePlay=false) => {
+  const handlePlayGame = async (game, forcePlay = false) => {
     const gameName = game.game || game.name;
-    
+
     // Check if window.electron.isDev is true. Cannot run in developer mode
-    if (await window.electron.ipcRenderer.invoke('is-dev')) {
-      toast.error(t('library.cannotRunDev'))
+    if (await window.electron.ipcRenderer.invoke("is-dev")) {
+      toast.error(t("library.cannotRunDev"));
       return;
     }
 
     try {
       // First check if game is already running
-      const isRunning = await window.electron.ipcRenderer.invoke('is-game-running', gameName);
+      const isRunning = await window.electron.ipcRenderer.invoke(
+        "is-game-running",
+        gameName
+      );
       if (isRunning) {
-        toast.error(t('library.alreadyRunning', { game: gameName }));
+        toast.error(t("library.alreadyRunning", { game: gameName }));
         return;
       }
 
@@ -280,17 +293,20 @@ const Library = () => {
 
       // Set launching state here after all checks pass
       setLaunchingGame(gameName);
-      
+
       console.log("Launching game: ", gameName);
       // Launch the game
-      await window.electron.ipcRenderer.invoke('play-game', gameName, game.isCustom);
-      
+      await window.electron.ipcRenderer.invoke("play-game", gameName, game.isCustom);
+
       // Get and cache the game image before saving to recently played
-      const imageBase64 = await window.electron.ipcRenderer.invoke('get-game-image', gameName);
+      const imageBase64 = await window.electron.ipcRenderer.invoke(
+        "get-game-image",
+        gameName
+      );
       if (imageBase64) {
         await imageCacheService.getImage(game.imgID);
       }
-      
+
       // Save to recently played games
       recentGamesService.addRecentGame({
         game: gameName,
@@ -299,41 +315,45 @@ const Library = () => {
         version: game.version,
         isCustom: game.isCustom,
         online: game.online,
-        dlc: game.dlc
+        dlc: game.dlc,
       });
     } catch (error) {
-      console.error('Error launching game:', error);
+      console.error("Error launching game:", error);
       setLaunchingGame(null);
     }
   };
 
-  const handleDeleteGame = async (game) => {
+  const handleDeleteGame = async game => {
     try {
       if (game.isCustom) {
-        await window.electron.ipcRenderer.invoke('remove-game', game.game || game.name);
+        await window.electron.ipcRenderer.invoke("remove-game", game.game || game.name);
       } else {
         setIsUninstalling(true);
         setUninstallingGame(game.game || game.name);
-        await window.electron.ipcRenderer.invoke('delete-game', game.game || game.name);
+        await window.electron.ipcRenderer.invoke("delete-game", game.game || game.name);
       }
       setGames(games.filter(g => (g.game || g.name) !== (game.game || game.name)));
       setGameToDelete(null);
       setIsUninstalling(false);
       setUninstallingGame(null);
     } catch (error) {
-      console.error('Error deleting game:', error);
-      setError('Failed to delete game');
+      console.error("Error deleting game:", error);
+      setError("Failed to delete game");
       setIsUninstalling(false);
       setUninstallingGame(null);
     }
   };
 
-  const handleOpenDirectory = async (game) => {
+  const handleOpenDirectory = async game => {
     try {
-      await window.electron.ipcRenderer.invoke('open-game-directory', game.game || game.name, game.isCustom);
+      await window.electron.ipcRenderer.invoke(
+        "open-game-directory",
+        game.game || game.name,
+        game.isCustom
+      );
     } catch (error) {
-      console.error('Error opening directory:', error);
-      setError('Failed to open game directory');
+      console.error("Error opening directory:", error);
+      setError("Failed to open game directory");
     }
   };
 
@@ -344,18 +364,18 @@ const Library = () => {
     return gameId === selectedId;
   };
 
-  const searchGameCovers = async (query) => {
+  const searchGameCovers = async query => {
     if (!query.trim()) {
       setCoverSearchResults([]);
       return;
     }
-    
+
     setIsCoverSearchLoading(true);
     try {
       const results = await gameService.searchGameCovers(query);
       setCoverSearchResults(results);
     } catch (error) {
-      console.error('Error searching game covers:', error);
+      console.error("Error searching game covers:", error);
       setCoverSearchResults([]);
     } finally {
       setIsCoverSearchLoading(false);
@@ -365,33 +385,58 @@ const Library = () => {
   const handleCloseErrorDialog = () => {
     setShowErrorDialog(false);
     setErrorGame(null);
-    setErrorMessage('');
+    setErrorMessage("");
   };
 
   const ErrorDialog = () => (
     <AlertDialog open={showErrorDialog} onOpenChange={handleCloseErrorDialog}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('library.launchError')}</AlertDialogTitle>
+          <AlertDialogTitle className="text-2xl font-bold text-foreground">
+            {t("library.launchError")}
+          </AlertDialogTitle>
           <AlertDialogDescription className="space-y-4 text-muted-foreground">
-            <p>{t('library.launchErrorMessage', { game: errorGame })}&nbsp;
-              <span onClick={() => {window.electron.openURL('https://ascendara.app/docs/troubleshooting/common-issues#executable-not-found-launch-error')}} className="hover:underline cursor-pointer">{t('common.learnMore')} <ExternalLink className="inline-block mb-1 h-3 w-3" /></span>
+            <p>
+              {t("library.launchErrorMessage", { game: errorGame })}&nbsp;
+              <span
+                onClick={() => {
+                  window.electron.openURL(
+                    "https://ascendara.app/docs/troubleshooting/common-issues#executable-not-found-launch-error"
+                  );
+                }}
+                className="cursor-pointer hover:underline"
+              >
+                {t("common.learnMore")}{" "}
+                <ExternalLink className="mb-1 inline-block h-3 w-3" />
+              </span>
             </p>
             <p>{errorMessage}</p>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex gap-2">
-          <Button variant="outline" className="text-primary" onClick={handleCloseErrorDialog}>
-            {t('common.cancel')}
+          <Button
+            variant="outline"
+            className="text-primary"
+            onClick={handleCloseErrorDialog}
+          >
+            {t("common.cancel")}
           </Button>
-          <Button className="text-secondary bg-primary" onClick={async () => {
-                const exePath = await window.electron.ipcRenderer.invoke('open-file-dialog');
-                if (exePath) {
-                  await window.electron.ipcRenderer.invoke('modify-game-executable', errorGame, exePath);
-                }
-                handleCloseErrorDialog();
-              }}>
-            {t('library.changeExecutable')}
+          <Button
+            className="bg-primary text-secondary"
+            onClick={async () => {
+              const exePath =
+                await window.electron.ipcRenderer.invoke("open-file-dialog");
+              if (exePath) {
+                await window.electron.ipcRenderer.invoke(
+                  "modify-game-executable",
+                  errorGame,
+                  exePath
+                );
+              }
+              handleCloseErrorDialog();
+            }}
+          >
+            {t("library.changeExecutable")}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -400,91 +445,126 @@ const Library = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-foreground">{t('library.loadingGames')}</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-foreground">{t("library.loadingGames")}</div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-7xl mx-auto p-4 md:p-8">
+      <div className="container mx-auto max-w-7xl p-4 md:p-8">
         {error && (
-          <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-lg">
+          <div className="bg-destructive/10 text-destructive mb-4 rounded-lg p-4">
             {error}
           </div>
         )}
-          <div className="flex flex-col gap-6 mb-8">
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-row justify-between items-start">
-                {/* Left side: Title and Search */}
-                <div className="flex-1">
-                  <div className="flex items-center mb-4">
-                    <h1 className="text-3xl font-bold text-primary tracking-tight">{t('library.pageTitle')}</h1>
+        <div className="mb-8 flex flex-col gap-6">
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-row items-start justify-between">
+              {/* Left side: Title and Search */}
+              <div className="flex-1">
+                <div className="mb-4 flex items-center">
+                  <h1 className="text-3xl font-bold tracking-tight text-primary">
+                    {t("library.pageTitle")}
+                  </h1>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center justify-center w-6 h-6 rounded-full ml-2 mb-2 bg-muted hover:bg-muted/80 cursor-help">
+                        <div className="mb-2 ml-2 flex h-6 w-6 cursor-help items-center justify-center rounded-full bg-muted hover:bg-muted/80">
                           <span className="text-sm font-medium">?</span>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" className="p-4 space-y-2 text-secondary">
+                      <TooltipContent
+                        side="bottom"
+                        className="space-y-2 p-4 text-secondary"
+                      >
                         <div className="flex items-center gap-2">
-                          <Gamepad2 className="w-4 h-4" /> <span>{t('library.iconLegend.onlineFix')}</span>
+                          <Gamepad2 className="h-4 w-4" />{" "}
+                          <span>{t("library.iconLegend.onlineFix")}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Gift className="w-4 h-4" /> <span>{t('library.iconLegend.allDlcs')}</span>
+                          <Gift className="h-4 w-4" />{" "}
+                          <span>{t("library.iconLegend.allDlcs")}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <svg className="text-secondary w-4 h-4" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M2 10C2 8.89543 2.89543 8 4 8H20C21.1046 8 22 8.89543 22 10V17C22 18.1046 21.1046 19 20 19H16.1324C15.4299 19 14.7788 18.6314 14.4174 18.029L12.8575 15.4292C12.4691 14.7818 11.5309 14.7818 11.1425 15.4292L9.58261 18.029C9.22116 18.6314 8.57014 19 7.86762 19H4C2.89543 19 2 18.1046 2 17V10Z" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M3.81253 6.7812C4.5544 5.6684 5.80332 5 7.14074 5H16.8593C18.1967 5 19.4456 5.6684 20.1875 6.7812L21 8H3L3.81253 6.7812Z" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg> <span>{t('library.iconLegend.vrGame')}</span>
+                          <svg
+                            className="h-4 w-4 text-secondary"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M2 10C2 8.89543 2.89543 8 4 8H20C21.1046 8 22 8.89543 22 10V17C22 18.1046 21.1046 19 20 19H16.1324C15.4299 19 14.7788 18.6314 14.4174 18.029L12.8575 15.4292C12.4691 14.7818 11.5309 14.7818 11.1425 15.4292L9.58261 18.029C9.22116 18.6314 8.57014 19 7.86762 19H4C2.89543 19 2 18.1046 2 17V10Z"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M3.81253 6.7812C4.5544 5.6684 5.80332 5 7.14074 5H16.8593C18.1967 5 19.4456 5.6684 20.1875 6.7812L21 8H3L3.81253 6.7812Z"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>{" "}
+                          <span>{t("library.iconLegend.vrGame")}</span>
                         </div>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  </div>
+                </div>
 
                 <div className="relative w-72">
                   <Input
                     type="text"
-                    placeholder={t('library.searchLibrary')}
+                    placeholder={t("library.searchLibrary")}
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={e => setSearchQuery(e.target.value)}
                     className="pr-8"
                   />
-                  <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 </div>
               </div>
 
               {/* Right side: Storage Info and Settings */}
               <div className="flex items-start gap-4">
                 {storageInfo && (
-                  <div className="bg-secondary/10 rounded-lg p-3 min-w-[250px]">
+                  <div className="min-w-[250px] rounded-lg bg-secondary/10 p-3">
                     <div className="space-y-3">
                       {/* Username section */}
-                      <div className="flex items-center justify-between pb-2 border-b border-secondary/20">
+                      <div className="flex items-center justify-between border-b border-secondary/20 pb-2">
                         <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-primary" />
-                          <span className="text-sm font-medium">{username || 'Guest'}</span>
+                          <User className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-medium">
+                            {username || "Guest"}
+                          </span>
                         </div>
-                            <UserSettingsDialog />
+                        <UserSettingsDialog />
                       </div>
-                
+
                       {/* Storage section */}
                       <div>
-                        <div className="flex justify-between items-center mb-1">
+                        <div className="mb-1 flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <HardDrive className="w-4 h-4 text-primary" />
-                            <span className="text-sm text-muted-foreground">{t('library.availableSpace')}</span>
+                            <HardDrive className="h-4 w-4 text-primary" />
+                            <span className="text-sm text-muted-foreground">
+                              {t("library.availableSpace")}
+                            </span>
                           </div>
-                          <span className="text-sm font-medium">{formatBytes(storageInfo.freeSpace)}</span>
+                          <span className="text-sm font-medium">
+                            {formatBytes(storageInfo.freeSpace)}
+                          </span>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <SquareLibrary className="w-4 h-4 text-primary" />
-                            <span className="text-sm text-muted-foreground">{t('library.gamesInLibrary')}</span>
+                            <SquareLibrary className="h-4 w-4 text-primary" />
+                            <span className="text-sm text-muted-foreground">
+                              {t("library.gamesInLibrary")}
+                            </span>
                           </div>
                           <span className="text-sm font-medium">{games.length}</span>
                         </div>
@@ -495,31 +575,37 @@ const Library = () => {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <AlertDialog key="add-game-dialog" open={isAddGameOpen} onOpenChange={setIsAddGameOpen}>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <AlertDialog
+              key="add-game-dialog"
+              open={isAddGameOpen}
+              onOpenChange={setIsAddGameOpen}
+            >
               <AlertDialogTrigger asChild>
                 <AddGameCard />
               </AlertDialogTrigger>
-              <AlertDialogContent className="sm:max-w-[425px] bg-background border-border">
+              <AlertDialogContent className="border-border bg-background sm:max-w-[425px]">
                 <AlertDialogHeader className="space-y-2">
                   <AlertDialogTitle className="text-2xl font-bold text-foreground">
-                    {t('library.addGame')}
+                    {t("library.addGame")}
                   </AlertDialogTitle>
                   <AlertDialogDescription className="text-muted-foreground">
-                    {t('library.addGameDescription2')}
+                    {t("library.addGameDescription2")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <div className="py-4 max-h-[60vh] overflow-y-auto">
-                  <AddGameForm onSuccess={() => {
-                    setIsAddGameOpen(false);
-                    setSelectedGameImage(null);
-                    loadGames();
-                  }} />
+                <div className="max-h-[60vh] overflow-y-auto py-4">
+                  <AddGameForm
+                    onSuccess={() => {
+                      setIsAddGameOpen(false);
+                      setSelectedGameImage(null);
+                      loadGames();
+                    }}
+                  />
                 </div>
               </AlertDialogContent>
             </AlertDialog>
 
-            {filteredGames.map((game) => (
+            {filteredGames.map(game => (
               <div key={game.game || game.name}>
                 <InstalledGameCard
                   game={game}
@@ -540,83 +626,94 @@ const Library = () => {
           <ErrorDialog />
 
           {/* VR Warning Dialog */}
-          <AlertDialog 
-            open={showVrWarning} 
-            onOpenChange={(open) => {
+          <AlertDialog
+            open={showVrWarning}
+            onOpenChange={open => {
               setShowVrWarning(open);
             }}
           >
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('library.vrWarning.title')}</AlertDialogTitle>
+                <AlertDialogTitle className="text-2xl font-bold text-foreground">
+                  {t("library.vrWarning.title")}
+                </AlertDialogTitle>
                 <AlertDialogDescription className="text-muted-foreground">
-                  {t('library.vrWarning.description')}
+                  {t("library.vrWarning.description")}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <Button
-                 variant="outline"
-                 className="text-primary text-xs"
-                 onClick={() => {
-                  setShowVrWarning(false);
-                  window.electron.openURL('https://ascendara.app/docs/troubleshooting/vr-games');
-                }}>
-                  {t('library.vrWarning.learnMore')}
+                  variant="outline"
+                  className="text-xs text-primary"
+                  onClick={() => {
+                    setShowVrWarning(false);
+                    window.electron.openURL(
+                      "https://ascendara.app/docs/troubleshooting/vr-games"
+                    );
+                  }}
+                >
+                  {t("library.vrWarning.learnMore")}
                 </Button>
-                <Button className="text-secondary" onClick={() => {
-                  setShowVrWarning(false);
-                  if (selectedGame) {
-                    handlePlayGame(selectedGame, true);
-                  }
-                }}>
-                  {t('library.vrWarning.confirm')}
+                <Button
+                  className="text-secondary"
+                  onClick={() => {
+                    setShowVrWarning(false);
+                    if (selectedGame) {
+                      handlePlayGame(selectedGame, true);
+                    }
+                  }}
+                >
+                  {t("library.vrWarning.confirm")}
                 </Button>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
 
-          <AlertDialog 
-            key="delete-game-dialog" 
-            open={!!gameToDelete} 
-            onOpenChange={(open) => !open && setGameToDelete(null)}
+          <AlertDialog
+            key="delete-game-dialog"
+            open={!!gameToDelete}
+            onOpenChange={open => !open && setGameToDelete(null)}
           >
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-2xl font-bold text-foreground">
-                  {gameToDelete?.isCustom 
-                    ? t('library.removeGameFromLibrary')
-                    : t('library.uninstallGame')}
+                  {gameToDelete?.isCustom
+                    ? t("library.removeGameFromLibrary")
+                    : t("library.uninstallGame")}
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-muted-foreground">
-                  {gameToDelete?.isCustom 
-                    ? t('library.removeGameFromLibraryWarning')
-                    : t('library.uninstallGameWarning')}
+                  {gameToDelete?.isCustom
+                    ? t("library.removeGameFromLibraryWarning")
+                    : t("library.uninstallGameWarning")}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter className="flex justify-end gap-2">
                 {isUninstalling ? (
                   <div className="w-full">
                     <Progress className="w-full" value={undefined} />
-                    <p className="text-sm text-muted-foreground mt-2 text-center">
-                      {t('library.uninstallingGame')} {gameToDelete?.game || gameToDelete?.name}...
+                    <p className="mt-2 text-center text-sm text-muted-foreground">
+                      {t("library.uninstallingGame")}{" "}
+                      {gameToDelete?.game || gameToDelete?.name}...
                     </p>
                   </div>
                 ) : (
-                  < >
+                  <>
                     <Button
                       variant="outline"
                       onClick={() => setGameToDelete(null)}
                       className="text-muted-foreground hover:text-foreground"
                     >
-                      {t('common.cancel')}
+                      {t("common.cancel")}
                     </Button>
                     <Button
                       onClick={() => handleDeleteGame(gameToDelete)}
-                      className="text-secondary hover:text-secondary-foreground"
+                      className="hover:text-secondary-foreground text-secondary"
                     >
-                      {gameToDelete?.isCustom ? t('library.removeGame') : t('library.uninstallGame')}
+                      {gameToDelete?.isCustom
+                        ? t("library.removeGame")
+                        : t("library.uninstallGame")}
                     </Button>
-                  </ >
+                  </>
                 )}
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -630,22 +727,20 @@ const Library = () => {
 const AddGameCard = React.forwardRef((props, ref) => {
   const { t } = useLanguage();
   return (
-    <Card 
+    <Card
       ref={ref}
       className={cn(
         "group relative overflow-hidden transition-colors",
-        "border-2 border-dashed border-muted hover:border-primary cursor-pointer"
+        "cursor-pointer border-2 border-dashed border-muted hover:border-primary"
       )}
       {...props}
     >
-      <CardContent className="p-6 flex flex-col items-center justify-center h-full min-h-[280px] text-muted-foreground group-hover:text-primary">
+      <CardContent className="flex h-full min-h-[280px] flex-col items-center justify-center p-6 text-muted-foreground group-hover:text-primary">
         <div className="rounded-full bg-muted p-6 group-hover:bg-primary/10">
-          <Plus className="w-8 h-8" />
+          <Plus className="h-8 w-8" />
         </div>
-        <h3 className="mt-4 font-semibold text-lg">{t('library.addGame')}</h3>
-        <p className="text-sm text-center mt-2">
-          {t('library.addGameDescription1')}
-        </p>
+        <h3 className="mt-4 text-lg font-semibold">{t("library.addGame")}</h3>
+        <p className="mt-2 text-center text-sm">{t("library.addGameDescription1")}</p>
       </CardContent>
     </Card>
   );
@@ -653,17 +748,17 @@ const AddGameCard = React.forwardRef((props, ref) => {
 
 AddGameCard.displayName = "AddGameCard";
 
-const InstalledGameCard = ({ 
-  game, 
-  onPlay, 
-  onDelete, 
-  onSelect, 
-  isSelected, 
-  onOpenDirectory, 
+const InstalledGameCard = ({
+  game,
+  onPlay,
+  onDelete,
+  onSelect,
+  isSelected,
+  onOpenDirectory,
   isLaunching,
   isUninstalling,
   favorites,
-  onToggleFavorite 
+  onToggleFavorite,
 }) => {
   const { t } = useLanguage();
   const [isRunning, setIsRunning] = useState(false);
@@ -674,18 +769,21 @@ const InstalledGameCard = ({
 
   useEffect(() => {
     const checkExecutable = async () => {
-      if (game.executable && !game.isCustom) {  
+      if (game.executable && !game.isCustom) {
         try {
           const execPath = `${game.game}/${game.executable}`;
-          const exists = await window.electron.ipcRenderer.invoke('check-file-exists', execPath);
+          const exists = await window.electron.ipcRenderer.invoke(
+            "check-file-exists",
+            execPath
+          );
           setExecutableExists(exists);
         } catch (error) {
-          console.error('Error checking executable:', error);
+          console.error("Error checking executable:", error);
           setExecutableExists(false);
         }
       }
     };
-    
+
     checkExecutable();
   }, [game.executable, game.isCustom, game.game]);
 
@@ -696,12 +794,15 @@ const InstalledGameCard = ({
     const checkGameStatus = async () => {
       try {
         if (!isMounted) return;
-        const running = await window.electron.ipcRenderer.invoke('is-game-running', game.game || game.name);
+        const running = await window.electron.ipcRenderer.invoke(
+          "is-game-running",
+          game.game || game.name
+        );
         if (isMounted) {
           setIsRunning(running);
         }
       } catch (error) {
-        console.error('Error checking game status:', error);
+        console.error("Error checking game status:", error);
       }
     };
 
@@ -724,12 +825,15 @@ const InstalledGameCard = ({
 
     const loadGameImage = async () => {
       try {
-        const imageBase64 = await window.electron.ipcRenderer.invoke('get-game-image', game.game || game.name);
+        const imageBase64 = await window.electron.ipcRenderer.invoke(
+          "get-game-image",
+          game.game || game.name
+        );
         if (imageBase64 && isMounted) {
           setImageData(`data:image/jpeg;base64,${imageBase64}`);
         }
       } catch (error) {
-        console.error('Error loading game image:', error);
+        console.error("Error loading game image:", error);
       }
     };
 
@@ -741,10 +845,10 @@ const InstalledGameCard = ({
   }, [game]);
 
   return (
-    <Card 
+    <Card
       className={cn(
         "group relative overflow-hidden transition-all duration-200",
-        "hover:shadow-lg hover:-translate-y-1",
+        "hover:-translate-y-1 hover:shadow-lg",
         isSelected && "ring-2 ring-primary",
         "cursor-pointer"
       )}
@@ -753,61 +857,64 @@ const InstalledGameCard = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       <CardContent className="p-0">
-        <div className="aspect-[4/3] relative">
-          <img 
-            src={imageData} 
-            alt={game.game}
-            className="w-full h-full object-cover"
-          />
+        <div className="relative aspect-[4/3]">
+          <img src={imageData} alt={game.game} className="h-full w-full object-cover" />
           {isUninstalling && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
               <div className="w-full max-w-[200px] space-y-2 px-4">
                 <div className="relative overflow-hidden">
                   <Progress value={undefined} />
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/30 to-transparent" 
-                       style={{ 
-                         animation: 'shimmer 2s linear infinite',
-                         transform: 'translateX(-100%)',
-                         maskImage: 'linear-gradient(to right, transparent 20%, black 50%, transparent 80%)',
-                         WebkitMaskImage: 'linear-gradient(to right, transparent 20%, black 50%, transparent 80%)'
-                       }} 
+                  <div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/30 to-transparent"
+                    style={{
+                      animation: "shimmer 2s linear infinite",
+                      transform: "translateX(-100%)",
+                      maskImage:
+                        "linear-gradient(to right, transparent 20%, black 50%, transparent 80%)",
+                      WebkitMaskImage:
+                        "linear-gradient(to right, transparent 20%, black 50%, transparent 80%)",
+                    }}
                   />
                 </div>
                 <div className="text-center text-sm font-medium text-white">
                   <span className="flex items-center justify-center gap-2">
                     <Loader className="h-4 w-4 animate-spin" />
-                    {t('library.uninstalling')}
+                    {t("library.uninstalling")}
                   </span>
                 </div>
               </div>
             </div>
           )}
-          <div className={cn(
-            "absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent",
-            "opacity-0 group-hover:opacity-100 transition-opacity",
-            "flex flex-col justify-end p-4 text-secondary"
-          )}>
-            <div className="absolute top-4 right-4">
+          <div
+            className={cn(
+              "absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent",
+              "opacity-0 transition-opacity group-hover:opacity-100",
+              "flex flex-col justify-end p-4 text-secondary"
+            )}
+          >
+            <div className="absolute right-4 top-4">
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white hover:text-primary hover:bg-white/20"
-                onClick={(e) => {
+                className="text-white hover:bg-white/20 hover:text-primary"
+                onClick={e => {
                   e.stopPropagation();
                   onToggleFavorite(game.game || game.name);
                 }}
               >
-                <Heart className={cn(
-                  "w-6 h-6",
-                  isFavorite ? "fill-primary text-primary" : "fill-none text-white"
-                )} />
+                <Heart
+                  className={cn(
+                    "h-6 w-6",
+                    isFavorite ? "fill-primary text-primary" : "fill-none text-white"
+                  )}
+                />
               </Button>
             </div>
             <div className="space-y-4">
               <div className="flex flex-col gap-2">
-                <Button 
+                <Button
                   className="w-full gap-2"
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation();
                     if (!isRunning && !isLaunching) {
                       onPlay();
@@ -816,20 +923,20 @@ const InstalledGameCard = ({
                   disabled={isLaunching || isRunning}
                 >
                   {isLaunching ? (
-                    < >
-                      <Loader className="w-4 h-4 animate-spin" />
-                      {t('library.launching')}
-                    </ >
+                    <>
+                      <Loader className="h-4 w-4 animate-spin" />
+                      {t("library.launching")}
+                    </>
                   ) : isRunning ? (
-                    < >
-                      <StopCircle className="w-4 h-4" />
-                      {t('library.running')}
-                    </ >
+                    <>
+                      <StopCircle className="h-4 w-4" />
+                      {t("library.running")}
+                    </>
                   ) : (
-                    < >
-                      <Play className="w-4 h-4" />
-                      {t('library.play')}
-                    </ >
+                    <>
+                      <Play className="h-4 w-4" />
+                      {t("library.play")}
+                    </>
                   )}
                 </Button>
               </div>
@@ -837,68 +944,104 @@ const InstalledGameCard = ({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between items-center p-4">
-        <div className="flex-1 min-w-0">
+      <CardFooter className="flex items-center justify-between p-4">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-foreground truncate">{game.game}</h3>
-            {game.online && <Gamepad2 className="w-4 h-4 text-muted-foreground" />}
-            {game.dlc && <Gift className="w-4 h-4 text-muted-foreground" />}
-            {game.isVr && 
-              <svg className="text-foreground p-0.5" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2 10C2 8.89543 2.89543 8 4 8H20C21.1046 8 22 8.89543 22 10V17C22 18.1046 21.1046 19 20 19H16.1324C15.4299 19 14.7788 18.6314 14.4174 18.029L12.8575 15.4292C12.4691 14.7818 11.5309 14.7818 11.1425 15.4292L9.58261 18.029C9.22116 18.6314 8.57014 19 7.86762 19H4C2.89543 19 2 18.1046 2 17V10Z" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M3.81253 6.7812C4.5544 5.6684 5.80332 5 7.14074 5H16.8593C18.1967 5 19.4456 5.6684 20.1875 6.7812L21 8H3L3.81253 6.7812Z" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+            <h3 className="truncate font-semibold text-foreground">{game.game}</h3>
+            {game.online && <Gamepad2 className="h-4 w-4 text-muted-foreground" />}
+            {game.dlc && <Gift className="h-4 w-4 text-muted-foreground" />}
+            {game.isVr && (
+              <svg
+                className="p-0.5 text-foreground"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M2 10C2 8.89543 2.89543 8 4 8H20C21.1046 8 22 8.89543 22 10V17C22 18.1046 21.1046 19 20 19H16.1324C15.4299 19 14.7788 18.6314 14.4174 18.029L12.8575 15.4292C12.4691 14.7818 11.5309 14.7818 11.1425 15.4292L9.58261 18.029C9.22116 18.6314 8.57014 19 7.86762 19H4C2.89543 19 2 18.1046 2 17V10Z"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M3.81253 6.7812C4.5544 5.6684 5.80332 5 7.14074 5H16.8593C18.1967 5 19.4456 5.6684 20.1875 6.7812L21 8H3L3.81253 6.7812Z"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
-            }
-            {executableExists === true && <AlertTriangle className="w-4 h-4 text-yellow-500" title={t('library.executableNotFound')} />}
+            )}
+            {executableExists === true && (
+              <AlertTriangle
+                className="h-4 w-4 text-yellow-500"
+                title={t("library.executableNotFound")}
+              />
+            )}
           </div>
-          <p className="text-sm text-muted-foreground">{game.version || t('library.noVersion')}</p>
+          <p className="text-sm text-muted-foreground">
+            {game.version || t("library.noVersion")}
+          </p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="w-4 h-4" />
+            <Button variant="ghost" size="icon" onClick={e => e.stopPropagation()}>
+              <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={onOpenDirectory}>
-              <FolderOpen className="w-4 h-4 mr-2" />
-              {t('library.openGameDirectory')}
+              <FolderOpen className="mr-2 h-4 w-4" />
+              {t("library.openGameDirectory")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={async () => {
-              const success = await window.electron.ipcRenderer.invoke('create-game-shortcut', game);
-              if (success) {
-                toast.success(t('library.shortcutCreated'));
-              } else {
-                toast.error(t('library.shortcutError'));
-              }
-            }}>
-              <Monitor className="w-4 h-4 mr-2" />
-              {t('library.createShortcut')}
+            <DropdownMenuItem
+              onClick={async () => {
+                const success = await window.electron.ipcRenderer.invoke(
+                  "create-game-shortcut",
+                  game
+                );
+                if (success) {
+                  toast.success(t("library.shortcutCreated"));
+                } else {
+                  toast.error(t("library.shortcutError"));
+                }
+              }}
+            >
+              <Monitor className="mr-2 h-4 w-4" />
+              {t("library.createShortcut")}
             </DropdownMenuItem>
             {!game.isCustom && (
-              <DropdownMenuItem onClick={async () => {
-                const exePath = await window.electron.ipcRenderer.invoke('open-file-dialog');
-                if (exePath) {
-                  await window.electron.ipcRenderer.invoke('modify-game-executable', game.game || game.name, exePath);
-                }
-              }}>
-                <Pencil className="w-4 h-4 mr-2" />
-                {t('library.changeExecutable')}
+              <DropdownMenuItem
+                onClick={async () => {
+                  const exePath =
+                    await window.electron.ipcRenderer.invoke("open-file-dialog");
+                  if (exePath) {
+                    await window.electron.ipcRenderer.invoke(
+                      "modify-game-executable",
+                      game.game || game.name,
+                      exePath
+                    );
+                  }
+                }}
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                {t("library.changeExecutable")}
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem 
-              onClick={(e) => {
+            <DropdownMenuItem
+              onClick={e => {
                 e.stopPropagation();
                 onDelete();
               }}
               className="text-destructive"
             >
-              <Trash2 className="w-4 h-4 mr-2" />
-              {game.isCustom ? t('library.removeGameFromLibrary') : t('library.uninstallGame')}
+              <Trash2 className="mr-2 h-4 w-4" />
+              {game.isCustom
+                ? t("library.removeGameFromLibrary")
+                : t("library.uninstallGame")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -910,28 +1053,28 @@ const InstalledGameCard = ({
 const AddGameForm = ({ onSuccess }) => {
   const { t } = useLanguage();
   const [formData, setFormData] = useState({
-    executable: '',
-    name: '',
+    executable: "",
+    name: "",
     hasVersion: false,
-    version: '',
+    version: "",
     isOnline: false,
-    hasDLC: false
+    hasDLC: false,
   });
   const [coverSearch, setCoverSearch] = useState({
-    query: '',
+    query: "",
     isLoading: false,
     results: [],
-    selectedCover: null
+    selectedCover: null,
   });
-  
+
   // Add debounce timer ref
   const searchDebounceRef = useRef(null);
   const minSearchLength = 2;
 
-  const handleCoverSearch = async (query) => {
+  const handleCoverSearch = async query => {
     // Update query immediately for UI responsiveness
     setCoverSearch(prev => ({ ...prev, query }));
-    
+
     // Clear previous timer
     if (searchDebounceRef.current) {
       clearTimeout(searchDebounceRef.current);
@@ -948,33 +1091,34 @@ const AddGameForm = ({ onSuccess }) => {
       setCoverSearch(prev => ({ ...prev, isLoading: true }));
       try {
         const results = await gameService.searchGameCovers(query);
-        setCoverSearch(prev => ({ 
-          ...prev, 
+        setCoverSearch(prev => ({
+          ...prev,
           results: results.slice(0, 9),
-          isLoading: false 
+          isLoading: false,
         }));
       } catch (error) {
-        console.error('Error searching covers:', error);
+        console.error("Error searching covers:", error);
         setCoverSearch(prev => ({ ...prev, isLoading: false }));
-        toast.error(t('library.coverSearchError'));
+        toast.error(t("library.coverSearchError"));
       }
     }, 300); // 300ms debounce
   };
 
   const handleChooseExecutable = async () => {
-    const file = await window.electron.ipcRenderer.invoke('open-file-dialog');
+    const file = await window.electron.ipcRenderer.invoke("open-file-dialog");
     if (file) {
       setFormData(prev => ({
         ...prev,
         executable: file,
-        name: file.split('\\').pop().replace('.exe', '')
+        name: file.split("\\").pop().replace(".exe", ""),
       }));
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    await window.electron.ipcRenderer.invoke('save-custom-game', 
+    await window.electron.ipcRenderer.invoke(
+      "save-custom-game",
       formData.name,
       formData.isOnline,
       formData.hasDLC,
@@ -989,28 +1133,31 @@ const AddGameForm = ({ onSuccess }) => {
     <div className="space-y-6">
       <div className="space-y-4">
         <div>
-          <h4 className="text-sm font-medium text-foreground mb-2">{t('library.gameExecutable')}</h4>
-          <Button 
-            type="button" 
-            variant="outline" 
-            className="w-full justify-start text-left text-primary font-normal bg-background hover:bg-accent truncate"
+          <h4 className="mb-2 text-sm font-medium text-foreground">
+            {t("library.gameExecutable")}
+          </h4>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full justify-start truncate bg-background text-left font-normal text-primary hover:bg-accent"
             onClick={handleChooseExecutable}
           >
-            <FolderOpen className="w-4 h-4 mr-2 flex-shrink-0" />
+            <FolderOpen className="mr-2 h-4 w-4 flex-shrink-0" />
             <span className="truncate">
-              {formData.executable || t('library.chooseExecutableFile')}
+              {formData.executable || t("library.chooseExecutableFile")}
             </span>
           </Button>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-foreground">{t('library.gameName')}</Label>
+          <Label htmlFor="name" className="text-foreground">
+            {t("library.gameName")}
+          </Label>
           <Input
             id="name"
             value={formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-
-            className="bg-background border-input text-foreground"
+            onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            className="border-input bg-background text-foreground"
           />
         </div>
 
@@ -1018,16 +1165,19 @@ const AddGameForm = ({ onSuccess }) => {
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label htmlFor="hasVersion" className="flex-1 text-foreground">{t('library.version')}</Label>
+            <Label htmlFor="hasVersion" className="flex-1 text-foreground">
+              {t("library.version")}
+            </Label>
             <Switch
               id="hasVersion"
               checked={formData.hasVersion}
-              onCheckedChange={(checked) => setFormData(prev => ({ 
-                ...prev, 
-                hasVersion: checked,
-                version: !checked ? '' : prev.version 
-              }))}
-
+              onCheckedChange={checked =>
+                setFormData(prev => ({
+                  ...prev,
+                  hasVersion: checked,
+                  version: !checked ? "" : prev.version,
+                }))
+              }
             />
           </div>
 
@@ -1035,46 +1185,50 @@ const AddGameForm = ({ onSuccess }) => {
             <Input
               id="version"
               value={formData.version}
-              onChange={(e) => setFormData(prev => ({ ...prev, version: e.target.value }))}
-
-              placeholder={t('library.versionPlaceholder')}
-              className="bg-background border-input text-foreground"
+              onChange={e => setFormData(prev => ({ ...prev, version: e.target.value }))}
+              placeholder={t("library.versionPlaceholder")}
+              className="border-input bg-background text-foreground"
             />
           )}
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="isOnline" className="flex-1 text-foreground">{t('library.hasOnlineFix')}</Label>
+          <Label htmlFor="isOnline" className="flex-1 text-foreground">
+            {t("library.hasOnlineFix")}
+          </Label>
           <Switch
             id="isOnline"
             checked={formData.isOnline}
-            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isOnline: checked }))}
-
+            onCheckedChange={checked =>
+              setFormData(prev => ({ ...prev, isOnline: checked }))
+            }
           />
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="hasDLC" className="flex-1 text-foreground">{t('library.includesAllDLCs')}</Label>
+          <Label htmlFor="hasDLC" className="flex-1 text-foreground">
+            {t("library.includesAllDLCs")}
+          </Label>
           <Switch
             id="hasDLC"
             checked={formData.hasDLC}
-            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, hasDLC: checked }))}
-
+            onCheckedChange={checked =>
+              setFormData(prev => ({ ...prev, hasDLC: checked }))
+            }
           />
         </div>
 
-        
         {/* Game Cover Search Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="relative flex-grow">
-              <SearchIcon className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <SearchIcon className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
               <Input
                 id="coverSearch"
                 value={coverSearch.query}
-                onChange={(e) => handleCoverSearch(e.target.value)}
-                className="pl-8 bg-background border-input text-foreground"
-                placeholder={t('library.searchGameCover')}
+                onChange={e => handleCoverSearch(e.target.value)}
+                className="border-input bg-background pl-8 text-foreground"
+                placeholder={t("library.searchGameCover")}
                 minLength={minSearchLength}
               />
             </div>
@@ -1082,77 +1236,74 @@ const AddGameForm = ({ onSuccess }) => {
 
           {/* Cover Search Results */}
           {coverSearch.query.length < minSearchLength ? (
-            <div className="text-center text-sm text-muted-foreground py-2">
-              {t('library.enterMoreChars', { count: minSearchLength })}
+            <div className="py-2 text-center text-sm text-muted-foreground">
+              {t("library.enterMoreChars", { count: minSearchLength })}
             </div>
           ) : coverSearch.isLoading ? (
             <div className="flex justify-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
             </div>
           ) : coverSearch.results.length > 0 ? (
             <div className="grid grid-cols-3 gap-4">
               {coverSearch.results.map((cover, index) => (
-                <div 
+                <div
                   key={index}
-                  onClick={() => setCoverSearch(prev => ({ ...prev, selectedCover: cover }))}
+                  onClick={() =>
+                    setCoverSearch(prev => ({ ...prev, selectedCover: cover }))
+                  }
                   className={cn(
                     "relative aspect-video cursor-pointer overflow-hidden rounded-lg border-2 transition-all",
-                    coverSearch.selectedCover === cover 
-                      ? "border-primary shadow-lg" 
+                    coverSearch.selectedCover === cover
+                      ? "border-primary shadow-lg"
                       : "border-transparent hover:border-primary/50"
                   )}
                 >
                   <img
                     src={gameService.getImageUrl(cover.imgID)}
                     alt={cover.title}
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <p className="text-white text-sm text-center px-2">{cover.title}</p>
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity hover:opacity-100">
+                    <p className="px-2 text-center text-sm text-white">{cover.title}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center text-sm text-muted-foreground py-2">
-              {t('library.noResultsFound')}
+            <div className="py-2 text-center text-sm text-muted-foreground">
+              {t("library.noResultsFound")}
             </div>
           )}
 
           {/* Selected Cover Preview */}
           {coverSearch.selectedCover && (
             <div className="mt-4 flex justify-center">
-              <div className="relative aspect-video w-64 rounded-lg overflow-hidden border-2 border-primary">
+              <div className="relative aspect-video w-64 overflow-hidden rounded-lg border-2 border-primary">
                 <img
                   src={gameService.getImageUrl(coverSearch.selectedCover.imgID)}
                   alt={coverSearch.selectedCover.title}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                 />
               </div>
             </div>
           )}
         </div>
-
       </div>
 
       <AlertDialogFooter className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          onClick={() => onSuccess()}
-          className="text-primary"
-        >
-          {t('common.cancel')}
+        <Button variant="outline" onClick={() => onSuccess()} className="text-primary">
+          {t("common.cancel")}
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={!formData.executable || !formData.name}
-          className="bg-primary text-secondary "
+          className="bg-primary text-secondary"
         >
-          {t('library.addGame')}
+          {t("library.addGame")}
         </Button>
       </AlertDialogFooter>
     </div>
   );
 };
 
-export default Library; 
+export default Library;
