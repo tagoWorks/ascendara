@@ -403,8 +403,8 @@ function sanitizeDirectoryName(name) {
 }
 
 // Download the file
-ipcMain.handle('download-file', async (event, link, game, online, dlc, version, imgID, size) => {
-  console.log(`Downloading file: ${link}, game: ${game}, online: ${online}, dlc: ${dlc}, version: ${version}, size: ${size}`);
+ipcMain.handle('download-file', async (event, link, game, online, dlc, isVr, version, imgID, size) => {
+  console.log(`Downloading file: ${link}, game: ${game}, online: ${online}, dlc: ${dlc}, isVr: ${isVr}, version: ${version}, size: ${size}`);
   const filePath = path.join(app.getPath('userData'), 'ascendarasettings.json');
   try {
     const data = fs.readFileSync(filePath, 'utf8');
@@ -445,12 +445,12 @@ ipcMain.handle('download-file', async (event, link, game, online, dlc, version, 
           executablePath = isDev 
             ? path.join('./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe')
             : path.join(appDirectory, '/resources/AscendaraGofileHelper.exe');
-          spawnCommand = ["https://" + link, game, online, dlc, version, size, gamesDirectory];
+          spawnCommand = ["https://" + link, game, online, dlc, isVr, version, size, gamesDirectory];
         } else {
           executablePath = isDev
             ? path.join('./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe')
             : path.join(appDirectory, '/resources/AscendaraDownloader.exe');
-          spawnCommand = [link, game, online, dlc, version, size, gamesDirectory];
+          spawnCommand = [link, game, online, dlc, isVr, version, size, gamesDirectory];
           console.log(spawnCommand)
         }
 

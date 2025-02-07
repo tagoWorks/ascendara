@@ -79,7 +79,7 @@ def handleerror(game_info, game_info_path, e):
     safe_write_json(game_info_path, game_info)
 
 class GofileDownloader:
-    def __init__(self, game, online, dlc, version, size, download_dir, max_workers=5):
+    def __init__(self, game, online, dlc, isVr, version, size, download_dir, max_workers=5):
         self._max_retries = 3
         self._download_timeout = 30 
         self._token = self._getToken()
@@ -88,6 +88,7 @@ class GofileDownloader:
         self.game = game
         self.online = online
         self.dlc = dlc
+        self.isVr = isVr
         self.version = version
         self.size = size
         # Remove k9bsbM from path if present
@@ -100,6 +101,7 @@ class GofileDownloader:
             "game": game,
             "online": online,
             "dlc": dlc,
+            "isVr": isVr,
             "version": version if version else "",
             "size": size,
             "executable": os.path.join(self.download_dir, f"{game}.exe"),
@@ -435,6 +437,7 @@ def main():
         parser.add_argument("game", help="Name of the game")
         parser.add_argument("online", type=parse_boolean, help="Is the game online (true/false)?")
         parser.add_argument("dlc", type=parse_boolean, help="Is DLC included (true/false)?")
+        parser.add_argument("isVr", type=parse_boolean, help="Is the game a VR game (true/false)?")
         parser.add_argument("version", help="Version of the game")
         parser.add_argument("size", help="Size of the file in (ex: 12 GB, 439 MB)")
         parser.add_argument("download_dir", help="Directory to save the downloaded files")
@@ -443,7 +446,7 @@ def main():
         args = parser.parse_args()
 
         try:
-            downloader = GofileDownloader(args.game, args.online, args.dlc, args.version, args.size, args.download_dir)
+            downloader = GofileDownloader(args.game, args.online, args.dlc, args.isVr, args.version, args.size, args.download_dir)
             downloader.download_from_gofile(args.url, args.password)
         except Exception as e:
             handleerror(downloader.game_info, downloader.game_info_path, e)

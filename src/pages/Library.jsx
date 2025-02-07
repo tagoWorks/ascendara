@@ -33,7 +33,8 @@ import {
   Loader,
   StopCircle,
   AlertTriangle,
-  Heart
+  Heart,
+  SquareLibrary
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import {
@@ -48,6 +49,7 @@ import {
 import { Separator } from "../components/ui/separator";
 import { Progress } from "../components/ui/progress";
 import recentGamesService from '../services/recentGamesService';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../components/ui/tooltip';
 import imageCacheService from '../services/imageCacheService';
 import gameService from '../services/gameService';
 import fs from 'fs';
@@ -63,6 +65,7 @@ const Library = () => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isUninstalling, setIsUninstalling] = useState(false);
+  const [showVrWarning, setShowVrWarning] = useState(false);
   const [uninstallingGame, setUninstallingGame] = useState(null);
   const [launchingGame, setLaunchingGame] = useState(null);
   const [coverSearchQuery, setCoverSearchQuery] = useState("");
@@ -165,6 +168,7 @@ const Library = () => {
           version: game.version,
           online: game.online,
           dlc: game.dlc,
+          isVr: game.isVr,
           executable: game.executable,
           isCustom: true,
           custom: true
@@ -251,15 +255,17 @@ const Library = () => {
       return (game.game || game.name).toLowerCase().includes(searchLower);
     });
 
-  const handlePlayGame = async (game) => {
+  const handlePlayGame = async (game, forcePlay=false) => {
     const gameName = game.game || game.name;
     setLaunchingGame(gameName);
+    console.log(game, forcePlay);
     // Check if window.electron.isDev is true. Cannot run in developer mode
     if (await window.electron.ipcRenderer.invoke('is-dev')) {
       toast.error(t('library.cannotRunDev'))
       setLaunchingGame(null);
       return;
     }
+    
 
     try {
       // First check if game is already running
@@ -270,6 +276,13 @@ const Library = () => {
         return;
       }
 
+      // Check if game is VR and show warning
+      if (game.isVr && !forcePlay) {
+        setShowVrWarning(true);
+        setLaunchingGame(null);
+        return;
+      }
+      console.log("Launching game: ", gameName);
       // Launch the game
       await window.electron.ipcRenderer.invoke('play-game', gameName, game.isCustom);
       
@@ -363,7 +376,7 @@ const Library = () => {
           <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('library.launchError')}</AlertDialogTitle>
           <AlertDialogDescription className="space-y-4 text-muted-foreground">
             <p>{t('library.launchErrorMessage', { game: errorGame })}&nbsp;
-              <span onClick={() => {window.electron.openURL('https://ascendara.app/docs/troubleshooting/common-issues')}} className="hover:underline cursor-pointer">{t('common.learnMore')} <ExternalLink className="inline-block mb-1 h-3 w-3" /></span>
+              <span onClick={() => {window.electron.openURL('https://ascendara.app/docs/troubleshooting/common-issues#executable-not-found-launch-error')}} className="hover:underline cursor-pointer">{t('common.learnMore')} <ExternalLink className="inline-block mb-1 h-3 w-3" /></span>
             </p>
             <p>{errorMessage}</p>
           </AlertDialogDescription>
@@ -409,7 +422,31 @@ const Library = () => {
                 <div className="flex-1">
                   <div className="flex items-center mb-4">
                     <h1 className="text-3xl font-bold text-primary tracking-tight">{t('library.pageTitle')}</h1>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center justify-center w-6 h-6 rounded-full ml-2 mb-2 bg-muted hover:bg-muted/80 cursor-help">
+                          <span className="text-sm font-medium">?</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="p-4 space-y-2 text-secondary">
+                        <div className="flex items-center gap-2">
+                          <Gamepad2 className="w-4 h-4" /> <span>{t('library.iconLegend.onlineFix')}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Gift className="w-4 h-4" /> <span>{t('library.iconLegend.allDlcs')}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <svg className="text-secondary w-4 h-4" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 10C2 8.89543 2.89543 8 4 8H20C21.1046 8 22 8.89543 22 10V17C22 18.1046 21.1046 19 20 19H16.1324C15.4299 19 14.7788 18.6314 14.4174 18.029L12.8575 15.4292C12.4691 14.7818 11.5309 14.7818 11.1425 15.4292L9.58261 18.029C9.22116 18.6314 8.57014 19 7.86762 19H4C2.89543 19 2 18.1046 2 17V10Z" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M3.81253 6.7812C4.5544 5.6684 5.80332 5 7.14074 5H16.8593C18.1967 5 19.4456 5.6684 20.1875 6.7812L21 8H3L3.81253 6.7812Z" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg> <span>{t('library.iconLegend.vrGame')}</span>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   </div>
+
                 <div className="relative w-72">
                   <Input
                     type="text"
@@ -447,7 +484,7 @@ const Library = () => {
                         </div>
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
-                            <Gamepad2 className="w-4 h-4 text-primary" />
+                            <SquareLibrary className="w-4 h-4 text-primary" />
                             <span className="text-sm text-muted-foreground">{t('library.gamesInLibrary')}</span>
                           </div>
                           <span className="text-sm font-medium">{games.length}</span>
@@ -495,13 +532,42 @@ const Library = () => {
                   isLaunching={launchingGame === (game.game || game.name)}
                   isUninstalling={uninstallingGame === (game.game || game.name)}
                   favorites={favorites}
-                  onToggleFavorite={toggleFavorite}
+                  onToggleFavorite={() => toggleFavorite(game.game || game.name)}
                 />
               </div>
             ))}
           </div>
 
           <ErrorDialog />
+
+          {/* VR Warning Dialog */}
+          <AlertDialog open={showVrWarning} onOpenChange={setShowVrWarning}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('library.vrWarning.title')}</AlertDialogTitle>
+                <AlertDialogDescription className="text-muted-foreground">
+                  {t('library.vrWarning.description')}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <Button
+                 variant="outline"
+                 className="text-primary text-xs"
+                 onClick={() => {
+                  setShowVrWarning(false);
+                  window.electron.openURL('https://ascendara.app/docs/troubleshooting/vr-games');
+                }}>
+                  {t('library.vrWarning.learnMore')}
+                </Button>
+                <Button className="text-secondary" onClick={() => {
+                  setShowVrWarning(false);
+                  handlePlayGame(selectedGame, true);
+                }}>
+                  {t('library.vrWarning.confirm')}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           <AlertDialog 
             key="delete-game-dialog" 
@@ -771,6 +837,12 @@ const InstalledGameCard = ({
             <h3 className="font-semibold text-foreground truncate">{game.game}</h3>
             {game.online && <Gamepad2 className="w-4 h-4 text-muted-foreground" />}
             {game.dlc && <Gift className="w-4 h-4 text-muted-foreground" />}
+            {game.isVr && 
+              <svg className="text-foreground p-0.5" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 10C2 8.89543 2.89543 8 4 8H20C21.1046 8 22 8.89543 22 10V17C22 18.1046 21.1046 19 20 19H16.1324C15.4299 19 14.7788 18.6314 14.4174 18.029L12.8575 15.4292C12.4691 14.7818 11.5309 14.7818 11.1425 15.4292L9.58261 18.029C9.22116 18.6314 8.57014 19 7.86762 19H4C2.89543 19 2 18.1046 2 17V10Z" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3.81253 6.7812C4.5544 5.6684 5.80332 5 7.14074 5H16.8593C18.1967 5 19.4456 5.6684 20.1875 6.7812L21 8H3L3.81253 6.7812Z" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            }
             {executableExists === true && <AlertTriangle className="w-4 h-4 text-yellow-500" title={t('library.executableNotFound')} />}
           </div>
           <p className="text-sm text-muted-foreground">{game.version || t('library.noVersion')}</p>

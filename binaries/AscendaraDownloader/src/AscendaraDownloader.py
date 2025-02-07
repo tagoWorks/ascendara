@@ -195,7 +195,7 @@ class DownloadManager:
                 if callback:
                     callback(len(data))
 
-def download_file(link, game, online, dlc, version, size, download_dir):
+def download_file(link, game, online, dlc, isVr, version, size, download_dir):
     game = sanitize_folder_name(game)
     download_path = os.path.join(download_dir, game)
     os.makedirs(download_path, exist_ok=True)
@@ -206,6 +206,7 @@ def download_file(link, game, online, dlc, version, size, download_dir):
         "game": game,
         "online": online,
         "dlc": dlc,
+        "isVr": isVr,
         "version": version if version else "",
         "size": size,
         "executable": os.path.join(download_path, f"{game}.exe"),
@@ -379,6 +380,7 @@ def main():
     parser.add_argument("game", help="Name of the game")
     parser.add_argument("online", type=parse_boolean, help="Is the game online (true/false)?")
     parser.add_argument("dlc", type=parse_boolean, help="Is DLC included (true/false)?")
+    parser.add_argument("isVr", type=parse_boolean, help="Is the game a VR game (true/false)?")
     parser.add_argument("version", help="Version of the game")
     parser.add_argument("size", help="Size of the file (ex: 12 GB, 439 MB)")
     parser.add_argument("download_dir", help="Directory to save the downloaded files")
@@ -390,7 +392,7 @@ def main():
             sys.exit(1)
             
         args = parser.parse_args()
-        download_file(args.link, args.game, args.online, args.dlc, args.version, args.size, args.download_dir)
+        download_file(args.link, args.game, args.online, args.dlc, args.isVr, args.version, args.size, args.download_dir)
     except (argparse.ArgumentError, SystemExit) as e:
         error_msg = "Invalid or missing arguments. Please provide all required arguments."
         launch_crash_reporter(1, error_msg)

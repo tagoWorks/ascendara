@@ -135,6 +135,11 @@
     },
     "library": {
       "pageTitle": "Your Library",
+      "iconLegend": {
+        "onlineFix": "Game Has Online-Fix",
+        "allDlcs": "All DLCs Included",
+        "vrGame": "Virtual Reality Game"
+      },
       "noGamesMessage": "No games in your library yet",
       "cannotRunDev": "Cannot run games in developer mode",
       "gamesInLibrary": "Total Games",
@@ -186,7 +191,14 @@
       "noGames": "No games found",
       "noGamesDesc": "You haven't installed any games yet",
       "alreadyRunning": "{{game}} is already running",
-      "executableNotFound": "Game executable not found"
+      "executableNotFound": "Game executable not found",
+      "vrWarning": {
+        "title": "VR Games and Ascendara",
+        "description": "This is a virtual reality game and may require you to launch the game through SteamVR or your Meta Quest app. Running the game directly may cause your headset to not connect to the game.",
+        "learnMore": "Learn More About Running VR Games",
+        "confirm": "I Understand, Run Anyway",
+        "cancel": "Cancel"
+      }
     },
     "downloads": {
       "noDownloads": "No active downloads",

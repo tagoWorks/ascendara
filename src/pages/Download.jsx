@@ -176,12 +176,14 @@ export default function DownloadPage() {
 
     try {
       const sanitizedGameName = sanitizeText(gameData.game);
+      const isVrGame = gameData.category?.includes("Virtual Reality");
       
       await window.electron.downloadFile(
         urlToUse,
         sanitizedGameName,
         gameData.online || false,
         gameData.dlc || false,
+        isVrGame || false,
         gameData.version || '',
         gameData.imgID,
         gameData.size || ''
