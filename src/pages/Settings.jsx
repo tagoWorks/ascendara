@@ -565,8 +565,17 @@ function Settings() {
                       <p className="text-sm text-muted-foreground">
                         {t("settings.showOldDownloadLinksDescription")}
                         <br />
-                        <a onClick={() => window.electron.openURL("https://ascendara.app/docs/features/overview#ascendara-timemachine")} className="cursor-pointer text-primary hover:underline">{t("common.learnMore")} 
-                        <ExternalLink className="h-3 w-3 inline-block mb-1 ml-1" /></a>
+                        <a
+                          onClick={() =>
+                            window.electron.openURL(
+                              "https://ascendara.app/docs/features/overview#ascendara-timemachine"
+                            )
+                          }
+                          className="cursor-pointer text-primary hover:underline"
+                        >
+                          {t("common.learnMore")}
+                          <ExternalLink className="mb-1 ml-1 inline-block h-3 w-3" />
+                        </a>
                       </p>
                     </div>
                     <Switch

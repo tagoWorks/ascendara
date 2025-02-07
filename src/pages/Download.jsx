@@ -429,7 +429,6 @@ export default function DownloadPage() {
     getShowOldDownloadLinksSetting();
   }, []);
 
-
   useEffect(() => {
     window.scrollTo(0, 0);
     const loadCachedImage = async () => {
@@ -870,7 +869,10 @@ export default function DownloadPage() {
                   <span className="flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-sm text-primary">
                     {gameData.version}
                     {timemachineSetting && (
-                      <History onClick={() => setShowTimemachineSelection(true)} className="h-4 w-4 cursor-pointer" />
+                      <History
+                        onClick={() => setShowTimemachineSelection(true)}
+                        className="h-4 w-4 cursor-pointer"
+                      />
                     )}
                   </span>
                 )}
@@ -1319,9 +1321,9 @@ export default function DownloadPage() {
       </TooltipProvider>
 
       {gameData && (
-        <TimemachineDialog 
+        <TimemachineDialog
           gameData={gameData}
-          onVersionSelect={(version) => setGameData(version)} 
+          onVersionSelect={version => setGameData(version)}
           open={showTimemachineSelection}
           onOpenChange={setShowTimemachineSelection}
         />

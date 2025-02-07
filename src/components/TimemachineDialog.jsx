@@ -14,7 +14,12 @@ import { useState, useEffect } from "react";
 import { fetchGameVersions } from "../services/timemachineService";
 import { useLanguage } from "@/context/LanguageContext";
 
-export default function TimemachineDialog({ gameData, onVersionSelect, open, onOpenChange }) {
+export default function TimemachineDialog({
+  gameData,
+  onVersionSelect,
+  open,
+  onOpenChange,
+}) {
   const [versions, setVersions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -34,7 +39,7 @@ export default function TimemachineDialog({ gameData, onVersionSelect, open, onO
       const versionData = await fetchGameVersions(gameData.game);
       console.log("Fetched versions:", versionData);
       setVersions(versionData);
-      
+
       if (versionData.length === 0) {
         setError(t("download.timemachine.noVersions"));
       }
@@ -46,7 +51,7 @@ export default function TimemachineDialog({ gameData, onVersionSelect, open, onO
     }
   };
 
-  const handleVersionSelect = (version) => {
+  const handleVersionSelect = version => {
     // Preserve the original image ID when selecting a version
     const updatedGameData = {
       ...version.game,
@@ -54,16 +59,16 @@ export default function TimemachineDialog({ gameData, onVersionSelect, open, onO
     };
     onVersionSelect(updatedGameData);
     onOpenChange(false);
-    
+
     // Show toast notification
     const versionText = version.game.version || t("download.timemachine.unknownVersion");
     const dateText = version.metadata?.getDate || t("download.timemachine.unknownDate");
-    
+
     toast.success(t("download.timemachine.versionChanged"), {
       description: t("download.timemachine.versionChangedDesc")
         .replace("{version}", versionText)
         .replace("{date}", dateText),
-      duration: 3000
+      duration: 3000,
     });
   };
 
@@ -71,7 +76,9 @@ export default function TimemachineDialog({ gameData, onVersionSelect, open, onO
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-2xl font-bold text-foreground">{t("download.timemachine.title")}</AlertDialogTitle>
+          <AlertDialogTitle className="text-2xl font-bold text-foreground">
+            {t("download.timemachine.title")}
+          </AlertDialogTitle>
           <AlertDialogDescription className="text-foreground">
             {t("download.timemachine.description").replace("{game}", gameData.game)}
           </AlertDialogDescription>
@@ -86,7 +93,7 @@ export default function TimemachineDialog({ gameData, onVersionSelect, open, onO
         ) : (
           <ScrollArea className="h-[300px] w-full">
             <div className="space-y-2 p-4">
-              {versions.map((version) => (
+              {versions.map(version => (
                 <Button
                   key={version.version}
                   variant="outline"
