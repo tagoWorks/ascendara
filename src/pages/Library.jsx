@@ -879,7 +879,7 @@ const InstalledGameCard = ({
                 <div className="text-center text-sm font-medium text-white">
                   <span className="flex items-center justify-center gap-2">
                     <Loader className="h-4 w-4 animate-spin" />
-                    {t("library.uninstalling")}
+                    {t("library.uninstallingGame")}
                   </span>
                 </div>
               </div>
