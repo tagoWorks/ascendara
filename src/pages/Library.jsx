@@ -257,31 +257,30 @@ const Library = () => {
 
   const handlePlayGame = async (game, forcePlay=false) => {
     const gameName = game.game || game.name;
-    setLaunchingGame(gameName);
-    console.log(game, forcePlay);
+    
     // Check if window.electron.isDev is true. Cannot run in developer mode
     if (await window.electron.ipcRenderer.invoke('is-dev')) {
       toast.error(t('library.cannotRunDev'))
-      setLaunchingGame(null);
       return;
     }
-    
 
     try {
       // First check if game is already running
       const isRunning = await window.electron.ipcRenderer.invoke('is-game-running', gameName);
       if (isRunning) {
         toast.error(t('library.alreadyRunning', { game: gameName }));
-        setLaunchingGame(null);
         return;
       }
 
       // Check if game is VR and show warning
       if (game.isVr && !forcePlay) {
         setShowVrWarning(true);
-        setLaunchingGame(null);
         return;
       }
+
+      // Set launching state here after all checks pass
+      setLaunchingGame(gameName);
+      
       console.log("Launching game: ", gameName);
       // Launch the game
       await window.electron.ipcRenderer.invoke('play-game', gameName, game.isCustom);
@@ -541,7 +540,12 @@ const Library = () => {
           <ErrorDialog />
 
           {/* VR Warning Dialog */}
-          <AlertDialog open={showVrWarning} onOpenChange={setShowVrWarning}>
+          <AlertDialog 
+            open={showVrWarning} 
+            onOpenChange={(open) => {
+              setShowVrWarning(open);
+            }}
+          >
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('library.vrWarning.title')}</AlertDialogTitle>
@@ -561,7 +565,9 @@ const Library = () => {
                 </Button>
                 <Button className="text-secondary" onClick={() => {
                   setShowVrWarning(false);
-                  handlePlayGame(selectedGame, true);
+                  if (selectedGame) {
+                    handlePlayGame(selectedGame, true);
+                  }
                 }}>
                   {t('library.vrWarning.confirm')}
                 </Button>
