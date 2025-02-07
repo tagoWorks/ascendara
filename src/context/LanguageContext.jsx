@@ -5,7 +5,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import i18n, { loadLanguageAsync, languages, getClosestSupportedLanguage } from "../i18n";
+import i18n, { loadLanguageAsync, languages, getClosestSupportedLanguage } from "@/i18n";
 
 const LanguageContext = createContext();
 
@@ -59,8 +59,8 @@ export function LanguageProvider({ children }) {
 
   // Subscribe to i18next language changes
   useEffect(() => {
-    const handleLanguageChanged = lng => {
-      setLanguage(lng);
+    const handleLanguageChanged = language => {
+      setLanguage(language);
     };
 
     i18n.on("languageChanged", handleLanguageChanged);
@@ -93,10 +93,10 @@ export function LanguageProvider({ children }) {
     } catch (error) {
       console.error("Error updating language:", error);
       // Revert to previous language on error
-      setLanguage(prevLang => {
-        i18n.changeLanguage(prevLang);
-        loadLanguageAsync(prevLang);
-        return prevLang;
+      setLanguage(previous => {
+        i18n.changeLanguage(previous);
+        loadLanguageAsync(previous);
+        return previous;
       });
     }
   }, []);
