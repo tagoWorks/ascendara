@@ -40,11 +40,13 @@ import {
   Loader,
   MessageSquareWarning,
   TriangleAlert,
+  History,
   Zap,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import TimemachineDialog from "@/components/TimemachineDialog";
 
 const isValidURL = (url, provider) => {
   const trimmedUrl = url.trim();
@@ -98,7 +100,7 @@ export default function DownloadPage() {
   const { state } = useLocation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { gameData } = state || {};
+  const [gameData, setGameData] = useState(state?.gameData);
   const { t } = useLanguage();
 
   // Clear data when leaving the page
@@ -150,6 +152,8 @@ export default function DownloadPage() {
   const [isReporting, setIsReporting] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [reportDetails, setReportDetails] = useState("");
+  const [timemachineSetting, setTimemachineSetting] = useState(false);
+  const [showTimemachineSelection, setShowTimemachineSelection] = useState(false);
   const [showNewUserGuide, setShowNewUserGuide] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
   const [guideImages, setGuideImages] = useState({});
@@ -416,6 +420,15 @@ export default function DownloadPage() {
     setShowNewUserGuide(false);
     setGuideStep(0);
   };
+
+  useEffect(() => {
+    const getShowOldDownloadLinksSetting = async () => {
+      const settings = await window.electron.getSettings();
+      setTimemachineSetting(settings.showOldDownloadLinks);
+    };
+    getShowOldDownloadLinksSetting();
+  }, []);
+
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -804,7 +817,7 @@ export default function DownloadPage() {
 
               <div className="flex items-center gap-2">
                 {gameData.emulator && (
-                  <span className="flex items-center rounded bg-yellow-500/10 px-2 py-0.5 text-sm text-yellow-500">
+                  <span className="flex items-center gap-1 rounded bg-yellow-500/10 px-2 py-0.5 text-sm text-yellow-500">
                     <CircleSlash className="mr-1 h-4 w-4" />{" "}
                     {t("download.gameNeedsEmulator")}&nbsp;
                     <a
@@ -854,8 +867,11 @@ export default function DownloadPage() {
 
               <div className="mb-2 mt-4 flex items-center gap-2">
                 {gameData.version && (
-                  <span className="rounded bg-primary/10 px-2 py-0.5 text-sm text-primary">
+                  <span className="flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-sm text-primary">
                     {gameData.version}
+                    {timemachineSetting && (
+                      <History onClick={() => setShowTimemachineSelection(true)} className="h-4 w-4 cursor-pointer" />
+                    )}
                   </span>
                 )}
                 {gameData.online && (
@@ -1301,6 +1317,15 @@ export default function DownloadPage() {
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+
+      {gameData && (
+        <TimemachineDialog 
+          gameData={gameData}
+          onVersionSelect={(version) => setGameData(version)} 
+          open={showTimemachineSelection}
+          onOpenChange={setShowTimemachineSelection}
+        />
+      )}
     </div>
   );
 }

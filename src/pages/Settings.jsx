@@ -166,6 +166,7 @@ function Settings() {
   const [settings, setSettings] = useState({
     downloadDirectory: "",
     viewOldDownloadLinks: false,
+    showOldDownloadLinks: false,
     seeInappropriateContent: false,
     autoCreateShortcuts: true,
     sendAnalytics: true,
@@ -551,6 +552,26 @@ function Settings() {
                       checked={settings.autoUpdate}
                       onCheckedChange={() =>
                         handleSettingChange({ autoUpdate: !settings.autoUpdate })
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("settings.showOldDownloadLinks")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("settings.showOldDownloadLinksDescription")}
+                        <br />
+                        <a onClick={() => window.electron.openURL("https://ascendara.app/docs/features/overview#ascendara-timemachine")} className="cursor-pointer text-primary hover:underline">{t("common.learnMore")} 
+                        <ExternalLink className="h-3 w-3 inline-block mb-1 ml-1" /></a>
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.showOldDownloadLinks}
+                      onCheckedChange={() =>
+                        handleSettingChange({
+                          showOldDownloadLinks: !settings.showOldDownloadLinks,
+                        })
                       }
                     />
                   </div>

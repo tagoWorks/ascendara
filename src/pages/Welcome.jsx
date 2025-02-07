@@ -237,6 +237,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
     downloadDirectory: "",
     viewOldDownloadLinks: false,
     seeInappropriateContent: false,
+    showOldDownloadLinks: false,
     autoCreateShortcuts: true,
     sendAnalytics: true,
     autoUpdate: true,
