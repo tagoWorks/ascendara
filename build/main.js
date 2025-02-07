@@ -4,7 +4,7 @@
  *    The best way to test games before you buy them.
  *       =====================================
  * 
- * This is the main process file for , built with Electron.
+ * This is the main process file for Ascendara, built with Electron.
  * It handles core functionality including:
  * 
  * - Application lifecycle management

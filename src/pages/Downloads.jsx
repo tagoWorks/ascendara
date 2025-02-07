@@ -349,7 +349,7 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
   };
 
   useEffect(() => {
-    if (hasError && !wasReported && downloadingData.message !== 'content_type_error') {
+    if (hasError && !wasReported && downloadingData.message !== 'content_type_error' && downloadingData.message !== 'no_files_error') {
       handleReport();
     }
   }, [hasError, wasReported]);
@@ -418,13 +418,23 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                       {t('common.learnMore')} <ExternalLink className="inline-block mb-1 h-3 w-3" />
                     </a>
                   </p>
+                ) || downloadingData.message === 'no_files_error' && (
+                  <p className="text-sm text-muted-foreground">
+                    {t('downloads.noFilesError')}<br />
+                    <a 
+                      onClick={() => window.electron.openURL('https://ascendara.app/docs/troubleshooting/common-issues#download-issues')}
+                      className="text-primary cursor-pointer hover:underline"
+                    >
+                      {t('common.learnMore')} <ExternalLink className="inline-block mb-1 h-3 w-3" />
+                    </a>
+                  </p>
                 ) || (
                   <p className="text-sm text-muted-foreground">
                     {downloadingData.message}
                   </p>
                 )}
                 <div className="flex items-center space-x-2 pt-1">
-                  {downloadingData.message !== 'content_type_error' && (
+                  {downloadingData.message !== 'content_type_error' && downloadingData.message !== 'no_files_error' && (
                     <Button
                       variant="outline"
                       size="sm"
