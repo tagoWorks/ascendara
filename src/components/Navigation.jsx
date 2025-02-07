@@ -114,7 +114,6 @@ const Navigation = memo(({ items }) => {
     /**  @param {KeyboardEvent} event */
     const handleCtrlNavigation = event => {
       if (!(event.ctrlKey || event.metaKey)) return;
-      console.log("button pressed");
       switch (event.key) {
         case "1": {
           navigate("/");
