@@ -87,7 +87,7 @@ contextBridge.exposeInMainWorld('electron', {
   installDependencies: () => ipcRenderer.invoke('install-dependencies'),
   stopDownload: (game) => ipcRenderer.invoke('stop-download', game),
   retryDownload: (link, game, online, dlc, version) => ipcRenderer.invoke('retry-download', link, game, online, dlc, version),
-  downloadFile: (link, game, online, dlc, version, imgID, size) => ipcRenderer.invoke('download-file', link, game, online, dlc, version, imgID, size),
+  downloadFile: (link, game, online, dlc, isVr, version, imgID, size) => ipcRenderer.invoke('download-file', link, game, online, dlc, isVr, version, imgID, size),
   checkRetryExtract: (game) => ipcRenderer.invoke('check-retry-extract', game),
   retryExtract: (game, online, dlc, version) => ipcRenderer.invoke('retry-extract', game, online, dlc, version),
 
