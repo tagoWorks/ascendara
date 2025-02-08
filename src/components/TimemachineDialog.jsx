@@ -117,7 +117,9 @@ export default function TimemachineDialog({
         )}
 
         <AlertDialogFooter>
-          <AlertDialogCancel className="text-foreground">{t("download.timemachine.cancel")}</AlertDialogCancel>
+          <AlertDialogCancel className="text-foreground">
+            {t("download.timemachine.cancel")}
+          </AlertDialogCancel>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
