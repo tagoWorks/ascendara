@@ -18,7 +18,6 @@ import {
 import {
   ShieldAlert,
   Languages,
-  Zap,
   Loader,
   Hand,
   RefreshCw,
@@ -26,6 +25,8 @@ import {
   CircleCheck,
   AlertCircle,
   ExternalLink,
+  History,
+  ChartNoAxesCombined,
 } from "lucide-react";
 import gameService from "@/services/gameService";
 import { useNavigate } from "react-router-dom";
@@ -561,35 +562,6 @@ function Settings() {
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>{t("settings.showOldDownloadLinks")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("settings.showOldDownloadLinksDescription")}
-                        <br />
-                        <a
-                          onClick={() =>
-                            window.electron.openURL(
-                              "https://ascendara.app/docs/features/overview#ascendara-timemachine"
-                            )
-                          }
-                          className="cursor-pointer text-primary hover:underline"
-                        >
-                          {t("common.learnMore")}
-                          <ExternalLink className="mb-1 ml-1 inline-block h-3 w-3" />
-                        </a>
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.showOldDownloadLinks}
-                      onCheckedChange={() =>
-                        handleSettingChange({
-                          showOldDownloadLinks: !settings.showOldDownloadLinks,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
                       <Label>{t("settings.matureContent")}</Label>
                       <p className="text-sm text-muted-foreground">
                         {t("settings.matureContentDescription")}
@@ -870,55 +842,103 @@ function Settings() {
 
           {/* Right Column - Additional Settings */}
           <div className="space-y-6 lg:col-span-4">
+
             {/* Analytics Card */}
             <Card className="p-6">
+              <div className="flex items-center gap-2 mb-2">
+                <ChartNoAxesCombined className="h-5 w-5 text-primary mb-2" />
+                <h2 className="text-xl font-semibold text-primary">
+                  {t("settings.ascendaraAnalytics")}
+                </h2>
+              </div>
               <div className="space-y-6">
-                <div>
-                  <h2 className="mb-4 text-xl font-semibold text-primary">
-                    {t("settings.ascendaraAnalytics")}
-                  </h2>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>{t("settings.ascendaraToggleAnalytics")}</Label>
-                        <p className="text-sm text-muted-foreground">
-                          {t("settings.ascendaraAnalyticsDescription")}{" "}
-                          <a
-                            className="cursor-pointer text-primary hover:underline"
-                            onClick={() =>
-                              window.electron.openURL("https://ascendara.app/analytics")
-                            }
-                          >
-                            {t("common.learnMore")}{" "}
-                            <ExternalLink className="mb-1 inline-block h-3 w-3" />
-                          </a>
-                        </p>
-                      </div>
-                      <Switch
-                        checked={settings.sendAnalytics}
-                        onCheckedChange={() =>
-                          handleSettingChange({ sendAnalytics: !settings.sendAnalytics })
-                        }
-                      />
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {t("settings.ascendaraAnalyticsDescription")}&nbsp;
+                    <a
+                          className="text-xs text-primary hover:underline cursor-pointer inline-flex items-center"
+                          onClick={() =>
+                            window.electron.openURL("https://ascendara.app/analytics")
+                          }
+                        >
+                          {t("common.learnMore")}
+                          <ExternalLink className="ml-1 h-3 w-3" />
+                        </a>
+                  </p>
+                  <div className="flex items-center justify-between space-x-4">
+                    <div className="space-y-1">
+                      <Label className="text-sm font-medium">
+                        {t("settings.ascendaraToggleAnalytics")}
+                      </Label>
                     </div>
+                    <Switch
+                      checked={settings.sendAnalytics}
+                      onCheckedChange={() =>
+                        handleSettingChange({ sendAnalytics: !settings.sendAnalytics })
+                      }
+                    />
                   </div>
                 </div>
               </div>
             </Card>
 
-            {/* Language Settings Card */}
+            {/* Timemachine Card */}
             <Card className="p-6">
-              <h2 className="mb-4 text-xl font-semibold text-primary">
-                {t("settings.languageSettings")}
-              </h2>
+              <div className="flex items-center gap-2 mb-2">
+                <History className="h-5 w-5 text-primary mb-2" />
+                <h2 className="text-xl font-semibold text-primary">
+                  {t("settings.ascendaraTimechine")}
+                </h2>
+              </div>
               <div className="space-y-6">
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Languages className="h-5 w-5 text-primary" />
-                    <p className="text-sm text-muted-foreground">
-                      {t("settings.languageSettingsDescription")}
-                    </p>
+                  <p className="text-sm text-muted-foreground">
+                    {t("settings.showOldDownloadLinksDescription")}&nbsp;
+                    <a
+                      onClick={() =>
+                        window.electron.openURL(
+                          "https://ascendara.app/docs/features/overview#ascendara-timemachine"
+                        )
+                      }
+                      className="text-xs text-primary hover:underline cursor-pointer inline-flex items-center"
+                    >
+                      {t("common.learnMore")}
+                      <ExternalLink className="ml-1 h-3 w-3" />
+                    </a>
+                  </p>
+                  <div className="flex items-center justify-between space-x-4">
+                    <div className="space-y-1">
+                      <Label className="text-sm font-medium">
+                        {t("settings.enableAscendaraTimechine")}
+                      </Label>
+                    </div>
+                    <Switch
+                      checked={settings.showOldDownloadLinks}
+                      onCheckedChange={() =>
+                        handleSettingChange({
+                          showOldDownloadLinks: !settings.showOldDownloadLinks,
+                        })
+                      }
+                    />
                   </div>
+                </div>
+              </div>
+            </Card>
+
+
+            {/* Language Settings Card */}
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-2">
+                <Languages className="h-5 w-5 text-primary mb-2" />
+                <h2 className="text-xl font-semibold text-primary">
+                  {t("settings.languageSettings")}
+                </h2>
+              </div>
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {t("settings.languageSettingsDescription")}
+                  </p>
                   <Select value={settings.language} onValueChange={handleLanguageChange}>
                     <SelectTrigger className="w-full">
                       <SelectValue>
@@ -952,30 +972,28 @@ function Settings() {
 
             {/* Install Game Dependencies Card */}
             <Card className="p-6">
-              <h2 className="mb-4 text-xl font-semibold text-primary">
-                {t("settings.installGameDependencies")}
-              </h2>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  {getDependencyStatusInfo.icon}
-                  <span className={`text-sm ${getDependencyStatusInfo.color}`}>
-                    {getDependencyStatusInfo.text}
-                  </span>
-                </div>
+              <div className="flex items-center gap-2 mb-2">
+                <ShieldAlert className="h-5 w-5 text-primary mb-2" />
+                <h2 className="text-xl font-semibold text-primary">
+                  {t("settings.installGameDependencies")}
+                </h2>
+              </div>
+              <div className="space-y-6">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm text-muted-foreground">
-                      {t("settings.reinstallDependenciesDesc")}
-                    </p>
+                    <span className={`text-sm ${getDependencyStatusInfo.color}`}>
+                      {getDependencyStatusInfo.text}
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <Button
-                      onClick={() => navigate("/dependencies")}
-                      className="flex w-full items-center gap-2 text-secondary"
-                    >
-                      {t("settings.manageDependencies")}
-                    </Button>
-                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {t("settings.reinstallDependenciesDesc")}
+                  </p>
+                  <Button
+                    onClick={() => navigate("/dependencies")}
+                    className="w-full flex items-center gap-2 text-secondary"
+                  >
+                    {t("settings.manageDependencies")}
+                  </Button>
                 </div>
               </div>
             </Card>
