@@ -74,7 +74,15 @@ def move_files():
             src_path = os.path.join(assets_dir, file)
             dst_path = os.path.join('build', file)
             shutil.move(src_path, dst_path)
-        
+
+        # Guide directory
+        guide_dir = 'src/dist/guide'
+        for file in os.listdir(guide_dir):
+            src_path = os.path.join(guide_dir, file)
+            os.makedirs(os.path.join('build', 'guide'), exist_ok=True)
+            dst_path = os.path.join('build', 'guide', file)
+            shutil.move(src_path, dst_path)
+
         # Move icon.png and no-image.png if they exist
         image_files = ['icon.png', 'no-image.png']
         for image in image_files:
