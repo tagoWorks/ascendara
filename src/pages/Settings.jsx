@@ -842,11 +842,10 @@ function Settings() {
 
           {/* Right Column - Additional Settings */}
           <div className="space-y-6 lg:col-span-4">
-
             {/* Analytics Card */}
             <Card className="p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <ChartNoAxesCombined className="h-5 w-5 text-primary mb-2" />
+              <div className="mb-2 flex items-center gap-2">
+                <ChartNoAxesCombined className="mb-2 h-5 w-5 text-primary" />
                 <h2 className="text-xl font-semibold text-primary">
                   {t("settings.ascendaraAnalytics")}
                 </h2>
@@ -856,14 +855,14 @@ function Settings() {
                   <p className="text-sm text-muted-foreground">
                     {t("settings.ascendaraAnalyticsDescription")}&nbsp;
                     <a
-                          className="text-xs text-primary hover:underline cursor-pointer inline-flex items-center"
-                          onClick={() =>
-                            window.electron.openURL("https://ascendara.app/analytics")
-                          }
-                        >
-                          {t("common.learnMore")}
-                          <ExternalLink className="ml-1 h-3 w-3" />
-                        </a>
+                      className="inline-flex cursor-pointer items-center text-xs text-primary hover:underline"
+                      onClick={() =>
+                        window.electron.openURL("https://ascendara.app/analytics")
+                      }
+                    >
+                      {t("common.learnMore")}
+                      <ExternalLink className="ml-1 h-3 w-3" />
+                    </a>
                   </p>
                   <div className="flex items-center justify-between space-x-4">
                     <div className="space-y-1">
@@ -884,8 +883,8 @@ function Settings() {
 
             {/* Timemachine Card */}
             <Card className="p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <History className="h-5 w-5 text-primary mb-2" />
+              <div className="mb-2 flex items-center gap-2">
+                <History className="mb-2 h-5 w-5 text-primary" />
                 <h2 className="text-xl font-semibold text-primary">
                   {t("settings.ascendaraTimechine")}
                 </h2>
@@ -900,7 +899,7 @@ function Settings() {
                           "https://ascendara.app/docs/features/overview#ascendara-timemachine"
                         )
                       }
-                      className="text-xs text-primary hover:underline cursor-pointer inline-flex items-center"
+                      className="inline-flex cursor-pointer items-center text-xs text-primary hover:underline"
                     >
                       {t("common.learnMore")}
                       <ExternalLink className="ml-1 h-3 w-3" />
@@ -925,11 +924,10 @@ function Settings() {
               </div>
             </Card>
 
-
             {/* Language Settings Card */}
             <Card className="p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <Languages className="h-5 w-5 text-primary mb-2" />
+              <div className="mb-2 flex items-center gap-2">
+                <Languages className="mb-2 h-5 w-5 text-primary" />
                 <h2 className="text-xl font-semibold text-primary">
                   {t("settings.languageSettings")}
                 </h2>
@@ -972,8 +970,8 @@ function Settings() {
 
             {/* Install Game Dependencies Card */}
             <Card className="p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <ShieldAlert className="h-5 w-5 text-primary mb-2" />
+              <div className="mb-2 flex items-center gap-2">
+                <ShieldAlert className="mb-2 h-5 w-5 text-primary" />
                 <h2 className="text-xl font-semibold text-primary">
                   {t("settings.installGameDependencies")}
                 </h2>
@@ -990,7 +988,7 @@ function Settings() {
                   </p>
                   <Button
                     onClick={() => navigate("/dependencies")}
-                    className="w-full flex items-center gap-2 text-secondary"
+                    className="flex w-full items-center gap-2 text-secondary"
                   >
                     {t("settings.manageDependencies")}
                   </Button>
