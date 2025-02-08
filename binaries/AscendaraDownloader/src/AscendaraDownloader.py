@@ -173,6 +173,7 @@ class DownloadManager:
         self.chunks = []
         self.downloaded_size = 0
         self.lock = threading.Lock()
+        self.max_retries = 3  # Maximum number of retries per chunk
         
     def split_chunks(self):
         chunk_size = self.total_size // self.num_threads
@@ -182,18 +183,55 @@ class DownloadManager:
             self.chunks.append(DownloadChunk(start, end, self.url))
             
     def download_chunk(self, chunk, session, callback=None):
-        headers = {'Range': f'bytes={chunk.start}-{chunk.end}'}
-        response = session.get(chunk.url, headers=headers, stream=True)
+        headers = {
+            'Range': f'bytes={chunk.start}-{chunk.end}',
+            'Connection': 'keep-alive',
+            'Keep-Alive': '300'
+        }
         
-        for data in response.iter_content(chunk_size=1024*1024):
-            if not data:
-                break
-            chunk.data += data
-            chunk.downloaded += len(data)
-            with self.lock:
-                self.downloaded_size += len(data)
-                if callback:
-                    callback(len(data))
+        retries = 0
+        while retries < self.max_retries:
+            try:
+                response = session.get(chunk.url, headers=headers, stream=True, timeout=(30, 300))
+                response.raise_for_status()
+                
+                # Verify we got the expected content length
+                expected_size = chunk.end - chunk.start + 1
+                content_length = int(response.headers.get('content-length', 0))
+                if content_length and content_length != expected_size:
+                    raise ValueError(f"Received content length {content_length} does not match expected size {expected_size}")
+                
+                chunk.data = bytearray()  # Use bytearray for more efficient appending
+                
+                for data in response.iter_content(chunk_size=1024*1024):
+                    if not data:
+                        break
+                    chunk.data.extend(data)
+                    chunk.downloaded += len(data)
+                    with self.lock:
+                        self.downloaded_size += len(data)
+                        if callback:
+                            callback(len(data))
+                
+                # Verify the downloaded size matches expected size
+                if len(chunk.data) != expected_size:
+                    raise ValueError(f"Downloaded size {len(chunk.data)} does not match expected size {expected_size}")
+                
+                return  # Success, exit the retry loop
+                
+            except (requests.exceptions.RequestException, ValueError) as e:
+                retries += 1
+                if retries >= self.max_retries:
+                    raise Exception(f"Failed to download chunk after {self.max_retries} retries: {str(e)}")
+                
+                # Reset chunk data and downloaded count before retry
+                chunk.data = bytearray()
+                with self.lock:
+                    self.downloaded_size -= chunk.downloaded
+                chunk.downloaded = 0
+                
+                # Wait before retrying with exponential backoff
+                time.sleep(2 ** retries)
 
 def download_file(link, game, online, dlc, isVr, version, size, download_dir):
     game = sanitize_folder_name(game)
@@ -224,9 +262,19 @@ def download_file(link, game, online, dlc, isVr, version, size, download_dir):
     def download_with_requests():
         session = requests.Session()
         session.mount('https://', SSLContextAdapter())
+        
+        # Configure the session for better reliability
+        adapter = requests.adapters.HTTPAdapter(
+            max_retries=3,
+            pool_connections=10,
+            pool_maxsize=10
+        )
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        
         try:
             # Get file info first
-            response = session.head(link, timeout=(10, 30))
+            response = session.head(link, timeout=(30, 60))
             response.raise_for_status()
             content_type = response.headers.get('Content-Type')
             if content_type and 'text/html' in content_type:
@@ -236,7 +284,7 @@ def download_file(link, game, online, dlc, isVr, version, size, download_dir):
             
             # If HEAD request didn't give us the size, try a GET request
             if total_size == 0:
-                response = session.get(link, stream=True, timeout=(10, 30))
+                response = session.get(link, stream=True, timeout=(30, 60))
                 response.raise_for_status()
                 total_size = int(response.headers.get('content-length', 0) or 0)
 
