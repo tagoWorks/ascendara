@@ -4,8 +4,8 @@
   "main": "main.js",
   "description": "Skip extracting files, navigating setup processes, or any unnecessary hassles.",
   "scripts": {
-    "dev": "vite --mode development ./src",
-    "build": "vite build ./src",
+    "dev": "vite --mode development",
+    "build": "vite build",
     "build-react": "npm run build && electron-builder",
     "electron": "electron ./build/main.js",
     "start": "concurrently \"vite\" \"wait-on tcp:5173 && electron ./build/main.js\"",
