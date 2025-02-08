@@ -18,12 +18,15 @@ Ascendara simplifies your pirating experience by providing a seamless way to dow
 
 ## ✨ Features
 
-- 🌐 Support for 9 total languages
+- 🌐 Support for 12 total languages
 <details>
 <summary>Click to expand</summary>
     
 - English 
 - Spanish
+- French
+- German
+- Italian
 - Chinese
 - Arabic 
 - Hindi
