@@ -85,7 +85,7 @@ export default function TimemachineDialog({
         </AlertDialogHeader>
 
         {loading ? (
-          <div className="flex items-center justify-center p-4">
+          <div className="flex items-center justify-center p-4 text-foreground">
             {t("download.timemachine.loading")}
           </div>
         ) : error ? (
@@ -101,7 +101,7 @@ export default function TimemachineDialog({
                   onClick={() => handleVersionSelect(version)}
                 >
                   <div className="flex flex-col items-start">
-                    <div className="font-medium">
+                    <div className="font-medium text-foreground">
                       {version.game.version || t("download.timemachine.unknownVersion")}
                     </div>
                     {version.metadata?.getDate && (
@@ -117,7 +117,7 @@ export default function TimemachineDialog({
         )}
 
         <AlertDialogFooter>
-          <AlertDialogCancel>{t("download.timemachine.cancel")}</AlertDialogCancel>
+          <AlertDialogCancel className="text-foreground">{t("download.timemachine.cancel")}</AlertDialogCancel>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
