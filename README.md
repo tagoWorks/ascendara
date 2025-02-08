@@ -39,8 +39,8 @@ Ascendara simplifies your pirating experience by providing a seamless way to dow
 
 - 🎯 2 Clicks to start game downloads
 - 📖 Detailed documentation for users & developers
-- 📚 Organized game library management
-- 🔍 Smart search functionality
+- 🕑 Ascendara Timemachine to download old versions of games
+- 🔍 Filter searches and organized game library
 - 🔄 Regular updates
 - 🎨 Customizable themes
 
