@@ -58,12 +58,12 @@ Before building, ensure you have all required dependencies. [View full requireme
 - [ ] Endpoint for known games that have weird installation paths, issues, etc.
 - [ ] Retry Download & Extract functionality
 - [ ] Enhanced antivirus operation checks
-- [ ] Legacy game version support
 - [ ] Improved download management (pausing, resuming)
 
 ### ✅ Completed Features
 
 - [x] Complete UI overhaul (V7)
+- [x] Legacy game version support (Ascendara Timemachine)
 - [x] Automatic shortcut creation
 - [x] Enhanced search algorithms
 - [x] Theme customization
