@@ -96,6 +96,37 @@ Before building, ensure you have all required dependencies. [View full requireme
    npm run dist
    ```
 
+## 🗺️ Development Roadmap
+
+### Current Goals
+- [ ] Endpoint for known games that have weird installation paths, issues, etc.
+- [ ] Improved download management (pausing, resuming)
+
+### Future Goals
+ > Want to suggest a feature you dont see here? [Contribute](https://ascendara.app/docs/getting-started/contributing) to Ascendara or [submit feedback](https://ascendara.app/feedback)!
+
+- [ ] Add semi-support for Linux, and macOS
+- [ ] Retry Download & Extract functionality
+- [ ] Enhanced antivirus operation checks
+
+### Completed Features
+- [x] Complete UI overhaul (V7)
+- [x] Legacy game version support (Ascendara Timemachine)
+- [x] Automatic shortcut creation
+- [x] Enhanced search algorithms
+- [x] Theme customization
+- [x] Game dependencies reinstallation option
+- [x] Advanced filtering options
+- [x] Comprehensive tooltips
+- [x] Page population
+- [x] Welcome screens
+- [x] Improved tab navigation
+- [x] Separate library, downloads, and browse sections
+- [x] Custom game addition support
+- [x] Public API creation
+- [x] Popularity-based sorting
+
+
 ## 📝 License & Contact
 
 Licensed under [CC BY-NC 1.0 Universal](./LICENSE) - 2025 tagoWorks
