@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import imageCacheService from '../services/imageCacheService';
+import { useState, useEffect } from "react";
+import imageCacheService from "@/services/imageCacheService";
 
 // Track which images are currently being loaded to prevent duplicate requests
 const loadingImages = new Map();
@@ -9,7 +9,7 @@ export function useImageLoader(imgID, shouldLoad = true) {
   const [state, setState] = useState({
     cachedImage: null,
     loading: false,
-    error: null
+    error: null,
   });
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export function useImageLoader(imgID, shouldLoad = true) {
           setState({
             cachedImage: null,
             loading: false,
-            error: null
+            error: null,
           });
         }
         return;
@@ -36,7 +36,7 @@ export function useImageLoader(imgID, shouldLoad = true) {
             setState({
               cachedImage: cached,
               loading: false,
-              error: cached ? null : 'Failed to load image'
+              error: cached ? null : "Failed to load image",
             });
           }
         } catch (error) {
@@ -44,7 +44,7 @@ export function useImageLoader(imgID, shouldLoad = true) {
             setState({
               cachedImage: null,
               loading: false,
-              error: error.message || 'Failed to load image'
+              error: error.message || "Failed to load image",
             });
           }
         }
@@ -53,18 +53,18 @@ export function useImageLoader(imgID, shouldLoad = true) {
 
       try {
         setState(prev => ({ ...prev, loading: true, error: null }));
-        
+
         // Create and store the loading promise
         const loadPromise = imageCacheService.getImage(imgID);
         loadingImages.set(imgID, loadPromise);
-        
+
         const cached = await loadPromise;
-        
+
         if (mounted) {
           setState({
             cachedImage: cached,
             loading: false,
-            error: cached ? null : 'Failed to load image'
+            error: cached ? null : "Failed to load image",
           });
         }
       } catch (error) {
@@ -72,7 +72,7 @@ export function useImageLoader(imgID, shouldLoad = true) {
           setState({
             cachedImage: null,
             loading: false,
-            error: error.message || 'Failed to load image'
+            error: error.message || "Failed to load image",
           });
         }
       } finally {

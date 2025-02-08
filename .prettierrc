@@ -1,0 +1,19 @@
+{
+  "useTabs": false,
+  "tabWidth": 2,
+  "arrowParens": "avoid",
+  "printWidth": 90,
+  "endOfLine": "lf",
+  "trailingComma": "es5",
+  "singleQuote": false,
+  "overrides": [
+    {
+      "files": ["./src/translations/*.json"],
+      "options": {
+        "plugins": ["prettier-plugin-sort-json"],
+        "jsonRecursiveSort": true
+      }
+    }
+  ],
+  "plugins": ["prettier-plugin-tailwindcss"]
+}

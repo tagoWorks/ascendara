@@ -1,27 +1,28 @@
 const ENDPOINTS = {
-  api: 'https://api.ascendara.app/health',
-  storage: 'https://cdn.ascendara.app/health',
-  lfs: 'https://lfs.ascendara.app/health'
+  api: "https://api.ascendara.app/health",
+  storage: "https://cdn.ascendara.app/health",
+  lfs: "https://lfs.ascendara.app/health",
 };
 
-const checkEndpoint = async (url) => {
+const checkEndpoint = async url => {
   try {
     console.log(`Checking endpoint ${url}...`);
     const response = await window.electron.request(url, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Accept': 'application/json',
-        'X-Client': 'launcher-status-check'
+        Accept: "application/json",
+        "X-Client": "launcher-status-check",
       },
-      timeout: 5000
+      timeout: 5000,
     });
-    
+
     console.log(`Response from ${url}:`, response);
-    
+
     if (response.ok) {
       return {
         ok: true,
-        data: typeof response.data === 'string' ? JSON.parse(response.data) : response.data
+        data:
+          typeof response.data === "string" ? JSON.parse(response.data) : response.data,
       };
     }
     return { ok: false };
@@ -34,13 +35,13 @@ const checkEndpoint = async (url) => {
 const checkInternetConnectivity = async () => {
   try {
     // Try to fetch a reliable external resource
-    const response = await window.electron.request('https://www.google.com/', {
-      method: 'HEAD',
-      timeout: 5000
+    const response = await window.electron.request("https://www.google.com/", {
+      method: "HEAD",
+      timeout: 5000,
     });
     return response.ok;
   } catch (error) {
-    console.warn('Internet connectivity check failed:', error);
+    console.warn("Internet connectivity check failed:", error);
     return false;
   }
 };
@@ -50,7 +51,7 @@ let currentStatus = {
   ok: true, // Start optimistically
   api: { ok: true },
   storage: { ok: true },
-  lfs: { ok: true }
+  lfs: { ok: true },
 };
 let lastCheck = null;
 let checkInterval = null;
@@ -60,21 +61,21 @@ const CACHE_DURATION = 10000; // 10 seconds
 
 export const checkServerStatus = async (force = false) => {
   // Return cached status if available and not forced
-  if (!force && currentStatus && lastCheck && (Date.now() - lastCheck < CACHE_DURATION)) {
+  if (!force && currentStatus && lastCheck && Date.now() - lastCheck < CACHE_DURATION) {
     return currentStatus;
   }
 
   try {
     // First check internet connectivity
     const isOnline = await checkInternetConnectivity();
-    
+
     if (!isOnline) {
-      currentStatus = { 
-        ok: false, 
+      currentStatus = {
+        ok: false,
         api: { ok: false },
         storage: { ok: false },
         lfs: { ok: false },
-        message: 'No internet connection'
+        message: "No internet connection",
       };
       lastCheck = Date.now();
       notifySubscribers();
@@ -84,21 +85,21 @@ export const checkServerStatus = async (force = false) => {
     const results = await Promise.all([
       checkEndpoint(ENDPOINTS.api),
       checkEndpoint(ENDPOINTS.storage),
-      checkEndpoint(ENDPOINTS.lfs)
+      checkEndpoint(ENDPOINTS.lfs),
     ]);
 
     currentStatus = {
       ok: results.every(r => r.ok),
       api: results[0],
       storage: results[1],
-      lfs: results[2]
+      lfs: results[2],
     };
-    
+
     lastCheck = Date.now();
     notifySubscribers();
     return currentStatus;
   } catch (error) {
-    console.error('Error checking server status:', error);
+    console.error("Error checking server status:", error);
     // Don't update status on error, keep previous status
     return currentStatus;
   }
@@ -110,7 +111,7 @@ const notifySubscribers = () => {
 };
 
 // Subscribe to status updates
-export const subscribeToStatus = (callback) => {
+export const subscribeToStatus = callback => {
   subscribers.add(callback);
   // Return unsubscribe function
   return () => subscribers.delete(callback);
@@ -121,14 +122,14 @@ export const startStatusCheck = (interval = 30000) => {
   if (checkInterval) {
     clearInterval(checkInterval);
   }
-  
+
   // Do an immediate check
   checkServerStatus(true).catch(console.error);
-  
+
   checkInterval = setInterval(() => {
     checkServerStatus(true).catch(console.error);
   }, interval);
-  
+
   return () => {
     if (checkInterval) {
       clearInterval(checkInterval);

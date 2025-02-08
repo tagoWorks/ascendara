@@ -1,13 +1,18 @@
-import React, { useMemo, useEffect } from 'react';
-import { Badge } from "../components/ui/badge";
-import { ScrollArea } from "../components/ui/scroll-area";
+import React, { useMemo, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-function CategoryFilter({ selectedCategories, setSelectedCategories, games, showMatureCategories }) {
+function CategoryFilter({
+  selectedCategories,
+  setSelectedCategories,
+  games,
+  showMatureCategories,
+}) {
   const categories = useMemo(() => {
     const allCategories = new Set();
     games.forEach(game => {
       game.category?.forEach(category => {
-        if (showMatureCategories || category !== 'Nudity') {
+        if (showMatureCategories || category !== "Nudity") {
           allCategories.add(category);
         }
       });
@@ -17,11 +22,11 @@ function CategoryFilter({ selectedCategories, setSelectedCategories, games, show
 
   useEffect(() => {
     if (!showMatureCategories) {
-      setSelectedCategories(prev => prev.filter(cat => cat !== 'Nudity'));
+      setSelectedCategories(prev => prev.filter(cat => cat !== "Nudity"));
     }
   }, [showMatureCategories, setSelectedCategories]);
 
-  const toggleCategory = (category) => {
+  const toggleCategory = category => {
     if (selectedCategories.includes(category)) {
       setSelectedCategories(selectedCategories.filter(cat => cat !== category));
     } else {
@@ -32,11 +37,11 @@ function CategoryFilter({ selectedCategories, setSelectedCategories, games, show
   return (
     <ScrollArea className="w-full max-w-[600px]">
       <div className="flex flex-wrap gap-2 pb-2">
-        {categories.map((category) => (
+        {categories.map(category => (
           <Badge
             key={category}
             variant={selectedCategories.includes(category) ? "default" : "outline"}
-            className="cursor-pointer hover:opacity-80 transition-opacity"
+            className="cursor-pointer transition-opacity hover:opacity-80"
             onClick={() => toggleCategory(category)}
           >
             {category}
@@ -47,4 +52,4 @@ function CategoryFilter({ selectedCategories, setSelectedCategories, games, show
   );
 }
 
-export default CategoryFilter; 
+export default CategoryFilter;

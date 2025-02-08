@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquareText, TriangleAlert } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
-import ReportIssue from './ReportIssue';
-import './ContextMenu.css';
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MessageSquareText, TriangleAlert } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+import ReportIssue from "./ReportIssue";
+import "./ContextMenu.css";
 
 const ContextMenu = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -12,25 +12,25 @@ const ContextMenu = () => {
   const menuRef = useRef(null);
   const { t } = useLanguage();
 
-  const handleContextMenu = (e) => {
+  const handleContextMenu = e => {
     e.preventDefault();
     const x = e.clientX;
     const y = e.clientY;
-    
+
     // Ensure menu stays within viewport
     const menuWidth = 200; // Approximate menu width
     const menuHeight = 200; // Approximate menu height
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    
+
     const adjustedX = Math.min(x, viewportWidth - menuWidth);
     const adjustedY = Math.min(y, viewportHeight - menuHeight);
-    
+
     setPosition({ x: adjustedX, y: adjustedY });
     setIsVisible(true);
   };
 
-  const handleClickOutside = (e) => {
+  const handleClickOutside = e => {
     if (menuRef.current && !menuRef.current.contains(e.target)) {
       setIsVisible(false);
     }
@@ -42,17 +42,17 @@ const ContextMenu = () => {
   };
 
   const handleFeedback = () => {
-    window.electron.openURL('https://ascendara.app/feedback');
+    window.electron.openURL("https://ascendara.app/feedback");
     setIsVisible(false);
   };
 
   useEffect(() => {
     // Only attach listeners if we haven't already
     if (!window.__contextMenuListenersAttached) {
-      document.addEventListener('contextmenu', handleContextMenu);
-      document.addEventListener('click', handleClickOutside);
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') setIsVisible(false);
+      document.addEventListener("contextmenu", handleContextMenu);
+      document.addEventListener("click", handleClickOutside);
+      document.addEventListener("keydown", e => {
+        if (e.key === "Escape") setIsVisible(false);
       });
       window.__contextMenuListenersAttached = true;
     }
@@ -60,10 +60,10 @@ const ContextMenu = () => {
     return () => {
       // Only remove listeners if we're the last instance
       if (window.__contextMenuListenersAttached) {
-        document.removeEventListener('contextmenu', handleContextMenu);
-        document.removeEventListener('click', handleClickOutside);
-        document.removeEventListener('keydown', (e) => {
-          if (e.key === 'Escape') setIsVisible(false);
+        document.removeEventListener("contextmenu", handleContextMenu);
+        document.removeEventListener("click", handleClickOutside);
+        document.removeEventListener("keydown", e => {
+          if (e.key === "Escape") setIsVisible(false);
         });
         window.__contextMenuListenersAttached = false;
       }
@@ -82,20 +82,20 @@ const ContextMenu = () => {
             transition={{ duration: 0.1 }}
             className="context-menu"
             style={{
-              position: 'fixed',
+              position: "fixed",
               top: position.y,
               left: position.x,
-              zIndex: 1000
+              zIndex: 1000,
             }}
           >
             <div className="context-menu-content">
               <button onClick={handleReport} className="context-menu-item">
-                <TriangleAlert className="w-4 h-4 mr-2" />
-                {t('common.reportIssue')}
+                <TriangleAlert className="mr-2 h-4 w-4" />
+                {t("common.reportIssue")}
               </button>
               <button onClick={handleFeedback} className="context-menu-item">
-                <MessageSquareText className="w-4 h-4 mr-2" />
-                {t('common.giveFeedback')}
+                <MessageSquareText className="mr-2 h-4 w-4" />
+                {t("common.giveFeedback")}
               </button>
             </div>
           </motion.div>
