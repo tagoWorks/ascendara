@@ -12,7 +12,9 @@
     "dist": "python ./scripts/build_ascendara.py",
     "buildwithelectron": "electron-builder -c.extraMetadata.main=build/main.js",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "prepare": "husky",
+    "lint-staged": "lint-staged"
   },
   "dependencies": {
     "@million/lint": "^1.0.14",
@@ -79,6 +81,8 @@
     "electron-builder": "^24.13.3",
     "esbuild-wasm": "0.17.12",
     "html-to-image": "^1.11.11",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
     "postcss": "^8.4.21",
     "prettier": "^3.4.2",
     "prettier-plugin-sort-json": "4.1.1",
@@ -133,5 +137,10 @@
       "output": "dist",
       "buildResources": "build"
     }
+  },
+  "lint-staged": {
+    "*.{js,jsx,json,md,html,css}": [
+      "prettier --write"
+    ]
   }
 }
