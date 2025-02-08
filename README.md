@@ -66,16 +66,16 @@ Ascendara simplifies your pirating experience by providing a seamless way to dow
 
 </details>
 
+## 🤝 Contributing 
+
+Contributing to Ascendara is the best way to get your desired features, bug fixes, or improvements into the official build! When your contribution is accepted, your changes will be prominently featured in the Ascendara changelogs, giving you recognition for your valuable input to the project. Learn how to contribute to Ascendara [here](https://ascendara.app/docs/developer/contributing).
+
 ## 🛠️ Building from Source
 
 For detailed instructions, check out the [Developer Docs](https://ascendara.app/docs/developer/build-from-source).
 
 ### Prerequisites
 Before building, ensure you have all required dependencies. [View full requirements](https://ascendara.app/docs/developer/build-from-source#prerequisites).
-
-### 🤝 Contributing 
-
-Contributing to Ascendara is the best way to get your desired features, bug fixes, or improvements into the official build! When your contribution is accepted, your changes will be prominently featured in the Ascendara changelogs, giving you recognition for your valuable input to the project. Learn how to contribute to Ascendara [here](https://ascendara.app/docs/developer/contributing).
 
 ### Quick Start
 
