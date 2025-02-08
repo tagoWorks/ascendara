@@ -269,7 +269,7 @@ const Library = () => {
     const gameName = game.game || game.name;
 
     // Check if window.electron.isDev is true. Cannot run in developer mode
-    if (!await window.electron.ipcRenderer.invoke("is-dev")) {
+    if (await window.electron.ipcRenderer.invoke("is-dev")) {
       toast.error(t("library.cannotRunDev"));
       return;
     }
