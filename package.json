@@ -1,6 +1,6 @@
 {
   "name": "ascendara",
-  "version": "7.7.0",
+  "version": "7.7.1",
   "main": "main.js",
   "description": "Skip extracting files, navigating setup processes, or any unnecessary hassles.",
   "scripts": {
