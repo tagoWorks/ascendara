@@ -360,8 +360,8 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
       });
     } catch (error) {
       console.error("Failed to report error:", error);
-      toast.error(t("downloads.reportFailed"), {
-        description: t("downloads.reportFailedDescription"),
+      toast.error(t("common.reportDialog.couldNotReport"), {
+        description: t("common.reportDialog.couldNotReportDesc"),
       });
     } finally {
       setIsReporting(false);

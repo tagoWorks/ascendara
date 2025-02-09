@@ -133,7 +133,7 @@ const ReportIssue = ({ isOpen, onClose }) => {
 
     toast.promise(promise, {
       loading: t("common.reportDialog.submitting"),
-      success: t("common.reportDialog.submitted"),
+      success: t("common.reportDialog.success"),
       error: err => `${t("common.reportDialog.error")}: ${err.message}`,
     });
 

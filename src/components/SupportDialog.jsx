@@ -25,8 +25,8 @@ const SupportDialog = ({ onClose }) => {
         }
       } catch (error) {
         console.error("Error fetching token:", error);
-        toast.error(t("common.authFailed"), {
-          description: t("common.authFailedDesc"),
+        toast.error(t("common.reportDialog.authFailed"), {
+          description: t("common.reportDialog.authFailedDesc"),
         });
       }
     };
@@ -42,8 +42,8 @@ const SupportDialog = ({ onClose }) => {
     if (rating > 0) {
       if (!authToken) {
         console.error("No auth token available");
-        toast.error(t("common.authFailed"), {
-          description: t("common.authFailedDesc"),
+        toast.error(t("common.reportDialog.authFailed"), {
+          description: t("common.reportDialog.authFailedDesc"),
         });
         onClose();
         return;
@@ -62,8 +62,8 @@ const SupportDialog = ({ onClose }) => {
         }),
       }).catch(error => {
         console.error("Error sending rating:", error);
-        toast.error(t("common.ratingFailed"), {
-          description: t("common.ratingFailedDesc"),
+        toast.error(t("common.reportDialog.ratingFailed"), {
+          description: t("common.reportDialog.ratingFailedDesc"),
         });
       });
     }

@@ -671,7 +671,7 @@ export default function DownloadPage() {
     return (
       <div className="container mx-auto max-w-7xl p-6">
         <AlertDialog variant="destructive">
-          <AlertDialogDescription>{t("download.noGameData")}</AlertDialogDescription>
+          <AlertDialogDescription>{t("download.toast.noGameData")}</AlertDialogDescription>
         </AlertDialog>
       </div>
     );

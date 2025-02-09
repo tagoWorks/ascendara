@@ -1645,14 +1645,14 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 variants={itemVariants}
               >
                 <h2 className="text-4xl font-bold text-primary">
-                  {t("welcome.dependenciesInstalled")}
+                  {t("welcome.allRequiredDependenciesHaveBeenInstalledTitle")}
                 </h2>
               </motion.div>
               <motion.p
-                className="mb-8 max-w-2xl text-xl text-foreground/80"
+                className="mb-8 max-w-xl text-xl text-foreground/80"
                 variants={itemVariants}
               >
-                {t("welcome.allRequiredDependenciesHaveBeenInstalled")}
+                {t("welcome.allRequiredDependenciesHaveBeenInstalledDesc")}
               </motion.p>
 
               <motion.div
@@ -1661,7 +1661,7 @@ const Welcome = ({ welcomeData, onComplete }) => {
               >
                 <Button onClick={() => handleExit(true)} size="lg" className="px-8 py-6">
                   <Rocket className="mr-2 h-5 w-5" />
-                  {t("welcome.takeTheTour")}
+                  {t("welcome.takeTour")}
                 </Button>
                 <button
                   onClick={() => handleExit(false)}
