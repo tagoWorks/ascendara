@@ -164,7 +164,7 @@ const ReportIssue = ({ isOpen, onClose }) => {
             </Label>
             <Input
               id="reason"
-              className="text-primary"
+              className="text-foreground"
               value={reportReason}
               onChange={e => setReportReason(e.target.value)}
               placeholder={t("common.reportDialog.reasonPlaceholder")}
@@ -176,7 +176,7 @@ const ReportIssue = ({ isOpen, onClose }) => {
             </Label>
             <Textarea
               id="details"
-              className="text-primary"
+              className="text-foreground"
               value={details}
               onChange={e => setDetails(e.target.value)}
               placeholder={t("common.reportDialog.detailsPlaceholder")}
