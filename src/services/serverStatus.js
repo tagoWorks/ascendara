@@ -25,10 +25,16 @@ const checkEndpoint = async url => {
           typeof response.data === "string" ? JSON.parse(response.data) : response.data,
       };
     }
-    return { ok: false };
+    return { 
+      ok: false,
+      error: `Service Unavailable (${response.status})`,
+    };
   } catch (error) {
     console.warn(`Failed to check ${url}:`, error);
-    return { ok: false };
+    return { 
+      ok: false,
+      error: 'Service Unreachable'
+    };
   }
 };
 
@@ -49,6 +55,7 @@ const checkInternetConnectivity = async () => {
 // Singleton state
 let currentStatus = {
   ok: true, // Start optimistically
+  noInternet: false,
   api: { ok: true },
   storage: { ok: true },
   lfs: { ok: true },
@@ -69,19 +76,21 @@ export const checkServerStatus = async (force = false) => {
     // First check internet connectivity
     const isOnline = await checkInternetConnectivity();
 
+    // If no internet, update and return that status
     if (!isOnline) {
       currentStatus = {
         ok: false,
-        api: { ok: false },
-        storage: { ok: false },
-        lfs: { ok: false },
-        message: "No internet connection",
+        noInternet: true,
+        api: { ok: false, error: 'No internet connection' },
+        storage: { ok: false, error: 'No internet connection' },
+        lfs: { ok: false, error: 'No internet connection' },
       };
       lastCheck = Date.now();
       notifySubscribers();
       return currentStatus;
     }
 
+    // We have internet, check all services
     const results = await Promise.all([
       checkEndpoint(ENDPOINTS.api),
       checkEndpoint(ENDPOINTS.storage),
@@ -90,6 +99,7 @@ export const checkServerStatus = async (force = false) => {
 
     currentStatus = {
       ok: results.every(r => r.ok),
+      noInternet: false,
       api: results[0],
       storage: results[1],
       lfs: results[2],

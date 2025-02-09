@@ -19,6 +19,7 @@ const MenuBar = () => {
     // Default status if no valid cache exists
     return {
       ok: true,
+      noInternet: false,
       api: { ok: true },
       storage: { ok: true },
       lfs: { ok: true },
@@ -173,7 +174,7 @@ const MenuBar = () => {
           title={t("server-status.title")}
           style={{ WebkitAppRegion: "no-drag" }}
         >
-          {!serverStatus?.ok ? (
+          {serverStatus.noInternet ? (
             <WifiOff className="h-4 w-4 text-red-500" />
           ) : (
             <div
@@ -272,7 +273,7 @@ const MenuBar = () => {
               <X className="h-4 w-4" />
             </div>
             <AlertDialogTitle className="text-2xl font-bold text-foreground">
-              {!serverStatus?.ok ? t("server-status.offline") : t("server-status.title")}
+              {t("server-status.title")}
             </AlertDialogTitle>
 
             <AlertDialogDescription className="sr-only">
@@ -280,8 +281,7 @@ const MenuBar = () => {
             </AlertDialogDescription>
 
             <div className="mt-4 space-y-4">
-              {/* Status Card */}
-              {!serverStatus?.ok ? (
+              {serverStatus.noInternet ? (
                 <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4">
                   <div className="flex items-center gap-3">
                     <WifiOff className="h-8 w-8 text-red-500" />
@@ -315,25 +315,50 @@ const MenuBar = () => {
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    {serverStatus.api?.ok &&
-                    serverStatus.storage?.ok &&
-                    serverStatus.lfs?.ok ? (
+                    {serverStatus.noInternet ? (
+                      <div>
+                        {t("server-status.no-internet")}
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {t("server-status.check-connection")}
+                        </p>
+                      </div>
+                    ) : serverStatus.api?.ok &&
+                      serverStatus.storage?.ok &&
+                      serverStatus.lfs?.ok ? (
                       t("server-status.healthy-description")
                     ) : (
                       <div>
                         {t("server-status.unhealthy-description")}
                         <ul className="mt-2 space-y-2">
-                          {(!serverStatus.api?.ok ||
-                            !serverStatus.storage?.ok ||
-                            !serverStatus.lfs?.ok) && (
-                            <li key="downServices" className="flex items-start">
+                          {!serverStatus.api?.ok && (
+                            <li key="apiDown" className="flex items-start">
                               <span className="mr-2 mt-1.5 h-2.5 w-2.5 rounded-full bg-red-500" />
                               <div>
-                                <span className="font-medium">
-                                  {t("server-status.down-services")}
-                                </span>
+                                <span className="font-medium">API</span>
                                 <p className="text-xs text-muted-foreground">
-                                  {t("server-status.down-services-description")}
+                                  {t("server-status.api-description")}
+                                </p>
+                              </div>
+                            </li>
+                          )}
+                          {!serverStatus.storage?.ok && (
+                            <li key="storageDown" className="flex items-start">
+                              <span className="mr-2 mt-1.5 h-2.5 w-2.5 rounded-full bg-red-500" />
+                              <div>
+                                <span className="font-medium">Storage</span>
+                                <p className="text-xs text-muted-foreground">
+                                  {t("server-status.storage-description")}
+                                </p>
+                              </div>
+                            </li>
+                          )}
+                          {!serverStatus.lfs?.ok && (
+                            <li key="lfsDown" className="flex items-start">
+                              <span className="mr-2 mt-1.5 h-2.5 w-2.5 rounded-full bg-red-500" />
+                              <div>
+                                <span className="font-medium">LFS</span>
+                                <p className="text-xs text-muted-foreground">
+                                  {t("server-status.lfs-description")}
                                 </p>
                               </div>
                             </li>
