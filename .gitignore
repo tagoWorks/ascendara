@@ -33,3 +33,9 @@ build/icon.ico
 /binaries/AscendaraCrashReporter/build
 /server
 /binaries/AscendaraLanguageTranslation/build
+/binaries/AscendaraGameHandler/src/debian
+/binaries/AscendaraDownloader/src/debian
+/binaries/AscendaraCrashReporter/src/debian
+/binaries/AscendaraLanguageTranslation/src/debian
+/binaries/AscendaraGofileHelper/src/debian
+

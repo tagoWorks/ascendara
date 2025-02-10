@@ -9,7 +9,7 @@
     "build-react": "npm run build && electron-builder",
     "electron": "electron ./build/main.js",
     "start": "concurrently \"vite\" \"wait-on tcp:5173 && electron ./build/main.js\"",
-    "dist": "python ./scripts/build_ascendara.py",
+    "dist": "python3 ./scripts/build_ascendara.py",
     "buildwithelectron": "electron-builder -c.extraMetadata.main=build/main.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -124,6 +124,26 @@
       {
         "from": "binaries/AscendaraCrashReporter/dist/AscendaraCrashReporter.exe",
         "to": "."
+      },
+      {
+        "from": "binaries/AscendaraGofileHelper/src/debian/AscendaraGofileHelper.py",
+        "to": "."
+      },
+      {
+        "from": "binaries/AscendaraDownloader/src/debian/AscendaraDownloader.py",
+        "to": "."
+      },
+      {
+        "from": "binaries/AscendaraGameHandler/src/debian/AscendaraGameHandler.py",
+        "to": "."
+      },
+      {
+        "from": "binaries/AscendaraCrashReporter/src/debian/AscendaraCrashReporter.py",
+        "to": "."
+      },
+      {
+        "from": "binaries/AscendaraLanguageTranslation/src/debian/AscendaraLanguageTranslation.py",
+        "to": "."
       }
     ],
     "extraMetadata": {
@@ -131,6 +151,9 @@
     },
     "win": {
       "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
     },
     "productName": "Ascendara",
     "directories": {
