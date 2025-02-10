@@ -94,6 +94,116 @@ app.whenReady().then(() => {
   });
 });
 
+// Settings Manager
+class SettingsManager {
+  constructor() {
+    this.filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
+    this.settings = this.loadSettings();
+  }
+
+  loadSettings() {
+    try {
+      const data = fs.readFileSync(this.filePath, "utf8");
+      return JSON.parse(data);
+    } catch (error) {
+      return {};
+    }
+  }
+
+  saveSettings(settings) {
+    try {
+      // Merge with existing settings to prevent overwriting
+      const existingSettings = this.loadSettings();
+      const mergedSettings = {
+        ...existingSettings,
+        ...settings
+      };
+      fs.writeFileSync(this.filePath, JSON.stringify(mergedSettings, null, 2));
+      this.settings = mergedSettings;
+      return true;
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      return false;
+    }
+  }
+
+  updateSetting(key, value) {
+    try {
+      // Load current settings to ensure we have the latest
+      const currentSettings = this.loadSettings();
+      const updatedSettings = {
+        ...currentSettings,
+        [key]: value
+      };
+      const success = this.saveSettings(updatedSettings);
+      if (success) {
+        ipcMain.emit("settings-updated", updatedSettings);
+      }
+      return success;
+    } catch (error) {
+      console.error('Failed to update setting:', error);
+      return false;
+    }
+  }
+
+  getSetting(key) {
+    return this.settings[key];
+  }
+
+  getSettings() {
+    return this.settings;
+  }
+}
+
+const settingsManager = new SettingsManager();
+
+// Save individual setting
+ipcMain.handle("update-setting", async (event, key, value) => {
+  const success = settingsManager.updateSetting(key, value);
+  if (success) {
+    // Notify renderer about the change
+    event.sender.send("settings-changed", settingsManager.getSettings());
+  }
+  return success;
+});
+
+// Get individual setting
+ipcMain.handle("get-setting", async (event, key) => {
+  return settingsManager.getSetting(key);
+});
+
+// Save the settings JSON file
+ipcMain.handle("save-settings", async (event, options, directory) => {
+  // Get current settings to preserve existing values
+  const currentSettings = settingsManager.getSettings();
+  
+  // Ensure all settings values are properly typed
+  const sanitizedOptions = {
+    ...currentSettings,
+    ...options
+  };
+
+  // Handle downloadDirectory separately to ensure it's not lost
+  if (directory) {
+    sanitizedOptions.downloadDirectory = directory;
+  } else if (options.downloadDirectory) {
+    sanitizedOptions.downloadDirectory = options.downloadDirectory;
+  }
+
+  // Ensure language is properly typed
+  if (options.language) {
+    sanitizedOptions.language = String(options.language);
+  }
+
+  const success = settingsManager.saveSettings(sanitizedOptions);
+  if (success) {
+    event.sender.send("settings-changed", sanitizedOptions);
+  }
+  return success;
+});
+
+// Check for updates
+
 async function checkVersionAndUpdate() {
   try {
     const response = await axios.get("https://api.ascendara.app/");
@@ -893,117 +1003,9 @@ ipcMain.handle("get-timestamp-value", async (event, key) => {
   }
 });
 
-// Read the settings JSON file and send it to the renderer process
+// Add a getter for settings
 ipcMain.handle("get-settings", () => {
-  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
-  try {
-    let settings = {};
-
-    // Try to read existing settings
-    if (fs.existsSync(filePath)) {
-      const data = fs.readFileSync(filePath, "utf8");
-      settings = JSON.parse(data);
-    }
-
-    // Define default settings
-    const defaultSettings = {
-      downloadDirectory: settings.downloadDirectory || "",
-      viewOldDownloadLinks: false,
-      seeInappropriateContent: false,
-      showOldDownloadLinks: false,
-      autoCreateShortcuts: true,
-      sendAnalytics: true,
-      autoUpdate: true,
-      language: "en",
-      theme: "purple",
-      threadCount: 4,
-    };
-
-    // Merge existing settings with defaults, preserving existing values
-    const mergedSettings = {
-      ...defaultSettings,
-      ...settings,
-      enabledSources: {
-        ...defaultSettings.enabledSources,
-        ...(settings.enabledSources || {}),
-      },
-      // Ensure download directory is preserved from existing settings
-      downloadDirectory: settings.downloadDirectory || defaultSettings.downloadDirectory,
-    };
-
-    // Save merged settings only if file doesn't exist
-    if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, JSON.stringify(mergedSettings, null, 2));
-    }
-
-    return mergedSettings;
-  } catch (error) {
-    console.error("Error reading settings:", error);
-    // Return default settings if there's an error
-    const defaultSettings = {
-      downloadDirectory: "",
-      viewOldDownloadLinks: false,
-      seeInappropriateContent: false,
-      showOldDownloadLinks: false,
-      autoCreateShortcuts: true,
-      sendAnalytics: true,
-      autoUpdate: true,
-      language: "en",
-      theme: "purple",
-      threadCount: 4,
-    };
-    return defaultSettings;
-  }
-});
-
-ipcMain.handle("update-setting", (event, key, value) => {
-  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
-  try {
-    let settings = {};
-    try {
-      const data = fs.readFileSync(filePath, "utf8");
-      settings = JSON.parse(data);
-    } catch (error) {
-      // File doesn't exist or is invalid, use empty settings object
-    }
-    settings[key] = value;
-    fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
-    return true;
-  } catch (error) {
-    console.error("Error updating setting:", error);
-    return false;
-  }
-})
-
-// Save the settings JSON file
-ipcMain.handle("save-settings", async (event, options, directory) => {
-  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
-  try {
-    let settings = {};
-    try {
-      const data = fs.readFileSync(filePath, "utf8");
-      settings = JSON.parse(data);
-    } catch (error) {
-      // File doesn't exist or is invalid, use empty settings object
-    }
-
-    // Ensure language is saved as a string
-    if (options && typeof options.language === "object") {
-      options.language = String(options.language);
-    }
-
-    // If directory is provided, update the download directory
-    if (directory) {
-      options.downloadDirectory = directory;
-    }
-
-    fs.writeFileSync(filePath, JSON.stringify(options, null, 2));
-    event.sender.send("settings-changed", options);
-    return true;
-  } catch (error) {
-    console.error("Error saving settings:", error);
-    return false;
-  }
+  return settingsManager.getSettings();
 });
 
 let isInstalling = false;
@@ -1384,7 +1386,10 @@ ipcMain.handle("uninstall-ascendara", async () => {
   const executablePath = process.execPath;
   const executableDir = path.dirname(executablePath);
   const uninstallerPath = path.join(executableDir + "\\Uninstall Ascendara.exe");
-  const timestampFilePath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
+  const timestampFilePath = path.join(
+    process.env.USERPROFILE,
+    "timestamp.ascendara.json"
+  );
   try {
     fs.unlinkSync(timestampFilePath);
   } catch (error) {
@@ -2738,7 +2743,6 @@ ipcMain.handle("cancel-translation", async () => {
 ipcMain.handle("get-language-file", async (event, languageCode) => {
   try {
     const filePath = path.join(appDirectory, "/languages/", `${languageCode}.json`);
-    console.log(filePath);
     if (await fs.pathExists(filePath)) {
       return await fs.readJson(filePath);
     }

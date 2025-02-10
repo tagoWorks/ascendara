@@ -259,68 +259,52 @@ function Settings() {
     initializeSettings();
   }, []); // Run only once on mount
 
-  const handleSettingChange = useCallback(setting => {
-    setSettings(prev => {
-      const newSettings = {
-        ...prev,
-        ...setting,
-      };
-      return newSettings;
+  const handleSettingChange = useCallback((key, value) => {
+    window.electron.updateSetting(key, value).then(success => {
+      if (success) {
+        setSettings(prev => ({
+          ...prev,
+          [key]: value
+        }));
+      }
     });
   }, []);
+
+  const handleLanguageChange = useCallback(
+    value => {
+      const languageValue = String(value);
+      handleSettingChange("language", languageValue);
+      changeLanguage(languageValue);
+    },
+    [handleSettingChange, changeLanguage]
+  );
 
   const handleDirectorySelect = useCallback(async () => {
     try {
       const directory = await window.electron.openDirectoryDialog();
       if (directory) {
-        const canCreateFiles = await window.electron.canCreateFiles(directory);
-        setCanCreateFiles(canCreateFiles);
-        if (!canCreateFiles) {
+        const canCreate = await window.electron.canCreateFiles(directory);
+        if (!canCreate) {
+          toast.error(t("settings.errors.noPermission"));
           return;
-        } else {
-          if (canCreateFiles) {
-            setCanCreateFiles(true);
-          }
         }
         setDownloadPath(directory);
-        // Update settings with new directory and trigger immediate save
-        const newSettings = {
-          ...settings,
-          downloadDirectory: directory,
-        };
-        setSettings(newSettings);
-        // Immediately save the settings using the correct method name
-        await window.electron.saveSettings(newSettings, directory);
+        handleSettingChange("downloadDirectory", directory);
       }
     } catch (error) {
       console.error("Error selecting directory:", error);
+      toast.error(t("settings.errors.directorySelect"));
     }
-  }, [settings]);
-
-  const handleLanguageChange = useCallback(
-    value => {
-      // Ensure value is a string
-      const languageValue = String(value);
-      setSettings(prev => {
-        const newSettings = {
-          ...prev,
-          language: languageValue,
-        };
-        return newSettings;
-      });
-      // Use changeLanguage from the context
-      changeLanguage(languageValue);
-    },
-    [changeLanguage]
-  );
+  }, [handleSettingChange, t]);
 
   // Theme handling
   const handleThemeChange = useCallback(
     newTheme => {
       setTheme(newTheme);
       localStorage.setItem("ascendara-theme", newTheme);
+      handleSettingChange("theme", newTheme);
     },
-    [setTheme]
+    [handleSettingChange, setTheme]
   );
 
   useEffect(() => {
@@ -332,9 +316,9 @@ function Settings() {
 
   useEffect(() => {
     if (theme && isInitialized) {
-      handleSettingChange({ theme });
+      handleSettingChange("theme", theme);
     }
-  }, [theme, isInitialized]);
+  }, [theme, isInitialized, handleSettingChange]);
 
   const groupedThemes = {
     light: themes.filter(t => t.group === "light"),
@@ -535,9 +519,7 @@ function Settings() {
                     <Switch
                       checked={settings.autoCreateShortcuts}
                       onCheckedChange={() =>
-                        handleSettingChange({
-                          autoCreateShortcuts: !settings.autoCreateShortcuts,
-                        })
+                        handleSettingChange("autoCreateShortcuts", !settings.autoCreateShortcuts)
                       }
                     />
                   </div>
@@ -552,7 +534,7 @@ function Settings() {
                     <Switch
                       checked={settings.autoUpdate}
                       onCheckedChange={() =>
-                        handleSettingChange({ autoUpdate: !settings.autoUpdate })
+                        handleSettingChange("autoUpdate", !settings.autoUpdate)
                       }
                     />
                   </div>
@@ -567,9 +549,7 @@ function Settings() {
                     <Switch
                       checked={settings.seeInappropriateContent}
                       onCheckedChange={() =>
-                        handleSettingChange({
-                          seeInappropriateContent: !settings.seeInappropriateContent,
-                        })
+                        handleSettingChange("seeInappropriateContent", !settings.seeInappropriateContent)
                       }
                     />
                   </div>
@@ -631,10 +611,7 @@ function Settings() {
                       }
                       onValueChange={value => {
                         const threadCount = value === "custom" ? 0 : parseInt(value);
-                        setSettings(prev => ({
-                          ...prev,
-                          threadCount: threadCount,
-                        }));
+                        handleSettingChange("threadCount", threadCount);
                       }}
                     >
                       <SelectTrigger>
@@ -673,10 +650,7 @@ function Settings() {
                               1,
                               Math.min(32, parseInt(e.target.value) || 1)
                             );
-                            setSettings(prev => ({
-                              ...prev,
-                              threadCount: value,
-                            }));
+                            handleSettingChange("threadCount", value);
                           }}
                           className="mt-1"
                         />
@@ -870,7 +844,7 @@ function Settings() {
                     <Switch
                       checked={settings.sendAnalytics}
                       onCheckedChange={() =>
-                        handleSettingChange({ sendAnalytics: !settings.sendAnalytics })
+                        handleSettingChange("sendAnalytics", !settings.sendAnalytics)
                       }
                     />
                   </div>
@@ -911,9 +885,7 @@ function Settings() {
                     <Switch
                       checked={settings.showOldDownloadLinks}
                       onCheckedChange={() =>
-                        handleSettingChange({
-                          showOldDownloadLinks: !settings.showOldDownloadLinks,
-                        })
+                        handleSettingChange("showOldDownloadLinks", !settings.showOldDownloadLinks)
                       }
                     />
                   </div>
