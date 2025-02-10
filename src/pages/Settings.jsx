@@ -425,7 +425,7 @@ function Settings() {
 
   // Check dependency status on mount and after reinstall
   const checkDependencies = useCallback(async () => {
-    if (!sOnWindows) {
+    if (!isOnWindows) {
       return;
     }
 
@@ -998,7 +998,6 @@ function Settings() {
             {/* Install Game Dependencies Card */}
             <Card className="p-6">
               <div className="mb-2 flex items-center gap-2">
-                disabled={isOnWindows}
                 <ShieldAlert className="mb-2 h-5 w-5 text-primary" />
                 <h2 className="text-xl font-semibold text-primary">
                   {t("settings.installGameDependencies")}
@@ -1016,6 +1015,7 @@ function Settings() {
                   </p>
                   <Button
                     onClick={() => navigate("/dependencies")}
+                    disabled={isOnWindows}
                     className="flex w-full items-center gap-2 text-secondary"
                   >
                     {t("settings.manageDependencies")}
