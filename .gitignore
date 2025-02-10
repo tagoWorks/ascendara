@@ -32,3 +32,4 @@ build/icon.ico
 /installer/build
 /binaries/AscendaraCrashReporter/build
 /server
+/binaries/AscendaraLanguageTranslation/build

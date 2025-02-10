@@ -27,9 +27,11 @@ import {
   ExternalLink,
   History,
   ChartNoAxesCombined,
+  ArrowRight
 } from "lucide-react";
 import gameService from "@/services/gameService";
 import { useNavigate } from "react-router-dom";
+import { getAvailableLanguages } from "@/services/languageService";
 
 const themes = [
   // Light themes
@@ -47,21 +49,6 @@ const themes = [
   { id: "sunset", name: "Sunset", group: "dark" },
   { id: "forest", name: "Forest", group: "dark" },
   { id: "ocean", name: "Deep Ocean", group: "dark" },
-];
-
-const languages = [
-  { id: "en", name: "English", icon: "🇺🇸" },
-  { id: "es", name: "Español", icon: "🇪🇸" },
-  { id: "fr", name: "Français", icon: "🇫🇷" },
-  { id: "it", name: "Italiano", icon: "🇮🇹" },
-  { id: "de", name: "Deutsch", icon: "🇩🇪" },
-  { id: "pt", name: "Português", icon: "🇵🇹" },
-  { id: "ru", name: "Русский", icon: "🇷🇺" },
-  { id: "zh-CN", name: "中文", icon: "🇨🇳" },
-  { id: "ar", name: "العربية", icon: "🇸🇦" },
-  { id: "hi", name: "हिन्दी", icon: "🇮🇳" },
-  { id: "bn", name: "বাংলা", icon: "🇧🇩" },
-  { id: "ja", name: "日本語", icon: "🇯🇵" },
 ];
 
 const getThemeColors = themeId => {
@@ -490,6 +477,16 @@ function Settings() {
       };
     }
   }, [dependencyStatus, t]);
+
+  const [availableLanguages, setAvailableLanguages] = useState([]);
+
+  useEffect(() => {
+    const loadLanguages = async () => {
+      const languages = await getAvailableLanguages();
+      setAvailableLanguages(languages);
+    };
+    loadLanguages();
+  }, []);
 
   // Show loading state
   if (isLoading) {
@@ -942,16 +939,16 @@ function Settings() {
                       <SelectValue>
                         <div className="flex items-center gap-2">
                           <span>
-                            {languages.find(l => l.id === settings.language)?.icon}
+                            {availableLanguages.find(l => l.id === settings.language)?.icon}
                           </span>
                           <span>
-                            {languages.find(l => l.id === settings.language)?.name}
+                            {availableLanguages.find(l => l.id === settings.language)?.name}
                           </span>
                         </div>
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {languages.map(lang => (
+                      {availableLanguages.map(lang => (
                         <SelectItem key={lang.id} value={lang.id}>
                           <div className="flex items-center gap-2">
                             <span>{lang.icon}</span>
@@ -961,6 +958,10 @@ function Settings() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="cursor-pointer text-md font-medium text-muted-foreground hover:translate-x-1 duration-200 inline-flex items-center" onClick={() => navigate("/extralanguages")}>
+                    {t("settings.selectMoreLanguages")}
+                    <ArrowRight className="ml-1 h-4 w-4" />
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     {t("settings.languageSetNote")}
                   </p>

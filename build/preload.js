@@ -35,6 +35,17 @@ contextBridge.exposeInMainWorld("electron", {
   getSettings: () => ipcRenderer.invoke("get-settings"),
   saveSettings: (options, directory) =>
     ipcRenderer.invoke("save-settings", options, directory),
+  updateSetting: (key, value) => ipcRenderer.invoke("update-setting", key, value),
+
+  // Language Management
+  downloadLanguage: (langCode) => ipcRenderer.invoke("download-language", langCode),
+  saveLanguageFile: (langCode, content) => ipcRenderer.invoke("save-language-file", langCode, content),
+  getLanguageFile: (langCode) => ipcRenderer.invoke("get-language-file", langCode),
+  startTranslation: (langCode) => ipcRenderer.invoke("start-translation", langCode),
+  cancelTranslation: () => ipcRenderer.invoke("cancel-translation"),
+  getDownloadedLanguages: () => ipcRenderer.invoke("get-downloaded-languages"),
+  languageFileExists: (filename) => ipcRenderer.invoke("language-file-exists", filename),
+
   getAnalyticsKey: () => ipcRenderer.invoke("get-analytics-key"),
   getImageKey: () => ipcRenderer.invoke("get-image-key"),
   getVersion: () => ipcRenderer.invoke("get-version"),

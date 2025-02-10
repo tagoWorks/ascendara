@@ -103,7 +103,6 @@ async function checkVersionAndUpdate() {
     console.log(
       `Version check: Current=${CURRENT_VERSION}, Latest=${latest_version}, Is Latest=${is_latest}`
     );
-
     if (!is_latest) {
       const settings = await getSettings();
       if (settings.autoUpdate && !updateDownloadInProgress) {
@@ -116,13 +115,63 @@ async function checkVersionAndUpdate() {
           window.webContents.send("update-available");
         });
       }
+      const timestampPath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
+      try {
+        let timestamp = {};
+        if (fs.existsSync(timestampPath)) {
+          timestamp = JSON.parse(fs.readFileSync(timestampPath, "utf8"));
+        }
+        extraLangVer = timestamp["extraLangVer"];
+      const langVerResponse = await axios.get(`https://api.ascendara.app/language/version`);
+      const langVer = langVerResponse.data.version;
+      if (langVer !== extraLangVer) {
+        getNewLangKeys();
+      }
+        } catch (error) {}
     }
-
     return is_latest;
   } catch (error) {
     console.error("Error checking version:", error);
     return true;
   }
+}
+
+async function getNewLangKeys() {
+    try {
+        // Get all language files from the languages directory
+        const languageFiles = fs.readdirSync(path.join(appDirectory, "/languages/"))
+            .filter(file => file.endsWith('.json'));
+
+        // Fetch reference English translations from API
+        const response = await fetch('https://api.ascendara.app/language/en');
+        if (!response.ok) {
+            throw new Error('Failed to fetch reference English translations');
+        }
+        const referenceKeys = Object.keys(await response.json());
+
+        // Store missing keys for each language
+        const missingKeys = {};
+
+        // Compare each language file with reference
+        for (const langFile of languageFiles) {
+            const langCode = langFile.replace('.json', '');
+            const langPath = path.join(appDirectory, "/languages/", langFile);
+            const langContent = JSON.parse(fs.readFileSync(langPath, 'utf8'));
+            const langKeys = Object.keys(langContent);
+
+            // Find keys that exist in reference but not in language file
+            const missing = referenceKeys.filter(key => !langKeys.includes(key));
+            
+            if (missing.length > 0) {
+                missingKeys[langCode] = missing;
+            }
+        }
+
+        return missingKeys;
+    } catch (error) {
+        console.error('Error in getNewLangKeys:', error);
+        throw error;
+    }
 }
 
 async function downloadUpdateInBackground() {
@@ -131,7 +180,7 @@ async function downloadUpdateInBackground() {
 
   try {
     // Set downloadingUpdate to true in timestamp
-    const timestampPath = path.join(os.homedir(), "timestamp.ascendara.json");
+    const timestampPath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
     let timestamp = {};
     if (fs.existsSync(timestampPath)) {
       timestamp = JSON.parse(fs.readFileSync(timestampPath, "utf8"));
@@ -189,7 +238,7 @@ async function downloadUpdateInBackground() {
 }
 
 let electronDl;
-const TIMESTAMP_FILE = path.join(os.homedir(), "timestamp.ascendara.json");
+const TIMESTAMP_FILE = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
 
 (async () => {
   electronDl = await import("electron-dl");
@@ -602,7 +651,6 @@ ipcMain.handle("retry-extract", async (event, game, online, dlc, version) => {
       return; // Return after setting the downloadProcess
     } catch (error) {
       console.error("Error reading the settings file:", error);
-      return;
     }
   }
 });
@@ -741,7 +789,7 @@ ipcMain.handle("is-v7", () => {
 });
 
 ipcMain.handle("set-v7", () => {
-  const filePath = path.join(os.homedir(), "timestamp.ascendara.json");
+  const filePath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
   try {
     let timestamp = {
       timestamp: Date.now(),
@@ -763,7 +811,7 @@ ipcMain.handle("set-v7", () => {
 });
 
 ipcMain.handle("create-timestamp", () => {
-  const filePath = path.join(os.homedir(), "timestamp.ascendara.json");
+  const filePath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
   const timestamp = {
     timestamp: Date.now(),
     v7: true,
@@ -782,7 +830,7 @@ ipcMain.handle("has-launched", () => {
 
 ipcMain.handle("update-launch-count", () => {
   try {
-    const timestampPath = path.join(os.homedir(), "timestamp.ascendara.json");
+    const timestampPath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
     let timestamp = {};
 
     if (fs.existsSync(timestampPath)) {
@@ -818,7 +866,7 @@ ipcMain.handle("get-image-key", () => {
 });
 
 ipcMain.handle("set-timestamp-value", async (event, key, value) => {
-  const filePath = TIMESTAMP_FILE;
+  const filePath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
   try {
     let timestamp = {};
     if (fs.existsSync(filePath)) {
@@ -832,7 +880,7 @@ ipcMain.handle("set-timestamp-value", async (event, key, value) => {
 });
 
 ipcMain.handle("get-timestamp-value", async (event, key) => {
-  const filePath = TIMESTAMP_FILE;
+  const filePath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
   try {
     let timestamp = {};
     if (fs.existsSync(filePath)) {
@@ -907,6 +955,25 @@ ipcMain.handle("get-settings", () => {
     return defaultSettings;
   }
 });
+
+ipcMain.handle("update-setting", (event, key, value) => {
+  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
+  try {
+    let settings = {};
+    try {
+      const data = fs.readFileSync(filePath, "utf8");
+      settings = JSON.parse(data);
+    } catch (error) {
+      // File doesn't exist or is invalid, use empty settings object
+    }
+    settings[key] = value;
+    fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
+    return true;
+  } catch (error) {
+    console.error("Error updating setting:", error);
+    return false;
+  }
+})
 
 // Save the settings JSON file
 ipcMain.handle("save-settings", async (event, options, directory) => {
@@ -1317,7 +1384,7 @@ ipcMain.handle("uninstall-ascendara", async () => {
   const executablePath = process.execPath;
   const executableDir = path.dirname(executablePath);
   const uninstallerPath = path.join(executableDir + "\\Uninstall Ascendara.exe");
-  const timestampFilePath = path.join(app.getPath("home"), "timestamp.ascendara.json");
+  const timestampFilePath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
   try {
     fs.unlinkSync(timestampFilePath);
   } catch (error) {
@@ -1790,7 +1857,7 @@ ipcMain.handle("delete-game", async (event, game) => {
   try {
     if (game === "local") {
       const timestampFilePath = path.join(
-        app.getPath("home"),
+        process.env.USERPROFILE,
         "timestamp.ascendara.json"
       );
       fs.unlinkSync(timestampFilePath);
@@ -1932,6 +1999,9 @@ function createWindow() {
   mainWindow.webContents.setWindowOpenHandler(info => {
     return { action: "deny" };
   });
+
+  // Start watching for translation progress
+  startTranslationWatcher(mainWindow);
 }
 
 // Window visibility control functions
@@ -1987,7 +2057,7 @@ ipcMain.handle("get-asset-path", (event, filename) => {
   let assetPath;
   if (!app.isPackaged) {
     // In development
-    assetPath = path.join(__dirname, "..", "public", filename);
+    assetPath = path.join(__dirname, "../src", "public", filename);
   } else {
     // In production
     assetPath = path.join(process.resourcesPath, "public", filename);
@@ -2449,7 +2519,7 @@ if (!gotTheLock) {
 
 ipcMain.handle("get-launch-count", () => {
   try {
-    const timestampPath = path.join(os.homedir(), "timestamp.ascendara.json");
+    const timestampPath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
     if (fs.existsSync(timestampPath)) {
       const timestamp = JSON.parse(fs.readFileSync(timestampPath, "utf8"));
       return timestamp.launchCount || 0;
@@ -2560,3 +2630,174 @@ ipcMain.handle("set-local-crack-username", (event, username) => {
     return false;
   }
 });
+
+// Translation process management
+let currentTranslationProcess = null;
+
+// Handle translation start
+ipcMain.handle("start-translation", async (event, langCode) => {
+  try {
+    // Don't start a new translation if one is in progress
+    if (currentTranslationProcess) {
+      throw new Error("A translation is already in progress");
+    }
+
+    // Ensure the progress file exists with initial state
+    await fs.writeJson(TRANSLATION_PROGRESS_FILE, {
+      languageCode: langCode,
+      phase: "starting",
+      progress: 0,
+      timestamp: Date.now()
+    });
+
+    
+    const translationExePath = isDev
+    ? path.join("./binaries/AscendaraLanguageTranslation/dist/AscendaraLanguageTranslation.exe")
+    : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.exe");
+
+    // Start the translation process
+    currentTranslationProcess = spawn(translationExePath, [langCode], {
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+
+    // Monitor process output
+    currentTranslationProcess.stdout.on("data", (data) => {
+      console.log(`Translation stdout: ${data}`);
+    });
+
+    currentTranslationProcess.stderr.on("data", (data) => {
+      console.error(`Translation stderr: ${data}`);
+    });
+
+    // Set up progress monitoring
+    const progressInterval = setInterval(async () => {
+      try {
+        if (fs.existsSync(TRANSLATION_PROGRESS_FILE)) {
+          const progress = await fs.readJson(TRANSLATION_PROGRESS_FILE);
+          event.sender.send("translation-progress", progress);
+
+          // Clean up if completed or error
+          if (progress.phase === "completed" || progress.phase === "error") {
+            clearInterval(progressInterval);
+            currentTranslationProcess = null;
+          }
+        }
+      } catch (error) {
+        console.error("Error reading progress:", error);
+      }
+    }, 100);
+
+    // Handle process completion
+    currentTranslationProcess.on("close", (code) => {
+      console.log(`Translation process exited with code ${code}`);
+      clearInterval(progressInterval);
+      
+      if (code === 0) {
+        event.sender.send("translation-progress", {
+          languageCode: langCode,
+          phase: "completed",
+          progress: 1,
+          timestamp: Date.now()
+        });
+      } else {
+        event.sender.send("translation-progress", {
+          languageCode: langCode,
+          phase: "error",
+          progress: 0,
+          timestamp: Date.now()
+        });
+      }
+      
+      currentTranslationProcess = null;
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Failed to start translation:", error);
+    event.sender.send("translation-progress", {
+      languageCode: langCode,
+      phase: "error",
+      progress: 0,
+      timestamp: Date.now()
+    });
+    return false;
+  }
+});
+
+// Handle translation cancellation
+ipcMain.handle("cancel-translation", async () => {
+  if (currentTranslationProcess) {
+    currentTranslationProcess.kill();
+    currentTranslationProcess = null;
+    return true;
+  }
+  return false;
+});
+
+// Get language file
+ipcMain.handle("get-language-file", async (event, languageCode) => {
+  try {
+    const filePath = path.join(appDirectory, "/languages/", `${languageCode}.json`);
+    console.log(filePath);
+    if (await fs.pathExists(filePath)) {
+      return await fs.readJson(filePath);
+    }
+    return null;
+  } catch (error) {
+    console.error("Error reading language file:", error);
+    throw error;
+  }
+});
+
+ipcMain.handle("get-downloaded-languages", async () => {
+  try {
+    const languagesDir = path.join(appDirectory, "/languages/");
+    if (!await fs.pathExists(languagesDir)) {
+      await fs.ensureDir(languagesDir);
+      return [];
+    }
+
+    const files = await fs.readdir(languagesDir);
+    return files
+      .filter(file => file.endsWith('.json'))
+      .map(file => file.replace('.json', ''));
+  } catch (error) {
+    console.error("Error getting downloaded languages:", error);
+    return [];
+  }
+});
+
+ipcMain.handle("language-file-exists", async (event, filename) => {
+  try {
+    const filePath = path.join(appDirectory, "/languages/", filename);
+    return await fs.pathExists(filePath);
+  } catch (error) {
+    console.error("Error checking language file:", error);
+    return false;
+  }
+});
+
+// Translation progress file watcher
+const TRANSLATION_PROGRESS_FILE = path.join(os.homedir(), "translation_progress.ascendara.json");
+let translationWatcher = null;
+
+function startTranslationWatcher(window) {
+  if (translationWatcher) {
+    translationWatcher.close();
+  }
+
+  try {
+    translationWatcher = fs.watch(path.dirname(TRANSLATION_PROGRESS_FILE), (eventType, filename) => {
+      if (filename === "translation_progress.ascendara.json") {
+        try {
+          const progress = JSON.parse(fs.readFileSync(TRANSLATION_PROGRESS_FILE, 'utf8'));
+          window.webContents.send("translation-progress", progress);
+        } catch (error) {
+          console.error("Error reading translation progress:", error);
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error setting up translation progress watcher:", error);
+  }
+}

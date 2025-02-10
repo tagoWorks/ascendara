@@ -5,7 +5,8 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import i18n, { loadLanguageAsync, languages, getClosestSupportedLanguage } from "@/i18n";
+import i18n, { languages, getClosestSupportedLanguage } from "@/i18n";
+import { changeLanguage } from "@/services/languageService";
 
 const LanguageContext = createContext();
 
@@ -22,15 +23,13 @@ export function LanguageProvider({ children }) {
         const settings = await window.electron.getSettings();
         if (settings?.language) {
           const targetLang = getClosestSupportedLanguage(settings.language);
-          const success = await loadLanguageAsync(targetLang);
-          if (success) {
-            // First change i18n's language
-            await i18n.changeLanguage(targetLang);
-            // Then update our state
+          try {
+            await changeLanguage(targetLang);
             setLanguage(targetLang);
-          } else {
+          } catch (error) {
             console.warn(
-              `Failed to load language ${targetLang}, falling back to English`
+              `Failed to load language ${targetLang}, falling back to English`,
+              error
             );
             await i18n.changeLanguage("en");
             setLanguage("en");
@@ -38,11 +37,14 @@ export function LanguageProvider({ children }) {
         } else {
           // No language in settings, initialize with browser language
           const browserLang = getClosestSupportedLanguage(navigator.language);
-          const success = await loadLanguageAsync(browserLang);
-          if (success) {
-            await i18n.changeLanguage(browserLang);
+          try {
+            await changeLanguage(browserLang);
             setLanguage(browserLang);
-          } else {
+          } catch (error) {
+            console.warn(
+              `Failed to load browser language ${browserLang}, falling back to English`,
+              error
+            );
             await i18n.changeLanguage("en");
             setLanguage("en");
           }
@@ -54,19 +56,19 @@ export function LanguageProvider({ children }) {
         setLanguage("en");
       }
     };
+
     initLanguage();
   }, []);
 
-  // Subscribe to i18next language changes
-  useEffect(() => {
-    const handleLanguageChanged = language => {
-      setLanguage(language);
-    };
-
-    i18n.on("languageChanged", handleLanguageChanged);
-    return () => {
-      i18n.off("languageChanged", handleLanguageChanged);
-    };
+  const setLanguageAndSave = useCallback(async (newLanguage) => {
+    try {
+      await changeLanguage(newLanguage);
+      setLanguage(newLanguage);
+      await window.electron.saveSettings({ language: newLanguage });
+    } catch (error) {
+      console.error("Failed to change language:", error);
+      throw error;
+    }
   }, []);
 
   useEffect(() => {
@@ -74,36 +76,9 @@ export function LanguageProvider({ children }) {
     document.documentElement.lang = language;
   }, [language]);
 
-  const changeLanguage = useCallback(async newLanguage => {
-    try {
-      const success = await loadLanguageAsync(newLanguage);
-      if (success) {
-        // Change i18n's language
-        await i18n.changeLanguage(newLanguage);
-
-        // Save to electron settings
-        const settings = await window.electron.getSettings();
-        await window.electron.saveSettings({
-          ...settings,
-          language: newLanguage,
-        });
-      } else {
-        throw new Error(`Failed to load language ${newLanguage}`);
-      }
-    } catch (error) {
-      console.error("Error updating language:", error);
-      // Revert to previous language on error
-      setLanguage(previous => {
-        i18n.changeLanguage(previous);
-        loadLanguageAsync(previous);
-        return previous;
-      });
-    }
-  }, []);
-
   const value = {
     language,
-    changeLanguage,
+    changeLanguage: setLanguageAndSave,
     languages,
     t: i18n.t.bind(i18n),
   };

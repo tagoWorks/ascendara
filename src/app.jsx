@@ -22,6 +22,7 @@ import { Toaster, toast } from "sonner";
 import Dependencies from "./pages/Dependencies";
 import DownloadPage from "./pages/Download";
 import Downloads from "./pages/Downloads";
+import ExtraLanguages from "./pages/ExtraLanguages";
 import Home from "./pages/Home";
 import Library from "./pages/Library";
 import Search from "./pages/Search";
@@ -508,6 +509,14 @@ const AppRoutes = () => {
               element={
                 <AnimatePresence mode="wait">
                   <DownloadPage key="download" />
+                </AnimatePresence>
+              }
+            />
+            <Route
+              path="extralanguages"
+              element={
+                <AnimatePresence mode="wait">
+                  <ExtraLanguages key="extralanguages" />
                 </AnimatePresence>
               }
             />

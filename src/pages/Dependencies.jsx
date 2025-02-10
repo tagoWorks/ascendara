@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   Loader,
   XCircle,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -260,14 +261,14 @@ const Dependencies = () => {
           className="flex w-full max-w-4xl flex-col items-center px-8"
           variants={itemVariants}
         >
-          <div className="mb-8 w-full">
+          <div className="mb-8 w-full flex justify-end">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate("/settings")}
               className="rounded-full hover:bg-accent hover:text-accent-foreground"
             >
-              <ArrowLeft className="h-6 w-6" />
+              <X className="h-6 w-6" />
             </Button>
           </div>
           <motion.div

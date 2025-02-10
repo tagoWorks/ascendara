@@ -13,8 +13,8 @@ import it from "./translations/it.json";
 import de from "./translations/de.json";
 import fr from "./translations/fr.json";
 
-// Available languages with their labels
-export const languages = {
+// Base languages that come with the app
+export const baseLanguages = {
   en: { name: "English", nativeName: "English" },
   ar: { name: "Arabic", nativeName: "العربية" },
   bn: { name: "Bengali", nativeName: "বাংলা" },
@@ -29,9 +29,29 @@ export const languages = {
   fr: { name: "French", nativeName: "Français" },
 };
 
+// All available languages, including downloaded ones
+export const languages = { ...baseLanguages };
+
+// Function to add a new language to the available languages
+export const addLanguage = (code, name, nativeName) => {
+  if (!languages[code]) {
+    languages[code] = { name, nativeName };
+  }
+};
+
+// Function to check if a language file exists in the languages folder
+export const isExtraLanguageFile = async (lang) => {
+  try {
+    const { electron } = window;
+    return await electron.languageFileExists(`lang.${lang}.json`);
+  } catch (err) {
+    return false;
+  }
+};
+
 // Function to check if a language is supported
 export const isSupportedLanguage = lang => {
-  return lang in languages;
+  return lang in languages || isExtraLanguageFile(lang);
 };
 
 // Function to get the closest supported language
@@ -45,7 +65,7 @@ export const getClosestSupportedLanguage = lang => {
   return match || "en";
 };
 
-// Initialize i18next with all translations
+// Initialize i18next with base translations
 i18n.use(initReactI18next).init({
   resources: {
     en: { translation: en },
@@ -61,29 +81,11 @@ i18n.use(initReactI18next).init({
     de: { translation: de },
     fr: { translation: fr },
   },
+  lng: "en",
   fallbackLng: "en",
   interpolation: {
     escapeValue: false,
   },
-  react: {
-    useSuspense: false, // Disable suspense to prevent loading issues
-  },
 });
-
-// Export loadLanguageAsync for dynamic language loading
-export const loadLanguageAsync = async language => {
-  if (!isSupportedLanguage(language)) {
-    console.warn(`Language ${language} is not supported`);
-    return false;
-  }
-
-  try {
-    await i18n.changeLanguage(language);
-    return true;
-  } catch (error) {
-    console.error(`Error loading language ${language}:`, error);
-    return false;
-  }
-};
 
 export default i18n;

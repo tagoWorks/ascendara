@@ -63,6 +63,9 @@ const Navigation = memo(({ items }) => {
       if (path === "/search" && location.pathname === "/download") {
         return true;
       }
+      if (path === "/settings" && location.pathname === "/extralanguages") {
+        return true;
+      }
       return location.pathname === path;
     },
     [location.pathname]
