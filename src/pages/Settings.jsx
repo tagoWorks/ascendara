@@ -515,22 +515,22 @@ function Settings() {
           <p className="text-muted-foreground">{t("settings.configure")}</p>
           <div className="group relative ml-auto flex items-center text-sm text-muted-foreground">
             <div
-              onClick={() => window.electron.openURL("https://ascendara.app/changelog")}
-              className="transform cursor-pointer px-2 transition-transform duration-300 group-hover:-translate-x-2"
-            >
-              <span>Version {version}</span>
-            </div>
-            <div
               onClick={() =>
                 window.electron.openURL(
                   `https://github.com/ascendara/ascendara/commit/${commitGitHash}`
                 )
               }
-              className="translate-x-8 transform cursor-pointer opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
+              className="mr-2 -translate-x-8 transform cursor-pointer opacity-0 transition-all duration-300 hover:underline group-hover:translate-x-0 group-hover:opacity-100"
             >
               <span className="text-primary-foreground/60">
-                ({commitGitHash?.substring(0, 7) || "dev"})
+                (rev: {commitGitHash?.substring(0, 7) || "dev"})
               </span>
+            </div>
+            <div
+              onClick={() => window.electron.openURL("https://ascendara.app/changelog")}
+              className="cursor-pointer px-2 hover:underline"
+            >
+              <span>v{version}</span>
             </div>
           </div>
         </div>
