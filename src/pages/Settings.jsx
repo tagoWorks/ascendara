@@ -425,11 +425,11 @@ function Settings() {
 
   // Check dependency status on mount and after reinstall
   const checkDependencies = useCallback(async () => {
-    if (!isOnWindows) {
-      return;
-    }
-
     try {
+      if (!isOnWindows) {
+        setDependencyStatus(null);
+        return;
+      }
       const status = await window.electron.checkGameDependencies();
       setDependencyStatus(status);
     } catch (error) {
