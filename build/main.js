@@ -52,12 +52,12 @@ let is_latest = true;
 let updateDownloaded = false;
 let notificationShown = false;
 let updateDownloadInProgress = false;
-let isNotWindows = !os.platform().startsWith("win");
+let isWindows = os.platform().startsWith("win");
 let rpc;
 let config;
 let electronDl;
 
-const TIMESTAMP_FILE = isNotWindows
+const TIMESTAMP_FILE = !isWindows
   ? path.join(os.homedir(), "timestamp.ascendara.json")
   : path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
 
@@ -970,7 +970,7 @@ ipcMain.handle("update-launch-count", () => {
 });
 
 ipcMain.handle("is-on-windows", () => {
-  return isNotWindows;
+  return isWindows;
 });
 
 ipcMain.handle("delete-installer", () => {

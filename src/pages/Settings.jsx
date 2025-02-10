@@ -150,7 +150,7 @@ function Settings() {
   const { theme, setTheme } = useTheme();
   const { language, changeLanguage, t } = useLanguage();
   const navigate = useNavigate();
-  const [isOnWindows, setIsOnWindows] = useState(false);
+  const [isOnWindows, setIsOnWindows] = useState(true);
   const [downloadPath, setDownloadPath] = useState("");
   const [canCreateFiles, setCanCreateFiles] = useState(true);
   const [version, setVersion] = useState("");
@@ -462,19 +462,16 @@ function Settings() {
 
     if (installedCount === totalCount) {
       return {
-        icon: <CircleCheck className="h-5 w-5 text-green-500" />,
         text: t("settings.allDependenciesInstalled"),
         color: "text-green-500",
       };
     } else if (installedCount === 0) {
       return {
-        icon: <AlertCircle className="h-5 w-5 text-red-500" />,
         text: t("settings.noDependenciesInstalled"),
         color: "text-red-500",
       };
     } else {
       return {
-        icon: <AlertCircle className="h-5 w-5 text-yellow-500" />,
         text: t("settings.someDependenciesMissing", {
           installed: installedCount,
           total: totalCount,
