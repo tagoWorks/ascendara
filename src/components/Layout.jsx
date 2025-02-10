@@ -24,7 +24,7 @@ function Layout() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <MenuBar className="fixed left-0 right-0 top-0 z-50" />
-      <div className="h-16" />
+      <div className="h-8" />
       <main className="flex-1 overflow-y-auto px-4 pb-24">
         <Outlet />
         {showTour && <Tour onClose={handleCloseTour} />}
