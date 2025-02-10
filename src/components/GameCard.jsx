@@ -162,12 +162,13 @@ const GameCard = memo(function GameCard({ game, compact }) {
           </div>
           <div className="flex gap-4 text-sm text-muted-foreground">
             <p>
-              {t("gameCard.size")}: <span className="font-medium">{game.size}</span>
+              {t("gameCard.size")}:{" "}
+              <span className="font-medium md:text-xs">{game.size}</span>
             </p>
             {game.version && (
               <p>
                 {t("gameCard.version")}:{" "}
-                <span className="font-medium">{game.version}</span>
+                <span className="font-medium md:text-xs">{game.version}</span>
               </p>
             )}
           </div>
