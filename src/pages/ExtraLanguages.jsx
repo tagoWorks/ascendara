@@ -167,21 +167,31 @@ function ExtraLanguages() {
     [changeLanguage]
   );
 
+  // Memoize the available languages map for O(1) lookup
+  const availableLanguagesMap = useMemo(() => {
+    const map = new Map();
+    availableLanguages.forEach(lang => map.set(lang.id, true));
+    return map;
+  }, [availableLanguages]);
+
   // Filter languages based on search query
-  const filteredLanguages = Object.entries(extraLanguages)
-    .filter(([code, lang]) => {
-      const searchLower = searchQuery.toLowerCase();
-      return (
-        !baseLanguages.some(base => base.id === code) && // Exclude base languages from extra list
-        (lang.name.toLowerCase().includes(searchLower) ||
-         lang.nativeName.toLowerCase().includes(searchLower) ||
-         code.toLowerCase().includes(searchLower))
-      );
-    })
-    .map(([code, lang]) => ({
-      id: code,
-      ...lang
-    }));
+  const filteredLanguages = useMemo(() => 
+    Object.entries(extraLanguages)
+      .filter(([code, lang]) => {
+        const searchLower = searchQuery.toLowerCase();
+        return (
+          !baseLanguages.some(base => base.id === code) && // Exclude base languages from extra list
+          (lang.name.toLowerCase().includes(searchLower) ||
+           lang.nativeName.toLowerCase().includes(searchLower) ||
+           code.toLowerCase().includes(searchLower))
+        );
+      })
+      .map(([code, lang]) => ({
+        id: code,
+        ...lang
+      })),
+    [searchQuery] // Only recompute when search query changes
+  );
 
   return (
     <div className="container mx-auto p-4 space-y-4">
@@ -242,7 +252,7 @@ function ExtraLanguages() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredLanguages.map((lang) => {
-            const isAvailable = availableLanguages.some(available => available.id === lang.id);
+            const isAvailable = availableLanguagesMap.has(lang.id);
             const isDownloading = downloadProgress?.languageCode === lang.id;
             const progress = isDownloading ? Math.round(downloadProgress.progress * 100) : 0;
             
@@ -251,8 +261,8 @@ function ExtraLanguages() {
                 key={lang.id}
                 variant={language === lang.id ? "default" : "outline"}
                 className="w-full justify-start gap-2 relative overflow-hidden"
-                onClick={() => !isAvailable && !isDownloading && setSelectedLangId(lang.id)}
-                disabled={isDownloading || isAvailable}
+                onClick={() => !isAvailable && !downloadProgress && setSelectedLangId(lang.id)}
+                disabled={downloadProgress || isAvailable}
               >
                 <div className="flex items-center gap-2 z-10">
                   {isDownloading ? (
