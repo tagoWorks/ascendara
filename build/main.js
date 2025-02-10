@@ -2029,7 +2029,6 @@ function createWindow() {
   });
 
   // Start watching for translation progress
-  startTranslationWatcher(mainWindow);
 }
 
 // Window visibility control functions
@@ -2825,23 +2824,40 @@ function startTranslationWatcher(window) {
     translationWatcher.close();
   }
 
+  // Ensure the directory exists before watching
+  const dir = path.dirname(TRANSLATION_PROGRESS_FILE);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
   try {
-    translationWatcher = fs.watch(
-      path.dirname(TRANSLATION_PROGRESS_FILE),
-      (eventType, filename) => {
-        if (filename === "translation_progress.ascendara.json") {
-          try {
+    translationWatcher = fs.watch(dir, (eventType, filename) => {
+      if (filename === "translation_progress.ascendara.json") {
+        try {
+          if (fs.existsSync(TRANSLATION_PROGRESS_FILE)) {
             const progress = JSON.parse(
               fs.readFileSync(TRANSLATION_PROGRESS_FILE, "utf8")
             );
             window.webContents.send("translation-progress", progress);
-          } catch (error) {
-            console.error("Error reading translation progress:", error);
           }
+        } catch (error) {
+          console.error("Error reading translation progress:", error);
         }
       }
-    );
+    });
   } catch (error) {
     console.error("Error setting up translation progress watcher:", error);
   }
 }
+
+// IPC handlers for translation watcher
+ipcMain.handle("start-translation-watcher", event => {
+  startTranslationWatcher(BrowserWindow.fromWebContents(event.sender));
+});
+
+ipcMain.handle("stop-translation-watcher", () => {
+  if (translationWatcher) {
+    translationWatcher.close();
+    translationWatcher = null;
+  }
+});
