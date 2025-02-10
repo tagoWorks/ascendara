@@ -3,7 +3,7 @@
 # ==============================================================================
 # A command-line tool for translating Ascendara language files
 # Read more about the Language Translator Tool here:
-# https://ascendara.app/docs/developer/language-Translator
+# https://ascendara.app/docs/developer/language-translator
 
 
 
