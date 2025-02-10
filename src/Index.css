@@ -1,3 +1,35 @@
+/* Root scaling variables */
+:root {
+  --scale-factor: 1;
+  font-size: calc(16px * var(--scale-factor));
+}
+
+/* Responsive scaling for different window sizes */
+@media (max-width: 1200px) {
+  :root {
+    --scale-factor: 0.95;
+  }
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --scale-factor: 0.9;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --scale-factor: 0.85;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --scale-factor: 0.8;
+  }
+}
+
+/* Base container styles */
 .loading-container {
   position: fixed;
   top: 0;
@@ -25,15 +57,15 @@
 }
 
 .loading-icon {
-  width: 128px;
-  height: 128px;
+  width: calc(128px * var(--scale-factor));
+  height: calc(128px * var(--scale-factor));
   object-fit: contain;
 }
 
 .loading-text {
-  font-size: 1.2rem;
+  font-size: calc(1.2rem * var(--scale-factor));
   color: var(--text);
-  margin-top: 20px;
+  margin-top: calc(20px * var(--scale-factor));
   opacity: 0.9;
 }
 
@@ -49,18 +81,18 @@
 }
 
 [data-sonner-toast] [data-description] {
-  margin-top: 4px !important;
-  font-size: 0.875rem !important;
-  line-height: 1.25rem !important;
+  margin-top: calc(4px * var(--scale-factor)) !important;
+  font-size: calc(0.875rem * var(--scale-factor)) !important;
+  line-height: calc(1.25rem * var(--scale-factor)) !important;
   opacity: 0.9 !important;
 }
 
 [data-sonner-toast] [data-button] {
-  font-size: 0.875rem !important;
-  padding: 6px 12px !important;
+  font-size: calc(0.875rem * var(--scale-factor)) !important;
+  padding: calc(6px * var(--scale-factor)) calc(12px * var(--scale-factor)) !important;
   background: rgba(255, 255, 255, 0.1) !important;
-  border-radius: 4px !important;
-  margin-top: 8px !important;
+  border-radius: calc(4px * var(--scale-factor)) !important;
+  margin-top: calc(8px * var(--scale-factor)) !important;
   transition: background-color 0.2s !important;
 }
 

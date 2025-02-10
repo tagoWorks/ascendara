@@ -668,7 +668,9 @@ export default function DownloadPage() {
     return (
       <div className="container mx-auto max-w-7xl p-6">
         <AlertDialog variant="destructive">
-          <AlertDialogDescription>{t("download.toast.noGameData")}</AlertDialogDescription>
+          <AlertDialogDescription>
+            {t("download.toast.noGameData")}
+          </AlertDialogDescription>
         </AlertDialog>
       </div>
     );
@@ -695,7 +697,7 @@ export default function DownloadPage() {
   return (
     <div
       className="container mx-auto flex min-h-screen max-w-7xl flex-col fade-in"
-      style={{ transform: "scale(0.95)", transformOrigin: "top center" }}
+      style={{ transform: `scale(0.95)`, transformOrigin: "top center" }}
     >
       <div className="w-full max-w-6xl">
         <div
@@ -1325,21 +1327,23 @@ export default function DownloadPage() {
           onOpenChange={setShowTimemachineSelection}
         />
       )}
-    
+
       {/* New User Guide Alert Dialog */}
       <AlertDialog open={showNewUserGuide} onOpenChange={handleCloseGuide}>
         <AlertDialogContent className="sm:max-w-[425px]">
           <AlertDialogHeader>
             {guideStep === 0 ? (
               <>
-                <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('download.newUserGuide.title')}</AlertDialogTitle>
+                <AlertDialogTitle className="text-2xl font-bold text-foreground">
+                  {t("download.newUserGuide.title")}
+                </AlertDialogTitle>
                 <AlertDialogDescription>
-                  {t('download.newUserGuide.description')}
+                  {t("download.newUserGuide.description")}
                 </AlertDialogDescription>
               </>
             ) : (
               <>
-                <AlertDialogTitle className="text-2xl md:text-xl font-bold text-foreground">
+                <AlertDialogTitle className="text-2xl font-bold text-foreground md:text-xl">
                   {t(`download.newUserGuide.steps.${guideStep - 1}.title`)}
                 </AlertDialogTitle>
                 <AlertDialogDescription>
@@ -1347,15 +1351,15 @@ export default function DownloadPage() {
                 </AlertDialogDescription>
                 <div className="mt-4 space-y-4">
                   {guideSteps[guideStep - 1].image && (
-                    <img 
+                    <img
                       src={guideSteps[guideStep - 1].image}
                       alt={t(`download.newUserGuide.steps.${guideStep - 1}.title`)}
                       className="w-full rounded-lg border border-border"
                     />
                   )}
                   {guideSteps[guideStep - 1].action && (
-                    <Button 
-                      className="w-full" 
+                    <Button
+                      className="w-full"
                       onClick={guideSteps[guideStep - 1].action.onClick}
                     >
                       {guideSteps[guideStep - 1].action.label}
@@ -1367,14 +1371,23 @@ export default function DownloadPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="text-primary" onClick={handleCloseGuide}>
-              {guideStep === 0 ? t('download.newUserGuide.noThanks') : t('download.newUserGuide.close')}
+              {guideStep === 0
+                ? t("download.newUserGuide.noThanks")
+                : t("download.newUserGuide.close")}
             </AlertDialogCancel>
-            <Button className="text-secondary" onClick={guideStep === 0 ? handleStartGuide : handleNextStep}>
-              {guideStep === 0 ? t('download.newUserGuide.startGuide') : 
-               guideStep === guideSteps.length ? t('download.newUserGuide.finish') : 
-               guideStep === 1 ? t('download.newUserGuide.installed') :
-               guideStep === 2 ? t('download.newUserGuide.handlerEnabled') :
-               t('download.newUserGuide.nextStep')}
+            <Button
+              className="text-secondary"
+              onClick={guideStep === 0 ? handleStartGuide : handleNextStep}
+            >
+              {guideStep === 0
+                ? t("download.newUserGuide.startGuide")
+                : guideStep === guideSteps.length
+                  ? t("download.newUserGuide.finish")
+                  : guideStep === 1
+                    ? t("download.newUserGuide.installed")
+                    : guideStep === 2
+                      ? t("download.newUserGuide.handlerEnabled")
+                      : t("download.newUserGuide.nextStep")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

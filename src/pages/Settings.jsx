@@ -27,7 +27,7 @@ import {
   ExternalLink,
   History,
   ChartNoAxesCombined,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 import gameService from "@/services/gameService";
 import { useNavigate } from "react-router-dom";
@@ -150,6 +150,7 @@ function Settings() {
   const { theme, setTheme } = useTheme();
   const { language, changeLanguage, t } = useLanguage();
   const navigate = useNavigate();
+  const [isOnWindows, setIsOnWindows] = useState(false);
   const [downloadPath, setDownloadPath] = useState("");
   const [canCreateFiles, setCanCreateFiles] = useState(true);
   const [version, setVersion] = useState("");
@@ -174,6 +175,11 @@ function Settings() {
 
   // Use a ref to track if this is the first mount
   const isFirstMount = useRef(true);
+
+  // Check if we're on Windows
+  useEffect(() => {
+    setIsOnWindows(window.electron.isOnWindows());
+  }, []);
 
   // Create a debounced save function to prevent too frequent saves
   const debouncedSave = useMemo(
@@ -264,7 +270,7 @@ function Settings() {
       if (success) {
         setSettings(prev => ({
           ...prev,
-          [key]: value
+          [key]: value,
         }));
       }
     });
@@ -413,6 +419,10 @@ function Settings() {
 
   // Check dependency status on mount and after reinstall
   const checkDependencies = useCallback(async () => {
+    if (!sOnWindows) {
+      return;
+    }
+
     try {
       const status = await window.electron.checkGameDependencies();
       setDependencyStatus(status);
@@ -427,9 +437,15 @@ function Settings() {
 
   // Get dependency status indicator
   const getDependencyStatusInfo = useMemo(() => {
+    if (!isOnWindows) {
+      return {
+        text: t("settings.cannotCheckDependencies"),
+        color: "text-muted-foreground",
+      };
+    }
+
     if (!dependencyStatus) {
       return {
-        icon: <CircleAlert className="h-5 w-5 text-muted-foreground" />,
         text: t("settings.checkingDependencies"),
         color: "text-muted-foreground",
       };
@@ -519,7 +535,10 @@ function Settings() {
                     <Switch
                       checked={settings.autoCreateShortcuts}
                       onCheckedChange={() =>
-                        handleSettingChange("autoCreateShortcuts", !settings.autoCreateShortcuts)
+                        handleSettingChange(
+                          "autoCreateShortcuts",
+                          !settings.autoCreateShortcuts
+                        )
                       }
                     />
                   </div>
@@ -549,7 +568,10 @@ function Settings() {
                     <Switch
                       checked={settings.seeInappropriateContent}
                       onCheckedChange={() =>
-                        handleSettingChange("seeInappropriateContent", !settings.seeInappropriateContent)
+                        handleSettingChange(
+                          "seeInappropriateContent",
+                          !settings.seeInappropriateContent
+                        )
                       }
                     />
                   </div>
@@ -885,7 +907,10 @@ function Settings() {
                     <Switch
                       checked={settings.showOldDownloadLinks}
                       onCheckedChange={() =>
-                        handleSettingChange("showOldDownloadLinks", !settings.showOldDownloadLinks)
+                        handleSettingChange(
+                          "showOldDownloadLinks",
+                          !settings.showOldDownloadLinks
+                        )
                       }
                     />
                   </div>
@@ -911,10 +936,16 @@ function Settings() {
                       <SelectValue>
                         <div className="flex items-center gap-2">
                           <span>
-                            {availableLanguages.find(l => l.id === settings.language)?.icon}
+                            {
+                              availableLanguages.find(l => l.id === settings.language)
+                                ?.icon
+                            }
                           </span>
                           <span>
-                            {availableLanguages.find(l => l.id === settings.language)?.name}
+                            {
+                              availableLanguages.find(l => l.id === settings.language)
+                                ?.name
+                            }
                           </span>
                         </div>
                       </SelectValue>
@@ -930,7 +961,10 @@ function Settings() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="cursor-pointer text-md font-medium text-muted-foreground hover:translate-x-1 duration-200 inline-flex items-center" onClick={() => navigate("/extralanguages")}>
+                  <p
+                    className="text-md inline-flex cursor-pointer items-center font-medium text-muted-foreground duration-200 hover:translate-x-1"
+                    onClick={() => navigate("/extralanguages")}
+                  >
                     {t("settings.selectMoreLanguages")}
                     <ArrowRight className="ml-1 h-4 w-4" />
                   </p>
