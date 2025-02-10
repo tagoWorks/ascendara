@@ -2518,9 +2518,18 @@ if (!gotTheLock) {
   // Setup on app ready
   app.whenReady().then(() => {
     // Register protocol handler
-    protocol.registerHttpProtocol("ascendara", (request, callback) => {
-      handleProtocolUrl(request.url);
-    });
+    if (process.platform === "darwin") {
+      app.setAsDefaultProtocolClient("ascendara");
+    } else {
+      protocol.registerHttpProtocol("ascendara", (request, callback) => {
+        handleProtocolUrl(request.url);
+      });
+      // Handle macOS protocol activation
+      app.on("open-url", (event, url) => {
+        event.preventDefault();
+        handleProtocolUrl(url);
+      });
+    }
 
     // Check first instance protocol URL
     const protocolUrl = process.argv.find(arg => arg.startsWith("ascendara://"));
