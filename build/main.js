@@ -27,7 +27,16 @@
 let isDev = false;
 
 const CURRENT_VERSION = "7.7.1";
-const { app, BrowserWindow, ipcMain, dialog, shell, protocol } = require("electron");
+const LATEST_COMMIT_HASH = "c9d887c";
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  dialog,
+  shell,
+  protocol,
+  screen,
+} = require("electron");
 const { Client } = require("discord-rpc");
 const disk = require("diskusage");
 const path = require("path");
@@ -43,8 +52,14 @@ let is_latest = true;
 let updateDownloaded = false;
 let notificationShown = false;
 let updateDownloadInProgress = false;
+let isNotWindows = !os.platform().startsWith("win");
 let rpc;
 let config;
+let electronDl;
+
+const TIMESTAMP_FILE = isNotWindows
+  ? path.join(os.homedir(), "timestamp.ascendara.json")
+  : path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
 
 try {
   config = require("./config.prod.js");
@@ -116,13 +131,13 @@ class SettingsManager {
       const existingSettings = this.loadSettings();
       const mergedSettings = {
         ...existingSettings,
-        ...settings
+        ...settings,
       };
       fs.writeFileSync(this.filePath, JSON.stringify(mergedSettings, null, 2));
       this.settings = mergedSettings;
       return true;
     } catch (error) {
-      console.error('Failed to save settings:', error);
+      console.error("Failed to save settings:", error);
       return false;
     }
   }
@@ -133,7 +148,7 @@ class SettingsManager {
       const currentSettings = this.loadSettings();
       const updatedSettings = {
         ...currentSettings,
-        [key]: value
+        [key]: value,
       };
       const success = this.saveSettings(updatedSettings);
       if (success) {
@@ -141,7 +156,7 @@ class SettingsManager {
       }
       return success;
     } catch (error) {
-      console.error('Failed to update setting:', error);
+      console.error("Failed to update setting:", error);
       return false;
     }
   }
@@ -176,11 +191,11 @@ ipcMain.handle("get-setting", async (event, key) => {
 ipcMain.handle("save-settings", async (event, options, directory) => {
   // Get current settings to preserve existing values
   const currentSettings = settingsManager.getSettings();
-  
+
   // Ensure all settings values are properly typed
   const sanitizedOptions = {
     ...currentSettings,
-    ...options
+    ...options,
   };
 
   // Handle downloadDirectory separately to ensure it's not lost
@@ -225,19 +240,20 @@ async function checkVersionAndUpdate() {
           window.webContents.send("update-available");
         });
       }
-      const timestampPath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
       try {
         let timestamp = {};
-        if (fs.existsSync(timestampPath)) {
-          timestamp = JSON.parse(fs.readFileSync(timestampPath, "utf8"));
+        if (fs.existsSync(TIMESTAMP_FILE)) {
+          timestamp = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, "utf8"));
         }
         extraLangVer = timestamp["extraLangVer"];
-      const langVerResponse = await axios.get(`https://api.ascendara.app/language/version`);
-      const langVer = langVerResponse.data.version;
-      if (langVer !== extraLangVer) {
-        getNewLangKeys();
-      }
-        } catch (error) {}
+        const langVerResponse = await axios.get(
+          `https://api.ascendara.app/language/version`
+        );
+        const langVer = langVerResponse.data.version;
+        if (langVer !== extraLangVer) {
+          getNewLangKeys();
+        }
+      } catch (error) {}
     }
     return is_latest;
   } catch (error) {
@@ -247,41 +263,42 @@ async function checkVersionAndUpdate() {
 }
 
 async function getNewLangKeys() {
-    try {
-        // Get all language files from the languages directory
-        const languageFiles = fs.readdirSync(path.join(appDirectory, "/languages/"))
-            .filter(file => file.endsWith('.json'));
+  try {
+    // Get all language files from the languages directory
+    const languageFiles = fs
+      .readdirSync(path.join(appDirectory, "/languages/"))
+      .filter(file => file.endsWith(".json"));
 
-        // Fetch reference English translations from API
-        const response = await fetch('https://api.ascendara.app/language/en');
-        if (!response.ok) {
-            throw new Error('Failed to fetch reference English translations');
-        }
-        const referenceKeys = Object.keys(await response.json());
-
-        // Store missing keys for each language
-        const missingKeys = {};
-
-        // Compare each language file with reference
-        for (const langFile of languageFiles) {
-            const langCode = langFile.replace('.json', '');
-            const langPath = path.join(appDirectory, "/languages/", langFile);
-            const langContent = JSON.parse(fs.readFileSync(langPath, 'utf8'));
-            const langKeys = Object.keys(langContent);
-
-            // Find keys that exist in reference but not in language file
-            const missing = referenceKeys.filter(key => !langKeys.includes(key));
-            
-            if (missing.length > 0) {
-                missingKeys[langCode] = missing;
-            }
-        }
-
-        return missingKeys;
-    } catch (error) {
-        console.error('Error in getNewLangKeys:', error);
-        throw error;
+    // Fetch reference English translations from API
+    const response = await fetch("https://api.ascendara.app/language/en");
+    if (!response.ok) {
+      throw new Error("Failed to fetch reference English translations");
     }
+    const referenceKeys = Object.keys(await response.json());
+
+    // Store missing keys for each language
+    const missingKeys = {};
+
+    // Compare each language file with reference
+    for (const langFile of languageFiles) {
+      const langCode = langFile.replace(".json", "");
+      const langPath = path.join(appDirectory, "/languages/", langFile);
+      const langContent = JSON.parse(fs.readFileSync(langPath, "utf8"));
+      const langKeys = Object.keys(langContent);
+
+      // Find keys that exist in reference but not in language file
+      const missing = referenceKeys.filter(key => !langKeys.includes(key));
+
+      if (missing.length > 0) {
+        missingKeys[langCode] = missing;
+      }
+    }
+
+    return missingKeys;
+  } catch (error) {
+    console.error("Error in getNewLangKeys:", error);
+    throw error;
+  }
 }
 
 async function downloadUpdateInBackground() {
@@ -290,13 +307,12 @@ async function downloadUpdateInBackground() {
 
   try {
     // Set downloadingUpdate to true in timestamp
-    const timestampPath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
     let timestamp = {};
-    if (fs.existsSync(timestampPath)) {
-      timestamp = JSON.parse(fs.readFileSync(timestampPath, "utf8"));
+    if (fs.existsSync(TIMESTAMP_FILE)) {
+      timestamp = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, "utf8"));
     }
     timestamp.downloadingUpdate = true;
-    fs.writeFileSync(timestampPath, JSON.stringify(timestamp, null, 2));
+    fs.writeFileSync(TIMESTAMP_FILE, JSON.stringify(timestamp, null, 2));
 
     // Custom headers for app identification
     const headers = {
@@ -347,9 +363,6 @@ async function downloadUpdateInBackground() {
   }
 }
 
-let electronDl;
-const TIMESTAMP_FILE = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
-
 (async () => {
   electronDl = await import("electron-dl");
 })();
@@ -366,6 +379,8 @@ ipcMain.handle("override-api-key", (event, newApiKey) => {
   apiKeyOverride = newApiKey;
   console.log("API Key overridden:", apiKeyOverride);
 });
+
+ipcMain.handle("get-commit-githash", () => LATEST_COMMIT_HASH);
 
 ipcMain.handle("get-api-key", () => {
   return apiKeyOverride || APIKEY;
@@ -899,7 +914,6 @@ ipcMain.handle("is-v7", () => {
 });
 
 ipcMain.handle("set-v7", () => {
-  const filePath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
   try {
     let timestamp = {
       timestamp: Date.now(),
@@ -907,12 +921,12 @@ ipcMain.handle("set-v7", () => {
     };
 
     // If file exists, update it while preserving the original timestamp
-    if (fs.existsSync(filePath)) {
-      const existingData = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    if (fs.existsSync(TIMESTAMP_FILE)) {
+      const existingData = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, "utf8"));
       timestamp.timestamp = existingData.timestamp;
     }
 
-    fs.writeFileSync(filePath, JSON.stringify(timestamp, null, 2));
+    fs.writeFileSync(TIMESTAMP_FILE, JSON.stringify(timestamp, null, 2));
     return true;
   } catch (error) {
     console.error("Error setting v7:", error);
@@ -921,13 +935,12 @@ ipcMain.handle("set-v7", () => {
 });
 
 ipcMain.handle("create-timestamp", () => {
-  const filePath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
   const timestamp = {
     timestamp: Date.now(),
     v7: true,
   };
   console.log(timestamp);
-  fs.writeFileSync(filePath, JSON.stringify(timestamp, null, 2));
+  fs.writeFileSync(TIMESTAMP_FILE, JSON.stringify(timestamp, null, 2));
 });
 
 ipcMain.handle("has-launched", () => {
@@ -940,21 +953,24 @@ ipcMain.handle("has-launched", () => {
 
 ipcMain.handle("update-launch-count", () => {
   try {
-    const timestampPath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
     let timestamp = {};
 
-    if (fs.existsSync(timestampPath)) {
-      timestamp = JSON.parse(fs.readFileSync(timestampPath, "utf8"));
+    if (fs.existsSync(TIMESTAMP_FILE)) {
+      timestamp = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, "utf8"));
     }
 
     timestamp.launchCount = (timestamp.launchCount || 0) + 1;
-    fs.writeFileSync(timestampPath, JSON.stringify(timestamp, null, 2));
+    fs.writeFileSync(TIMESTAMP_FILE, JSON.stringify(timestamp, null, 2));
 
     return timestamp.launchCount;
   } catch (error) {
     console.error("Error updating launch count:", error);
     return 1;
   }
+});
+
+ipcMain.handle("is-on-windows", () => {
+  return isNotWindows;
 });
 
 ipcMain.handle("delete-installer", () => {
@@ -976,25 +992,23 @@ ipcMain.handle("get-image-key", () => {
 });
 
 ipcMain.handle("set-timestamp-value", async (event, key, value) => {
-  const filePath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
   try {
     let timestamp = {};
-    if (fs.existsSync(filePath)) {
-      timestamp = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    if (fs.existsSync(TIMESTAMP_FILE)) {
+      timestamp = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, "utf8"));
     }
     timestamp[key] = value;
-    fs.writeFileSync(filePath, JSON.stringify(timestamp, null, 2));
+    fs.writeFileSync(TIMESTAMP_FILE, JSON.stringify(timestamp, null, 2));
   } catch (error) {
     console.error("Error setting timestamp value:", error);
   }
 });
 
 ipcMain.handle("get-timestamp-value", async (event, key) => {
-  const filePath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
   try {
     let timestamp = {};
-    if (fs.existsSync(filePath)) {
-      timestamp = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    if (fs.existsSync(TIMESTAMP_FILE)) {
+      timestamp = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, "utf8"));
     }
     return timestamp[key];
   } catch (error) {
@@ -1980,11 +1994,20 @@ function shouldLogError(errorKey) {
 }
 
 function createWindow() {
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+
+  // If screen height is less than 900px, likely a laptop
+  const isLaptop = screenHeight < 900;
+
+  const windowWidth = isLaptop ? Math.min(1500, screenWidth * 0.9) : 1600;
+  const windowHeight = isLaptop ? Math.min(700, screenHeight * 0.9) : 800;
+
   const mainWindow = new BrowserWindow({
     title: "Ascendara",
     icon: path.join(__dirname, "icon.ico"),
-    width: 1600,
-    height: 800,
+    width: windowWidth,
+    height: windowHeight,
     frame: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -1993,13 +2016,13 @@ function createWindow() {
     },
   });
 
+  mainWindow.setMinimumSize(800, 600);
+
   if (isDev) {
     mainWindow.loadURL("http://localhost:5173");
   } else {
     mainWindow.loadFile(path.join(__dirname, "index.html"));
   }
-
-  mainWindow.setMinimumSize(1600, 800);
 
   mainWindow.webContents.setWindowOpenHandler(info => {
     return { action: "deny" };
@@ -2524,9 +2547,8 @@ if (!gotTheLock) {
 
 ipcMain.handle("get-launch-count", () => {
   try {
-    const timestampPath = path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
-    if (fs.existsSync(timestampPath)) {
-      const timestamp = JSON.parse(fs.readFileSync(timestampPath, "utf8"));
+    if (fs.existsSync(TIMESTAMP_FILE)) {
+      const timestamp = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, "utf8"));
       return timestamp.launchCount || 0;
     }
     return 0;
@@ -2652,25 +2674,26 @@ ipcMain.handle("start-translation", async (event, langCode) => {
       languageCode: langCode,
       phase: "starting",
       progress: 0,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
-    
     const translationExePath = isDev
-    ? path.join("./binaries/AscendaraLanguageTranslation/dist/AscendaraLanguageTranslation.exe")
-    : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.exe");
+      ? path.join(
+          "./binaries/AscendaraLanguageTranslation/dist/AscendaraLanguageTranslation.exe"
+        )
+      : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.exe");
 
     // Start the translation process
     currentTranslationProcess = spawn(translationExePath, [langCode], {
-      stdio: ["ignore", "pipe", "pipe"]
+      stdio: ["ignore", "pipe", "pipe"],
     });
 
     // Monitor process output
-    currentTranslationProcess.stdout.on("data", (data) => {
+    currentTranslationProcess.stdout.on("data", data => {
       console.log(`Translation stdout: ${data}`);
     });
 
-    currentTranslationProcess.stderr.on("data", (data) => {
+    currentTranslationProcess.stderr.on("data", data => {
       console.error(`Translation stderr: ${data}`);
     });
 
@@ -2693,26 +2716,26 @@ ipcMain.handle("start-translation", async (event, langCode) => {
     }, 100);
 
     // Handle process completion
-    currentTranslationProcess.on("close", (code) => {
+    currentTranslationProcess.on("close", code => {
       console.log(`Translation process exited with code ${code}`);
       clearInterval(progressInterval);
-      
+
       if (code === 0) {
         event.sender.send("translation-progress", {
           languageCode: langCode,
           phase: "completed",
           progress: 1,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       } else {
         event.sender.send("translation-progress", {
           languageCode: langCode,
           phase: "error",
           progress: 0,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
-      
+
       currentTranslationProcess = null;
     });
 
@@ -2723,7 +2746,7 @@ ipcMain.handle("start-translation", async (event, langCode) => {
       languageCode: langCode,
       phase: "error",
       progress: 0,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
     return false;
   }
@@ -2756,15 +2779,15 @@ ipcMain.handle("get-language-file", async (event, languageCode) => {
 ipcMain.handle("get-downloaded-languages", async () => {
   try {
     const languagesDir = path.join(appDirectory, "/languages/");
-    if (!await fs.pathExists(languagesDir)) {
+    if (!(await fs.pathExists(languagesDir))) {
       await fs.ensureDir(languagesDir);
       return [];
     }
 
     const files = await fs.readdir(languagesDir);
     return files
-      .filter(file => file.endsWith('.json'))
-      .map(file => file.replace('.json', ''));
+      .filter(file => file.endsWith(".json"))
+      .map(file => file.replace(".json", ""));
   } catch (error) {
     console.error("Error getting downloaded languages:", error);
     return [];
@@ -2782,7 +2805,10 @@ ipcMain.handle("language-file-exists", async (event, filename) => {
 });
 
 // Translation progress file watcher
-const TRANSLATION_PROGRESS_FILE = path.join(os.homedir(), "translation_progress.ascendara.json");
+const TRANSLATION_PROGRESS_FILE = path.join(
+  os.homedir(),
+  "translation_progress.ascendara.json"
+);
 let translationWatcher = null;
 
 function startTranslationWatcher(window) {
@@ -2791,16 +2817,21 @@ function startTranslationWatcher(window) {
   }
 
   try {
-    translationWatcher = fs.watch(path.dirname(TRANSLATION_PROGRESS_FILE), (eventType, filename) => {
-      if (filename === "translation_progress.ascendara.json") {
-        try {
-          const progress = JSON.parse(fs.readFileSync(TRANSLATION_PROGRESS_FILE, 'utf8'));
-          window.webContents.send("translation-progress", progress);
-        } catch (error) {
-          console.error("Error reading translation progress:", error);
+    translationWatcher = fs.watch(
+      path.dirname(TRANSLATION_PROGRESS_FILE),
+      (eventType, filename) => {
+        if (filename === "translation_progress.ascendara.json") {
+          try {
+            const progress = JSON.parse(
+              fs.readFileSync(TRANSLATION_PROGRESS_FILE, "utf8")
+            );
+            window.webContents.send("translation-progress", progress);
+          } catch (error) {
+            console.error("Error reading translation progress:", error);
+          }
         }
       }
-    });
+    );
   } catch (error) {
     console.error("Error setting up translation progress watcher:", error);
   }

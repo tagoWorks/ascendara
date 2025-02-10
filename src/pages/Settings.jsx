@@ -154,6 +154,7 @@ function Settings() {
   const [downloadPath, setDownloadPath] = useState("");
   const [canCreateFiles, setCanCreateFiles] = useState(true);
   const [version, setVersion] = useState("");
+  const [commitGitHash, setcommitGitHash] = useState("");
   const [isDownloaderRunning, setIsDownloaderRunning] = useState(false);
   const [settings, setSettings] = useState({
     downloadDirectory: "",
@@ -254,6 +255,11 @@ function Settings() {
         }
 
         setIsInitialized(true);
+        const mg = await window.electron.getCommitGitHash();
+        if (mg) {
+          setcommitGitHash(mg);
+        }
+
         isFirstMount.current = false;
       } catch (error) {
         console.error("Error initializing settings:", error);
@@ -507,11 +513,25 @@ function Settings() {
           <h1 className="text-3xl font-bold text-primary">{t("settings.title")}</h1>
           <Separator orientation="vertical" className="h-8" />
           <p className="text-muted-foreground">{t("settings.configure")}</p>
-          <div
-            onClick={() => window.electron.openURL("https://ascendara.app/changelog")}
-            className="ml-auto flex cursor-pointer items-center gap-2 text-sm text-muted-foreground"
-          >
-            <span>Version {version}</span>
+          <div className="group relative ml-auto flex items-center text-sm text-muted-foreground">
+            <div
+              onClick={() => window.electron.openURL("https://ascendara.app/changelog")}
+              className="transform cursor-pointer px-2 transition-transform duration-300 group-hover:-translate-x-2"
+            >
+              <span>Version {version}</span>
+            </div>
+            <div
+              onClick={() =>
+                window.electron.openURL(
+                  `https://github.com/ascendara/ascendara/commit/${commitGitHash}`
+                )
+              }
+              className="translate-x-8 transform cursor-pointer opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
+            >
+              <span className="text-primary-foreground/60">
+                ({commitGitHash?.substring(0, 7) || "dev"})
+              </span>
+            </div>
           </div>
         </div>
 
@@ -978,6 +998,7 @@ function Settings() {
             {/* Install Game Dependencies Card */}
             <Card className="p-6">
               <div className="mb-2 flex items-center gap-2">
+                disabled={isOnWindows}
                 <ShieldAlert className="mb-2 h-5 w-5 text-primary" />
                 <h2 className="text-xl font-semibold text-primary">
                   {t("settings.installGameDependencies")}

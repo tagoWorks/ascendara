@@ -38,16 +38,18 @@ contextBridge.exposeInMainWorld("electron", {
   updateSetting: (key, value) => ipcRenderer.invoke("update-setting", key, value),
 
   // Language Management
-  downloadLanguage: (langCode) => ipcRenderer.invoke("download-language", langCode),
-  saveLanguageFile: (langCode, content) => ipcRenderer.invoke("save-language-file", langCode, content),
-  getLanguageFile: (langCode) => ipcRenderer.invoke("get-language-file", langCode),
-  startTranslation: (langCode) => ipcRenderer.invoke("start-translation", langCode),
+  downloadLanguage: langCode => ipcRenderer.invoke("download-language", langCode),
+  saveLanguageFile: (langCode, content) =>
+    ipcRenderer.invoke("save-language-file", langCode, content),
+  getLanguageFile: langCode => ipcRenderer.invoke("get-language-file", langCode),
+  startTranslation: langCode => ipcRenderer.invoke("start-translation", langCode),
   cancelTranslation: () => ipcRenderer.invoke("cancel-translation"),
   getDownloadedLanguages: () => ipcRenderer.invoke("get-downloaded-languages"),
-  languageFileExists: (filename) => ipcRenderer.invoke("language-file-exists", filename),
+  languageFileExists: filename => ipcRenderer.invoke("language-file-exists", filename),
 
   getAnalyticsKey: () => ipcRenderer.invoke("get-analytics-key"),
   getImageKey: () => ipcRenderer.invoke("get-image-key"),
+  getCommitGitHash: () => ipcRenderer.invoke("get-commit-githash"),
   getVersion: () => ipcRenderer.invoke("get-version"),
   hasLaunched: () => ipcRenderer.invoke("has-launched"),
   imageSecret: () => ipcRenderer.invoke("get-image-key"),
@@ -125,6 +127,7 @@ contextBridge.exposeInMainWorld("electron", {
   checkForUpdates: () => ipcRenderer.invoke("check-for-updates"),
   updateLaunchCount: () => ipcRenderer.invoke("update-launch-count"),
   getLaunchCount: () => ipcRenderer.invoke("get-launch-count"),
+  isOnWindows: () => ipcRenderer.invoke("is-on-windows"),
   checkGameDependencies: () => ipcRenderer.invoke("check-game-dependencies"),
   isDownloaderRunning: () => ipcRenderer.invoke("is-downloader-running"),
   deleteInstaller: () => ipcRenderer.invoke("delete-installer"),
