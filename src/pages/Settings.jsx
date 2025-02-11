@@ -182,6 +182,7 @@ function Settings() {
   useEffect(() => {
     const checkPlatform = async () => {
       const isWindows = await window.electron.isOnWindows();
+      console.log("Is on Windows:", isWindows);
       setIsOnWindows(isWindows);
     };
     checkPlatform();
@@ -436,21 +437,31 @@ function Settings() {
 
   // Check dependency status on mount and after reinstall
   const checkDependencies = useCallback(async () => {
+    console.log("Checking dependencies...");
     try {
+      console.log("Is not Windows:", !isOnWindows);
       if (!isOnWindows) {
+        console.log("Not on Windows, skipping dependency check");
         setDependencyStatus(null);
         return;
+      } else {
+        const status = await window.electron.checkGameDependencies();
+        setDependencyStatus(status);
       }
-      const status = await window.electron.checkGameDependencies();
-      setDependencyStatus(status);
     } catch (error) {
       console.error("Failed to check dependencies:", error);
     }
   }, []);
 
   useEffect(() => {
-    checkDependencies();
-  }, [checkDependencies]);
+    if (!isOnWindows) {
+      return; // Don't even set up the timer if not on Windows
+    }
+    const timer = setTimeout(() => {
+      checkDependencies();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [checkDependencies, isOnWindows]);
 
   // Get dependency status indicator
   const getDependencyStatusInfo = useMemo(() => {
