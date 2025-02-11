@@ -240,26 +240,35 @@ async function checkVersionAndUpdate() {
           window.webContents.send("update-available");
         });
       }
-      try {
-        let timestamp = {};
-        if (fs.existsSync(TIMESTAMP_FILE)) {
-          timestamp = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, "utf8"));
-        }
-        extraLangVer = timestamp["extraLangVer"];
-        const langVerResponse = await axios.get(
-          `https://api.ascendara.app/language/version`
-        );
-        const langVer = langVerResponse.data.version;
-        if (langVer !== extraLangVer) {
-          getNewLangKeys();
-        }
-      } catch (error) {}
     }
     return is_latest;
   } catch (error) {
     console.error("Error checking version:", error);
     return true;
   }
+}
+
+async function checkReferenceLanguage() {
+  try {
+    let timestamp = {};
+    if (fs.existsSync(TIMESTAMP_FILE)) {
+      timestamp = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, "utf8"));
+    }
+    extraLangVer = timestamp["extraLangVer"];
+    const langVerResponse = await axios.get(
+      `https://api.ascendara.app/language/version`
+    );
+    console.log(
+      "Lang Version Check: Current=",
+      extraLangVer,
+      " Latest=",
+      langVerResponse.data.version
+    );
+    const langVer = langVerResponse.data.version;
+    if (langVer !== extraLangVer) {
+      getNewLangKeys();
+    }
+  } catch (error) {}
 }
 
 async function getNewLangKeys() {
@@ -274,7 +283,21 @@ async function getNewLangKeys() {
     if (!response.ok) {
       throw new Error("Failed to fetch reference English translations");
     }
-    const referenceKeys = Object.keys(await response.json());
+    const referenceTranslations = await response.json();
+
+    // Function to get all nested keys from an object
+    const getAllKeys = (obj, prefix = '') => {
+      return Object.entries(obj).reduce((keys, [key, value]) => {
+        const newKey = prefix ? `${prefix}.${key}` : key;
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          return [...keys, ...getAllKeys(value, newKey)];
+        }
+        return [...keys, newKey];
+      }, []);
+    };
+
+    // Get all nested keys from reference
+    const referenceKeys = getAllKeys(referenceTranslations);
 
     // Store missing keys for each language
     const missingKeys = {};
@@ -284,7 +307,9 @@ async function getNewLangKeys() {
       const langCode = langFile.replace(".json", "");
       const langPath = path.join(appDirectory, "/languages/", langFile);
       const langContent = JSON.parse(fs.readFileSync(langPath, "utf8"));
-      const langKeys = Object.keys(langContent);
+      
+      // Get all nested keys from the language file
+      const langKeys = getAllKeys(langContent);
 
       // Find keys that exist in reference but not in language file
       const missing = referenceKeys.filter(key => !langKeys.includes(key));
@@ -293,7 +318,7 @@ async function getNewLangKeys() {
         missingKeys[langCode] = missing;
       }
     }
-
+    console.log("Missing Keys:", missingKeys);
     return missingKeys;
   } catch (error) {
     console.error("Error in getNewLangKeys:", error);
@@ -1387,8 +1412,9 @@ ipcMain.handle("update-ascendara", async () => {
 });
 
 ipcMain.handle("check-for-updates", async () => {
-  if (isDev) return true;
+  if (false) return true;
   try {
+    await checkReferenceLanguage();
     return await checkVersionAndUpdate();
   } catch (error) {
     console.error("Error checking for updates:", error);

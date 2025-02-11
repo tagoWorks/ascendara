@@ -71,11 +71,13 @@ export const extraLanguages = {
   he: { name: "Hebrew", nativeName: "עברית" },
   hmn: { name: "Hmong", nativeName: "Hmong" },
   hr: { name: "Croatian", nativeName: "Hrvatski" },
+  ht: { name: "Haitian Creole", nativeName: "Kreyòl Ayisyen" },
   hu: { name: "Hungarian", nativeName: "Magyar" },
   hy: { name: "Armenian", nativeName: "Հայերեն" },
   id: { name: "Indonesian", nativeName: "Bahasa Indonesia" },
   ig: { name: "Igbo", nativeName: "Igbo" },
   is: { name: "Icelandic", nativeName: "Íslenska" },
+  iw: { name: "Hebrew", nativeName: "עברית" },
   jw: { name: "Javanese", nativeName: "Basa Jawa" },
   ka: { name: "Georgian", nativeName: "ქართული" },
   kk: { name: "Kazakh", nativeName: "Қазақ тілі" },
@@ -126,12 +128,13 @@ export const extraLanguages = {
   tl: { name: "Filipino", nativeName: "Filipino" },
   tr: { name: "Turkish", nativeName: "Türkçe" },
   uk: { name: "Ukrainian", nativeName: "Українська" },
+  ur: { name: "Urdu", nativeName: "اردو" },
   uz: { name: "Uzbek", nativeName: "O'zbek" },
   vi: { name: "Vietnamese", nativeName: "Tiếng Việt" },
   xh: { name: "Xhosa", nativeName: "isiXhosa" },
   yi: { name: "Yiddish", nativeName: "ייִדיש" },
   yo: { name: "Yoruba", nativeName: "Yorùbá" },
-  zh_tw: { name: "Chinese (Traditional)", nativeName: "繁體中文" },
+  "zh-TW": { name: "Chinese (Traditional)", nativeName: "繁體中文" },
   zu: { name: "Zulu", nativeName: "isiZulu" }
 };
 
