@@ -69,7 +69,11 @@
       "reasonPlaceholder": "What is the issue about?",
       "submit": "Submit Report",
       "submitting": "Submitting report...",
+      "ratingFailed": "Rating Failed",
+      "ratingFailedDesc": "Your rating was not submitted. Sorry about that!",
       "success": "Report submitted successfully!",
+      "couldNotReport": "Report was not submitted.",
+      "couldNotReportDesc": "Your report was not submitted. Please try again later.",
       "title": "Report Issue"
     },
     "reportIssue": "Report Issue",
@@ -217,6 +221,9 @@
       "downloadFailed": "Failed to start download",
       "downloadStarted": "Download started successfully",
       "reportFailed": "Failed to submit report",
+      "invalidLink": "Please enter a valid download link",
+      "invalidProtocolUrl": "Sent URL is invalid. Please try again",
+      "noGameData": "No game data was passed down",
       "reportSubmitted": "Report submitted successfully"
     }
   },
@@ -459,6 +466,16 @@
     "downloadLocation": "Download Location",
     "downloadLocationWarning": "Ascendara cannot write files to the chosen directory. Change was not saved.",
     "downloadSpeed": "Download Speed",
+    "selectMoreLanguages": "See entire list of languages",
+    "cannotCheckDependencies": "Cannot check dependencies on this system",
+    "extraLanguagesPanel": {
+      "title": "Ascendara Languages",
+      "availableLanguagesList": "Your Available Languages",
+      "additionalLanguagesList": "Additional Languages",
+      "additionalLangListDesc": "Choose from an additional 93 languages. These languages will be translated on your computer.",
+      "translatingDialog": "Don't Close Ascendara",
+      "translatingDialogDesc": "Ascendara is translating the selected language. This may take a few minutes, you can leave this but do not close Ascendara."
+    },
     "downloadThreads": "Download Performance",
     "downloadThreadsPresets": {
       "extreme": "Extreme (16 threads) - Use with caution",
@@ -468,7 +485,7 @@
       "veryHigh": "Very High (12 threads) - For fast connections"
     },
     "downloaderRunningWarning": "You cannot change these settings while a download is in progress",
-    "enableAscendaraTimechine": "Enable The Ascendara Timemachine",
+    "enableAscendaraTimechine": "Enable the Ascendara Timemachine",
     "gameSources": "Game Sources",
     "gameSourcesDescription": "Ascendara uses trusted sources to provide you with a safe and reliable gaming experience",
     "general": "General",
@@ -482,6 +499,8 @@
     "manageDependencies": "Manage Dependencies",
     "matureContent": "Mature Content",
     "matureContentDescription": "Allow games with mature themes to appear in search results",
+    "sideScrollBar": "Side Scroll Bar",
+    "sideScrollBarDescription": "Show a scroll bar on the side of the application window",
     "noDependenciesInstalled": "No dependencies installed",
     "reinstallDependencies": "Reinstall Dependencies",
     "reinstallDependenciesDesc": "If a game isn't running correctly, you can try reinstalling all the crucial libraries it needs to run",
@@ -556,7 +575,8 @@
     "welcome": "Welcome! Let's take a quick tour of Ascendara's interface."
   },
   "welcome": {
-    "allRequiredDependenciesHaveBeenInstalled": "All required dependencies have been successfully installed. Welcome to Ascendara.",
+    "allRequiredDependenciesHaveBeenInstalledTitle": "Dependency Installation Complete",
+    "allRequiredDependenciesHaveBeenInstalledDesc": "All required dependencies have been successfully installed. Welcome to Ascendara.",
     "analytics": "Help Improve Ascendara",
     "analyticsDesc": "Share anonymous usage data to help improve your experience",
     "areYouSureYouWantToSkip": "Are you sure you want to skip installing dependencies? Some games may not work properly.",
