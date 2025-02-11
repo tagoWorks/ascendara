@@ -20,6 +20,7 @@ import {
   Globe2,
   ExternalLink,
   ArrowRight,
+  ArrowDown,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -1670,21 +1671,32 @@ const Welcome = ({ welcomeData, onComplete }) => {
                   variants={itemVariants}
                 >
                   <h2 className="text-4xl font-bold text-primary">
-                    {t("welcome.cannotInstallNonWindows")}
+                    {t("welcome.pythonIsRequired")}
                   </h2>
                 </motion.div>
                 <motion.div className="mb-12 max-w-3xl space-y-6" variants={itemVariants}>
                   <p className="text-xl text-foreground/80">
-                    {t("welcome.cannotInstallNonWindowsDesc")}
+                    {t("welcome.pythonMustBeInstalled")}
                   </p>
-                  <Button
-                    onClick={() => handleExit(true)}
-                    size="lg"
-                    className="px-8 py-6 text-secondary"
-                  >
-                    <ArrowRight className="mr-2 h-5 w-5" />
-                    {t("welcome.takeTour")}
-                  </Button>
+                  <div className="flex justify-center space-x-4">
+                    <Button
+                      onClick={() => window.electron.installPython()}
+                      size="lg"
+                      className="px-8 py-6 text-secondary"
+                    >
+                      <ArrowDown className="mr-2 h-5 w-5" />
+                      {t("welcome.installPython")}
+                    </Button>
+
+                    <Button
+                      onClick={() => handleExit(true)}
+                      size="lg"
+                      className="px-8 py-6 text-secondary"
+                    >
+                      <Rocket className="mr-2 h-5 w-5" />
+                      {t("welcome.havePython")}
+                    </Button>
+                  </div>
                 </motion.div>
               </motion.div>
             ))}

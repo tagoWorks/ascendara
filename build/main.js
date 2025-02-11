@@ -340,11 +340,17 @@ async function getNewLangKeys() {
       if (missing.length > 0) {
         // Run the translation script for missing keys
         try {
-          translatorExePath = isDev
-            ? path.join(
-                "./binaries/AscendaraLanguageTranslation/dist/AscendaraLanguageTranslation.exe"
-              )
-            : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.exe");
+          if (isWindows) {
+            translatorExePath = isDev
+              ? path.join(
+                  "./binaries/AscendaraLanguageTranslation/dist/AscendaraLanguageTranslation.exe"
+                )
+              : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.exe");
+          } else {
+            translatorExePath = isDev
+              ? "python3 ./binaries/AscendaraLanguageTranslation/src/debian/AscendaraLanguageTranslation.py"
+              : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.py");
+          }
           const args = [langCode, "--updateKeys"];
 
           // Add each missing key as a separate --newKey argument
@@ -714,11 +720,17 @@ ipcMain.handle(
             let spawnCommand;
 
             if (link.includes("gofile.io")) {
-              executablePath = isDev
-                ? path.join(
-                    "./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe"
-                  )
-                : path.join(appDirectory, "/resources/AscendaraGofileHelper.exe");
+              if (isWindows) {
+                executablePath = isDev
+                  ? path.join(
+                      "./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe"
+                    )
+                  : path.join(appDirectory, "/resources/AscendaraGofileHelper.exe");
+              } else {
+                executablePath = isDev
+                  ? "python3 ./binaries/AscendaraDownloader/src/debian/AscendaraGofileHelper.py"
+                  : path.join(appDirectory, "/resources/AscendaraGofileHelper.py");
+              }
               spawnCommand = [
                 "https://" + link,
                 game,
@@ -730,9 +742,17 @@ ipcMain.handle(
                 gamesDirectory,
               ];
             } else {
-              executablePath = isDev
-                ? path.join("./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe")
-                : path.join(appDirectory, "/resources/AscendaraDownloader.exe");
+              if (isWindows) {
+                executablePath = isDev
+                  ? path.join(
+                      "./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe"
+                    )
+                  : path.join(appDirectory, "/resources/AscendaraDownloader.exe");
+              } else {
+                executablePath = isDev
+                  ? "python3 ./binaries/AscendaraDownloader/src/debian/AscendaraDownloader.py"
+                  : path.join(appDirectory, "/resources/AscendaraDownloader.py");
+              }
               spawnCommand = [
                 link,
                 game,
@@ -1253,6 +1273,155 @@ ipcMain.handle("install-dependencies", async event => {
     return { success: false, message: error.message };
   } finally {
     isInstalling = false;
+  }
+});
+
+ipcMain.handle("install-python", async () => {
+  if (process.platform === "win32") {
+    return {
+      success: false,
+      message: "Windows installation not supported in this handler",
+    };
+  }
+
+  try {
+    const { exec } = require("child_process");
+    const { BrowserWindow } = require("electron");
+
+    const installWindow = new BrowserWindow({
+      width: 500,
+      height: 300,
+      frame: false,
+      transparent: true,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+      },
+    });
+
+    // Create HTML content for the window
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+              background: rgba(30, 30, 30, 0.95);
+              color: white;
+              border-radius: 10px;
+              padding: 20px;
+              margin: 0;
+              height: 100vh;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              box-sizing: border-box;
+            }
+            .spinner {
+              width: 50px;
+              height: 50px;
+              border: 5px solid #f3f3f3;
+              border-top: 5px solid #3498db;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+              margin-bottom: 20px;
+            }
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            .status {
+              margin-top: 15px;
+              text-align: center;
+              max-width: 400px;
+              word-wrap: break-word;
+            }
+            .progress-bar {
+              width: 300px;
+              height: 4px;
+              background: #2c2c2c;
+              border-radius: 2px;
+              margin-top: 15px;
+              overflow: hidden;
+            }
+            .progress {
+              width: 0%;
+              height: 100%;
+              background: #3498db;
+              transition: width 0.3s ease;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="spinner"></div>
+          <h2>Installing Python</h2>
+          <div class="status">Initializing installation...</div>
+          <div class="progress-bar">
+            <div class="progress"></div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Load the HTML content
+    installWindow.loadURL(
+      `data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`
+    );
+
+    const command =
+      process.platform === "darwin"
+        ? "brew install python"
+        : "sudo apt-get update && sudo apt-get install -y python3";
+
+    await new Promise((resolve, reject) => {
+      const updateStatus = message => {
+        installWindow.webContents.executeJavaScript(`
+          document.querySelector('.status').textContent = ${JSON.stringify(message)};
+        `);
+      };
+
+      const updateProgress = percent => {
+        installWindow.webContents.executeJavaScript(`
+          document.querySelector('.progress').style.width = '${percent}%';
+        `);
+      };
+
+      const process = exec(command, (error, stdout, stderr) => {
+        if (error) {
+          updateStatus(`Error: ${error.message}`);
+          setTimeout(() => {
+            installWindow.close();
+            reject(error);
+          }, 3000);
+        } else {
+          updateStatus("Installation completed successfully!");
+          updateProgress(100);
+          setTimeout(() => {
+            installWindow.close();
+            resolve();
+          }, 2000);
+        }
+      });
+
+      // Update progress based on output
+      let progress = 0;
+      process.stdout.on("data", data => {
+        progress = Math.min(progress + 10, 90);
+        updateProgress(progress);
+        updateStatus(data.toString().trim());
+      });
+
+      process.stderr.on("data", data => {
+        updateStatus(data.toString().trim());
+      });
+    });
+
+    return { success: true, message: "Python installed successfully" };
+  } catch (error) {
+    console.error("An error occurred during Python installation:", error);
+    return { success: false, message: error.message };
   }
 });
 
@@ -1788,7 +1957,13 @@ ipcMain.handle("play-game", async (event, game, isCustom = false) => {
       throw new Error("Game is already running");
     }
 
-    const handlerPath = path.join(appDirectory, "/resources/AscendaraGameHandler.exe");
+    let handlerPath;
+
+    if (isWindows) {
+      handlerPath = path.join(appDirectory, "/resources/AscendaraGameHandler.exe");
+    } else {
+      handlerPath = path.join(appDirectory, "/resources/AscendaraGameHandler.py");
+    }
 
     if (!fs.existsSync(handlerPath)) {
       throw new Error("Game handler not found");
