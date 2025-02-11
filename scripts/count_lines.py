@@ -47,6 +47,10 @@ def main():
         # Walk through directory
         for root, _, files in os.walk(dir_path):
             for file in files:
+                # Skip files in any path containing 'debian'
+                if 'debian' in root.replace('\\', '/').lower():
+                    continue
+                    
                 ext = os.path.splitext(file)[1].lower()
                 if ext in target_extensions:
                     filepath = os.path.join(root, file)
