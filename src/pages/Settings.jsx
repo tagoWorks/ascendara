@@ -521,13 +521,13 @@ function Settings() {
             <div
               onClick={() =>
                 window.electron.openURL(
-                  `https://github.com/Ascendara/ascendara/commits/development/${commitGitHash}`
+                  `https://github.com/ascendara/ascendara/commit/${commitGitHash}`
                 )
               }
               className="mr-2 -translate-x-8 transform cursor-pointer opacity-0 transition-all duration-300 hover:underline group-hover:translate-x-0 group-hover:opacity-100"
             >
               <span className="text-primary-foreground/60">
-                (rev: {commitGitHash})
+                (rev: {commitGitHash?.substring(0, 7) || "dev"})
               </span>
             </div>
             <div
