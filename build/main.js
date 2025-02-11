@@ -1484,7 +1484,7 @@ ipcMain.handle("update-ascendara", async () => {
 });
 
 ipcMain.handle("check-for-updates", async () => {
-  if (false) return true;
+  if (isDev) return true;
   try {
     await checkReferenceLanguage();
     return await checkVersionAndUpdate();
