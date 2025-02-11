@@ -18,10 +18,27 @@ Ascendara simplifies your pirating experience by providing a seamless way to dow
 
 ## ✨ Features
 
-- 🌐 Support for 12 total languages
+- 🚀 **Seamless Downloads**  
+  Lightning-fast 2 click download for games that support it. No browser needed at all.
+
+- 🌐 **Browser Integration**  
+  Seamlessly integrate with your browser for one-click game downloads and management.
+
+- 🎨 **Theme Customization**  
+  Beautiful, appealing themes to choose from for a truly unique experience.
+
+- 🕑 **Ascendara Timemachine**  
+  Access and download previous versions of games with the Ascendara Timemachine.
+
+- 👤 **Your own username**  
+  Personalize your username for online game cracks that support it.
+
+- 🌍 **105 Languages Support**  
+  Full interface support for 105 different languages, making Ascendara accessible worldwide.
 <details>
-<summary>Click to expand</summary>
-    
+<summary>See the 12 base languages</summary>
+
+ These languages come with the app by default:
 - English 
 - Spanish
 - French
@@ -34,15 +51,105 @@ Ascendara simplifies your pirating experience by providing a seamless way to dow
 - Portuguese
 - Russian 
 - Japanese
-  
+
+<details>
+<summary>Want to see the full list?</summary>
+
+- Afrikaans
+- Albanian
+- Amharic
+- Armenian
+- Azerbaijani
+- Basque
+- Belarusian
+- Bulgarian
+- Bosnian
+- Catalan
+- Cebuano
+- Chichewa
+- Chinese (Traditional)
+- Corsican
+- Croatian
+- Czech
+- Danish
+- Dutch
+- Esperanto
+- Estonian
+- Filipino
+- Finnish
+- Frisian
+- Galician
+- Georgian
+- Greek
+- Gujarati
+- Hausa
+- Hawaiian
+- Hebrew
+- Hmong
+- Hungarian
+- Icelandic
+- Igbo
+- Indonesian
+- Irish
+- Javanese
+- Kannada
+- Kazakh
+- Khmer
+- Korean
+- Kurdish
+- Kyrgyz
+- Lao
+- Latin
+- Latvian
+- Lithuanian
+- Luxembourgish
+- Macedonian
+- Malagasy
+- Malay
+- Malayalam
+- Maltese
+- Maori
+- Marathi
+- Mongolian
+- Myanmar (Burmese)
+- Nepali
+- Norwegian
+- Pashto
+- Persian
+- Polish
+- Punjabi
+- Romanian
+- Samoan
+- Scottish Gaelic
+- Serbian
+- Sesotho
+- Shona
+- Sindhi
+- Sinhala
+- Slovak
+- Slovenian
+- Somali
+- Sundanese
+- Swedish
+- Swahili
+- Tajik
+- Tamil
+- Telugu
+- Thai
+- Turkish
+- Ukrainian
+- Urdu
+- Uzbek
+- Vietnamese
+- Welsh
+- Xhosa
+- Yiddish
+- Yoruba
+- Zulu
+
 </details>
 
-- 🎯 2 Clicks to start game downloads
-- 📖 Detailed documentation for users & developers
-- 🕑 Ascendara Timemachine to download old versions of games
-- 🔍 Filter searches and organized game library
-- 🔄 Regular updates
-- 🎨 Customizable themes
+</details>
 
 ## 🖼️ Preview
 
