@@ -280,12 +280,15 @@ const Welcome = ({ welcomeData, onComplete }) => {
     () => [
       {
         title: t("welcome.helpIdentifyAndFix"),
+        description: t("welcome.helpIdentifyAndFixDesc"),
       },
       {
         title: t("welcome.influenceFutureFeatures"),
+        description: t("welcome.influenceFutureFeaturesDesc"),
       },
       {
         title: t("welcome.bePartOfImproving"),
+        description: t("welcome.bePartOfImprovingDesc"),
       },
     ],
     [t]
@@ -1402,6 +1405,9 @@ const Welcome = ({ welcomeData, onComplete }) => {
                         <div className="text-left">
                           <p className="font-medium text-muted-foreground">
                             {feature.title}
+                          </p>
+                          <p className="text-sm text-foreground/70">
+                            {feature.description}
                           </p>
                         </div>
                       </div>
