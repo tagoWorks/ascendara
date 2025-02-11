@@ -113,15 +113,36 @@ app.whenReady().then(() => {
 class SettingsManager {
   constructor() {
     this.filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
+    this.defaultSettings = {
+      downloadDirectory: "",
+      viewOldDownloadLinks: false,
+      showOldDownloadLinks: false,
+      seeInappropriateContent: false,
+      autoCreateShortcuts: true,
+      sendAnalytics: true,
+      autoUpdate: true,
+      language: "en",
+      theme: "purple",
+      threadCount: 4,
+      sideScrollBar: false
+    };
     this.settings = this.loadSettings();
   }
 
   loadSettings() {
     try {
+      if (!fs.existsSync(this.filePath)) {
+        // Create default settings file if it doesn't exist
+        fs.writeFileSync(this.filePath, JSON.stringify(this.defaultSettings, null, 2));
+        return this.defaultSettings;
+      }
       const data = fs.readFileSync(this.filePath, "utf8");
-      return JSON.parse(data);
+      const settings = JSON.parse(data);
+      // Merge with default settings to ensure all fields exist
+      return { ...this.defaultSettings, ...settings };
     } catch (error) {
-      return {};
+      console.error("Failed to load settings:", error);
+      return this.defaultSettings;
     }
   }
 
@@ -690,10 +711,10 @@ ipcMain.handle(
 
             if (link.includes("gofile.io")) {
               executablePath = isDev
-                ? path.join(
-                    "./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe"
-                  )
-                : path.join(appDirectory, "/resources/AscendaraGofileHelper.exe");
+              ? path.join(
+                  "./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe"
+                )
+              : path.join(appDirectory, "/resources/AscendaraGofileHelper.exe");
               spawnCommand = [
                 "https://" + link,
                 game,
@@ -706,8 +727,8 @@ ipcMain.handle(
               ];
             } else {
               executablePath = isDev
-                ? path.join("./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe")
-                : path.join(appDirectory, "/resources/AscendaraDownloader.exe");
+              ? path.join("./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe")
+              : path.join(appDirectory, "/resources/AscendaraDownloader.exe");
               spawnCommand = [
                 link,
                 game,
