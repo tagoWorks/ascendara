@@ -126,6 +126,10 @@
         "to": "."
       },
       {
+        "from": "binaries/AscendaraLanguageTranslation/dist/AscendaraLanguageTranslation.exe",
+        "to": "."
+      },
+      {
         "from": "binaries/AscendaraGofileHelper/src/debian/AscendaraGofileHelper.py",
         "to": "."
       },
