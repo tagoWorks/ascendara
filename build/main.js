@@ -124,7 +124,7 @@ class SettingsManager {
       language: "en",
       theme: "purple",
       threadCount: 4,
-      sideScrollBar: false
+      sideScrollBar: false,
     };
     this.settings = this.loadSettings();
   }
@@ -280,9 +280,7 @@ async function checkReferenceLanguage() {
       return;
     }
     extraLangVer = timestamp["extraLangVer"];
-    const langVerResponse = await axios.get(
-      `https://api.ascendara.app/language/version`
-    );
+    const langVerResponse = await axios.get(`https://api.ascendara.app/language/version`);
     console.log(
       "Lang Version Check: Current=",
       extraLangVer,
@@ -311,10 +309,10 @@ async function getNewLangKeys() {
     const referenceTranslations = await response.json();
 
     // Function to get all nested keys from an object
-    const getAllKeys = (obj, prefix = '') => {
+    const getAllKeys = (obj, prefix = "") => {
       return Object.entries(obj).reduce((keys, [key, value]) => {
         const newKey = prefix ? `${prefix}.${key}` : key;
-        if (value && typeof value === 'object' && !Array.isArray(value)) {
+        if (value && typeof value === "object" && !Array.isArray(value)) {
           return [...keys, ...getAllKeys(value, newKey)];
         }
         return [...keys, newKey];
@@ -332,7 +330,7 @@ async function getNewLangKeys() {
       const langCode = langFile.replace(".json", "");
       const langPath = path.join(appDirectory, "/languages/", langFile);
       let langContent = JSON.parse(fs.readFileSync(langPath, "utf8"));
-      
+
       // Get all nested keys from the language file
       let langKeys = getAllKeys(langContent);
 
@@ -343,15 +341,17 @@ async function getNewLangKeys() {
         // Run the translation script for missing keys
         try {
           translatorExePath = isDev
-          ? path.join("./binaries/AscendaraLanguageTranslation/dist/AscendaraLanguageTranslation.exe")
-          : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.exe");
+            ? path.join(
+                "./binaries/AscendaraLanguageTranslation/dist/AscendaraLanguageTranslation.exe"
+              )
+            : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.exe");
           const args = [langCode, "--updateKeys"];
-          
+
           // Add each missing key as a separate --newKey argument
           missing.forEach(key => {
             args.push("--newKey", key);
           });
-          
+
           // Start the translation process with proper configuration
           const translationProcess = spawn(translatorExePath, args, {
             stdio: ["ignore", "pipe", "pipe"],
@@ -715,10 +715,10 @@ ipcMain.handle(
 
             if (link.includes("gofile.io")) {
               executablePath = isDev
-              ? path.join(
-                  "./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe"
-                )
-              : path.join(appDirectory, "/resources/AscendaraGofileHelper.exe");
+                ? path.join(
+                    "./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe"
+                  )
+                : path.join(appDirectory, "/resources/AscendaraGofileHelper.exe");
               spawnCommand = [
                 "https://" + link,
                 game,
@@ -731,8 +731,8 @@ ipcMain.handle(
               ];
             } else {
               executablePath = isDev
-              ? path.join("./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe")
-              : path.join(appDirectory, "/resources/AscendaraDownloader.exe");
+                ? path.join("./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe")
+                : path.join(appDirectory, "/resources/AscendaraDownloader.exe");
               spawnCommand = [
                 link,
                 game,
@@ -2113,8 +2113,8 @@ function createWindow() {
       contextIsolation: true,
     },
   });
-
-  mainWindow.setMinimumSize(800, 600);
+  // Width, Height
+  mainWindow.setMinimumSize(600, 400);
 
   if (isDev) {
     mainWindow.loadURL("http://localhost:5173");

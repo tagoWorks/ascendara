@@ -5,27 +5,27 @@
 }
 
 /* Responsive scaling for different window sizes */
-@media (max-width: 1200px) {
-  :root {
-    --scale-factor: 0.95;
-  }
-}
-
-@media (max-width: 1024px) {
-  :root {
-    --scale-factor: 0.9;
-  }
-}
-
-@media (max-width: 768px) {
+@media (max-width: 1400px) {
   :root {
     --scale-factor: 0.85;
   }
 }
 
+@media (max-width: 1024px) {
+  :root {
+    --scale-factor: 0.7;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --scale-factor: 0.65;
+  }
+}
+
 @media (max-width: 640px) {
   :root {
-    --scale-factor: 0.8;
+    --scale-factor: 0.6;
   }
 }
 
