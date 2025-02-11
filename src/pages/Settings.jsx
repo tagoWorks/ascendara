@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import gameService from "@/services/gameService";
 import { useNavigate } from "react-router-dom";
-import { getAvailableLanguages } from "@/services/languageService";
+import { getAvailableLanguages, handleLanguageChange } from "@/services/languageService";
 
 const themes = [
   // Light themes
@@ -281,15 +281,6 @@ function Settings() {
       }
     });
   }, []);
-
-  const handleLanguageChange = useCallback(
-    value => {
-      const languageValue = String(value);
-      handleSettingChange("language", languageValue);
-      changeLanguage(languageValue);
-    },
-    [handleSettingChange, changeLanguage]
-  );
 
   const handleDirectorySelect = useCallback(async () => {
     try {
@@ -948,19 +939,22 @@ function Settings() {
                   <p className="text-sm text-muted-foreground">
                     {t("settings.languageSettingsDescription")}
                   </p>
-                  <Select value={settings.language} onValueChange={handleLanguageChange}>
+                  <Select value={language} onValueChange={value => {
+                    handleLanguageChange(value);
+                    changeLanguage(value);
+                  }}>
                     <SelectTrigger className="w-full">
                       <SelectValue>
                         <div className="flex items-center gap-2">
                           <span>
                             {
-                              availableLanguages.find(l => l.id === settings.language)
+                              availableLanguages.find(l => l.id === language)
                                 ?.icon
                             }
                           </span>
                           <span>
                             {
-                              availableLanguages.find(l => l.id === settings.language)
+                              availableLanguages.find(l => l.id === language)
                                 ?.name
                             }
                           </span>

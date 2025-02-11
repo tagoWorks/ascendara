@@ -48,6 +48,24 @@ export const onTranslationProgress = (listener) => {
     return () => progressListeners.delete(listener);
 };
 
+// Event emitter for language list changes
+const languageListeners = new Set();
+
+/**
+ * Subscribe to language list changes
+ * @param {function} listener - Callback function that receives updates
+ * @returns {function} Unsubscribe function
+ */
+export const onLanguageListChange = (listener) => {
+    languageListeners.add(listener);
+    return () => languageListeners.delete(listener);
+};
+
+// Notify listeners of language list changes
+const notifyLanguageListChange = () => {
+    languageListeners.forEach(listener => listener());
+};
+
 /**
  * Downloads and registers a new language translation from the Ascendara API
  * @param {string} languageCode - The language code to download (e.g., 'fr', 'de')
@@ -150,9 +168,14 @@ export const changeLanguage = async (languageCode) => {
                                 if (extraLanguages[languageCode]) {
                                     const { name, nativeName } = extraLanguages[languageCode];
                                     addLanguage(languageCode, name, nativeName);
+                                    // Notify listeners that the language list has changed
+                                    notifyLanguageListChange();
                                 }
                                 
-                                i18n.changeLanguage(languageCode);
+                                // Change language after a small delay to ensure UI updates
+                                setTimeout(() => {
+                                    i18n.changeLanguage(languageCode);
+                                }, 0);
                                 resolve();
                             })
                             .catch(reject);
@@ -168,6 +191,28 @@ export const changeLanguage = async (languageCode) => {
         await i18n.changeLanguage(languageCode);
     } catch (error) {
         console.error(`Failed to change language to ${languageCode}:`, error);
+        throw error;
+    }
+};
+
+/**
+ * Updates the language setting and changes the application language
+ * @param {string} languageValue - The language code to switch to
+ * @returns {Promise<void>}
+ */
+export const handleLanguageChange = async (languageValue) => {
+    const value = String(languageValue);
+    try {
+        // First update the setting
+        const success = await electron.updateSetting('language', value);
+        if (!success) {
+            throw new Error('Failed to save language setting');
+        }
+        // Then change the language
+        await changeLanguage(value);
+    } catch (error) {
+        console.error('Error changing language:', error);
+        toast.error('Failed to change language');
         throw error;
     }
 };
@@ -243,3 +288,5 @@ export const getAvailableLanguages = async () => {
         }));
     }
 };
+
+export { baseLanguages };
