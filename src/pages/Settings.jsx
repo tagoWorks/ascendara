@@ -1040,7 +1040,7 @@ function Settings() {
                   </p>
                   <Button
                     onClick={() => navigate("/dependencies")}
-                    disabled={isOnWindows}
+                    disabled={!isOnWindows}
                     className="flex w-full items-center gap-2 text-secondary"
                   >
                     {t("settings.manageDependencies")}
