@@ -180,7 +180,11 @@ function Settings() {
 
   // Check if we're on Windows
   useEffect(() => {
-    setIsOnWindows(window.electron.isOnWindows());
+    const checkPlatform = async () => {
+      const isWindows = await window.electron.isOnWindows();
+      setIsOnWindows(isWindows);
+    };
+    checkPlatform();
   }, []);
 
   // Create a debounced save function to prevent too frequent saves
@@ -287,7 +291,7 @@ function Settings() {
       }
       return;
     }
-    
+
     window.electron.updateSetting(key, value).then(success => {
       if (success) {
         setSettings(prev => ({
@@ -592,10 +596,7 @@ function Settings() {
                     <Switch
                       checked={settings.sideScrollBar}
                       onCheckedChange={() =>
-                        handleSettingChange(
-                          "sideScrollBar",
-                          !settings.sideScrollBar
-                        )
+                        handleSettingChange("sideScrollBar", !settings.sideScrollBar)
                       }
                     />
                   </div>
@@ -973,24 +974,21 @@ function Settings() {
                   <p className="text-sm text-muted-foreground">
                     {t("settings.languageSettingsDescription")}
                   </p>
-                  <Select value={language} onValueChange={value => {
-                    handleLanguageChange(value);
-                    changeLanguage(value);
-                  }}>
+                  <Select
+                    value={language}
+                    onValueChange={value => {
+                      handleLanguageChange(value);
+                      changeLanguage(value);
+                    }}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue>
                         <div className="flex items-center gap-2">
                           <span>
-                            {
-                              availableLanguages.find(l => l.id === language)
-                                ?.icon
-                            }
+                            {availableLanguages.find(l => l.id === language)?.icon}
                           </span>
                           <span>
-                            {
-                              availableLanguages.find(l => l.id === language)
-                                ?.name
-                            }
+                            {availableLanguages.find(l => l.id === language)?.name}
                           </span>
                         </div>
                       </SelectValue>
