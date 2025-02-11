@@ -17,10 +17,8 @@ import time
 import logging
 import argparse
 import requests
-import math
 from collections import deque
 from threading import Lock
-from urllib.parse import quote
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -283,10 +281,31 @@ def get_english_translations():
         logging.error(f"Error fetching English translations: {str(e)}")
         raise  # Let the main function handle the error
 
+def get_base_path():
+    """Get the base path for the application, handling both PyInstaller and regular execution"""
+    if getattr(sys, 'frozen', False):
+        # Running as compiled exe
+        base_path = os.path.dirname(sys.executable)
+        logging.debug(f"Running from exe: {base_path}")
+    else:
+        # Running as script
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        logging.debug(f"Running from script: {base_path}")
+    return base_path
+
 def save_translations(translations, output_path):
     """Save translations to a JSON file"""
     try:
+        # Get the absolute path but preserve the intended directory structure
+        base_path = get_base_path()
+        if not os.path.isabs(output_path):
+            # Go up one level from dist directory to the root directory
+            output_path = os.path.normpath(os.path.join(base_path, "..", output_path))
+        
+        logging.debug(f"Base path: {base_path}")
+        logging.debug(f"Saving translations to: {output_path}")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(translations, f, ensure_ascii=False, indent=2)
         
@@ -297,7 +316,6 @@ def save_translations(translations, output_path):
             version_data = version_response.json()
             
             timestamp_path = os.path.join(os.environ['USERPROFILE'], 'timestamp.ascendara.json')
-            os.makedirs(os.path.dirname(timestamp_path), exist_ok=True)
             
             timestamp_data = {}
             if os.path.exists(timestamp_path):
@@ -322,12 +340,126 @@ def main():
     parser = argparse.ArgumentParser(description='Translate Ascendara language files')
     parser.add_argument('lang', help='Target language code (e.g., fr, de, es)')
     parser.add_argument('--output', '-o', help='Output file path', default=None)
+    parser.add_argument('--updateKeys', action='store_true', help='Update specific keys in the language file')
+    parser.add_argument('--newKey', action='append', help='New key to translate (can be specified multiple times)', default=[])
     args = parser.parse_args()
 
     logging.info(f"Starting translation to {args.lang}")
     logging.debug(f"Arguments: {args}")
 
     try:
+        # Initialize progress tracking
+        progress = TranslationProgress(args.lang)
+        
+        if args.updateKeys:
+            # Handle specific key updates
+            logging.info(f"Updating specific keys: {args.newKey}")
+            try:
+                # Load existing translations if available
+                base_path = get_base_path()
+                # Go up one level from dist and into languages directory
+                languages_dir = os.path.join(base_path, "..", "languages")
+                output_path = args.output or os.path.join(languages_dir, f"{args.lang}.json")
+                
+                logging.debug(f"Base path: {base_path}")
+                logging.debug(f"Languages dir: {languages_dir}")
+                logging.debug(f"Using output path: {output_path}")
+                
+                existing_translations = {}
+                if os.path.exists(output_path):
+                    try:
+                        with open(output_path, 'r', encoding='utf-8') as f:
+                            existing_translations = json.load(f)
+                            logging.info(f"Loaded existing translations from {output_path}")
+                    except Exception as e:
+                        logging.error(f"Error loading existing translations: {e}")
+                        existing_translations = {}
+
+                # Get English translations for reference
+                en_translations = get_english_translations()
+                
+                # Extract values for the specified keys
+                to_translate = {}
+                for key in args.newKey:
+                    # Check if key already exists in translations
+                    current_translated = existing_translations
+                    current_en = en_translations
+                    key_parts = key.split('.')
+                    exists = False
+                    
+                    # Debug log the current state
+                    logging.debug(f"Checking key: {key}")
+                    logging.debug(f"Key parts: {key_parts}")
+                    
+                    # Check if key exists in current translations
+                    try:
+                        for i, part in enumerate(key_parts):
+                            logging.debug(f"Checking part {i}: {part}")
+                            if part not in current_translated:
+                                logging.debug(f"Part {part} not found in translations")
+                                exists = False
+                                break
+                            current_translated = current_translated[part]
+                            if i == len(key_parts) - 1:  # Last part
+                                if isinstance(current_translated, str):
+                                    exists = True
+                                    logging.debug(f"Found complete key with value: {current_translated[:30]}...")
+                                else:
+                                    exists = False
+                                    logging.debug(f"Found key but value is not a string: {type(current_translated)}")
+                    except (KeyError, TypeError) as e:
+                        exists = False
+                        logging.debug(f"Error checking key existence: {str(e)}")
+                    
+                    # Get English value and translate if key doesn't exist
+                    try:
+                        current = en_translations
+                        for part in key_parts:
+                            current = current[part]
+                        if isinstance(current, str):
+                            if not exists:
+                                to_translate[key] = current
+                                logging.info(f"Will translate missing key: {key}")
+                            else:
+                                logging.info(f"Key exists with valid value, skipping: {key}")
+                        else:
+                            logging.warning(f"English key exists but is not a string: {type(current)}")
+                    except (KeyError, TypeError) as e:
+                        logging.warning(f"Key not found in English translations: {key} ({str(e)})")
+                        continue
+                if to_translate:
+                    # Translate the missing keys
+                    progress.total_strings = len(to_translate)
+                    translated_values = {}
+                    for key, value in to_translate.items():
+                        translated = translate_text(value, args.lang)
+                        translated_values[key] = translated
+                        progress.mark_translated()
+                        logging.info(f"Translated {key}: {value[:30]}... -> {translated[:30]}...")
+
+                    # Update the existing translations with new values
+                    for key, value in translated_values.items():
+                        current = existing_translations
+                        key_parts = key.split('.')
+                        for part in key_parts[:-1]:
+                            if part not in current:
+                                current[part] = {}
+                            current = current[part]
+                        current[key_parts[-1]] = value
+
+                    # Save updated translations
+                    save_translations(existing_translations, output_path)
+                    progress.set_phase("completed")
+                    logging.info("Translation of specific keys completed successfully!")
+                else:
+                    logging.info("No new keys to translate")
+                return
+
+            except Exception as e:
+                logging.error(f"Failed to update specific keys: {e}")
+                sys.exit(1)
+
+        # Regular full translation flow
         # Initialize progress tracking
         progress = TranslationProgress(args.lang)
         
@@ -363,7 +495,9 @@ def main():
         if args.output:
             output_path = args.output
         else:
-            output_path = os.path.join("../languages", f"{args.lang}.json")
+            base_path = get_base_path()
+            languages_dir = os.path.join(base_path, "..", "languages")
+            output_path = os.path.join(languages_dir, f"{args.lang}.json")
         
         try:
             save_translations(translated, output_path)

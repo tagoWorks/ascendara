@@ -306,13 +306,60 @@ async function getNewLangKeys() {
     for (const langFile of languageFiles) {
       const langCode = langFile.replace(".json", "");
       const langPath = path.join(appDirectory, "/languages/", langFile);
-      const langContent = JSON.parse(fs.readFileSync(langPath, "utf8"));
+      let langContent = JSON.parse(fs.readFileSync(langPath, "utf8"));
       
       // Get all nested keys from the language file
-      const langKeys = getAllKeys(langContent);
+      let langKeys = getAllKeys(langContent);
 
       // Find keys that exist in reference but not in language file
-      const missing = referenceKeys.filter(key => !langKeys.includes(key));
+      let missing = referenceKeys.filter(key => !langKeys.includes(key));
+
+      if (missing.length > 0) {
+        // Run the translation script for missing keys
+        try {
+          translatorExePath = isDev
+          ? path.join("./binaries/AscendaraLanguageTranslation/dist/AscendaraLanguageTranslation.exe")
+          : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.exe");
+          const args = [langCode, "--updateKeys"];
+          
+          // Add each missing key as a separate --newKey argument
+          missing.forEach(key => {
+            args.push("--newKey", key);
+          });
+          
+          // Start the translation process with proper configuration
+          const translationProcess = spawn(translatorExePath, args, {
+            stdio: ["ignore", "pipe", "pipe"],
+          });
+
+          // Monitor process output
+          translationProcess.stdout.on("data", data => {
+            console.log(`Translation stdout: ${data}`);
+          });
+
+          translationProcess.stderr.on("data", data => {
+            console.error(`Translation stderr: ${data}`);
+          });
+
+          // Wait for process to complete
+          await new Promise((resolve, reject) => {
+            translationProcess.on("close", code => {
+              if (code === 0) {
+                resolve();
+              } else {
+                reject(new Error(`Translation process exited with code ${code}`));
+              }
+            });
+          });
+
+          // Recheck the language file after translation
+          langContent = JSON.parse(fs.readFileSync(langPath, "utf8"));
+          langKeys = getAllKeys(langContent);
+          missing = referenceKeys.filter(key => !langKeys.includes(key));
+        } catch (error) {
+          console.error(`Error running translation script for ${langCode}:`, error);
+        }
+      }
 
       if (missing.length > 0) {
         missingKeys[langCode] = missing;
@@ -2185,6 +2232,7 @@ ipcMain.handle("save-game-image", async (event, gameName, imageBase64) => {
   try {
     const data = fs.readFileSync(filePath, "utf8");
     const settings = JSON.parse(data);
+
     if (!settings.downloadDirectory) {
       console.error("Download directory not set");
       return false;
@@ -2745,7 +2793,7 @@ ipcMain.handle("start-translation", async (event, langCode) => {
           }
         }
       } catch (error) {
-        console.error("Error reading progress:", error);
+        console.error("Error reading translation progress:", error);
       }
     }, 100);
 
