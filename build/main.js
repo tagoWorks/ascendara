@@ -275,6 +275,10 @@ async function checkReferenceLanguage() {
     if (fs.existsSync(TIMESTAMP_FILE)) {
       timestamp = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, "utf8"));
     }
+    // If extraLangVer doesn't exist, no extra languages are installed, so skip check
+    if (!timestamp.hasOwnProperty("extraLangVer")) {
+      return;
+    }
     extraLangVer = timestamp["extraLangVer"];
     const langVerResponse = await axios.get(
       `https://api.ascendara.app/language/version`
@@ -2763,6 +2767,10 @@ ipcMain.handle("set-local-crack-username", (event, username) => {
 
 // Translation process management
 let currentTranslationProcess = null;
+const TRANSLATION_PROGRESS_FILE = path.join(
+  os.homedir(),
+  "translation_progress.ascendara.json"
+);
 
 // Handle translation start
 ipcMain.handle("start-translation", async (event, langCode) => {
@@ -2785,6 +2793,20 @@ ipcMain.handle("start-translation", async (event, langCode) => {
           "./binaries/AscendaraLanguageTranslation/dist/AscendaraLanguageTranslation.exe"
         )
       : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.exe");
+
+    if (!fs.existsSync(translationExePath)) {
+      console.error("Translation executable not found at:", translationExePath);
+      event.sender.send("translation-progress", {
+        languageCode: langCode,
+        phase: "error",
+        progress: 0,
+        error: "Translation executable not found",
+        timestamp: Date.now(),
+      });
+      return false;
+    }
+
+    console.log("Starting translation process with executable:", translationExePath);
 
     // Start the translation process
     currentTranslationProcess = spawn(translationExePath, [langCode], {
@@ -2849,6 +2871,7 @@ ipcMain.handle("start-translation", async (event, langCode) => {
       languageCode: langCode,
       phase: "error",
       progress: 0,
+      error: error.message,
       timestamp: Date.now(),
     });
     return false;
@@ -2908,10 +2931,6 @@ ipcMain.handle("language-file-exists", async (event, filename) => {
 });
 
 // Translation progress file watcher
-const TRANSLATION_PROGRESS_FILE = path.join(
-  os.homedir(),
-  "translation_progress.ascendara.json"
-);
 let translationWatcher = null;
 
 function startTranslationWatcher(window) {
