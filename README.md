@@ -210,7 +210,7 @@ Before building, ensure you have all required dependencies. [View full requireme
 - [ ] Improved download management (pausing, resuming)
 
 ### Future Goals
- > Want to suggest a feature you dont see here? [Contribute](https://ascendara.app/docs/getting-started/contributing) to Ascendara or [submit feedback](https://ascendara.app/feedback)!
+ > Want to suggest a feature you don't see here? [Contribute](https://ascendara.app/docs/getting-started/contributing) to Ascendara or [submit feedback](https://ascendara.app/feedback)!
 
 - [ ] Add semi-support for Linux, and macOS
 - [ ] Retry Download & Extract functionality
