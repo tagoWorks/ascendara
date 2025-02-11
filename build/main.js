@@ -27,7 +27,7 @@
 let isDev = false;
 
 const CURRENT_VERSION = "7.8.1";
-const LATEST_COMMIT_HASH = "dc6edc1";
+const LATEST_COMMIT_HASH = "fd4e74e";
 const {
   app,
   BrowserWindow,
