@@ -55,7 +55,7 @@ const AppRoutes = () => {
   const [isInstalling, setIsInstalling] = useState(false);
   const [iconData, setIconData] = useState("");
   const [showSupportDialog, setShowSupportDialog] = useState(false);
-  const [showPlatformWarning, setShowPlatformWarning] = useState(true);
+  const [showPlatformWarning, setShowPlatformWarning] = useState(false);
   const location = useLocation();
   const hasChecked = useRef(false);
   const loadStartTime = useRef(Date.now());
