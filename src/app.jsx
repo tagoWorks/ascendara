@@ -1,6 +1,7 @@
 import ContextMenu from "@/components/ContextMenu";
 import Layout from "@/components/Layout";
 import SupportDialog from "@/components/SupportDialog";
+import PlatformWarningDialog from "@/components/PlatformWarningDialog";
 import UpdateOverlay from "@/components/UpdateOverlay";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
@@ -53,6 +54,7 @@ const AppRoutes = () => {
   const [isInstalling, setIsInstalling] = useState(false);
   const [iconData, setIconData] = useState("");
   const [showSupportDialog, setShowSupportDialog] = useState(false);
+  const [showPlatformWarning, setShowPlatformWarning] = useState(true);
   const location = useLocation();
   const hasChecked = useRef(false);
   const loadStartTime = useRef(Date.now());
@@ -301,6 +303,20 @@ const AppRoutes = () => {
     }
   };
 
+  useEffect(() => {
+    const checkPlatform = async () => {
+      const hasLaunched = await window.electron.hasLaunched();
+      console.log("Has launched:", hasLaunched);
+      if (!hasLaunched) {
+        const isWindows = await window.electron.isOnWindows();
+        if (!isWindows) {
+          setShowPlatformWarning(true);
+        }
+      }
+    };
+    checkPlatform();
+  }, []);
+
   const handleInstallAndRestart = async () => {
     setIsInstalling(true);
     // Set isUpdating timestamp first
@@ -526,6 +542,9 @@ const AppRoutes = () => {
         </Routes>
       )}
       {showSupportDialog && <SupportDialog onClose={() => setShowSupportDialog(false)} />}
+      {showPlatformWarning && (
+        <PlatformWarningDialog onClose={() => setShowPlatformWarning(false)} />
+      )}
     </>
   );
 };
