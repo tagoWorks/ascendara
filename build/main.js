@@ -26,7 +26,7 @@
 
 let isDev = false;
 
-const CURRENT_VERSION = "7.7.1";
+const CURRENT_VERSION = "7.8.1";
 const LATEST_COMMIT_HASH = "c9d887c";
 const {
   app,
