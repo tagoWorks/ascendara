@@ -19,6 +19,7 @@ import {
   XCircle,
   Globe2,
   ExternalLink,
+  ArrowRight,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -30,6 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
 import { languages } from "@/i18n";
 import { useTheme } from "@/context/ThemeContext";
@@ -207,12 +209,14 @@ function ThemeButton({ theme, currentTheme, onSelect }) {
 const Welcome = ({ welcomeData, onComplete }) => {
   const { t } = useTranslation();
   const { language, changeLanguage } = useLanguage();
+  const navigate = useNavigate();
   const { setTheme } = useTheme();
   const [isV7Welcome, setIsV7Welcome] = useState(welcomeData.isV7Welcome);
   const [step, setStep] = useState("language");
   const [selectedTheme, setSelectedTheme] = useState("purple");
   const [showingLightThemes, setShowingLightThemes] = useState(true);
   const [privacyChecked, setPrivacyChecked] = useState(false);
+  const [isOnWindows, setIsOnWindows] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
   const [showDepsAlert, setShowDepsAlert] = useState(false);
@@ -648,6 +652,14 @@ const Welcome = ({ welcomeData, onComplete }) => {
       console.error("Failed to save settings:", error);
     }
   };
+
+  useEffect(() => {
+    const checkPlatform = async () => {
+      const isWindows = await window.electron.isOnWindows();
+      setIsOnWindows(isWindows);
+    };
+    checkPlatform();
+  }, []);
 
   if (welcomeData.isV7Welcome) {
     if (showAnalyticsStep) {
@@ -1121,7 +1133,14 @@ const Welcome = ({ welcomeData, onComplete }) => {
                 className="mt-6 text-sm text-muted-foreground"
                 variants={itemVariants}
               >
-                {t("welcome.youCanChangeThisLater")}
+                {t("welcome.youCanChangeThisLater")}&nbsp;
+                <a
+                  className="cursor-pointer hover:underline"
+                  onClick={() => navigate("/extralanguages")}
+                >
+                  {t("welcome.seeEntireList")}
+                  <ArrowRight className="ml-1 inline-block h-3 w-3" />
+                </a>
               </motion.p>
             </motion.div>
           )}
@@ -1531,106 +1550,145 @@ const Welcome = ({ welcomeData, onComplete }) => {
             </motion.div>
           )}
 
-          {step === "dependencies" && (
-            <motion.div
-              key="dependencies"
-              className="relative z-10 flex min-h-screen flex-col items-center justify-center p-8 text-center"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-            >
+          {step === "dependencies" &&
+            (isOnWindows ? (
               <motion.div
-                className="mb-8 flex items-center justify-center"
-                variants={itemVariants}
+                key="dependencies"
+                className="relative z-10 flex min-h-screen flex-col items-center justify-center p-8 text-center"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
               >
-                <h2 className="text-4xl font-bold text-primary">
-                  {t("welcome.essentialDependencies")}
-                </h2>
-              </motion.div>
-              <motion.div className="mb-12 max-w-2xl space-y-6" variants={itemVariants}>
-                <p className="text-xl text-foreground/80">
-                  {t("welcome.dependenciesDesc")}
-                </p>
-                <div className="grid grid-cols-2 gap-4 text-left text-muted-foreground">
-                  {[
-                    { name: ".NET Framework", desc: t("welcome.requiredForModernGames") },
-                    { name: "DirectX", desc: t("welcome.graphicsAndMultimedia") },
-                    { name: "OpenAL", desc: t("welcome.audioProcessing") },
-                    { name: "Visual C++", desc: t("welcome.runtimeComponents") },
-                    {
-                      name: "XNA Framework",
-                      desc: t("welcome.gameDevelopmentFramework"),
-                    },
-                  ].map(dep => (
-                    <div key={dep.name} className="flex items-start space-x-3 p-4">
-                      {dependencyStatus[dep.name].icon}
-                      <div>
-                        <button
-                          type="button"
-                          onClick={() => window.electron.openURL(dep.url)}
-                          className="font-medium transition-colors hover:text-primary"
-                        >
-                          {dep.name}
-                        </button>
-                        <p className="text-sm text-foreground/60">{dep.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-
-              {isInstalling ? (
-                <motion.div className="w-full max-w-md space-y-4" variants={itemVariants}>
-                  <p className="text-lg text-foreground/80">
-                    {t("welcome.installingDependencies")} {progress}/{totalDependencies}
-                  </p>
-                  <p className="text-sm text-foreground/60">
-                    {t("welcome.pleaseWaitAndRespondToAdminPrompts")}
-                  </p>
-                  <Progress
-                    value={(progress / totalDependencies) * 100}
-                    className="h-2"
-                  />
-                </motion.div>
-              ) : (
                 <motion.div
-                  className="flex justify-center space-x-4"
+                  className="mb-8 flex items-center justify-center"
                   variants={itemVariants}
                 >
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => setShowDepsAlert(true)}
-                    className="px-8 py-6 text-muted-foreground transition-colors hover:text-primary"
-                  >
-                    {t("welcome.installDependencies")}
-                  </Button>
-
-                  <div className="flex flex-col items-center space-y-4">
-                    <Button
-                      onClick={() => handleExit(true)}
-                      size="lg"
-                      className="px-8 py-6"
-                    >
-                      <Rocket className="mr-2 h-5 w-5 text-secondary" />
-                      <span className="text-secondary">
-                        {" "}
-                        {t("welcome.iHaveTheseTakeMeToTheTour")}
-                      </span>
-                    </Button>
-
-                    <button
-                      onClick={() => handleExit(false)}
-                      className="text-sm text-foreground/60 transition-colors hover:text-primary"
-                    >
-                      {t("welcome.skipTheTour")}
-                    </button>
+                  <h2 className="text-4xl font-bold text-primary">
+                    {t("welcome.essentialDependencies")}
+                  </h2>
+                </motion.div>
+                <motion.div className="mb-12 max-w-2xl space-y-6" variants={itemVariants}>
+                  <p className="text-xl text-foreground/80">
+                    {t("welcome.dependenciesDesc")}
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 text-left text-muted-foreground">
+                    {[
+                      {
+                        name: ".NET Framework",
+                        desc: t("welcome.requiredForModernGames"),
+                      },
+                      { name: "DirectX", desc: t("welcome.graphicsAndMultimedia") },
+                      { name: "OpenAL", desc: t("welcome.audioProcessing") },
+                      { name: "Visual C++", desc: t("welcome.runtimeComponents") },
+                      {
+                        name: "XNA Framework",
+                        desc: t("welcome.gameDevelopmentFramework"),
+                      },
+                    ].map(dep => (
+                      <div key={dep.name} className="flex items-start space-x-3 p-4">
+                        {dependencyStatus[dep.name].icon}
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => window.electron.openURL(dep.url)}
+                            className="font-medium transition-colors hover:text-primary"
+                          >
+                            {dep.name}
+                          </button>
+                          <p className="text-sm text-foreground/60">{dep.desc}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </motion.div>
-              )}
-            </motion.div>
-          )}
+
+                {isInstalling ? (
+                  <motion.div
+                    className="w-full max-w-md space-y-4"
+                    variants={itemVariants}
+                  >
+                    <p className="text-lg text-foreground/80">
+                      {t("welcome.installingDependencies")} {progress}/{totalDependencies}
+                    </p>
+                    <p className="text-sm text-foreground/60">
+                      {t("welcome.pleaseWaitAndRespondToAdminPrompts")}
+                    </p>
+                    <Progress
+                      value={(progress / totalDependencies) * 100}
+                      className="h-2"
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    className="flex justify-center space-x-4"
+                    variants={itemVariants}
+                  >
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => setShowDepsAlert(true)}
+                      className="px-8 py-6 text-muted-foreground transition-colors hover:text-primary"
+                    >
+                      {t("welcome.installDependencies")}
+                    </Button>
+
+                    <div className="flex flex-col items-center space-y-4">
+                      <Button
+                        onClick={() => handleExit(true)}
+                        size="lg"
+                        className="px-8 py-6"
+                      >
+                        <Rocket className="mr-2 h-5 w-5 text-secondary" />
+                        <span className="text-secondary">
+                          {" "}
+                          {t("welcome.iHaveTheseTakeMeToTheTour")}
+                        </span>
+                      </Button>
+
+                      <button
+                        onClick={() => handleExit(false)}
+                        className="text-sm text-foreground/60 transition-colors hover:text-primary"
+                      >
+                        {t("welcome.skipTheTour")}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="non-windows-dependencies"
+                className="relative z-10 flex min-h-screen flex-col items-center justify-center p-8 text-center"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
+                <motion.div
+                  className="mb-8 flex items-center justify-center"
+                  variants={itemVariants}
+                >
+                  <h2 className="text-4xl font-bold text-primary">
+                    {t("welcome.cannotInstallNonWindows")}
+                  </h2>
+                </motion.div>
+                <motion.div className="mb-12 max-w-3xl space-y-6" variants={itemVariants}>
+                  <p className="text-xl text-foreground/80">
+                    {t("welcome.cannotInstallNonWindowsDesc")}
+                  </p>
+                  <Button
+                    onClick={() => handleExit(true)}
+                    size="lg"
+                    className="px-8 py-6 text-secondary"
+                  >
+                    <ArrowRight className="mr-2 h-5 w-5" />
+                    {t("welcome.takeTour")}
+                  </Button>
+                </motion.div>
+              </motion.div>
+            ))}
+
           {step === "installationComplete" && (
             <motion.div
               key="installationComplete"

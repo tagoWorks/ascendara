@@ -1,5 +1,6 @@
 import ContextMenu from "@/components/ContextMenu";
 import Layout from "@/components/Layout";
+import MenuBar from "@/components/MenuBar";
 import SupportDialog from "@/components/SupportDialog";
 import PlatformWarningDialog from "@/components/PlatformWarningDialog";
 import UpdateOverlay from "@/components/UpdateOverlay";
@@ -464,12 +465,21 @@ const AppRoutes = () => {
 
   return (
     <>
+      <MenuBar />
       {showWelcome ? (
-        <Welcome
-          isNewInstall={isNewInstall}
-          welcomeData={welcomeData}
-          onComplete={handleWelcomeComplete}
-        />
+        <Routes>
+          <Route path="/extralanguages" element={<ExtraLanguages />} />
+          <Route
+            path="*"
+            element={
+              <Welcome
+                isNewInstall={isNewInstall}
+                welcomeData={welcomeData}
+                onComplete={handleWelcomeComplete}
+              />
+            }
+          />
+        </Routes>
       ) : (
         <Routes location={location}>
           <Route path="/" element={<Layout />}>
