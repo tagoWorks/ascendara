@@ -30,6 +30,7 @@ import Settings from "./pages/Settings";
 import Welcome from "./pages/Welcome";
 import i18n from "./i18n";
 import "./index.css";
+import "./styles/scrollbar.css";
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -652,6 +653,20 @@ function App() {
       }
     `;
     document.head.appendChild(style);
+  }, []);
+
+  useEffect(() => {
+    const updateScrollbarStyle = () => {
+      const sideScrollBar = localStorage.getItem("sideScrollBar") === "true";
+      if (sideScrollBar) {
+        document.documentElement.classList.add("custom-scrollbar");
+      } else {
+        document.documentElement.classList.remove("custom-scrollbar");
+      }
+    };
+
+    // Initial setup
+    updateScrollbarStyle();
   }, []);
 
   return (

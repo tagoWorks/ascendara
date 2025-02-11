@@ -167,6 +167,7 @@ function Settings() {
     language: "en",
     theme: "purple",
     threadCount: 4,
+    sideScrollBar: localStorage.getItem("sideScrollBar") === "true" || false,
   });
 
   // Track if settings have been initialized
@@ -272,6 +273,21 @@ function Settings() {
   }, []); // Run only once on mount
 
   const handleSettingChange = useCallback((key, value) => {
+    if (key === "sideScrollBar") {
+      localStorage.setItem("sideScrollBar", value);
+      setSettings(prev => ({
+        ...prev,
+        [key]: value,
+      }));
+      // Update scrollbar styles directly
+      if (value) {
+        document.documentElement.classList.add("custom-scrollbar");
+      } else {
+        document.documentElement.classList.remove("custom-scrollbar");
+      }
+      return;
+    }
+    
     window.electron.updateSetting(key, value).then(success => {
       if (success) {
         setSettings(prev => ({
@@ -562,6 +578,24 @@ function Settings() {
                       checked={settings.autoUpdate}
                       onCheckedChange={() =>
                         handleSettingChange("autoUpdate", !settings.autoUpdate)
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("settings.sideScrollBar")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("settings.sideScrollBarDescription")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.sideScrollBar}
+                      onCheckedChange={() =>
+                        handleSettingChange(
+                          "sideScrollBar",
+                          !settings.sideScrollBar
+                        )
                       }
                     />
                   </div>

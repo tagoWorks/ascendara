@@ -1,0 +1,35 @@
+/* Firefox */
+html.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--color-muted-foreground) / 0.5) rgb(var(--color-muted));
+}
+
+/* Chrome, Edge, Safari */
+html.custom-scrollbar::-webkit-scrollbar,
+html.custom-scrollbar *::-webkit-scrollbar {
+  width: 12px;
+}
+
+html.custom-scrollbar::-webkit-scrollbar-track,
+html.custom-scrollbar *::-webkit-scrollbar-track {
+  background: rgb(var(--color-muted));
+  border-radius: 100vh;
+  margin: 2px;
+}
+
+html.custom-scrollbar::-webkit-scrollbar-thumb,
+html.custom-scrollbar *::-webkit-scrollbar-thumb {
+  background: rgb(var(--color-muted-foreground) / 0.5);
+  border: 4px solid rgb(var(--color-muted));
+  border-radius: 100vh;
+}
+
+html.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+html.custom-scrollbar *::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--color-muted-foreground) / 0.7);
+}
+
+html.custom-scrollbar::-webkit-scrollbar-corner,
+html.custom-scrollbar *::-webkit-scrollbar-corner {
+  background: transparent;
+}
