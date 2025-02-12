@@ -27,7 +27,7 @@
 let isDev = false;
 
 const CURRENT_VERSION = "7.8.1";
-const LATEST_COMMIT_HASH = "fd4e74e";
+const LATEST_MAIN_COMMIT_HASH = "fd4e74e";
 const {
   app,
   BrowserWindow,
@@ -483,7 +483,7 @@ ipcMain.handle("override-api-key", (event, newApiKey) => {
   console.log("API Key overridden:", apiKeyOverride);
 });
 
-ipcMain.handle("get-commit-githash", () => LATEST_COMMIT_HASH);
+ipcMain.handle("get-commit-githash", () => LATEST_MAIN_COMMIT_HASH);
 
 ipcMain.handle("get-api-key", () => {
   return apiKeyOverride || APIKEY;
@@ -758,9 +758,12 @@ ipcMain.handle(
 
               // Spawn the process
               const childProcess = spawn(executablePath, spawnCommand, {
-                stdio: "inherit",
+                detached: true,
+                stdio: "ignore",
                 cwd: process.cwd(),
               });
+
+              childProcess.unref();
 
               childProcess.on("error", err => {
                 console.error("Failed to start subprocess:", err);
