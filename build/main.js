@@ -565,12 +565,36 @@ ipcMain.handle("delete-game-directory", async (event, game) => {
 
 ipcMain.handle("stop-download", async (event, game) => {
   try {
-    // Kill any running downloader processes for this game
-    const processNames = ["AscendaraDownloader.exe", "AscendaraGofileHelper.exe"];
+    if (isWindows) {
+      // Windows: Use taskkill to terminate processes
+      const processNames = ["AscendaraDownloader.exe", "AscendaraGofileHelper.exe"];
+      for (const processName of processNames) {
+        const killProcess = spawn("taskkill", ["/f", "/im", processName]);
+        await new Promise(resolve => killProcess.on("close", resolve));
+      }
+    } else {
+      // Unix-like systems: Find and kill Python processes for this game
+      const pythonScripts = ["AscendaraDownloader.py", "AscendaraGofileHelper.py"];
 
-    for (const processName of processNames) {
-      const killProcess = spawn("taskkill", ["/f", "/im", processName]);
-      await new Promise(resolve => killProcess.on("close", resolve));
+      for (const script of pythonScripts) {
+        // Use pgrep to find Python processes running our scripts
+        const findProcess = spawn("pgrep", ["-f", script]);
+        const pids = await new Promise(resolve => {
+          let output = "";
+          findProcess.stdout.on("data", data => (output += data));
+          findProcess.on("close", () =>
+            resolve(output.trim().split("\n").filter(Boolean))
+          );
+        });
+
+        // Kill each found process
+        for (const pid of pids) {
+          if (pid) {
+            const killProcess = spawn("kill", ["-9", pid]);
+            await new Promise(resolve => killProcess.on("close", resolve));
+          }
+        }
+      }
     }
 
     // Wait for processes to fully terminate and release file handles
