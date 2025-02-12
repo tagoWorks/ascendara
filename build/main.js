@@ -726,21 +726,45 @@ ipcMain.handle(
                       "./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe"
                     )
                   : path.join(appDirectory, "/resources/AscendaraGofileHelper.exe");
+                spawnCommand = [
+                  "https://" + link,
+                  game,
+                  online,
+                  dlc,
+                  isVr,
+                  version,
+                  size,
+                  gamesDirectory,
+                ];
               } else {
-                executablePath = isDev
-                  ? "python3 ./binaries/AscendaraDownloader/src/debian/AscendaraGofileHelper.py"
+                executablePath = "python3";
+                pythonScript = isDev
+                  ? path.join(
+                      "./binaries/AscendaraDownloader/src/AscendaraGofileHelper.py"
+                    )
                   : path.join(appDirectory, "/resources/AscendaraGofileHelper.py");
+                spawnCommand = [
+                  pythonScript,
+                  "https://" + link,
+                  game,
+                  online,
+                  dlc,
+                  isVr,
+                  version,
+                  size,
+                  gamesDirectory,
+                ];
               }
-              spawnCommand = [
-                "https://" + link,
-                game,
-                online,
-                dlc,
-                isVr,
-                version,
-                size,
-                gamesDirectory,
-              ];
+
+              // Spawn the process
+              const childProcess = spawn(executablePath, spawnCommand, {
+                stdio: "inherit",
+                cwd: process.cwd(),
+              });
+
+              childProcess.on("error", err => {
+                console.error("Failed to start subprocess:", err);
+              });
             } else {
               if (isWindows) {
                 executablePath = isDev
@@ -1287,6 +1311,29 @@ ipcMain.handle("install-python", async () => {
   try {
     const { exec } = require("child_process");
     const { BrowserWindow } = require("electron");
+    const resourcePath =
+      process.env.NODE_ENV === "development"
+        ? path.join(app.getAppPath(), "binaries")
+        : path.join(process.resourcesPath, "binaries");
+
+    await new Promise((resolve, reject) => {
+      const chmodCommand = [
+        `chmod +x "${isDev ? "./binaries/AscendaraCrashReporter/src/AscendaraCrashReporter.py" : path.join(resourcePath, "/resources/AscendaraCrashReporter.py")}"`,
+        `chmod +x "${isDev ? "./binaries/AscendaraDownloader/src/AscendaraDownloader.py" : path.join(resourcePath, "/resources/AscendaraDownloader.py")}"`,
+        `chmod +x "${isDev ? "./binaries/AscendaraDownloader/src/AscendaraGofileHelper.py" : path.join(resourcePath, "/resources/AscendaraGofileHelper.py")}"`,
+        `chmod +x "${isDev ? "./binaries/AscendaraGameHandler/src/AscendaraGameHandler.py" : path.join(resourcePath, "/resources/AscendaraGameHandler.py")}"`,
+        `chmod +x "${isDev ? "./binaries/AscendaraLanguageTranslation/src/AscendaraLanguageTranslation.py" : path.join(resourcePath, "/resources/AscendaraLanguageTranslation.py")}"`,
+      ].join(" && ");
+
+      exec(chmodCommand, error => {
+        if (error) {
+          console.error("Error making Python files executable:", error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
 
     const installWindow = new BrowserWindow({
       width: 500,
@@ -1388,7 +1435,7 @@ ipcMain.handle("install-python", async () => {
         `);
       };
 
-      const process = exec(command, (error, stdout, stderr) => {
+      const process = exec(command, async (error, stdout, stderr) => {
         if (error) {
           updateStatus(`Error: ${error.message}`);
           setTimeout(() => {
@@ -1396,12 +1443,47 @@ ipcMain.handle("install-python", async () => {
             reject(error);
           }, 3000);
         } else {
-          updateStatus("Installation completed successfully!");
-          updateProgress(100);
-          setTimeout(() => {
-            installWindow.close();
-            resolve();
-          }, 2000);
+          updateStatus("Python installed successfully! Installing required packages...");
+          updateProgress(40);
+
+          // Install pip packages
+          const packages = ["requests", "psutil", "pypresence", "unrar"];
+
+          try {
+            const pipCommand = process.platform === "darwin" ? "pip3" : "pip3";
+
+            for (let i = 0; i < packages.length; i++) {
+              const pkg = packages[i];
+              const progress = 40 + Math.floor(((i + 1) / packages.length) * 60);
+
+              updateStatus(`Installing package: ${pkg}`);
+              updateProgress(progress);
+
+              await new Promise((resolvePackage, rejectPackage) => {
+                exec(`${pipCommand} install --user ${pkg}`, (err, stdout, stderr) => {
+                  if (err) {
+                    console.error(`Error installing ${pkg}:`, err);
+                    rejectPackage(err);
+                  } else {
+                    resolvePackage();
+                  }
+                });
+              });
+            }
+
+            updateStatus("All dependencies installed successfully!");
+            updateProgress(100);
+            setTimeout(() => {
+              installWindow.close();
+              resolve();
+            }, 2000);
+          } catch (pipError) {
+            updateStatus(`Package installation error: ${pipError.message}`);
+            setTimeout(() => {
+              installWindow.close();
+              reject(pipError);
+            }, 3000);
+          }
         }
       });
 
