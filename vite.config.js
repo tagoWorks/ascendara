@@ -13,7 +13,7 @@ export default defineConfig({
   plugins: plugins,
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
-    __APP_REVISION__: JSON.stringify(execSync("git rev-parse refs/tags/" + pkg.version).toString()),
+    __APP_REVISION__: JSON.stringify(execSync("git rev-parse HEAD").toString()),
   },
   root: path.join(__dirname, "src"),
   base: process.env.ELECTRON == "true" ? "./" : "/",
