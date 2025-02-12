@@ -27,6 +27,7 @@ from threading import Lock
 from hashlib import sha256
 from argparse import ArgumentParser, ArgumentTypeError
 from unrar import rarfile
+import patoolib
 
 NEW_LINE = "\n" if sys.platform != "Windows" else "\r\n"
 IS_DEV = False  # Development mode flag
@@ -367,11 +368,15 @@ class GofileDownloader:
                     extract_dir = os.path.dirname(archive_path)  # Extract to same directory as archive
                     print(f"Extracting {archive_path}")
                     
-                    if file.endswith('.zip'):
-                        shutil.unpack_archive(archive_path, extract_dir, format="zip")
-                    elif file.endswith('.rar'):
-                        with rarfile.RarFile(archive_path, 'r') as rar_ref:
-                            rar_ref.extractall(extract_dir)
+                    # check os
+                    if sys.platform == "win32":
+                        if file.endswith('.zip'):
+                            shutil.unpack_archive(archive_path, extract_dir, format="zip")
+                        elif file.endswith('.rar'):
+                            with rarfile.RarFile(archive_path, 'r') as rar_ref:
+                                rar_ref.extractall(extract_dir)
+                    else:
+                        patoolib.extract_archive(archive_path, outdir=extract_dir)
                     os.remove(archive_path)
 
         # Clean up unwanted files
