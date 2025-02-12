@@ -235,9 +235,8 @@ const AppRoutes = () => {
             setIsUpdating(false);
             setIsLoading(false);
             await checkAndSetWelcomeStatus();
-            const version = await window.electron.getVersion();
             toast(t("app.toasts.justUpdated"), {
-              description: t("app.toasts.justUpdatedDesc", { version }),
+              description: t("app.toasts.justUpdatedDesc", { version: __APP_VERSION__ }),
               action: {
                 label: t("app.toasts.viewChangelog"),
                 onClick: () => window.electron.openURL("https://ascendara.app/changelog"),

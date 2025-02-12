@@ -26,8 +26,6 @@
 
 let isDev = false;
 
-const CURRENT_VERSION = "7.8.1";
-const LATEST_MAIN_COMMIT_HASH = "fd4e74e";
 const {
   app,
   BrowserWindow,
@@ -48,7 +46,7 @@ const { spawn } = require("child_process");
 require("dotenv").config();
 
 let has_launched = false;
-let is_latest = true;
+let isLatest = true;
 let updateDownloaded = false;
 let notificationShown = false;
 let updateDownloadInProgress = false;
@@ -247,13 +245,13 @@ ipcMain.handle("save-settings", async (event, options, directory) => {
 async function checkVersionAndUpdate() {
   try {
     const response = await axios.get("https://api.ascendara.app/");
-    const latest_version = response.data.appVer;
+    const latestVersion = response.data.appVer;
 
-    is_latest = latest_version === CURRENT_VERSION;
+    isLatest = latestVersion === __APP_VERSION__;
     console.log(
-      `Version check: Current=${CURRENT_VERSION}, Latest=${latest_version}, Is Latest=${is_latest}`
+      `Version check: Current=${__APP_VERSION__}, Latest=${latestVersion}, Is Latest=${isLatest}`
     );
-    if (!is_latest) {
+    if (!isLatest) {
       const settings = await getSettings();
       if (settings.autoUpdate && !updateDownloadInProgress) {
         // Start background download
@@ -266,7 +264,7 @@ async function checkVersionAndUpdate() {
         });
       }
     }
-    return is_latest;
+    return isLatest;
   } catch (error) {
     console.error("Error checking version:", error);
     return true;
@@ -307,9 +305,7 @@ async function getNewLangKeys() {
     }
 
     // Get all language files from the languages directory in AppData Local
-    const languageFiles = fs
-      .readdirSync(LANG_DIR)
-      .filter(file => file.endsWith(".json"));
+    const languageFiles = fs.readdirSync(LANG_DIR).filter(file => file.endsWith(".json"));
 
     // Fetch reference English translations from API
     const response = await fetch("https://api.ascendara.app/language/en");
@@ -430,7 +426,7 @@ async function downloadUpdateInBackground() {
     // Custom headers for app identification
     const headers = {
       "X-Ascendara-Client": "app",
-      "X-Ascendara-Version": CURRENT_VERSION,
+      "X-Ascendara-Version": __APP_VERSION__,
     };
 
     const updateUrl = `https://lfs.ascendara.app/download?update`;
@@ -493,8 +489,6 @@ ipcMain.handle("override-api-key", (event, newApiKey) => {
   console.log("API Key overridden:", apiKeyOverride);
 });
 
-ipcMain.handle("get-commit-githash", () => LATEST_MAIN_COMMIT_HASH);
-
 ipcMain.handle("get-api-key", () => {
   return apiKeyOverride || APIKEY;
 });
@@ -503,8 +497,6 @@ ipcMain.handle("get-api-key", () => {
 ipcMain.handle("open-url", async (event, url) => {
   shell.openExternal(url);
 });
-
-ipcMain.handle("get-version", () => CURRENT_VERSION);
 
 // Check if any game is downloading
 ipcMain.handle("is-downloader-running", async () => {
@@ -1712,7 +1704,7 @@ async function getSettings() {
 }
 
 ipcMain.handle("update-ascendara", async () => {
-  if (is_latest) return;
+  if (isLatest) return;
 
   if (!updateDownloaded) {
     try {

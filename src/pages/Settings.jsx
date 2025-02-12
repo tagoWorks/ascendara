@@ -153,8 +153,6 @@ function Settings() {
   const [isOnWindows, setIsOnWindows] = useState(true);
   const [downloadPath, setDownloadPath] = useState("");
   const [canCreateFiles, setCanCreateFiles] = useState(true);
-  const [version, setVersion] = useState("");
-  const [commitGitHash, setcommitGitHash] = useState("");
   const [isDownloaderRunning, setIsDownloaderRunning] = useState(false);
   const [settings, setSettings] = useState({
     downloadDirectory: "",
@@ -252,18 +250,6 @@ function Settings() {
             setDownloadPath(savedSettings.downloadDirectory);
           }
           initialSettingsRef.current = savedSettings;
-        }
-
-        // Get version
-        const ver = await window.electron.getVersion();
-        if (ver) {
-          setVersion(ver);
-        }
-
-        setIsInitialized(true);
-        const mg = await window.electron.getCommitGitHash();
-        if (mg) {
-          setcommitGitHash(mg);
         }
 
         isFirstMount.current = false;
@@ -535,20 +521,20 @@ function Settings() {
             <div
               onClick={() =>
                 window.electron.openURL(
-                  `https://github.com/ascendara/ascendara/commit/${commitGitHash}`
+                  `https://github.com/ascendara/ascendara/commit/${__APP_REVISION__}`
                 )
               }
               className="mr-2 -translate-x-8 transform cursor-pointer opacity-0 transition-all duration-300 hover:underline group-hover:translate-x-0 group-hover:opacity-100"
             >
               <span className="text-primary-foreground/60">
-                (rev: {commitGitHash?.substring(0, 7) || "dev"})
+                (rev: {__APP_REVISION__?.substring(0, 7) || "dev"})
               </span>
             </div>
             <div
               onClick={() => window.electron.openURL("https://ascendara.app/changelog")}
               className="cursor-pointer px-2 hover:underline"
             >
-              <span>v{version}</span>
+              <span>v{__APP_VERSION__}</span>
             </div>
           </div>
         </div>
@@ -752,12 +738,12 @@ function Settings() {
 
             {/* Game Sources Card */}
             <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
+              <div className="mb-6 flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-primary">
                     {t("settings.gameSources")}
                   </h2>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {t("settings.gameSourcesDescription")}
                   </p>
                 </div>
@@ -771,9 +757,7 @@ function Settings() {
                   <RefreshCw
                     className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
                   />
-                  {isRefreshing
-                    ? t("search.refreshingIndex")
-                    : t("search.refreshIndex")}
+                  {isRefreshing ? t("search.refreshingIndex") : t("search.refreshIndex")}
                 </Button>
               </div>
 
@@ -789,7 +773,7 @@ function Settings() {
                             {t("settings.sourceActive")}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground max-w-[600px]">
+                        <p className="max-w-[600px] text-sm text-muted-foreground">
                           {t("settings.steamripDescription")}
                         </p>
                       </div>
@@ -831,12 +815,12 @@ function Settings() {
 
                 {/* Additional Features */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-lg border p-4 bg-muted/30">
-                    <div className="flex items-center gap-2 mb-2">
+                  <div className="rounded-lg border bg-muted/30 p-4">
+                    <div className="mb-2 flex items-center gap-2">
                       <ClockAlert className="h-4 w-4 text-muted-foreground" />
                       <h4 className="font-medium">{t("settings.torrentSupport")}</h4>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-3">
+                    <p className="mb-3 text-sm text-muted-foreground">
                       {t("settings.torrentSupportDescription")}
                     </p>
                     <Badge variant="secondary" className="text-xs">
@@ -844,12 +828,12 @@ function Settings() {
                     </Badge>
                   </div>
 
-                  <div className="rounded-lg border p-4 bg-muted/30">
-                    <div className="flex items-center gap-2 mb-2">
+                  <div className="rounded-lg border bg-muted/30 p-4">
+                    <div className="mb-2 flex items-center gap-2">
                       <Plus className="h-4 w-4 text-muted-foreground" />
                       <h4 className="font-medium">{t("settings.customSources")}</h4>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-3">
+                    <p className="mb-3 text-sm text-muted-foreground">
                       {t("settings.customSourcesDescription")}
                     </p>
                     <Badge variant="secondary" className="text-xs">
