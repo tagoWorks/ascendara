@@ -83,8 +83,8 @@ export const fetchGameVersions = async gameName => {
   }
 
   try {
-    // Use encodeURIComponent for proper URL encoding of special characters
-    const encodedName = encodeURIComponent(gameName.trim());
+    // Use the raw game name from gameData.game without sanitization
+    const encodedName = encodeURIComponent(gameName);
     const url = `${API_URL}/json/timemachine/game/${encodedName}`;
     console.log("Fetching from URL:", url);
 
