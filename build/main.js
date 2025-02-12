@@ -346,18 +346,24 @@ async function getNewLangKeys() {
       if (missing.length > 0) {
         // Run the translation script for missing keys
         try {
+          let args;
           if (isWindows) {
             translatorExePath = isDev
               ? path.join(
                   "./binaries/AscendaraLanguageTranslation/dist/AscendaraLanguageTranslation.exe"
                 )
               : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.exe");
+            args = [langCode, "--updateKeys"];
           } else {
-            translatorExePath = isDev
-              ? "python3 ./binaries/AscendaraLanguageTranslation/src/debian/AscendaraLanguageTranslation.py"
+            // For non-Windows, use python3 directly
+            translatorExePath = "python3";
+            // Set the script path based on environment
+            const scriptPath = isDev
+              ? "./binaries/AscendaraLanguageTranslation/src/debian/AscendaraLanguageTranslation.py"
               : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.py");
+            // Initialize args with script path and standard arguments
+            args = [scriptPath, langCode, "--updateKeys"];
           }
-          const args = [langCode, "--updateKeys"];
 
           // Add each missing key as a separate --newKey argument
           missing.forEach(key => {
@@ -367,6 +373,7 @@ async function getNewLangKeys() {
           // Start the translation process with proper configuration
           const translationProcess = spawn(translatorExePath, args, {
             stdio: ["ignore", "pipe", "pipe"],
+            shell: !isWindows, // Use shell on non-Windows platforms
           });
 
           // Monitor process output
@@ -758,14 +765,36 @@ ipcMain.handle(
                 ];
               }
 
-              // Spawn the process
-              const childProcess = spawn(executablePath, spawnCommand, {
-                detached: true,
-                stdio: "ignore",
-                cwd: process.cwd(),
-              });
+              // Spawn the process with different configurations based on platform
+              const spawnOptions = isWindows
+                ? {
+                    detached: true,
+                    stdio: "ignore",
+                    cwd: process.cwd(),
+                  }
+                : {
+                    stdio: ["pipe", "pipe", "pipe"],
+                    cwd: process.cwd(),
+                  };
 
-              childProcess.unref();
+              const childProcess = spawn(executablePath, spawnCommand, spawnOptions);
+
+              if (isWindows) {
+                childProcess.unref();
+              } else {
+                // Handle stdout and stderr for non-Windows platforms
+                childProcess.stdout.on("data", data => {
+                  console.log(`Python stdout: ${data}`);
+                });
+
+                childProcess.stderr.on("data", data => {
+                  console.error(`Python stderr: ${data}`);
+                });
+
+                childProcess.on("close", code => {
+                  console.log(`Python process exited with code ${code}`);
+                });
+              }
 
               childProcess.on("error", err => {
                 console.error("Failed to start subprocess:", err);
@@ -1452,7 +1481,7 @@ ipcMain.handle("install-python", async () => {
           updateProgress(40);
 
           // Install pip packages
-          const packages = ["requests", "psutil", "pypresence", "unrar"];
+          const packages = ["requests", "psutil", "pypresence", "patool"];
 
           try {
             const pipCommand = process.platform === "darwin" ? "pip3" : "pip3";
@@ -2049,7 +2078,9 @@ ipcMain.handle("play-game", async (event, game, isCustom = false) => {
     if (isWindows) {
       handlerPath = path.join(appDirectory, "/resources/AscendaraGameHandler.exe");
     } else {
-      handlerPath = path.join(appDirectory, "/resources/AscendaraGameHandler.py");
+      // For non-Windows, we need to use python3 to execute the script
+      handlerPath = "python3";
+      executable = `${path.join(appDirectory, "/resources/AscendaraGameHandler.py")} ${executable}`;
     }
 
     if (!fs.existsSync(handlerPath)) {
@@ -2063,11 +2094,16 @@ ipcMain.handle("play-game", async (event, game, isCustom = false) => {
       gameDirectory,
     });
 
-    const runGame = spawn(handlerPath, [executable, isCustom.toString()], {
+    const spawnArgs = isWindows
+      ? [executable, isCustom.toString()]
+      : ["-c", executable, isCustom.toString()];
+
+    const runGame = spawn(handlerPath, spawnArgs, {
       detached: false,
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
       cwd: gameDirectory,
+      shell: !isWindows, // Use shell on non-Windows platforms
     });
 
     // Log any output for debugging
