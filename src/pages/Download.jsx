@@ -696,7 +696,7 @@ export default function DownloadPage() {
 
   return (
     <div
-      className="container mx-auto flex min-h-screen max-w-7xl flex-col fade-in"
+      className="container mx-auto flex min-h-screen max-w-7xl flex-col items-center fade-in"
       style={{ transform: `scale(0.95)`, transformOrigin: "top center" }}
     >
       <div className="w-full max-w-6xl">
