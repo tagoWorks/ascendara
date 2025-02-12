@@ -61,6 +61,10 @@ const TIMESTAMP_FILE = !isWindows
   ? path.join(os.homedir(), "timestamp.ascendara.json")
   : path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
 
+const LANG_DIR = !isWindows
+  ? path.join(app.getPath("userData"), "Ascendara", "languages")
+  : path.join(os.homedir(), ".ascendara", "languages");
+
 try {
   config = require("./config.prod.js");
 } catch (e) {
@@ -296,9 +300,15 @@ async function checkReferenceLanguage() {
 
 async function getNewLangKeys() {
   try {
-    // Get all language files from the languages directory
+    // Ensure the languages directory exists in AppData Local;
+    if (!fs.existsSync(LANG_DIR)) {
+      fs.mkdirSync(LANG_DIR, { recursive: true });
+      return; // No language files yet
+    }
+
+    // Get all language files from the languages directory in AppData Local
     const languageFiles = fs
-      .readdirSync(path.join(appDirectory, "/languages/"))
+      .readdirSync(LANG_DIR)
       .filter(file => file.endsWith(".json"));
 
     // Fetch reference English translations from API
@@ -328,7 +338,7 @@ async function getNewLangKeys() {
     // Compare each language file with reference
     for (const langFile of languageFiles) {
       const langCode = langFile.replace(".json", "");
-      const langPath = path.join(appDirectory, "/languages/", langFile);
+      const langPath = path.join(LANG_DIR, langFile);
       let langContent = JSON.parse(fs.readFileSync(langPath, "utf8"));
 
       // Get all nested keys from the language file
@@ -3151,7 +3161,7 @@ ipcMain.handle("cancel-translation", async () => {
 // Get language file
 ipcMain.handle("get-language-file", async (event, languageCode) => {
   try {
-    const filePath = path.join(appDirectory, "/languages/", `${languageCode}.json`);
+    const filePath = path.join(LANG_DIR, `${languageCode}.json`);
     if (await fs.pathExists(filePath)) {
       return await fs.readJson(filePath);
     }
@@ -3164,13 +3174,12 @@ ipcMain.handle("get-language-file", async (event, languageCode) => {
 
 ipcMain.handle("get-downloaded-languages", async () => {
   try {
-    const languagesDir = path.join(appDirectory, "/languages/");
-    if (!(await fs.pathExists(languagesDir))) {
-      await fs.ensureDir(languagesDir);
+    if (!(await fs.pathExists(LANG_DIR))) {
+      await fs.ensureDir(LANG_DIR);
       return [];
     }
 
-    const files = await fs.readdir(languagesDir);
+    const files = await fs.readdir(LANG_DIR);
     return files
       .filter(file => file.endsWith(".json"))
       .map(file => file.replace(".json", ""));
@@ -3182,7 +3191,7 @@ ipcMain.handle("get-downloaded-languages", async () => {
 
 ipcMain.handle("language-file-exists", async (event, filename) => {
   try {
-    const filePath = path.join(appDirectory, "/languages/", filename);
+    const filePath = path.join(LANG_DIR, filename);
     return await fs.pathExists(filePath);
   } catch (error) {
     console.error("Error checking language file:", error);
