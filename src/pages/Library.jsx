@@ -69,6 +69,7 @@ const Library = () => {
   const [showVrWarning, setShowVrWarning] = useState(false);
   const [uninstallingGame, setUninstallingGame] = useState(null);
   const [launchingGame, setLaunchingGame] = useState(null);
+  const [isOnWindows, setIsOnWindows] = useState(true);
   const [coverSearchQuery, setCoverSearchQuery] = useState("");
   const [coverSearchResults, setCoverSearchResults] = useState([]);
   const [isCoverSearchLoading, setIsCoverSearchLoading] = useState(false);
@@ -88,6 +89,14 @@ const Library = () => {
   useEffect(() => {
     localStorage.setItem("game-favorites", JSON.stringify(favorites));
   }, [favorites]);
+
+  useEffect(() => {
+    const checkWindows = async () => {
+      const isWindows = await window.electron.isOnWindows();
+      setIsOnWindows(isWindows);
+    };
+    checkWindows();
+  }, []);
 
   useEffect(() => {
     // Add keyframes to document
@@ -287,7 +296,7 @@ const Library = () => {
 
       // Check if game is VR and show warning
       if (game.isVr && !forcePlay) {
-        setSelectedGame(game);  // Set the selected game before showing warning
+        setSelectedGame(game); // Set the selected game before showing warning
         setShowVrWarning(true);
         return;
       }
@@ -454,7 +463,6 @@ const Library = () => {
     );
   }
 
-
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto max-w-7xl p-4 md:p-8">
@@ -547,7 +555,18 @@ const Library = () => {
                             {username || "Guest"}
                           </span>
                         </div>
-                        <UserSettingsDialog />
+                        {isOnWindows ? (
+                          <UserSettingsDialog />
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            disabled
+                            size="icon"
+                            className="h-9 w-9"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
 
                       {/* Storage section */}
