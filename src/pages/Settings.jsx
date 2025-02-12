@@ -22,16 +22,12 @@ import {
   Hand,
   RefreshCw,
   CircleAlert,
-  CircleCheck,
-  AlertCircle,
   ExternalLink,
   History,
   ChartNoAxesCombined,
   ArrowRight,
-  Download,
   Plus,
-  Plug,
-  TimerReset,
+  ClockAlert,
 } from "lucide-react";
 import gameService from "@/services/gameService";
 import { useNavigate } from "react-router-dom";
@@ -523,7 +519,6 @@ function Settings() {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="space-y-4 text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground">Loading settings...</p>
         </div>
       </div>
     );
@@ -838,7 +833,7 @@ function Settings() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="rounded-lg border p-4 bg-muted/30">
                     <div className="flex items-center gap-2 mb-2">
-                      <TimerReset className="h-4 w-4 text-muted-foreground" />
+                      <ClockAlert className="h-4 w-4 text-muted-foreground" />
                       <h4 className="font-medium">{t("settings.torrentSupport")}</h4>
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
