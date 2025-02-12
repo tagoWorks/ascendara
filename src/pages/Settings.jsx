@@ -28,6 +28,10 @@ import {
   History,
   ChartNoAxesCombined,
   ArrowRight,
+  Download,
+  Plus,
+  Plug,
+  TimerReset,
 } from "lucide-react";
 import gameService from "@/services/gameService";
 import { useNavigate } from "react-router-dom";
@@ -753,92 +757,109 @@ function Settings() {
 
             {/* Game Sources Card */}
             <Card className="p-6">
-              <h2 className="mb-4 text-xl font-semibold text-primary">
-                {t("settings.gameSources")}
-              </h2>
-              <p className="mb-6 text-sm text-muted-foreground">
-                {t("settings.gameSourcesDescription")}
-              </p>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-primary">
+                    {t("settings.gameSources")}
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {t("settings.gameSourcesDescription")}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefreshIndex}
+                  disabled={isRefreshing}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+                  />
+                  {isRefreshing
+                    ? t("search.refreshingIndex")
+                    : t("search.refreshIndex")}
+                </Button>
+              </div>
 
               <div className="space-y-6">
-                {/* Source Status Section */}
-                <div>
-                  <h3 className="mb-3 text-sm font-medium">
-                    {t("settings.sourceStatus")}
-                  </h3>
-                  <p className="mb-4 text-sm text-muted-foreground">
-                    {t("settings.sourceStatusDescription")}
-                  </p>
-
-                  <div className="space-y-4">
-                    {/* SteamRip Status */}
-                    <div className="flex items-center justify-between rounded-lg border p-4">
+                {/* Main Source Info */}
+                <div className="rounded-lg border bg-card">
+                  <div className="p-6">
+                    <div className="flex items-start justify-between">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <Label className="font-medium">SteamRip</Label>
+                          <h3 className="text-lg font-semibold">SteamRip</h3>
                           <Badge variant="success" className="text-xs">
                             {t("settings.sourceActive")}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground max-w-[600px]">
                           {t("settings.steamripDescription")}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          className="whitespace-nowrap"
-                          size="sm"
-                          onClick={() =>
-                            window.electron.openURL(
-                              "https://ascendara.app/sources/steamrip"
-                            )
-                          }
-                        >
-                          {t("common.learnMore")}{" "}
-                          <ExternalLink className="ml-1 inline-block h-3 w-3" />
-                        </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0"
+                        onClick={() =>
+                          window.electron.openURL(
+                            "https://ascendara.app/sources/steamrip"
+                          )
+                        }
+                      >
+                        {t("common.learnMore")}{" "}
+                        <ExternalLink className="ml-1 inline-block h-3 w-3" />
+                      </Button>
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-3 gap-4">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">
+                          {t("settings.lastUpdated")}
+                        </Label>
+                        <p className="text-sm font-medium">
+                          {apiMetadata?.getDate || "-"}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">
+                          {t("settings.totalGames")}
+                        </Label>
+                        <p className="text-sm font-medium">
+                          {apiMetadata?.games?.toLocaleString() || "-"}
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <Separator />
-
-                {/* Source Information */}
-                <div>
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-sm font-medium">{t("settings.sourceInfo")}</h3>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleRefreshIndex}
-                      disabled={isRefreshing}
-                      className="flex items-center gap-2"
-                    >
-                      <RefreshCw
-                        className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-                      />
-                      {isRefreshing
-                        ? t("search.refreshingIndex")
-                        : t("search.refreshIndex")}
-                    </Button>
+                {/* Additional Features */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-lg border p-4 bg-muted/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TimerReset className="h-4 w-4 text-muted-foreground" />
+                      <h4 className="font-medium">{t("settings.torrentSupport")}</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {t("settings.torrentSupportDescription")}
+                    </p>
+                    <Badge variant="secondary" className="text-xs">
+                      {t("settings.comingSoon")}
+                    </Badge>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">
-                        {t("settings.lastUpdated")}
-                      </Label>
-                      <p className="text-sm font-medium">{apiMetadata?.getDate || "-"}</p>
+
+                  <div className="rounded-lg border p-4 bg-muted/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Plus className="h-4 w-4 text-muted-foreground" />
+                      <h4 className="font-medium">{t("settings.customSources")}</h4>
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">
-                        {t("settings.totalGames")}
-                      </Label>
-                      <p className="text-sm font-medium">
-                        {apiMetadata?.games?.toLocaleString() || "-"}
-                      </p>
-                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {t("settings.customSourcesDescription")}
+                    </p>
+                    <Badge variant="secondary" className="text-xs">
+                      {t("settings.comingSoon")}
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -1045,7 +1066,7 @@ function Settings() {
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {t("settings.reinstallDependenciesDesc")}
+                    {t("settings.reinstallDependenciesDesc")}.
                   </p>
                   <Button
                     onClick={() => navigate("/dependencies")}
