@@ -26,8 +26,6 @@
 
 let isDev = false;
 
-const CURRENT_VERSION = "7.8.1";
-const LATEST_COMMIT_HASH = "fd4e74e";
 const {
   app,
   BrowserWindow,
@@ -48,7 +46,7 @@ const { spawn } = require("child_process");
 require("dotenv").config();
 
 let has_launched = false;
-let is_latest = true;
+let isLatest = true;
 let updateDownloaded = false;
 let notificationShown = false;
 let updateDownloadInProgress = false;
@@ -60,6 +58,10 @@ let electronDl;
 const TIMESTAMP_FILE = !isWindows
   ? path.join(os.homedir(), "timestamp.ascendara.json")
   : path.join(process.env.USERPROFILE, "timestamp.ascendara.json");
+
+const LANG_DIR = !isWindows
+  ? path.join(app.getPath("userData"), "Ascendara", "languages")
+  : path.join(os.homedir(), ".ascendara", "languages");
 
 try {
   config = require("./config.prod.js");
@@ -124,7 +126,7 @@ class SettingsManager {
       language: "en",
       theme: "purple",
       threadCount: 4,
-      sideScrollBar: false
+      sideScrollBar: false,
     };
     this.settings = this.loadSettings();
   }
@@ -243,13 +245,13 @@ ipcMain.handle("save-settings", async (event, options, directory) => {
 async function checkVersionAndUpdate() {
   try {
     const response = await axios.get("https://api.ascendara.app/");
-    const latest_version = response.data.appVer;
+    const latestVersion = response.data.appVer;
 
-    is_latest = latest_version === CURRENT_VERSION;
+    isLatest = latestVersion === __APP_VERSION__;
     console.log(
-      `Version check: Current=${CURRENT_VERSION}, Latest=${latest_version}, Is Latest=${is_latest}`
+      `Version check: Current=${__APP_VERSION__}, Latest=${latestVersion}, Is Latest=${isLatest}`
     );
-    if (!is_latest) {
+    if (!isLatest) {
       const settings = await getSettings();
       if (settings.autoUpdate && !updateDownloadInProgress) {
         // Start background download
@@ -262,7 +264,7 @@ async function checkVersionAndUpdate() {
         });
       }
     }
-    return is_latest;
+    return isLatest;
   } catch (error) {
     console.error("Error checking version:", error);
     return true;
@@ -280,9 +282,7 @@ async function checkReferenceLanguage() {
       return;
     }
     extraLangVer = timestamp["extraLangVer"];
-    const langVerResponse = await axios.get(
-      `https://api.ascendara.app/language/version`
-    );
+    const langVerResponse = await axios.get(`https://api.ascendara.app/language/version`);
     console.log(
       "Lang Version Check: Current=",
       extraLangVer,
@@ -298,10 +298,14 @@ async function checkReferenceLanguage() {
 
 async function getNewLangKeys() {
   try {
-    // Get all language files from the languages directory
-    const languageFiles = fs
-      .readdirSync(path.join(appDirectory, "/languages/"))
-      .filter(file => file.endsWith(".json"));
+    // Ensure the languages directory exists in AppData Local;
+    if (!fs.existsSync(LANG_DIR)) {
+      fs.mkdirSync(LANG_DIR, { recursive: true });
+      return; // No language files yet
+    }
+
+    // Get all language files from the languages directory in AppData Local
+    const languageFiles = fs.readdirSync(LANG_DIR).filter(file => file.endsWith(".json"));
 
     // Fetch reference English translations from API
     const response = await fetch("https://api.ascendara.app/language/en");
@@ -311,10 +315,10 @@ async function getNewLangKeys() {
     const referenceTranslations = await response.json();
 
     // Function to get all nested keys from an object
-    const getAllKeys = (obj, prefix = '') => {
+    const getAllKeys = (obj, prefix = "") => {
       return Object.entries(obj).reduce((keys, [key, value]) => {
         const newKey = prefix ? `${prefix}.${key}` : key;
-        if (value && typeof value === 'object' && !Array.isArray(value)) {
+        if (value && typeof value === "object" && !Array.isArray(value)) {
           return [...keys, ...getAllKeys(value, newKey)];
         }
         return [...keys, newKey];
@@ -330,9 +334,9 @@ async function getNewLangKeys() {
     // Compare each language file with reference
     for (const langFile of languageFiles) {
       const langCode = langFile.replace(".json", "");
-      const langPath = path.join(appDirectory, "/languages/", langFile);
+      const langPath = path.join(LANG_DIR, langFile);
       let langContent = JSON.parse(fs.readFileSync(langPath, "utf8"));
-      
+
       // Get all nested keys from the language file
       let langKeys = getAllKeys(langContent);
 
@@ -342,16 +346,24 @@ async function getNewLangKeys() {
       if (missing.length > 0) {
         // Run the translation script for missing keys
         try {
-          translatorExePath = isDev
-          ? path.join("./binaries/AscendaraLanguageTranslation/dist/AscendaraLanguageTranslation.exe")
-          : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.exe");
+          if (isWindows) {
+            translatorExePath = isDev
+              ? path.join(
+                  "./binaries/AscendaraLanguageTranslation/dist/AscendaraLanguageTranslation.exe"
+                )
+              : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.exe");
+          } else {
+            translatorExePath = isDev
+              ? "python3 ./binaries/AscendaraLanguageTranslation/src/debian/AscendaraLanguageTranslation.py"
+              : path.join(appDirectory, "/resources/AscendaraLanguageTranslation.py");
+          }
           const args = [langCode, "--updateKeys"];
-          
+
           // Add each missing key as a separate --newKey argument
           missing.forEach(key => {
             args.push("--newKey", key);
           });
-          
+
           // Start the translation process with proper configuration
           const translationProcess = spawn(translatorExePath, args, {
             stdio: ["ignore", "pipe", "pipe"],
@@ -414,7 +426,7 @@ async function downloadUpdateInBackground() {
     // Custom headers for app identification
     const headers = {
       "X-Ascendara-Client": "app",
-      "X-Ascendara-Version": CURRENT_VERSION,
+      "X-Ascendara-Version": __APP_VERSION__,
     };
 
     const updateUrl = `https://lfs.ascendara.app/download?update`;
@@ -477,8 +489,6 @@ ipcMain.handle("override-api-key", (event, newApiKey) => {
   console.log("API Key overridden:", apiKeyOverride);
 });
 
-ipcMain.handle("get-commit-githash", () => LATEST_COMMIT_HASH);
-
 ipcMain.handle("get-api-key", () => {
   return apiKeyOverride || APIKEY;
 });
@@ -487,8 +497,6 @@ ipcMain.handle("get-api-key", () => {
 ipcMain.handle("open-url", async (event, url) => {
   shell.openExternal(url);
 });
-
-ipcMain.handle("get-version", () => CURRENT_VERSION);
 
 // Check if any game is downloading
 ipcMain.handle("is-downloader-running", async () => {
@@ -714,25 +722,66 @@ ipcMain.handle(
             let spawnCommand;
 
             if (link.includes("gofile.io")) {
-              executablePath = isDev
-              ? path.join(
-                  "./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe"
-                )
-              : path.join(appDirectory, "/resources/AscendaraGofileHelper.exe");
-              spawnCommand = [
-                "https://" + link,
-                game,
-                online,
-                dlc,
-                isVr,
-                version,
-                size,
-                gamesDirectory,
-              ];
+              if (isWindows) {
+                executablePath = isDev
+                  ? path.join(
+                      "./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe"
+                    )
+                  : path.join(appDirectory, "/resources/AscendaraGofileHelper.exe");
+                spawnCommand = [
+                  "https://" + link,
+                  game,
+                  online,
+                  dlc,
+                  isVr,
+                  version,
+                  size,
+                  gamesDirectory,
+                ];
+              } else {
+                executablePath = "python3";
+                pythonScript = isDev
+                  ? path.join(
+                      "./binaries/AscendaraDownloader/src/AscendaraGofileHelper.py"
+                    )
+                  : path.join(appDirectory, "/resources/AscendaraGofileHelper.py");
+                spawnCommand = [
+                  pythonScript,
+                  "https://" + link,
+                  game,
+                  online,
+                  dlc,
+                  isVr,
+                  version,
+                  size,
+                  gamesDirectory,
+                ];
+              }
+
+              // Spawn the process
+              const childProcess = spawn(executablePath, spawnCommand, {
+                detached: true,
+                stdio: "ignore",
+                cwd: process.cwd(),
+              });
+
+              childProcess.unref();
+
+              childProcess.on("error", err => {
+                console.error("Failed to start subprocess:", err);
+              });
             } else {
-              executablePath = isDev
-              ? path.join("./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe")
-              : path.join(appDirectory, "/resources/AscendaraDownloader.exe");
+              if (isWindows) {
+                executablePath = isDev
+                  ? path.join(
+                      "./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe"
+                    )
+                  : path.join(appDirectory, "/resources/AscendaraDownloader.exe");
+              } else {
+                executablePath = isDev
+                  ? "python3 ./binaries/AscendaraDownloader/src/debian/AscendaraDownloader.py"
+                  : path.join(appDirectory, "/resources/AscendaraDownloader.py");
+              }
               spawnCommand = [
                 link,
                 game,
@@ -1256,6 +1305,213 @@ ipcMain.handle("install-dependencies", async event => {
   }
 });
 
+ipcMain.handle("install-python", async () => {
+  if (process.platform === "win32") {
+    return {
+      success: false,
+      message: "Windows installation not supported in this handler",
+    };
+  }
+
+  try {
+    const { exec } = require("child_process");
+    const { BrowserWindow } = require("electron");
+    const resourcePath =
+      process.env.NODE_ENV === "development"
+        ? path.join(app.getAppPath(), "binaries")
+        : path.join(process.resourcesPath, "binaries");
+
+    await new Promise((resolve, reject) => {
+      const chmodCommand = [
+        `chmod +x "${isDev ? "./binaries/AscendaraCrashReporter/src/AscendaraCrashReporter.py" : path.join(resourcePath, "/resources/AscendaraCrashReporter.py")}"`,
+        `chmod +x "${isDev ? "./binaries/AscendaraDownloader/src/AscendaraDownloader.py" : path.join(resourcePath, "/resources/AscendaraDownloader.py")}"`,
+        `chmod +x "${isDev ? "./binaries/AscendaraDownloader/src/AscendaraGofileHelper.py" : path.join(resourcePath, "/resources/AscendaraGofileHelper.py")}"`,
+        `chmod +x "${isDev ? "./binaries/AscendaraGameHandler/src/AscendaraGameHandler.py" : path.join(resourcePath, "/resources/AscendaraGameHandler.py")}"`,
+        `chmod +x "${isDev ? "./binaries/AscendaraLanguageTranslation/src/AscendaraLanguageTranslation.py" : path.join(resourcePath, "/resources/AscendaraLanguageTranslation.py")}"`,
+      ].join(" && ");
+
+      exec(chmodCommand, error => {
+        if (error) {
+          console.error("Error making Python files executable:", error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
+
+    const installWindow = new BrowserWindow({
+      width: 500,
+      height: 300,
+      frame: false,
+      transparent: true,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+      },
+    });
+
+    // Create HTML content for the window
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+              background: rgba(30, 30, 30, 0.95);
+              color: white;
+              border-radius: 10px;
+              padding: 20px;
+              margin: 0;
+              height: 100vh;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              box-sizing: border-box;
+            }
+            .spinner {
+              width: 50px;
+              height: 50px;
+              border: 5px solid #f3f3f3;
+              border-top: 5px solid #3498db;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+              margin-bottom: 20px;
+            }
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            .status {
+              margin-top: 15px;
+              text-align: center;
+              max-width: 400px;
+              word-wrap: break-word;
+            }
+            .progress-bar {
+              width: 300px;
+              height: 4px;
+              background: #2c2c2c;
+              border-radius: 2px;
+              margin-top: 15px;
+              overflow: hidden;
+            }
+            .progress {
+              width: 0%;
+              height: 100%;
+              background: #3498db;
+              transition: width 0.3s ease;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="spinner"></div>
+          <h2>Installing Python</h2>
+          <div class="status">Initializing installation...</div>
+          <div class="progress-bar">
+            <div class="progress"></div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Load the HTML content
+    installWindow.loadURL(
+      `data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`
+    );
+
+    const command =
+      process.platform === "darwin"
+        ? "brew install python"
+        : "sudo apt-get update && sudo apt-get install -y python3";
+
+    await new Promise((resolve, reject) => {
+      const updateStatus = message => {
+        installWindow.webContents.executeJavaScript(`
+          document.querySelector('.status').textContent = ${JSON.stringify(message)};
+        `);
+      };
+
+      const updateProgress = percent => {
+        installWindow.webContents.executeJavaScript(`
+          document.querySelector('.progress').style.width = '${percent}%';
+        `);
+      };
+
+      const process = exec(command, async (error, stdout, stderr) => {
+        if (error) {
+          updateStatus(`Error: ${error.message}`);
+          setTimeout(() => {
+            installWindow.close();
+            reject(error);
+          }, 3000);
+        } else {
+          updateStatus("Python installed successfully! Installing required packages...");
+          updateProgress(40);
+
+          // Install pip packages
+          const packages = ["requests", "psutil", "pypresence", "unrar"];
+
+          try {
+            const pipCommand = process.platform === "darwin" ? "pip3" : "pip3";
+
+            for (let i = 0; i < packages.length; i++) {
+              const pkg = packages[i];
+              const progress = 40 + Math.floor(((i + 1) / packages.length) * 60);
+
+              updateStatus(`Installing package: ${pkg}`);
+              updateProgress(progress);
+
+              await new Promise((resolvePackage, rejectPackage) => {
+                exec(`${pipCommand} install --user ${pkg}`, (err, stdout, stderr) => {
+                  if (err) {
+                    console.error(`Error installing ${pkg}:`, err);
+                    rejectPackage(err);
+                  } else {
+                    resolvePackage();
+                  }
+                });
+              });
+            }
+
+            updateStatus("All dependencies installed successfully!");
+            updateProgress(100);
+            setTimeout(() => {
+              installWindow.close();
+              resolve();
+            }, 2000);
+          } catch (pipError) {
+            updateStatus(`Package installation error: ${pipError.message}`);
+            setTimeout(() => {
+              installWindow.close();
+              reject(pipError);
+            }, 3000);
+          }
+        }
+      });
+
+      // Update progress based on output
+      let progress = 0;
+      process.stdout.on("data", data => {
+        progress = Math.min(progress + 10, 90);
+        updateProgress(progress);
+        updateStatus(data.toString().trim());
+      });
+
+      process.stderr.on("data", data => {
+        updateStatus(data.toString().trim());
+      });
+    });
+
+    return { success: true, message: "Python installed successfully" };
+  } catch (error) {
+    console.error("An error occurred during Python installation:", error);
+    return { success: false, message: error.message };
+  }
+});
+
 /**
  * Check if a file exists using PowerShell
  * @param {string} filePath - The file path to check
@@ -1448,7 +1704,7 @@ async function getSettings() {
 }
 
 ipcMain.handle("update-ascendara", async () => {
-  if (is_latest) return;
+  if (isLatest) return;
 
   if (!updateDownloaded) {
     try {
@@ -1484,7 +1740,7 @@ ipcMain.handle("update-ascendara", async () => {
 });
 
 ipcMain.handle("check-for-updates", async () => {
-  if (false) return true;
+  if (isDev) return true;
   try {
     await checkReferenceLanguage();
     return await checkVersionAndUpdate();
@@ -1788,7 +2044,13 @@ ipcMain.handle("play-game", async (event, game, isCustom = false) => {
       throw new Error("Game is already running");
     }
 
-    const handlerPath = path.join(appDirectory, "/resources/AscendaraGameHandler.exe");
+    let handlerPath;
+
+    if (isWindows) {
+      handlerPath = path.join(appDirectory, "/resources/AscendaraGameHandler.exe");
+    } else {
+      handlerPath = path.join(appDirectory, "/resources/AscendaraGameHandler.py");
+    }
 
     if (!fs.existsSync(handlerPath)) {
       throw new Error("Game handler not found");
@@ -2113,8 +2375,8 @@ function createWindow() {
       contextIsolation: true,
     },
   });
-
-  mainWindow.setMinimumSize(800, 600);
+  // Width, Height
+  mainWindow.setMinimumSize(600, 400);
 
   if (isDev) {
     mainWindow.loadURL("http://localhost:5173");
@@ -2891,7 +3153,7 @@ ipcMain.handle("cancel-translation", async () => {
 // Get language file
 ipcMain.handle("get-language-file", async (event, languageCode) => {
   try {
-    const filePath = path.join(appDirectory, "/languages/", `${languageCode}.json`);
+    const filePath = path.join(LANG_DIR, `${languageCode}.json`);
     if (await fs.pathExists(filePath)) {
       return await fs.readJson(filePath);
     }
@@ -2904,13 +3166,12 @@ ipcMain.handle("get-language-file", async (event, languageCode) => {
 
 ipcMain.handle("get-downloaded-languages", async () => {
   try {
-    const languagesDir = path.join(appDirectory, "/languages/");
-    if (!(await fs.pathExists(languagesDir))) {
-      await fs.ensureDir(languagesDir);
+    if (!(await fs.pathExists(LANG_DIR))) {
+      await fs.ensureDir(LANG_DIR);
       return [];
     }
 
-    const files = await fs.readdir(languagesDir);
+    const files = await fs.readdir(LANG_DIR);
     return files
       .filter(file => file.endsWith(".json"))
       .map(file => file.replace(".json", ""));
@@ -2922,7 +3183,7 @@ ipcMain.handle("get-downloaded-languages", async () => {
 
 ipcMain.handle("language-file-exists", async (event, filename) => {
   try {
-    const filePath = path.join(appDirectory, "/languages/", filename);
+    const filePath = path.join(LANG_DIR, filename);
     return await fs.pathExists(filePath);
   } catch (error) {
     console.error("Error checking language file:", error);

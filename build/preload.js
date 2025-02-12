@@ -49,8 +49,6 @@ contextBridge.exposeInMainWorld("electron", {
 
   getAnalyticsKey: () => ipcRenderer.invoke("get-analytics-key"),
   getImageKey: () => ipcRenderer.invoke("get-image-key"),
-  getCommitGitHash: () => ipcRenderer.invoke("get-commit-githash"),
-  getVersion: () => ipcRenderer.invoke("get-version"),
   hasLaunched: () => ipcRenderer.invoke("has-launched"),
   imageSecret: () => ipcRenderer.invoke("get-image-key"),
 
@@ -97,6 +95,7 @@ contextBridge.exposeInMainWorld("electron", {
 
   // Download and Installation
   installDependencies: () => ipcRenderer.invoke("install-dependencies"),
+  installPython: () => ipcRenderer.invoke("install-python"),
   stopDownload: game => ipcRenderer.invoke("stop-download", game),
   retryDownload: (link, game, online, dlc, version) =>
     ipcRenderer.invoke("retry-download", link, game, online, dlc, version),
@@ -231,7 +230,6 @@ contextBridge.exposeInMainWorld("electron", {
   checkForUpdates: () => ipcRenderer.invoke("check-for-updates"),
   platform: ipcRenderer.invoke("get-platform"),
   getPlatform: () => process.platform,
-  getAppVersion: () => ipcRenderer.invoke("get-version"),
   onSettingsChanged: callback => {
     ipcRenderer.on("settings-updated", callback);
     return () => {

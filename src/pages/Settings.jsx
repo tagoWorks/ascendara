@@ -22,12 +22,12 @@ import {
   Hand,
   RefreshCw,
   CircleAlert,
-  CircleCheck,
-  AlertCircle,
   ExternalLink,
   History,
   ChartNoAxesCombined,
   ArrowRight,
+  Plus,
+  ClockAlert,
 } from "lucide-react";
 import gameService from "@/services/gameService";
 import { useNavigate } from "react-router-dom";
@@ -153,8 +153,6 @@ function Settings() {
   const [isOnWindows, setIsOnWindows] = useState(true);
   const [downloadPath, setDownloadPath] = useState("");
   const [canCreateFiles, setCanCreateFiles] = useState(true);
-  const [version, setVersion] = useState("");
-  const [commitGitHash, setcommitGitHash] = useState("");
   const [isDownloaderRunning, setIsDownloaderRunning] = useState(false);
   const [settings, setSettings] = useState({
     downloadDirectory: "",
@@ -180,7 +178,12 @@ function Settings() {
 
   // Check if we're on Windows
   useEffect(() => {
-    setIsOnWindows(window.electron.isOnWindows());
+    const checkPlatform = async () => {
+      const isWindows = await window.electron.isOnWindows();
+      console.log("Is on Windows:", isWindows);
+      setIsOnWindows(isWindows);
+    };
+    checkPlatform();
   }, []);
 
   // Create a debounced save function to prevent too frequent saves
@@ -249,18 +252,6 @@ function Settings() {
           initialSettingsRef.current = savedSettings;
         }
 
-        // Get version
-        const ver = await window.electron.getVersion();
-        if (ver) {
-          setVersion(ver);
-        }
-
-        setIsInitialized(true);
-        const mg = await window.electron.getCommitGitHash();
-        if (mg) {
-          setcommitGitHash(mg);
-        }
-
         isFirstMount.current = false;
       } catch (error) {
         console.error("Error initializing settings:", error);
@@ -287,7 +278,7 @@ function Settings() {
       }
       return;
     }
-    
+
     window.electron.updateSetting(key, value).then(success => {
       if (success) {
         setSettings(prev => ({
@@ -432,21 +423,31 @@ function Settings() {
 
   // Check dependency status on mount and after reinstall
   const checkDependencies = useCallback(async () => {
+    console.log("Checking dependencies...");
     try {
+      console.log("Is not Windows:", !isOnWindows);
       if (!isOnWindows) {
+        console.log("Not on Windows, skipping dependency check");
         setDependencyStatus(null);
         return;
+      } else {
+        const status = await window.electron.checkGameDependencies();
+        setDependencyStatus(status);
       }
-      const status = await window.electron.checkGameDependencies();
-      setDependencyStatus(status);
     } catch (error) {
       console.error("Failed to check dependencies:", error);
     }
   }, []);
 
   useEffect(() => {
-    checkDependencies();
-  }, [checkDependencies]);
+    if (!isOnWindows) {
+      return; // Don't even set up the timer if not on Windows
+    }
+    const timer = setTimeout(() => {
+      checkDependencies();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [checkDependencies, isOnWindows]);
 
   // Get dependency status indicator
   const getDependencyStatusInfo = useMemo(() => {
@@ -504,7 +505,6 @@ function Settings() {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="space-y-4 text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground">Loading settings...</p>
         </div>
       </div>
     );
@@ -521,20 +521,20 @@ function Settings() {
             <div
               onClick={() =>
                 window.electron.openURL(
-                  `https://github.com/ascendara/ascendara/commit/${commitGitHash}`
+                  `https://github.com/ascendara/ascendara/commit/${__APP_REVISION__}`
                 )
               }
               className="mr-2 -translate-x-8 transform cursor-pointer opacity-0 transition-all duration-300 hover:underline group-hover:translate-x-0 group-hover:opacity-100"
             >
               <span className="text-primary-foreground/60">
-                (rev: {commitGitHash?.substring(0, 7) || "dev"})
+                (rev: {__APP_REVISION__?.substring(0, 7) || "dev"})
               </span>
             </div>
             <div
               onClick={() => window.electron.openURL("https://ascendara.app/changelog")}
               className="cursor-pointer px-2 hover:underline"
             >
-              <span>v{version}</span>
+              <span>v{__APP_VERSION__}</span>
             </div>
           </div>
         </div>
@@ -592,10 +592,7 @@ function Settings() {
                     <Switch
                       checked={settings.sideScrollBar}
                       onCheckedChange={() =>
-                        handleSettingChange(
-                          "sideScrollBar",
-                          !settings.sideScrollBar
-                        )
+                        handleSettingChange("sideScrollBar", !settings.sideScrollBar)
                       }
                     />
                   </div>
@@ -741,92 +738,107 @@ function Settings() {
 
             {/* Game Sources Card */}
             <Card className="p-6">
-              <h2 className="mb-4 text-xl font-semibold text-primary">
-                {t("settings.gameSources")}
-              </h2>
-              <p className="mb-6 text-sm text-muted-foreground">
-                {t("settings.gameSourcesDescription")}
-              </p>
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-primary">
+                    {t("settings.gameSources")}
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {t("settings.gameSourcesDescription")}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefreshIndex}
+                  disabled={isRefreshing}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+                  />
+                  {isRefreshing ? t("search.refreshingIndex") : t("search.refreshIndex")}
+                </Button>
+              </div>
 
               <div className="space-y-6">
-                {/* Source Status Section */}
-                <div>
-                  <h3 className="mb-3 text-sm font-medium">
-                    {t("settings.sourceStatus")}
-                  </h3>
-                  <p className="mb-4 text-sm text-muted-foreground">
-                    {t("settings.sourceStatusDescription")}
-                  </p>
-
-                  <div className="space-y-4">
-                    {/* SteamRip Status */}
-                    <div className="flex items-center justify-between rounded-lg border p-4">
+                {/* Main Source Info */}
+                <div className="rounded-lg border bg-card">
+                  <div className="p-6">
+                    <div className="flex items-start justify-between">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <Label className="font-medium">SteamRip</Label>
+                          <h3 className="text-lg font-semibold">SteamRip</h3>
                           <Badge variant="success" className="text-xs">
                             {t("settings.sourceActive")}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="max-w-[600px] text-sm text-muted-foreground">
                           {t("settings.steamripDescription")}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          className="whitespace-nowrap"
-                          size="sm"
-                          onClick={() =>
-                            window.electron.openURL(
-                              "https://ascendara.app/sources/steamrip"
-                            )
-                          }
-                        >
-                          {t("common.learnMore")}{" "}
-                          <ExternalLink className="ml-1 inline-block h-3 w-3" />
-                        </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0"
+                        onClick={() =>
+                          window.electron.openURL(
+                            "https://ascendara.app/sources/steamrip"
+                          )
+                        }
+                      >
+                        {t("common.learnMore")}{" "}
+                        <ExternalLink className="ml-1 inline-block h-3 w-3" />
+                      </Button>
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-3 gap-4">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">
+                          {t("settings.lastUpdated")}
+                        </Label>
+                        <p className="text-sm font-medium">
+                          {apiMetadata?.getDate || "-"}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">
+                          {t("settings.totalGames")}
+                        </Label>
+                        <p className="text-sm font-medium">
+                          {apiMetadata?.games?.toLocaleString() || "-"}
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <Separator />
-
-                {/* Source Information */}
-                <div>
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-sm font-medium">{t("settings.sourceInfo")}</h3>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleRefreshIndex}
-                      disabled={isRefreshing}
-                      className="flex items-center gap-2"
-                    >
-                      <RefreshCw
-                        className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-                      />
-                      {isRefreshing
-                        ? t("search.refreshingIndex")
-                        : t("search.refreshIndex")}
-                    </Button>
+                {/* Additional Features */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-lg border bg-muted/30 p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <ClockAlert className="h-4 w-4 text-muted-foreground" />
+                      <h4 className="font-medium">{t("settings.torrentSupport")}</h4>
+                    </div>
+                    <p className="mb-3 text-sm text-muted-foreground">
+                      {t("settings.torrentSupportDescription")}
+                    </p>
+                    <Badge variant="secondary" className="text-xs">
+                      {t("settings.comingSoon")}
+                    </Badge>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">
-                        {t("settings.lastUpdated")}
-                      </Label>
-                      <p className="text-sm font-medium">{apiMetadata?.getDate || "-"}</p>
+
+                  <div className="rounded-lg border bg-muted/30 p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Plus className="h-4 w-4 text-muted-foreground" />
+                      <h4 className="font-medium">{t("settings.customSources")}</h4>
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">
-                        {t("settings.totalGames")}
-                      </Label>
-                      <p className="text-sm font-medium">
-                        {apiMetadata?.games?.toLocaleString() || "-"}
-                      </p>
-                    </div>
+                    <p className="mb-3 text-sm text-muted-foreground">
+                      {t("settings.customSourcesDescription")}
+                    </p>
+                    <Badge variant="secondary" className="text-xs">
+                      {t("settings.comingSoon")}
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -973,24 +985,21 @@ function Settings() {
                   <p className="text-sm text-muted-foreground">
                     {t("settings.languageSettingsDescription")}
                   </p>
-                  <Select value={language} onValueChange={value => {
-                    handleLanguageChange(value);
-                    changeLanguage(value);
-                  }}>
+                  <Select
+                    value={language}
+                    onValueChange={value => {
+                      handleLanguageChange(value);
+                      changeLanguage(value);
+                    }}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue>
                         <div className="flex items-center gap-2">
                           <span>
-                            {
-                              availableLanguages.find(l => l.id === language)
-                                ?.icon
-                            }
+                            {availableLanguages.find(l => l.id === language)?.icon}
                           </span>
                           <span>
-                            {
-                              availableLanguages.find(l => l.id === language)
-                                ?.name
-                            }
+                            {availableLanguages.find(l => l.id === language)?.name}
                           </span>
                         </div>
                       </SelectValue>
@@ -1036,11 +1045,11 @@ function Settings() {
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {t("settings.reinstallDependenciesDesc")}
+                    {t("settings.reinstallDependenciesDesc")}.
                   </p>
                   <Button
                     onClick={() => navigate("/dependencies")}
-                    disabled={isOnWindows}
+                    disabled={!isOnWindows}
                     className="flex w-full items-center gap-2 text-secondary"
                   >
                     {t("settings.manageDependencies")}

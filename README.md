@@ -190,7 +190,7 @@ Before building, ensure you have all required dependencies. [View full requireme
 
 1. **Clone the Repository**
    ```sh
-   git clone https://github.com/tagoWorks/ascendara.git
+   git clone https://github.com/ascendara/ascendara.git
    ```
 
 2. **Install Dependencies**
@@ -206,13 +206,15 @@ Before building, ensure you have all required dependencies. [View full requireme
 ## 🗺️ Development Roadmap
 
 ### Current Goals
-- [ ] Endpoint for known games that have weird installation paths, issues, etc.
 - [ ] Improved download management (pausing, resuming)
+- [ ] Fitgirl and torrenting support
 
 ### Future Goals
  > Want to suggest a feature you don't see here? [Contribute](https://ascendara.app/docs/getting-started/contributing) to Ascendara or [submit feedback](https://ascendara.app/feedback)!
 
 - [ ] Add semi-support for Linux, and macOS
+- [ ] Endpoint for known games that have weird installation paths, issues, etc.
+- [ ] Ascendara approved additional sources
 - [ ] Retry Download & Extract functionality
 - [ ] Enhanced antivirus operation checks
 

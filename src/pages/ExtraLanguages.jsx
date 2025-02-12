@@ -12,7 +12,11 @@ import {
   CircleArrowDown,
   CircleCheck,
 } from "lucide-react";
-import { downloadLanguage, onTranslationProgress, getAvailableLanguages } from "@/services/languageService";
+import {
+  downloadLanguage,
+  onTranslationProgress,
+  getAvailableLanguages,
+} from "@/services/languageService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +42,7 @@ const baseLanguages = [
   { id: "ar", name: "Arabic", nativeName: "العربية", icon: "🇸🇦" },
   { id: "hi", name: "Hindi", nativeName: "हिन्दी", icon: "🇮🇳" },
   { id: "bn", name: "Bengali", nativeName: "বাংলা", icon: "🇧🇩" },
-  { id: "ja", name: "Japanese", nativeName: "日本語", icon: "🇯🇵" }
+  { id: "ja", name: "Japanese", nativeName: "日本語", icon: "🇯🇵" },
 ];
 
 // ISO 639-1 language codes and names
@@ -135,7 +139,7 @@ export const extraLanguages = {
   yi: { name: "Yiddish", nativeName: "ייִדיש" },
   yo: { name: "Yoruba", nativeName: "Yorùbá" },
   "zh-TW": { name: "Chinese (Traditional)", nativeName: "繁體中文" },
-  zu: { name: "Zulu", nativeName: "isiZulu" }
+  zu: { name: "Zulu", nativeName: "isiZulu" },
 };
 
 function ExtraLanguages() {
@@ -178,48 +182,53 @@ function ExtraLanguages() {
   }, [availableLanguages]);
 
   // Filter languages based on search query
-  const filteredLanguages = useMemo(() => 
-    Object.entries(extraLanguages)
-      .filter(([code, lang]) => {
-        const searchLower = searchQuery.toLowerCase();
-        return (
-          !baseLanguages.some(base => base.id === code) && // Exclude base languages from extra list
-          (lang.name.toLowerCase().includes(searchLower) ||
-           lang.nativeName.toLowerCase().includes(searchLower) ||
-           code.toLowerCase().includes(searchLower))
-        );
-      })
-      .map(([code, lang]) => ({
-        id: code,
-        ...lang
-      })),
+  const filteredLanguages = useMemo(
+    () =>
+      Object.entries(extraLanguages)
+        .filter(([code, lang]) => {
+          const searchLower = searchQuery.toLowerCase();
+          return (
+            !baseLanguages.some(base => base.id === code) && // Exclude base languages from extra list
+            (lang.name.toLowerCase().includes(searchLower) ||
+              lang.nativeName.toLowerCase().includes(searchLower) ||
+              code.toLowerCase().includes(searchLower))
+          );
+        })
+        .map(([code, lang]) => ({
+          id: code,
+          ...lang,
+        })),
     [searchQuery] // Only recompute when search query changes
   );
 
   return (
-    <div className="container mx-auto p-4 space-y-4">
-
+    <div className="container mx-auto space-y-4 p-4">
+      <div className="mt-20" />
       <div className="flex items-center">
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate("/settings")}
-          className="rounded-full hover:bg-accent hover:text-accent-foreground mb-2"
+          onClick={() => navigate(-1)}
+          className="mb-2 rounded-full hover:bg-accent hover:text-accent-foreground"
         >
           <ArrowLeft className="h-6 w-6" />
         </Button>
-        <h1 className="text-3xl font-bold text-primary ml-4">{t("settings.extraLanguagesPanel.title")}</h1>
+        <h1 className="ml-4 text-3xl font-bold text-primary">
+          {t("settings.extraLanguagesPanel.title")}
+        </h1>
       </div>
 
       {/* Available Languages Section */}
       <Card className="p-6">
-        <h2 className="text-xl font-semibold text-primary mb-4">{t("settings.extraLanguagesPanel.availableLanguagesList")}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {availableLanguages.map((lang) => (
+        <h2 className="mb-4 text-xl font-semibold text-primary">
+          {t("settings.extraLanguagesPanel.availableLanguagesList")}
+        </h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {availableLanguages.map(lang => (
             <Button
               key={lang.id}
               variant={language === lang.id ? "default" : "outline"}
-              className="w-full justify-start gap-2"
+              className={`w-full justify-start gap-2 ${language === lang.id ? 'text-secondary' : ''}`}
               onClick={() => handleChangeLanguage(lang.id)}
             >
               <span>{lang.icon}</span>
@@ -234,14 +243,21 @@ function ExtraLanguages() {
 
       {/* Extra Languages Section */}
       <Card className="p-6">
-        <h2 className="text-xl font-semibold text-primary">{t("settings.extraLanguagesPanel.additionalLanguagesList")}</h2>
-        <p className="text-muted-foreground text-sm mb-4">{t("settings.extraLanguagesPanel.additionalLangListDesc")}&nbsp;
-          <a 
-          onClick={() => window.electron.openURL("https://ascendara.app/docs/developer/language-translator")}
-          className="inline-flex cursor-pointer items-center text-xs text-primary hover:underline">
-            
+        <h2 className="text-xl font-semibold text-primary">
+          {t("settings.extraLanguagesPanel.additionalLanguagesList")}
+        </h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          {t("settings.extraLanguagesPanel.additionalLangListDesc")}&nbsp;
+          <a
+            onClick={() =>
+              window.electron.openURL(
+                "https://ascendara.app/docs/developer/language-translator"
+              )
+            }
+            className="inline-flex cursor-pointer items-center text-xs text-primary hover:underline"
+          >
             {t("common.learnMore")}
-          <ExternalLink className="ml-1 h-3 w-3" />
+            <ExternalLink className="ml-1 h-3 w-3" />
           </a>
         </p>
         <div className="mb-4">
@@ -249,25 +265,29 @@ function ExtraLanguages() {
             type="text"
             placeholder={t("Search languages...")}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredLanguages.map((lang) => {
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredLanguages.map(lang => {
             const isAvailable = availableLanguagesMap.has(lang.id);
             const isDownloading = downloadProgress?.languageCode === lang.id;
-            const progress = isDownloading ? Math.round(downloadProgress.progress * 100) : 0;
-            
+            const progress = isDownloading
+              ? Math.round(downloadProgress.progress * 100)
+              : 0;
+
             return (
               <Button
                 key={lang.id}
                 variant={language === lang.id ? "default" : "outline"}
-                className="w-full justify-start gap-2 relative overflow-hidden"
-                onClick={() => !isAvailable && !downloadProgress && setSelectedLangId(lang.id)}
+                className="relative w-full justify-start gap-2 overflow-hidden"
+                onClick={() =>
+                  !isAvailable && !downloadProgress && setSelectedLangId(lang.id)
+                }
                 disabled={downloadProgress || isAvailable}
               >
-                <div className="flex items-center gap-2 z-10">
+                <div className="z-10 flex items-center gap-2">
                   {isDownloading ? (
                     <>
                       <Loader className="animate-spin" />
@@ -281,11 +301,11 @@ function ExtraLanguages() {
                   <span>{lang.nativeName}</span>
                   <span className="text-muted-foreground">({lang.name})</span>
                 </div>
-                
+
                 {/* Progress Bar */}
                 {isDownloading && (
-                  <div 
-                    className="absolute left-0 top-0 bottom-0 bg-primary/20 transition-all duration-300"
+                  <div
+                    className="absolute bottom-0 left-0 top-0 bg-primary/20 transition-all duration-300"
                     style={{ width: `${progress}%` }}
                   />
                 )}
@@ -295,20 +315,32 @@ function ExtraLanguages() {
         </div>
       </Card>
 
-      <AlertDialog open={!!selectedLangId} onOpenChange={(open) => !open && setSelectedLangId(null)}>
+      <AlertDialog
+        open={!!selectedLangId}
+        onOpenChange={open => !open && setSelectedLangId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-bold text-foreground">{t("settings.extraLanguagesPanel.translatingDialog")}</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">
+              {t("settings.extraLanguagesPanel.translatingDialog")}
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
               {t("settings.extraLanguagesPanel.translatingDialogDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="text-primary">{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction className="bg-primary text-secondary" onClick={() => {
-              downloadLanguage(selectedLangId);
-              setSelectedLangId(null);
-            }}>{t("welcome.continue")}</AlertDialogAction>
+            <AlertDialogCancel className="text-primary">
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-primary text-secondary"
+              onClick={() => {
+                downloadLanguage(selectedLangId);
+                setSelectedLangId(null);
+              }}
+            >
+              {t("welcome.continue")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -29,6 +29,7 @@ from concurrent.futures import ThreadPoolExecutor
 from tempfile import NamedTemporaryFile
 import requests
 from unrar import rarfile
+import patoolib
 from requests.adapters import HTTPAdapter
 from urllib3.poolmanager import PoolManager
 import argparse
@@ -381,11 +382,15 @@ def download_file(link, game, online, dlc, isVr, version, size, download_dir):
         archive_file_path, archive_ext = download_with_requests()
 
         try:
-            if archive_ext == "rar":
-                with rarfile.RarFile(archive_file_path, 'r') as fs:
-                    fs.extractall(download_path)
-            elif archive_ext == "zip":
-                shutil.unpack_archive(archive_file_path, download_path, format="zip")
+            if sys.platform == "win32":
+                if archive_ext == "rar":
+                    with rarfile.RarFile(archive_file_path, 'r') as fs:
+                        fs.extractall(download_path)
+                elif archive_ext == "zip":
+                    shutil.unpack_archive(archive_file_path, download_path, format="zip")
+            elif sys.platform == "darwin":
+                patoolib.extract_archive(archive_file_path, download_path)
+
             os.remove(archive_file_path)
             game_info["downloadingData"]["extracting"] = False
 

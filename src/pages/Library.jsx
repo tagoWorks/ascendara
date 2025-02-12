@@ -447,10 +447,13 @@ const Library = () => {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-foreground">{t("library.loadingGames")}</div>
+        <div className="space-y-4 text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-background">

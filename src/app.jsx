@@ -1,6 +1,8 @@
 import ContextMenu from "@/components/ContextMenu";
 import Layout from "@/components/Layout";
+import MenuBar from "@/components/MenuBar";
 import SupportDialog from "@/components/SupportDialog";
+import PlatformWarningDialog from "@/components/PlatformWarningDialog";
 import UpdateOverlay from "@/components/UpdateOverlay";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
@@ -53,6 +55,7 @@ const AppRoutes = () => {
   const [isInstalling, setIsInstalling] = useState(false);
   const [iconData, setIconData] = useState("");
   const [showSupportDialog, setShowSupportDialog] = useState(false);
+  const [showPlatformWarning, setShowPlatformWarning] = useState(false);
   const location = useLocation();
   const hasChecked = useRef(false);
   const loadStartTime = useRef(Date.now());
@@ -232,9 +235,8 @@ const AppRoutes = () => {
             setIsUpdating(false);
             setIsLoading(false);
             await checkAndSetWelcomeStatus();
-            const version = await window.electron.getVersion();
             toast(t("app.toasts.justUpdated"), {
-              description: t("app.toasts.justUpdatedDesc", { version }),
+              description: t("app.toasts.justUpdatedDesc", { version: __APP_VERSION__ }),
               action: {
                 label: t("app.toasts.viewChangelog"),
                 onClick: () => window.electron.openURL("https://ascendara.app/changelog"),
@@ -300,6 +302,20 @@ const AppRoutes = () => {
       navigate("/", { replace: true });
     }
   };
+
+  useEffect(() => {
+    const checkPlatform = async () => {
+      const hasLaunched = await window.electron.hasLaunched();
+      console.log("Has launched:", hasLaunched);
+      if (!hasLaunched) {
+        const isWindows = await window.electron.isOnWindows();
+        if (!isWindows) {
+          setShowPlatformWarning(true);
+        }
+      }
+    };
+    checkPlatform();
+  }, []);
 
   const handleInstallAndRestart = async () => {
     setIsInstalling(true);
@@ -448,12 +464,21 @@ const AppRoutes = () => {
 
   return (
     <>
+      <MenuBar />
       {showWelcome ? (
-        <Welcome
-          isNewInstall={isNewInstall}
-          welcomeData={welcomeData}
-          onComplete={handleWelcomeComplete}
-        />
+        <Routes>
+          <Route path="/extralanguages" element={<ExtraLanguages />} />
+          <Route
+            path="*"
+            element={
+              <Welcome
+                isNewInstall={isNewInstall}
+                welcomeData={welcomeData}
+                onComplete={handleWelcomeComplete}
+              />
+            }
+          />
+        </Routes>
       ) : (
         <Routes location={location}>
           <Route path="/" element={<Layout />}>
@@ -526,6 +551,9 @@ const AppRoutes = () => {
         </Routes>
       )}
       {showSupportDialog && <SupportDialog onClose={() => setShowSupportDialog(false)} />}
+      {showPlatformWarning && (
+        <PlatformWarningDialog onClose={() => setShowPlatformWarning(false)} />
+      )}
     </>
   );
 };

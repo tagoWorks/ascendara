@@ -296,11 +296,11 @@ def get_base_path():
 def save_translations(translations, output_path):
     """Save translations to a JSON file"""
     try:
-        # Get the absolute path but preserve the intended directory structure
         base_path = get_base_path()
         if not os.path.isabs(output_path):
-            # Go up one level from dist directory to the root directory
-            output_path = os.path.normpath(os.path.join(base_path, "..", output_path))
+            # Use AppData Local for translations
+            appdata_path = os.path.expandvars(r"%LOCALAPPDATA%\Ascendara")
+            output_path = os.path.join(appdata_path, os.path.basename(output_path))
         
         logging.debug(f"Base path: {base_path}")
         logging.debug(f"Saving translations to: {output_path}")
