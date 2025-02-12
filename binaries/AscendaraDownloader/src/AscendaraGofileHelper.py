@@ -26,7 +26,6 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 from hashlib import sha256
 from argparse import ArgumentParser, ArgumentTypeError
-from unrar import rarfile
 import patoolib
 
 NEW_LINE = "\n" if sys.platform != "Windows" else "\r\n"
@@ -373,6 +372,7 @@ class GofileDownloader:
                         if file.endswith('.zip'):
                             shutil.unpack_archive(archive_path, extract_dir, format="zip")
                         elif file.endswith('.rar'):
+                            from unrar import rarfile
                             with rarfile.RarFile(archive_path, 'r') as rar_ref:
                                 rar_ref.extractall(extract_dir)
                     else:
