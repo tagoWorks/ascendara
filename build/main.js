@@ -212,6 +212,11 @@ ipcMain.handle("get-setting", async (event, key) => {
   return settingsManager.getSetting(key);
 });
 
+ipcMain.handle("reload", () => {
+  app.relaunch();
+  app.exit();
+})
+
 // Save the settings JSON file
 ipcMain.handle("save-settings", async (event, options, directory) => {
   // Get current settings to preserve existing values
@@ -3307,5 +3312,79 @@ ipcMain.handle("stop-translation-watcher", () => {
   if (translationWatcher) {
     translationWatcher.close();
     translationWatcher = null;
+  }
+});
+
+// Add qBittorrent IPC handlers
+const qbittorrentClient = axios.create({
+  baseURL: 'http://localhost:8080/api/v2',
+  withCredentials: true
+});
+
+let qbittorrentSID = null;
+
+ipcMain.handle('qbittorrent:login', async (event, { username, password }) => {
+  try {
+    console.log('[qbitMain] Attempting login...');
+    const response = await qbittorrentClient.post('/auth/login', 
+      `username=${username}&password=${password}`,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Referer': 'http://localhost:8080',
+          'Origin': 'http://localhost:8080'
+        }
+      }
+    );
+
+    console.log('[qbitMain] Login response status:', response.status);
+    console.log('[qbitMain] Login response data:', response.data);
+    console.log('[qbitMain] Login response headers:', response.headers);
+
+    // Extract and store the SID cookie
+    const setCookie = response.headers['set-cookie'];
+    if (setCookie && setCookie[0]) {
+      const match = setCookie[0].match(/SID=([^;]+)/);
+      if (match) {
+        qbittorrentSID = match[1];
+        console.log('[qbitMain] Extracted SID:', qbittorrentSID);
+      }
+    }
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('[qbitMain] Login error:', error.response?.data || error.message);
+    return { 
+      success: false, 
+      error: error.response?.data || error.message 
+    };
+  }
+});
+
+ipcMain.handle('qbittorrent:version', async () => {
+  try {
+    console.log('[qbitMain] Fetching version...');
+    if (!qbittorrentSID) {
+      throw new Error('No SID available - please login first');
+    }
+
+    const response = await qbittorrentClient.get('/app/version', {
+      headers: {
+        'Referer': 'http://localhost:8080',
+        'Origin': 'http://localhost:8080',
+        'Cookie': `SID=${qbittorrentSID}`
+      }
+    });
+    
+    console.log('[qbitMain] Version response status:', response.status);
+    console.log('[qbitMain] Version response data:', response.data);
+
+    return { success: true, version: response.data.replace(/['"]+/g, '') };
+  } catch (error) {
+    console.error('[qbitMain] Version error:', error.response?.data || error.message);
+    return { 
+      success: false, 
+      error: error.response?.data || error.message 
+    };
   }
 });

@@ -125,6 +125,7 @@ contextBridge.exposeInMainWorld("electron", {
   createTimestamp: () => ipcRenderer.invoke("create-timestamp"),
   checkForUpdates: () => ipcRenderer.invoke("check-for-updates"),
   updateLaunchCount: () => ipcRenderer.invoke("update-launch-count"),
+  reload: () => ipcRenderer.invoke("reload"),
   getLaunchCount: () => ipcRenderer.invoke("get-launch-count"),
   isOnWindows: () => ipcRenderer.invoke("is-on-windows"),
   checkGameDependencies: () => ipcRenderer.invoke("check-game-dependencies"),
@@ -236,6 +237,12 @@ contextBridge.exposeInMainWorld("electron", {
       ipcRenderer.removeListener("settings-updated", callback);
     };
   },
+});
+
+// Add qBittorrent API to context bridge
+contextBridge.exposeInMainWorld('qbittorrentApi', {
+  login: (credentials) => ipcRenderer.invoke('qbittorrent:login', credentials),
+  getVersion: () => ipcRenderer.invoke('qbittorrent:version')
 });
 
 window.addEventListener("DOMContentLoaded", () => {

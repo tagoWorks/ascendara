@@ -9,6 +9,7 @@ import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { analytics } from "@/services/analyticsService";
 import gameService from "@/services/gameService";
 import { checkForUpdates } from "@/services/updateCheckingService";
+import checkQbittorrentStatus from "@/services/qbittorrentCheckService";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -657,6 +658,7 @@ function ToasterWithTheme() {
 }
 
 function App() {
+  const { t } = useTranslation();
   useEffect(() => {
     const checkUpdates = async () => {
       const hasUpdate = await checkForUpdates();
@@ -664,6 +666,39 @@ function App() {
 
     checkUpdates();
   }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const checkQbittorrent = async () => {
+      // Check if torrenting is enabled in settings
+      const settings = await window.electron.getSettings();
+      if (!mounted) return; // Don't proceed if unmounted
+
+      if (settings.torrentEnabled) {
+        const status = await checkQbittorrentStatus();
+        if (!mounted) return; // Don't proceed if unmounted
+
+        if (!status.active) {
+          toast.error(t('app.qbittorrent.notAccessible'), {
+            description: status.error || t('app.qbittorrent.checkWebUI'),
+            duration: 10000,
+          });
+        }
+      }
+    };
+
+    checkQbittorrent().catch(error => {
+      if (mounted) {
+        console.error('[App] Error checking qBittorrent:', error);
+      }
+    });
+
+    // Cleanup function
+    return () => {
+      mounted = false;
+    };
+  }, [t]);
 
   useEffect(() => {
     const style = document.createElement("style");

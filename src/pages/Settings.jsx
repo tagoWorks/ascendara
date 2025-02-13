@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import checkQbittorrentStatus from "@/services/qbittorrentCheckService";
 import {
   Select,
   SelectContent,
@@ -197,6 +198,8 @@ function Settings() {
     gameSource: "steamrip",
   });
   const [showTorrentWarning, setShowTorrentWarning] = useState(false);
+  const [showReloadDialog, setShowReloadDialog] = useState(false);
+  const [pendingSourceChange, setPendingSourceChange] = useState(null);
   const [dependencyStatus, setDependencyStatus] = useState(null);
   const [availableLanguages, setAvailableLanguages] = useState([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -292,7 +295,13 @@ function Settings() {
     initializeSettings();
   }, []); // Run only once on mount
 
-  const handleSettingChange = useCallback((key, value) => {
+  const handleSettingChange = async (key, value) => {
+    if (key === "gameSource") {
+      setPendingSourceChange(value);
+      setShowReloadDialog(true);
+      return;
+    }
+
     if (key === "sideScrollBar") {
       localStorage.setItem("sideScrollBar", value);
       setSettings(prev => ({
@@ -316,7 +325,7 @@ function Settings() {
         }));
       }
     });
-  }, []);
+  };
 
   const handleDirectorySelect = useCallback(async () => {
     try {
@@ -541,6 +550,13 @@ function Settings() {
       handleSettingChange("gameSource", "steamrip");
     }
   }, [settings.torrentEnabled]);
+
+  // Disable Time Machine when using Fitgirl source
+  useEffect(() => {
+    if (settings.gameSource === "fitgirl" && settings.showOldDownloadLinks) {
+      handleSettingChange("showOldDownloadLinks", false);
+    }
+  }, [settings.gameSource]);
 
   // Show loading state
   if (isLoading) {
@@ -890,9 +906,9 @@ function Settings() {
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-semibold">{t("settings.fitgirlRepacks")}</h3>
+                            <h3 className="text-lg font-semibold">Fitgirl Repacks</h3>
                             <Badge variant={settings.gameSource === "fitgirl" ? "success" : "secondary"} className="text-xs">
-                              {settings.gameSource === "fitgirl" ? t("settings.currentSource") : t("settings.sourceInactive")}
+                              {settings.gameSource === "fitgirl" ? t("settings.currentSource") : t("settings.sourceInactive-", "Not Available Yet...")}
                             </Badge>
                           </div>
                           <p className="max-w-[600px] text-sm text-muted-foreground">
@@ -902,6 +918,7 @@ function Settings() {
                         {settings.gameSource !== "fitgirl" ? (
                           <Button
                             variant="outline"
+                            disabled
                             size="sm"
                             className="shrink-0"
                             onClick={() => handleSettingChange("gameSource", "fitgirl")}
@@ -1006,10 +1023,7 @@ function Settings() {
                           <div className="mt-6">
                             <div className="rounded-lg bg-muted/30 p-4">
                               <div className="flex items-center gap-2 text-sm">
-                                <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                                <p className="text-muted-foreground">
-                                  {t("settings.torrentWarning")}
-                                </p>
+                                <QbittorrentStatus />
                               </div>
                             </div>
                           </div>
@@ -1157,8 +1171,16 @@ function Settings() {
                           !settings.showOldDownloadLinks
                         )
                       }
+                      disabled={settings.gameSource === "fitgirl"}
                     />
                   </div>
+                  {settings.gameSource === "fitgirl" && (
+                    <div className="mt-2 flex items-center gap-2 text-yellow-600 dark:text-yellow-500">
+                      <p className="text-sm">
+                        {t("settings.timeMachineDisabledFitgirl")}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>
@@ -1374,9 +1396,101 @@ function Settings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Reload Required Dialog */}
+      <AlertDialog open={showReloadDialog} onOpenChange={setShowReloadDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">{t("settings.reloadRequired")}</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              {t("settings.sourceChangeReload")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-primary" onClick={() => {
+              setShowReloadDialog(false);
+              setPendingSourceChange(null);
+            }}>
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction className="bg-primary hover:bg-primary/90"
+              onClick={() => {
+                setSettings(prev => ({ ...prev, gameSource: pendingSourceChange }));
+                const newSettings = { ...settings, gameSource: pendingSourceChange };
+                window.electron.saveSettings(newSettings);
+                window.electron.reload();
+              }}
+            >
+              {t("settings.reload")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
+const QbittorrentStatus = () => {
+  const { t } = useLanguage();
+  const [status, setStatus] = useState({ active: false, version: null, error: null });
+  const [checking, setChecking] = useState(true);
+
+  const checkStatus = useCallback(async () => {
+    setChecking(true);
+    try {
+      const result = await checkQbittorrentStatus();
+      setStatus(result);
+    } catch (error) {
+      console.error('Error checking qBittorrent status:', error);
+      setStatus({ active: false, error: error.message });
+    } finally {
+      setChecking(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkStatus();
+    const interval = setInterval(checkStatus, 30000);
+    return () => clearInterval(interval);
+  }, [checkStatus]);
+
+  return (
+    <div className="flex items-center justify-between w-full">
+      <div className="flex items-center gap-2">
+        {checking ? (
+          <>
+            <Loader className="h-4 w-4 animate-spin" />
+            <span>{t('app.qbittorrent.checking')}</span>
+          </>
+        ) : status.active ? (
+          <>
+            <Badge className="h-2 w-2 rounded-full bg-green-500" />
+            <span>{t('app.qbittorrent.active', { version: status.version })}</span>
+          </>
+        ) : (
+          <>
+            <Badge className="h-2 w-2 rounded-full bg-red-500" />
+            <span>
+              {status.error 
+                ? t('app.qbittorrent.inactiveWithError', { error: status.error })
+                : t('app.qbittorrent.inactive')
+              }
+            </span>
+          </>
+        )}
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={checkStatus}
+        disabled={checking}
+        className="h-8 w-8"
+      >
+        <RefreshCw className={`h-4 w-4 ${checking ? 'animate-spin' : ''}`} />
+      </Button>
+    </div>
+  );
+};
 
 function ThemeButton({ theme, currentTheme, onSelect }) {
   const colors = getThemeColors(theme.id);
