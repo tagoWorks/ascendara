@@ -117,7 +117,6 @@ class SettingsManager {
     this.filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
     this.defaultSettings = {
       downloadDirectory: "",
-      viewOldDownloadLinks: false,
       showOldDownloadLinks: false,
       seeInappropriateContent: false,
       torrentEnabled: false,

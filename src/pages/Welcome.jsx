@@ -243,9 +243,8 @@ const Welcome = ({ welcomeData, onComplete }) => {
   const [autoUpdate, setAutoUpdate] = useState(true);
   const [settings, setSettings] = useState({
     downloadDirectory: "",
-    viewOldDownloadLinks: false,
-    seeInappropriateContent: false,
     showOldDownloadLinks: false,
+    seeInappropriateContent: false,
     autoCreateShortcuts: true,
     sendAnalytics: true,
     autoUpdate: true,

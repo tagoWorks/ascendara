@@ -185,7 +185,6 @@ function Settings() {
   const [isDownloaderRunning, setIsDownloaderRunning] = useState(false);
   const [settings, setSettings] = useState({
     downloadDirectory: "",
-    viewOldDownloadLinks: false,
     showOldDownloadLinks: false,
     seeInappropriateContent: false,
     autoCreateShortcuts: true,
