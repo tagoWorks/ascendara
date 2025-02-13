@@ -3,10 +3,15 @@
     <h1>Ascendara</h1>
     <p><em>The best way to test games before you buy them.</em></p>
     <p>
+        <a href="https://ascendara.app"><img src="https://img.shields.io/badge/website-ascendara.app-blue" alt="Website"></a>
+        <a href="https://discord.gg/ap6W3xMTKW"><img src="https://img.shields.io/discord/939249162887766139?color=7289da&label=discord&logo=discord&logoColor=white" alt="Discord"></a>
+        <a href="https://github.com/tagoWorks/ascendara/issues"><img src="https://img.shields.io/github/issues-raw/tagoWorks/ascendara" alt="Issues"></a>
         <img src="https://img.shields.io/github/last-commit/tagoWorks/ascendara" alt="Last Commit">
-        <img src="https://img.shields.io/github/issues-raw/tagoWorks/ascendara" alt="Issues">
-        <a href="https://ascendara.app/"><img src="https://img.shields.io/badge/website-ascendara.app-blue" alt="Website"></a>
         <a href="./LICENSE"><img src="https://img.shields.io/badge/license-CC%20BY--NC%201.0-green" alt="License"></a>
+    </p>
+    <p>
+        <a href="https://github.com/tagoWorks/ascendara/releases/latest"><img src="https://img.shields.io/github/v/release/tagoWorks/ascendara?include_prereleases&label=latest%20release" alt="Latest Release"></a>
+        <a href="https://github.com/tagoWorks/ascendara/stargazers"><img src="https://img.shields.io/github/stars/tagoWorks/ascendara?style=social" alt="GitHub Stars"></a>
     </p>
 </div>
 
@@ -15,6 +20,12 @@
 #### The website, API, and application were all completely developed and stay maintained by a [single developer](https://tago.works).
 
 Ascendara simplifies your pirating experience by providing a seamless way to download, manage, and play the pre-installed games. No more hassle with extracting, installing, or moving files. The game library is powered by a custom webscraper, currently featuring games from [STEAMRIP](https://steamrip.com/), with plans to expand to more sources.
+
+### 👥 Community
+- [Join our Discord](https://discord.gg/ascendara) for discussions and support
+- [Submit feedback for Ascendara](https://ascendara.app/feedback)
+- [Read the latest changelog](https://ascendara.app/changelog)
+- [Check latest releases on Github](https://github.com/tagoWorks/ascendara/releases)
 
 ## ✨ Features
 
