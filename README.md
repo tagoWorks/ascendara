@@ -215,6 +215,8 @@ Before building, ensure you have all required dependencies. [View full requireme
 - [ ] Add semi-support for Linux, and macOS
 - [ ] Endpoint for known games that have weird installation paths, issues, etc.
 - [ ] Ascendara approved additional sources
+- [ ] Custom game sources
+- [ ] Debrid support for downloads
 - [ ] Retry Download & Extract functionality
 - [ ] Enhanced antivirus operation checks
 
