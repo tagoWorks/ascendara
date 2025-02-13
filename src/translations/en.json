@@ -11,6 +11,15 @@
       "installingUpdate": "Installing Update"
     },
     "outdated": "OUTDATED",
+    "torrentWarning": "TORRENTING IS ENABLED - USE VPN",
+    "qbittorrent": {
+      "notAccessible": "qBittorrent WebUI is not accessible",
+      "checkWebUI": "Please check if qBittorrent is running with Web UI enabled",
+      "checking": "Checking qBittorrent status...",
+      "active": "qBittorrent WebUI Active ({{version}})",
+      "inactive": "qBittorrent WebUI Inactive",
+      "inactiveWithError": "qBittorrent WebUI Inactive - {{error}}"
+    },
     "platform": {
       "warning": {
         "description": "You are currently using Ascendara on a non-Windows platform. While cross-platform is in development, some features may not work as expected.",
@@ -318,6 +327,7 @@
     "visit-status-page": "Visit Status Page"
   },
   "settings": {
+    "advanced": "ADVANCED",
     "allDependenciesInstalled": "All dependencies installed",
     "ascendaraAnalytics": "Ascendara Usage Analytics",
     "ascendaraAnalyticsDescription": "Help improve Ascendara by sending usage data. This data is anonymous and cannot be used to identify you.",
@@ -328,9 +338,13 @@
     "autoCreateShortcuts": "Automatically Create Shortcuts",
     "autoCreateShortcutsDescription": "Automatically create shortcuts on desktop for games that run successfully for the first time",
     "cannotCheckDependencies": "Cannot check dependencies on this system",
+    "timeMachineDisabledFitgirl": "Ascendara Timemachine is not available when using FitGirl Repacks as the game source.",
     "checkingDependencies": "Checking dependencies...",
     "configure": "Configure your app preferences",
     "customThreadCount": "Custom Thread Count",
+    "reloadRequired": "Reload Required",
+    "sourceChangeReload": "You need to reload Ascendara after changing the game source.",
+    "reload": "Reload Now",
     "customThreadCountDesc": "Higher values may improve download speed but require more CPU power and memory. Maximum: 32 threads",
     "darkThemes": "Dark Themes",
     "downloadLocation": "Download Location",
@@ -353,8 +367,10 @@
       "translatingDialog": "Don't Close Ascendara",
       "translatingDialogDesc": "Ascendara is translating the selected language. This may take a few minutes, you can leave this but do not close Ascendara."
     },
-    "gameSources": "Game Sources",
-    "gameSourcesDescription": "Ascendara uses trusted sources to provide you with a safe and reliable gaming experience",
+    "fitgirlRepacks": "Fitgirl Repacks",
+    "fitgirlRepacksDescription": "Access Fitgirl's highly compressed game repacks. Significantly smaller downloads with the same quality, perfect for limited bandwidth.",
+    "gameSources": "Indexed Game Source",
+    "gameSourcesDescription": "Ascendara primarily uses SteamRip as its trusted source for games",
     "general": "General",
     "highThreadWarning": "High thread counts may cause download issues. Consider using 4-8 threads for better reliability.",
     "installGameDependencies": "Game Dependencies",
@@ -372,8 +388,11 @@
     "reinstallError": "Error reinstalling dependencies",
     "reinstallSuccess": "Dependencies reinstalled successfully",
     "comingSoon": "Coming Soon",
+    "torrentOnAscendara": "Torrent on Ascendara",
+    "torrentDescription": "Enable advanced torrent functionality through qBittorrent for supported games. This feature requires qBittorrent to be installed and is recommended for experienced users only.",
     "torrentSupport": "Fitgirl Support",
     "torrentSupportDescription": "Fitgirl and Torrent support are in development and are expected to be released soon.",
+    "torrentWarning": "Using torrent functionality may be restricted in some regions. Please ensure you comply with local laws and regulations. Configure additional settings through qBittorrent.",
     "customSources": "Custom Sources",
     "customSourcesDescription": "Custom sources will allow you to add you more Ascendara approved sources to your search.",
     "selectDirectory": "Select Directory",
@@ -383,7 +402,11 @@
     "sideScrollBarDescription": "Show a scroll bar on the side of the application window",
     "someDependenciesMissing": "{{installed}} of {{total}} dependencies installed",
     "sourceActive": "Active",
-    "steamripDescription": "SteamRip is currently the primary and only source for Ascendara. It is secure and reliable, offering a huge collection of games with regular updates.",
+    "sourceInactive": "Inactive",
+    "sourceRequiresTorrent": "Requires torrent support",
+    "steamripDescription": "SteamRip is the primary source for Ascendara, providing a secure and reliable collection of games with regular updates. Advanced users can enable optional torrent functionality.",
+    "switchSource": "Switch to this source",
+    "currentSource": "Current Source",
     "theme": "Theme",
     "title": "Settings",
     "totalGames": "Total Games",
@@ -404,7 +427,17 @@
     "warningDescription": "Ascendara is designed as a testing platform for video games, allowing users to evaluate gameplay, performance, and compatibility before making a purchase decision. Ascendara strongly encourages users to support game developers by purchasing games they enjoy.",
     "warningSupportDevelopers": "Game developers invest significant time, resources, and creativity into creating the experiences we all enjoy. Your purchase directly supports their ability to continue making great games and sustains the gaming industry.",
     "warningSupportDevelopersCallToAction": "Please support the developers by purchasing games you enjoy.",
-    "warningTitle": "Hey there, please read this!"
+    "warningTitle": "Hey there, please read this!",
+    "torrentWarningDialog": {
+      "title": "Enable Torrent Support",
+      "description": "Please read this carefully before enabling torrent functionality:",
+      "vpnWarning": "Your IP address will be visible to other peers. Use a VPN to protect your privacy and avoid potential legal issues.",
+      "legalWarning": "Downloading copyrighted content may be illegal in your region. You are responsible for your own actions.",
+      "qbitWarning": "This feature requires qBittorrent. Make sure it is properly configured with your VPN.",
+      "continue": "I Understand the Risks",
+      "cancel": "Cancel"
+    },
+    "cannotDisableTorrent": "Switch to SteamRip source before disabling torrent support"
   },
   "tour": {
     "downloads": {
