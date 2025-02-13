@@ -1,0 +1,4 @@
+requests>=2.31.0
+patoolib>=1.12
+psutil>=5.9.0
+pypresence>=4.3.0
