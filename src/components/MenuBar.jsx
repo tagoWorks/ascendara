@@ -8,7 +8,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
 } from "./ui/alert-dialog";
-import { AlertTriangle, WifiOff, Hammer, X, Minus, Download } from "lucide-react";
+import { AlertTriangle, WifiOff, Hammer, X, Minus, Download, Flag } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { checkForUpdates } from "@/services/updateCheckingService";
 import { exportToSvg } from "@/lib/exportToSvg";
@@ -27,6 +27,7 @@ const MenuBar = () => {
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [iconData, setIconData] = useState("");
+  const [showTorrentWarning, setShowTorrentWarning] = useState(false);
   const [isLatest, setIsLatest] = useState(true);
   const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
   const [isDev, setIsDev] = useState(false);
@@ -89,6 +90,28 @@ const MenuBar = () => {
         "update-download-progress",
         handleDownloadProgress
       );
+    };
+  }, []);
+
+  useEffect(() => {
+    const checkTorrentWarning = async () => {
+      const savedSettings = await window.electron.getSettings();
+      setShowTorrentWarning(savedSettings.torrentEnabled);
+    };
+
+    // Initial check
+    checkTorrentWarning();
+
+    // Listen for changes
+    const handleTorrentChange = (event) => {
+      setShowTorrentWarning(event.detail);
+    };
+
+    window.addEventListener('torrentSettingChanged', handleTorrentChange);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('torrentSettingChanged', handleTorrentChange);
     };
   }, []);
 
@@ -186,6 +209,13 @@ const MenuBar = () => {
             />
           )}
         </div>
+
+        {showTorrentWarning && (
+          <span className="ml-2 flex items-center gap-1 rounded border border-red-500/20 bg-red-500/10 px-1 py-0.5 text-[14px] text-red-500">
+            <Flag className="h-3 w-3" />
+            {t("app.torrentWarning")}
+          </span>
+        )}
 
         {isDev && (
           <span className="ml-2 flex items-center gap-1 rounded border border-blue-500/20 bg-blue-500/10 px-1 py-0.5 text-[14px] text-blue-500">

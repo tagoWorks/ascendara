@@ -120,6 +120,8 @@ class SettingsManager {
       viewOldDownloadLinks: false,
       showOldDownloadLinks: false,
       seeInappropriateContent: false,
+      torrentEnabled: false,
+      gameSource: "steamrip",
       autoCreateShortcuts: true,
       sendAnalytics: true,
       autoUpdate: true,
@@ -634,6 +636,7 @@ const deleteGameDirectory = async game => {
     }
     const downloadDirectory = settings.downloadDirectory;
     const gameDirectory = path.join(downloadDirectory, game);
+
     try {
       // First ensure all file handles are closed by attempting to read the directory
       const files = await fs.promises.readdir(gameDirectory, { withFileTypes: true });
@@ -1867,8 +1870,18 @@ ipcMain.handle(
           const mimeType = response.headers["content-type"];
           const extension = getExtensionFromMimeType(mimeType);
           const downloadPath = path.join(gameDirectory, `header.ascendara${extension}`);
-          await fs.promises.writeFile(downloadPath, imageBuffer);
-          console.log("Cover image downloaded successfully");
+          const writer = fs.createWriteStream(downloadPath);
+
+          writer.write(imageBuffer);
+          writer.end();
+
+          writer.on("finish", () => {
+            console.log("Cover image downloaded successfully");
+          });
+
+          writer.on("error", err => {
+            console.error("Error downloading the image:", err);
+          });
         } catch (error) {
           console.error("Error downloading cover image:", error);
         }

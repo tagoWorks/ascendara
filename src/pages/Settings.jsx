@@ -26,12 +26,32 @@ import {
   History,
   ChartNoAxesCombined,
   ArrowRight,
-  Plus,
+  Download,
+  Scale,
   ClockAlert,
+  AlertTriangle,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import gameService from "@/services/gameService";
 import { useNavigate } from "react-router-dom";
 import { getAvailableLanguages, handleLanguageChange } from "@/services/languageService";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const themes = [
   // Light themes
@@ -150,6 +170,14 @@ function Settings() {
   const { theme, setTheme } = useTheme();
   const { language, changeLanguage, t } = useLanguage();
   const navigate = useNavigate();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const initialSettingsRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentScreen, setCurrentScreen] = useState("none");
+  const [isTriggering, setIsTriggering] = useState(false);
+  const [apiMetadata, setApiMetadata] = useState(null);
+  const [fitgirlMetadata, setFitgirlMetadata] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isOnWindows, setIsOnWindows] = useState(true);
   const [downloadPath, setDownloadPath] = useState("");
   const [canCreateFiles, setCanCreateFiles] = useState(true);
@@ -166,12 +194,13 @@ function Settings() {
     theme: "purple",
     threadCount: 4,
     sideScrollBar: localStorage.getItem("sideScrollBar") === "true" || false,
+    gameSource: "steamrip",
   });
-
-  // Track if settings have been initialized
-  const [isInitialized, setIsInitialized] = useState(false);
-  const initialSettingsRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [showTorrentWarning, setShowTorrentWarning] = useState(false);
+  const [dependencyStatus, setDependencyStatus] = useState(null);
+  const [availableLanguages, setAvailableLanguages] = useState([]);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isDev, setIsDev] = useState(false);
 
   // Use a ref to track if this is the first mount
   const isFirstMount = useRef(true);
@@ -335,8 +364,6 @@ function Settings() {
     dark: themes.filter(t => t.group === "dark"),
   };
 
-  const [isDev, setIsDev] = useState(false);
-
   // Check if in development mode
   useEffect(() => {
     const checkDevMode = async () => {
@@ -345,9 +372,6 @@ function Settings() {
     };
     checkDevMode();
   }, []);
-
-  const [currentScreen, setCurrentScreen] = useState("none");
-  const [isTriggering, setIsTriggering] = useState(false);
 
   // Function to trigger selected screen
   const triggerScreen = async () => {
@@ -387,9 +411,6 @@ function Settings() {
     }
   };
 
-  const [apiMetadata, setApiMetadata] = useState(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
@@ -402,13 +423,26 @@ function Settings() {
     fetchMetadata();
   }, []);
 
+  useEffect(() => {
+    const loadFitgirlMetadata = async () => {
+      if (!settings.torrentEnabled) return;
+      try {
+        const metadata = await window.electron.getFitgirlMetadata();
+        setFitgirlMetadata(metadata);
+      } catch (error) {
+        console.error("Failed to load Fitgirl metadata:", error);
+      }
+    };
+    loadFitgirlMetadata();
+  }, [settings.torrentEnabled]);
+
   const handleRefreshIndex = async () => {
     setIsRefreshing(true);
     try {
       const lastModified = await gameService.checkMetadataUpdate();
       if (lastModified) {
-        const freshData = await gameService.getAllGames();
-        setApiMetadata(freshData.metadata);
+        const data = await gameService.getAllGames();
+        setApiMetadata(data.metadata);
       }
     } catch (error) {
       console.error("Error checking for updates:", error);
@@ -419,13 +453,10 @@ function Settings() {
     }
   };
 
-  const [dependencyStatus, setDependencyStatus] = useState(null);
-
   // Check dependency status on mount and after reinstall
   const checkDependencies = useCallback(async () => {
     console.log("Checking dependencies...");
     try {
-      console.log("Is not Windows:", !isOnWindows);
       if (!isOnWindows) {
         console.log("Not on Windows, skipping dependency check");
         setDependencyStatus(null);
@@ -489,8 +520,6 @@ function Settings() {
     }
   }, [dependencyStatus, t]);
 
-  const [availableLanguages, setAvailableLanguages] = useState([]);
-
   useEffect(() => {
     const loadLanguages = async () => {
       const languages = await getAvailableLanguages();
@@ -498,6 +527,20 @@ function Settings() {
     };
     loadLanguages();
   }, []);
+
+  // Auto-show advanced section when torrent is enabled
+  useEffect(() => {
+    if (settings.torrentEnabled) {
+      setShowAdvanced(true);
+    }
+  }, [settings.torrentEnabled]);
+
+  // Switch back to SteamRip if torrent is disabled while using Fitgirl
+  useEffect(() => {
+    if (!settings.torrentEnabled && settings.gameSource === "fitgirl") {
+      handleSettingChange("gameSource", "steamrip");
+    }
+  }, [settings.torrentEnabled]);
 
   // Show loading state
   if (isLoading) {
@@ -509,6 +552,21 @@ function Settings() {
       </div>
     );
   }
+
+  const handleTorrentToggle = () => {
+    if (!settings.torrentEnabled) {
+      setShowTorrentWarning(true);
+    } else {
+      handleSettingChange("torrentEnabled", false);
+      window.dispatchEvent(new CustomEvent('torrentSettingChanged', { detail: false }));
+    }
+  };
+
+  const handleEnableTorrent = () => {
+    setShowTorrentWarning(false);
+    handleSettingChange("torrentEnabled", true);
+    window.dispatchEvent(new CustomEvent('torrentSettingChanged', { detail: true }));
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -769,78 +827,211 @@ function Settings() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <h3 className="text-lg font-semibold">SteamRip</h3>
-                          <Badge variant="success" className="text-xs">
-                            {t("settings.sourceActive")}
+                          <Badge variant={settings.gameSource === "steamrip" ? "success" : "secondary"} className="text-xs">
+                            {settings.gameSource === "steamrip" ? t("settings.currentSource") : t("settings.sourceInactive")}
                           </Badge>
                         </div>
                         <p className="max-w-[600px] text-sm text-muted-foreground">
                           {t("settings.steamripDescription")}
                         </p>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="shrink-0"
-                        onClick={() =>
-                          window.electron.openURL(
-                            "https://ascendara.app/sources/steamrip"
-                          )
-                        }
-                      >
-                        {t("common.learnMore")}{" "}
-                        <ExternalLink className="ml-1 inline-block h-3 w-3" />
-                      </Button>
+                      {settings.gameSource !== "steamrip" ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="shrink-0"
+                          onClick={() => handleSettingChange("gameSource", "steamrip")}
+                        >
+                          {t("settings.switchSource")}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="shrink-0"
+                          onClick={() =>
+                            window.electron.openURL(
+                              "https://ascendara.app/sources/steamrip"
+                            )
+                          }
+                        >
+                          {t("common.learnMore")}{" "}
+                          <ExternalLink className="ml-1 inline-block h-3 w-3" />
+                        </Button>
+                      )}
                     </div>
 
-                    <div className="mt-6 grid grid-cols-3 gap-4">
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">
-                          {t("settings.lastUpdated")}
-                        </Label>
-                        <p className="text-sm font-medium">
-                          {apiMetadata?.getDate || "-"}
-                        </p>
+                    {settings.gameSource === "steamrip" && (
+                      <div className="mt-6 grid grid-cols-3 gap-4">
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">
+                            {t("settings.lastUpdated")}
+                          </Label>
+                          <p className="text-sm font-medium">
+                            {apiMetadata?.getDate || "-"}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">
+                            {t("settings.totalGames")}
+                          </Label>
+                          <p className="text-sm font-medium">
+                            {apiMetadata?.games?.toLocaleString() || "-"}
+                          </p>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">
-                          {t("settings.totalGames")}
-                        </Label>
-                        <p className="text-sm font-medium">
-                          {apiMetadata?.games?.toLocaleString() || "-"}
-                        </p>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Additional Features */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-lg border bg-muted/30 p-4">
-                    <div className="mb-2 flex items-center gap-2">
-                      <ClockAlert className="h-4 w-4 text-muted-foreground" />
-                      <h4 className="font-medium">{t("settings.torrentSupport")}</h4>
-                    </div>
-                    <p className="mb-3 text-sm text-muted-foreground">
-                      {t("settings.torrentSupportDescription")}
-                    </p>
-                    <Badge variant="secondary" className="text-xs">
-                      {t("settings.comingSoon")}
-                    </Badge>
-                  </div>
+                {settings.torrentEnabled && (
+                  <div className="mt-6 rounded-lg border bg-card animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-semibold">{t("settings.fitgirlRepacks")}</h3>
+                            <Badge variant={settings.gameSource === "fitgirl" ? "success" : "secondary"} className="text-xs">
+                              {settings.gameSource === "fitgirl" ? t("settings.currentSource") : t("settings.sourceInactive")}
+                            </Badge>
+                          </div>
+                          <p className="max-w-[600px] text-sm text-muted-foreground">
+                            {t("settings.fitgirlRepacksDescription")}
+                          </p>
+                        </div>
+                        {settings.gameSource !== "fitgirl" ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                            onClick={() => handleSettingChange("gameSource", "fitgirl")}
+                          >
+                            {t("settings.switchSource")}
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                            onClick={() =>
+                              window.electron.openURL(
+                                "https://ascendara.app/sources/fitgirl"
+                              )
+                            }
+                          >
+                            {t("common.learnMore")}{" "}
+                            <ExternalLink className="ml-1 inline-block h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
 
-                  <div className="rounded-lg border bg-muted/30 p-4">
-                    <div className="mb-2 flex items-center gap-2">
-                      <Plus className="h-4 w-4 text-muted-foreground" />
-                      <h4 className="font-medium">{t("settings.customSources")}</h4>
+                      {settings.gameSource === "fitgirl" && (
+                        <div className="mt-6 grid grid-cols-3 gap-4">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">
+                              {t("settings.lastUpdated")}
+                            </Label>
+                            <p className="text-sm font-medium">
+                              {fitgirlMetadata?.getDate || "-"}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">
+                              {t("settings.totalGames")}
+                            </Label>
+                            <p className="text-sm font-medium">
+                              {fitgirlMetadata?.games?.toLocaleString() || "-"}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <p className="mb-3 text-sm text-muted-foreground">
-                      {t("settings.customSourcesDescription")}
-                    </p>
-                    <Badge variant="secondary" className="text-xs">
-                      {t("settings.comingSoon")}
-                    </Badge>
+                  </div>
+                )}
+
+                {/* Advanced Section Toggle */}
+                <div className="relative py-4">
+                  <div className="absolute inset-0 flex items-center px-2">
+                    <div className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-background"
+                      onClick={() => setShowAdvanced(!showAdvanced)}
+                      disabled={settings.torrentEnabled}
+                    >
+                      {t("settings.advanced")} {showAdvanced ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+                    </Button>
                   </div>
                 </div>
+
+                {/* Advanced Settings */}
+                {showAdvanced && (
+                  <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                    {/* Torrent Support */}
+                    <div className="rounded-lg border bg-card">
+                      <div className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-lg font-semibold">{t("settings.torrentOnAscendara")}</h3>
+                            </div>
+                            <p className="max-w-[600px] text-sm text-muted-foreground">
+                              {t("settings.torrentDescription")}
+                            </p>
+                          </div>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div>
+                                  <Switch
+                                    checked={settings.torrentEnabled}
+                                    onCheckedChange={handleTorrentToggle}
+                                    disabled={settings.gameSource === "fitgirl"}
+                                  />
+                                </div>
+                              </TooltipTrigger>
+                              {settings.gameSource === "fitgirl" && (
+                                <TooltipContent>
+                                  <p>{t("settings.cannotDisableTorrent")}</p>
+                                </TooltipContent>
+                              )}
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+
+                        {settings.torrentEnabled && (
+                          <div className="mt-6">
+                            <div className="rounded-lg bg-muted/30 p-4">
+                              <div className="flex items-center gap-2 text-sm">
+                                <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                                <p className="text-muted-foreground">
+                                  {t("settings.torrentWarning")}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Additional Features */}
+                    <div className="rounded-lg border bg-muted/30 p-4">
+                      <div className="mb-2 flex items-center gap-2">
+                        <ClockAlert className="h-4 w-4 text-muted-foreground" />
+                        <h4 className="font-medium">{t("settings.customSources")}</h4>
+                      </div>
+                      <p className="mb-3 text-sm text-muted-foreground">
+                        {t("settings.customSourcesDescription")}
+                      </p>
+                      <Badge variant="secondary" className="text-xs">
+                        {t("settings.comingSoon")}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
 
@@ -1148,6 +1339,41 @@ function Settings() {
           </div>
         </div>
       </div>
+
+      {/* Torrent Warning Dialog */}
+      <AlertDialog open={showTorrentWarning} onOpenChange={setShowTorrentWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">{t("settings.torrentWarningDialog.title")}</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4 text-muted-foreground">
+              <p>{t("settings.torrentWarningDialog.description")}</p>
+              <div className="mt-4 space-y-3 rounded-lg bg-muted p-4">
+                <div className="flex items-start gap-2">
+                  <ShieldAlert className="mt-0.5 h-5 w-5 text-red-500" />
+                  <p>{t("settings.torrentWarningDialog.vpnWarning")}</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Scale className="mt-0.5 h-5 w-5 text-yellow-500" />
+                  <p>{t("settings.torrentWarningDialog.legalWarning")}</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Download className="mt-0.5 h-5 w-5 text-blue-500" />
+                  <p>{t("settings.torrentWarningDialog.qbitWarning")}</p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-primary">{t("settings.torrentWarningDialog.cancel")}</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleEnableTorrent}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {t("settings.torrentWarningDialog.continue")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
