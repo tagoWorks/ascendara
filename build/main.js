@@ -1631,11 +1631,6 @@ ipcMain.handle("check-game-dependencies", async () => {
   return await checkGameDependencies();
 });
 
-// Get OS
-ipcMain.handle("get-platform", async () => {
-  return os.platform();
-});
-
 ipcMain.handle("get-games", async () => {
   const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
