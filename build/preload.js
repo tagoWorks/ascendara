@@ -129,6 +129,7 @@ contextBridge.exposeInMainWorld("electron", {
   getLaunchCount: () => ipcRenderer.invoke("get-launch-count"),
   isOnWindows: () => ipcRenderer.invoke("is-on-windows"),
   checkGameDependencies: () => ipcRenderer.invoke("check-game-dependencies"),
+  getPlatform: () => ipcRenderer.invoke("get-platform"),
   isExperiment: () => ipcRenderer.invoke("is-experiment"),
   isDownloaderRunning: () => ipcRenderer.invoke("is-downloader-running"),
   deleteInstaller: () => ipcRenderer.invoke("delete-installer"),

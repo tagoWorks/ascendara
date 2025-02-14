@@ -315,15 +315,15 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
           • Error Message: ${downloadingData.message || "Unknown error"}
 
           Download State:
-          • Progress: ${downloadingData.progressPercent || "0"}%
+          • Progress: ${downloadingData.progressCompleted || "0"}%
           • Download Speed: ${downloadingData.progressDownloadSpeeds || "N/A"}
           • Current File: ${downloadingData.progressCurrentFile || "N/A"}
           • Total Files: ${downloadingData.progressTotalFiles || "N/A"}
 
           System Info:
           • Timestamp: ${new Date().toISOString()}
-          • Platform: ${window.electron.platform || "Unknown"}
-          • App Version: ${window.electron.version || "Unknown"}
+          • Platform: ${window.electron.getPlatform() || "Unknown"}
+          • App Version: ${__APP_VERSION__ || "Unknown"}
 
           Technical Details:
           \`\`\`json
