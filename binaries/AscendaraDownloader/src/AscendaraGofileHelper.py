@@ -22,7 +22,6 @@ import shutil
 from tempfile import NamedTemporaryFile
 import requests
 import atexit
-from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 from hashlib import sha256
 from argparse import ArgumentParser, ArgumentTypeError
@@ -83,8 +82,13 @@ class GofileDownloader:
         self._max_retries = 3
         self._download_timeout = 30 
         self._token = self._getToken()
-        self._max_workers = max_workers
         self._lock = Lock()
+        self._rate_window = []  # Store recent rate measurements
+        self._rate_window_size = 5  # Number of measurements to average
+        self._last_progress = 0  # Track highest progress
+        self._current_file_progress = {}  # Track progress per file
+        self._total_downloaded = 0  # Track total bytes downloaded
+        self._total_size = 0  # Track total bytes to download
         self.game = game
         self.online = online
         self.dlc = dlc
@@ -146,7 +150,28 @@ class GofileDownloader:
             handleerror(self.game_info, self.game_info_path, "no_files_error")
             return
 
-
+        # Calculate total size first
+        self._total_size = 0
+        self._total_downloaded = 0
+        for item in files_info.values():
+            filepath = os.path.join(self.download_dir, item["path"], item["filename"])
+            if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+                file_size = os.path.getsize(filepath)
+                self._total_downloaded += file_size
+                self._total_size += file_size
+            else:
+                # Get file size from headers
+                try:
+                    headers = {
+                        "Cookie": f"accountToken={self._token}",
+                        "User-Agent": os.getenv("GF_USERAGENT", "Mozilla/5.0")
+                    }
+                    response = requests.head(item["link"], headers=headers, allow_redirects=True)
+                    if response.status_code == 200:
+                        file_size = int(response.headers.get("Content-Length", 0))
+                        self._total_size += file_size
+                except:
+                    continue
 
         total_files = len(files_info)
         current_file = 0
@@ -263,6 +288,9 @@ class GofileDownloader:
                         start_time = time.time()
                         last_update = start_time
                         bytes_since_last_update = 0
+                        self._rate_window = []  # Reset rate window for new download
+                        file_key = f"{file_info['path']}/{file_info['filename']}"
+                        self._current_file_progress[file_key] = part_size
 
                         for chunk in response.iter_content(chunk_size=chunk_size):
                             if not chunk:
@@ -275,14 +303,36 @@ class GofileDownloader:
                             
                             # Update progress every 0.5 seconds
                             if current_time - last_update >= 0.5:
-                                progress = (downloaded / total_size) * 100
-                                rate = bytes_since_last_update / (current_time - last_update)
-                                eta = int((total_size - downloaded) / rate) if rate > 0 else 0
+                                # Update both file and total progress
+                                self._current_file_progress[file_key] = downloaded
+                                self._total_downloaded = sum(self._current_file_progress.values())
+                                
+                                # Calculate overall progress percentage
+                                if self._total_size > 0:
+                                    progress = (self._total_downloaded / self._total_size) * 100
+                                    # Ensure progress never decreases
+                                    progress = max(progress, self._last_progress)
+                                    self._last_progress = progress
+                                else:
+                                    progress = 0
+                                
+                                # Calculate current rate
+                                current_rate = bytes_since_last_update / (current_time - last_update)
+                                
+                                # Update rate window
+                                self._rate_window.append(current_rate)
+                                if len(self._rate_window) > self._rate_window_size:
+                                    self._rate_window.pop(0)
+                                
+                                # Use average rate for smoother updates
+                                avg_rate = sum(self._rate_window) / len(self._rate_window)
+                                remaining_bytes = self._total_size - self._total_downloaded
+                                eta = int(remaining_bytes / avg_rate) if avg_rate > 0 else 0
                                 
                                 self._update_progress(
                                     file_info["filename"], 
                                     progress,
-                                    rate,
+                                    avg_rate,
                                     eta
                                 )
                                 
@@ -291,9 +341,15 @@ class GofileDownloader:
 
                     # Download completed successfully
                     os.replace(tmp_file, filepath)
-                    self._update_progress(file_info["filename"], 100, 0, 0, done=True)
+                    # Update final progress
+                    self._current_file_progress[file_key] = total_size
+                    self._total_downloaded = sum(self._current_file_progress.values())
+                    if self._total_size > 0:
+                        final_progress = (self._total_downloaded / self._total_size) * 100
+                    else:
+                        final_progress = 100
+                    self._update_progress(file_info["filename"], final_progress, 0, 0, done=True)
                     return
-
             except (requests.exceptions.RequestException, IOError) as e:
                 print(f"Error downloading {url}: {str(e)}{NEW_LINE}")
                 if retry < self._max_retries - 1:
