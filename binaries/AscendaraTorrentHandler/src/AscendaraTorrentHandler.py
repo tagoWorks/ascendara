@@ -79,6 +79,22 @@ def handleerror(game_info, game_info_path, e):
 
 class TorrentManager:
     def __init__(self):
+        self.qbt_client = None
+        self.connect_thread = None
+        self.current_torrent_hash = None
+        
+    def cleanup(self):
+        if self.qbt_client and self.current_torrent_hash:
+            try:
+                # Get torrent info to check if it's complete
+                torrents = self.qbt_client.torrents_info(torrent_hashes=self.current_torrent_hash)
+                if torrents and not torrents[0].state_enum.is_complete:
+                    # Delete the torrent and its data if download is incomplete
+                    self.qbt_client.torrents_delete(delete_files=True, torrent_hashes=self.current_torrent_hash)
+            except:
+                pass  # Ignore any errors during cleanup
+    
+    def _connect_qbittorrent(self):
         # Connect to local qBittorrent Web UI
         self.qbt_client = qbittorrentapi.Client(
             host='localhost',
@@ -90,9 +106,30 @@ class TorrentManager:
             self.qbt_client.auth_log_in()
         except qbittorrentapi.LoginFailed as e:
             raise Exception("Failed to connect to qBittorrent. Make sure it's running with Web UI enabled.") from e
+    
+    def ensure_connected(self):
+        if self.qbt_client is None:
+            self.connect_thread = threading.Thread(target=self._connect_qbittorrent)
+            self.connect_thread.start()
         
     def download_torrent(self, magnet_link, game, online, dlc, version, size, download_dir):
-        game_info_path = os.path.join(download_dir, f"{game}.ascendara.json")
+        # Start connection process immediately
+        self.ensure_connected()
+        
+        # Create game-specific directory in a separate thread
+        def setup_directories():
+            game_dir = os.path.join(download_dir, game)
+            os.makedirs(game_dir, exist_ok=True)
+            return game_dir
+            
+        dir_thread = threading.Thread(target=setup_directories)
+        dir_thread.start()
+        
+        # Wait for directory creation
+        dir_thread.join()
+        game_dir = os.path.join(download_dir, game)
+        
+        game_info_path = os.path.join(game_dir, f"{game}.ascendara.json")
         
         game_info = {
             "game": game,
@@ -100,10 +137,11 @@ class TorrentManager:
             "dlc": dlc,
             "version": version if version else "",
             "size": size,
-            "executable": os.path.join(download_dir, f"{game}.exe"),
+            "executable": os.path.join(game_dir, f"{game}.exe"),
             "isRunning": False,
             "downloadingData": {
                 "downloading": True,
+                "waiting": True,
                 "extracting": False,
                 "updating": False,
                 "progressCompleted": "0.00",
@@ -112,19 +150,28 @@ class TorrentManager:
             }
         }
         
-        safe_write_json(game_info_path, game_info)
-        
         try:
+            # Create the JSON file right before adding the torrent
+            safe_write_json(game_info_path, game_info)
+            
+            # Wait for qBittorrent connection if not ready
+            if self.connect_thread and self.connect_thread.is_alive():
+                self.connect_thread.join()
+            
             # Add the torrent to qBittorrent
             self.qbt_client.torrents_add(
                 urls=magnet_link,
-                save_path=download_dir,
+                save_path=game_dir,  # Save to game-specific directory
                 use_auto_torrent_management=False,
                 sequential_download=True
             )
             
             # Get the torrent hash from the magnet link
             torrent_hash = magnet_link.split('&')[0].split(':')[-1]
+            self.current_torrent_hash = torrent_hash
+            
+            # Register cleanup on exit
+            atexit.register(self.cleanup)
             
             while True:
                 # Get torrent info
@@ -136,6 +183,12 @@ class TorrentManager:
                 # Update progress
                 progress = torrent.progress * 100
                 download_rate = torrent.dlspeed / 1024  # KB/s
+                
+                # Update waiting status based on download speed
+                if download_rate > 0 and game_info["downloadingData"]["waiting"]:
+                    game_info["downloadingData"]["waiting"] = False
+                    safe_write_json(game_info_path, game_info)
+                
                 if torrent.dlspeed > 0:
                     eta_seconds = torrent.eta
                 else:
@@ -157,7 +210,7 @@ class TorrentManager:
 
             # Find setup executable
             setup_file = None
-            torrent_folder = os.path.join(download_dir, torrent.name)
+            torrent_folder = os.path.join(game_dir, torrent.name)
             for file in os.listdir(torrent_folder):
                 if file.lower().startswith(('setup', game.lower())) and file.lower().endswith('.exe'):
                     setup_file = os.path.join(torrent_folder, file)
@@ -167,7 +220,7 @@ class TorrentManager:
                 raise Exception("Could not find setup executable")
 
             # Run setup silently with target directory
-            install_dir = os.path.join(download_dir, game)
+            install_dir = os.path.join(game_dir, game)
             os.makedirs(install_dir, exist_ok=True)
             
             # Run setup and wait for completion
@@ -206,13 +259,13 @@ def parse_boolean(value):
 
 def main():
     parser = argparse.ArgumentParser(description='Ascendara Torrent Handler')
-    parser.add_argument('--magnet', required=True, help='Magnet link to download')
-    parser.add_argument('--game', required=True, help='Game name')
-    parser.add_argument('--online', type=parse_boolean, default=False, help='Is online game')
-    parser.add_argument('--dlc', type=parse_boolean, default=False, help='Is DLC')
-    parser.add_argument('--version', help='Game version')
-    parser.add_argument('--size', required=True, help='Download size')
-    parser.add_argument('--dir', required=True, help='Download directory')
+    parser.add_argument("magnet", help="Magnet link to download")
+    parser.add_argument("game", help="Game name")
+    parser.add_argument("online", type=parse_boolean, help="Is online game")
+    parser.add_argument("dlc", type=parse_boolean, help="Is DLC")
+    parser.add_argument("version", help="Game version")
+    parser.add_argument("size", help="Download size")
+    parser.add_argument("dir", help="Download directory")
     
     args = parser.parse_args()
     

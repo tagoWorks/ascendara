@@ -1,6 +1,6 @@
 {
   "name": "ascendara",
-  "version": "7.8.2",
+  "version": "7.8.3",
   "main": "main.js",
   "description": "Skip extracting files, navigating setup processes, or any unnecessary hassles.",
   "scripts": {
@@ -130,6 +130,10 @@
         "to": "."
       },
       {
+        "from": "binaries/AscendaraTorrentHandler/dist/AscendaraTorrentHandler.exe",
+        "to": "."
+      },
+      {
         "from": "binaries/AscendaraGofileHelper/src/debian/AscendaraGofileHelper.py",
         "to": "."
       },
@@ -147,6 +151,10 @@
       },
       {
         "from": "binaries/AscendaraLanguageTranslation/src/debian/AscendaraLanguageTranslation.py",
+        "to": "."
+      },
+      {
+        "from": "binaries/AscendaraTorrentHandler/src/debian/AscendaraTorrentHandler.py",
         "to": "."
       }
     ],

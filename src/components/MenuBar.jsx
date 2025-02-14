@@ -8,7 +8,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
 } from "./ui/alert-dialog";
-import { AlertTriangle, WifiOff, Hammer, X, Minus, Download, Flag } from "lucide-react";
+import { AlertTriangle, WifiOff, Hammer, X, Minus, Download, Flag, FlaskConical } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { checkForUpdates } from "@/services/updateCheckingService";
 import { exportToSvg } from "@/lib/exportToSvg";
@@ -29,6 +29,7 @@ const MenuBar = () => {
   const [iconData, setIconData] = useState("");
   const [showTorrentWarning, setShowTorrentWarning] = useState(false);
   const [isLatest, setIsLatest] = useState(true);
+  const [isExperiment, setIsExperiment] = useState(false);
   const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
   const [leftSideActions, setLeftSideActions] = useState(false);
   const [isDev, setIsDev] = useState(false);
@@ -51,6 +52,14 @@ const MenuBar = () => {
       setLeftSideActions(!isWindows);
     };
     checkWindows();
+  }, []);
+
+  useEffect(() => {
+    const checkExperimentMode = async () => {
+      const isExperiment = await window.electron.isExperiment();
+      setIsExperiment(isExperiment);
+    };
+    checkExperimentMode();
   }, []);
 
   useEffect(() => {
@@ -235,6 +244,13 @@ const MenuBar = () => {
             />
           )}
         </div>
+        
+         {isExperiment && (
+          <span className="ml-2 flex items-center gap-1 rounded border border-amber-500/20 bg-amber-500/10 px-1 py-0.5 text-[14px] text-amber-500">
+            <FlaskConical className="h-3 w-3" />
+            {t("app.experiment")}
+          </span>
+        )}
 
         {showTorrentWarning && (
           <span className="ml-2 flex items-center gap-1 rounded border border-red-500/20 bg-red-500/10 px-1 py-0.5 text-[14px] text-red-500">
@@ -242,6 +258,8 @@ const MenuBar = () => {
             {t("app.torrentWarning")}
           </span>
         )}
+
+       
 
         {isDev && (
           <span className="ml-2 flex items-center gap-1 rounded border border-blue-500/20 bg-blue-500/10 px-1 py-0.5 text-[14px] text-blue-500">

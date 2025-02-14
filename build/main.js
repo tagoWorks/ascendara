@@ -50,6 +50,7 @@ let isLatest = true;
 let updateDownloaded = false;
 let notificationShown = false;
 let updateDownloadInProgress = false;
+let experiment = true;
 let isWindows = os.platform().startsWith("win");
 let rpc;
 let config;
@@ -119,6 +120,7 @@ class SettingsManager {
       downloadDirectory: "",
       showOldDownloadLinks: false,
       seeInappropriateContent: false,
+      downloadHandler: false,
       torrentEnabled: false,
       gameSource: "steamrip",
       autoCreateShortcuts: true,
@@ -573,14 +575,14 @@ ipcMain.handle("stop-download", async (event, game) => {
   try {
     if (isWindows) {
       // Windows: Use taskkill to terminate processes
-      const processNames = ["AscendaraDownloader.exe", "AscendaraGofileHelper.exe"];
+      const processNames = ["AscendaraDownloader.exe", "AscendaraGofileHelper.exe", "AscendaraTorrentHandler.exe"];
       for (const processName of processNames) {
         const killProcess = spawn("taskkill", ["/f", "/im", processName]);
         await new Promise(resolve => killProcess.on("close", resolve));
       }
     } else {
       // Unix-like systems: Find and kill Python processes for this game
-      const pythonScripts = ["AscendaraDownloader.py", "AscendaraGofileHelper.py"];
+      const pythonScripts = ["AscendaraDownloader.py", "AscendaraGofileHelper.py", "AscendaraTorrentHandler.py"];
 
       for (const script of pythonScripts) {
         // Use pgrep to find Python processes running our scripts
@@ -738,7 +740,12 @@ ipcMain.handle(
         fs.mkdirSync(gameDirectory, { recursive: true });
       }
 
-      const imageLink = `https://api.ascendara.app/v2/image/${imgID}`;
+      let imageLink;
+      if (settings.gameSource === "fitgirl") {
+        imageLink = `https://api.ascendara.app/v2/fitgirl/image/${imgID}`;
+      } else {
+        imageLink = `https://api.ascendara.app/v2/image/${imgID}`;
+      }
       axios({
         url: imageLink,
         method: "GET",
@@ -831,28 +838,64 @@ ipcMain.handle(
                 console.error("Failed to start subprocess:", err);
               });
             } else {
-              if (isWindows) {
-                executablePath = isDev
-                  ? path.join(
-                      "./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe"
-                    )
-                  : path.join(appDirectory, "/resources/AscendaraDownloader.exe");
+              if (settings.gameSource === "fitgirl") {
+                if (isWindows) {
+                  executablePath = isDev
+                    ? path.join(
+                        "./binaries/AscendaraTorrentHandler/dist/AscendaraTorrentHandler.exe"
+                      )
+                    : path.join(appDirectory, "/resources/AscendaraTorrentHandler.exe");
+                  spawnCommand = [
+                    link,
+                    game,
+                    online,
+                    dlc,
+                    version,
+                    size,
+                    gamesDirectory,
+                  ];
+                } else {
+                  executablePath = "python3";
+                  pythonScript = isDev
+                    ? path.join(
+                        "./binaries/AscendaraTorrentHandler/src/AscendaraTorrentHandler.py"
+                      )
+                    : path.join(appDirectory, "/resources/AscendaraTorrentHandler.py");
+                  spawnCommand = [
+                    pythonScript,
+                    link,
+                    game,
+                    online,
+                    dlc,
+                    version,
+                    size,
+                    gamesDirectory,
+                  ];
+                }
               } else {
-                executablePath = isDev
-                  ? "python3 ./binaries/AscendaraDownloader/src/debian/AscendaraDownloader.py"
-                  : path.join(appDirectory, "/resources/AscendaraDownloader.py");
+                if (isWindows) {
+                  executablePath = isDev
+                    ? path.join(
+                        "./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe"
+                      )
+                    : path.join(appDirectory, "/resources/AscendaraDownloader.exe");
+                } else {
+                  executablePath = isDev
+                    ? "python3 ./binaries/AscendaraDownloader/src/debian/AscendaraDownloader.py"
+                    : path.join(appDirectory, "/resources/AscendaraDownloader.py");
+                }
+                spawnCommand = [
+                  link,
+                  game,
+                  online,
+                  dlc,
+                  isVr,
+                  version,
+                  size,
+                  gamesDirectory,
+                ];
+                console.log(spawnCommand);
               }
-              spawnCommand = [
-                link,
-                game,
-                online,
-                dlc,
-                isVr,
-                version,
-                size,
-                gamesDirectory,
-              ];
-              console.log(spawnCommand);
             }
 
             spawn(executablePath, spawnCommand, {
@@ -1063,7 +1106,12 @@ ipcMain.handle("download-game-cover", async (event, { imgID, gameName }) => {
       fs.mkdirSync(gameDirectory, { recursive: true });
     }
 
-    const imageUrl = `https://api.ascendara.app/v2/image/${imgID}`;
+    let imageUrl;
+      if (settings.gameSource === "fitgirl") {
+        imageUrl = `https://api.ascendara.app/v2/fitgirl/image/${imgID}`;
+      } else {
+        imageUrl = `https://api.ascendara.app/v2/image/${imgID}`;
+      }
     const response = await axios({
       url: imageUrl,
       method: "GET",
@@ -1800,7 +1848,7 @@ ipcMain.handle("update-ascendara", async () => {
 });
 
 ipcMain.handle("check-for-updates", async () => {
-  if (isDev) return true;
+  if (isDev || experiment) return true;
   try {
     await checkReferenceLanguage();
     return await checkVersionAndUpdate();
@@ -1808,6 +1856,10 @@ ipcMain.handle("check-for-updates", async () => {
     console.error("Error checking for updates:", error);
     return true;
   }
+});
+
+ipcMain.handle("is-experiment", () => {
+  return experiment;
 });
 
 ipcMain.handle("uninstall-ascendara", async () => {

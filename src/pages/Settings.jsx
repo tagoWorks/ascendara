@@ -201,11 +201,21 @@ function Settings() {
   const [pendingSourceChange, setPendingSourceChange] = useState(null);
   const [dependencyStatus, setDependencyStatus] = useState(null);
   const [availableLanguages, setAvailableLanguages] = useState([]);
+  const [isExperiment, setIsExperiment] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isDev, setIsDev] = useState(false);
 
   // Use a ref to track if this is the first mount
   const isFirstMount = useRef(true);
+
+  useEffect(() => {
+    const checkExperiment = async () => {
+      const isExperiment = await window.electron.isExperiment();
+      setIsExperiment(isExperiment);
+    };
+    checkExperiment();
+  }, []);
+
 
   // Check if we're on Windows
   useEffect(() => {
@@ -435,8 +445,8 @@ function Settings() {
     const loadFitgirlMetadata = async () => {
       if (!settings.torrentEnabled) return;
       try {
-        const metadata = await window.electron.getFitgirlMetadata();
-        setFitgirlMetadata(metadata);
+        const data = await gameService.getAllGames();
+        setApiMetadata(data.metadata);
       } catch (error) {
         console.error("Failed to load Fitgirl metadata:", error);
       }
@@ -590,26 +600,35 @@ function Settings() {
           <h1 className="text-3xl font-bold text-primary">{t("settings.title")}</h1>
           <Separator orientation="vertical" className="h-8" />
           <p className="text-muted-foreground">{t("settings.configure")}</p>
-          <div className="group relative ml-auto flex items-center text-sm text-muted-foreground">
-            <div
-              onClick={() =>
-                window.electron.openURL(
-                  `https://github.com/ascendara/ascendara/commit/${__APP_REVISION__}`
-                )
-              }
-              className="mr-2 -translate-x-8 transform cursor-pointer opacity-0 transition-all duration-300 hover:underline group-hover:translate-x-0 group-hover:opacity-100"
-            >
-              <span className="text-primary-foreground/60">
-                (rev: {__APP_REVISION__?.substring(0, 7) || "dev"})
-              </span>
+          
+          {isExperiment ? (
+            <div className="group relative ml-auto flex items-center text-sm text-muted-foreground">
+              <div className="px-2 font-medium">
+                <span>Experiment Build, Subject to Change</span>
+              </div>
             </div>
-            <div
-              onClick={() => window.electron.openURL("https://ascendara.app/changelog")}
-              className="cursor-pointer px-2 hover:underline"
-            >
-              <span>v{__APP_VERSION__}</span>
+          ) : (
+            <div className="group relative ml-auto flex items-center text-sm text-muted-foreground">
+              <div
+                onClick={() =>
+                  window.electron.openURL(
+                    `https://github.com/ascendara/ascendara/commit/${__APP_REVISION__}`
+                  )
+                }
+                className="mr-2 -translate-x-8 transform cursor-pointer opacity-0 transition-all duration-300 hover:underline group-hover:translate-x-0 group-hover:opacity-100"
+              >
+                <span className="text-primary-foreground/60">
+                  (rev: {__APP_REVISION__?.substring(0, 7) || "dev"})
+                </span>
+              </div>
+              <div
+                onClick={() => window.electron.openURL("https://ascendara.app/changelog")}
+                className="cursor-pointer px-2 hover:underline"
+              >
+                <span>v{__APP_VERSION__}</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -947,7 +966,7 @@ function Settings() {
                               {t("settings.lastUpdated")}
                             </Label>
                             <p className="text-sm font-medium">
-                              {fitgirlMetadata?.getDate || "-"}
+                              {apiMetadata?.getDate || "-"}
                             </p>
                           </div>
                           <div className="space-y-1">
@@ -955,7 +974,7 @@ function Settings() {
                               {t("settings.totalGames")}
                             </Label>
                             <p className="text-sm font-medium">
-                              {fitgirlMetadata?.games?.toLocaleString() || "-"}
+                              {apiMetadata?.games?.toLocaleString() || "-"}
                             </p>
                           </div>
                         </div>

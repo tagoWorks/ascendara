@@ -28,6 +28,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useLanguage } from "@/context/LanguageContext";
+import { useSettings } from "@/context/SettingsContext";
 import { sanitizeText } from "@/lib/utils";
 import imageCacheService from "@/services/imageCacheService";
 import {
@@ -102,6 +103,7 @@ export default function DownloadPage() {
   const navigate = useNavigate();
   const [gameData, setGameData] = useState(state?.gameData);
   const { t } = useLanguage();
+  const { settings, updateSettings } = useSettings();
 
   // Clear data when leaving the page
   useEffect(() => {
@@ -157,7 +159,6 @@ export default function DownloadPage() {
   const [showNewUserGuide, setShowNewUserGuide] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
   const [guideImages, setGuideImages] = useState({});
-  const [settings, setSettings] = useState({ downloadHandler: false });
   const [lastProcessedUrl, setLastProcessedUrl] = useState(null);
   const [isProcessingUrl, setIsProcessingUrl] = useState(false);
 
@@ -167,6 +168,7 @@ export default function DownloadPage() {
 
   // Simple download handler function
   async function handleDownload(directUrl = null) {
+    const sanitizedGameName = sanitizeText(gameData.game);
     if (showNoDownloadPath) {
       return;
     }
@@ -175,6 +177,50 @@ export default function DownloadPage() {
       console.error("No game data available");
       toast.error(t("download.toast.noGameData"));
       return;
+    }
+
+    // Handle torrent links if Fitgirl is the source
+    if (settings.gameSource === "fitgirl") {
+      const torrentLink = gameData.torrentLink;
+      if (torrentLink) {
+        if (isStartingDownload) {
+          console.log("Download already in progress, skipping");
+          return;
+        }
+
+        setIsStartingDownload(true);
+
+        try {
+          await window.electron.downloadFile(
+            torrentLink,
+            sanitizedGameName,
+            gameData.online || false,
+            gameData.dlc || false,
+            false,
+            gameData.version || "",
+            gameData.imgID,
+            gameData.size || ""
+          );
+
+          // Keep isStarting true until download actually begins
+          const removeDownloadListener = window.electron.onDownloadProgress(downloadInfo => {
+            if (downloadInfo.game === sanitizedGameName) {
+              setIsStartingDownload(false);
+              removeDownloadListener();
+            }
+          });
+
+          setTimeout(() => {
+            toast.success(t("download.toast.torrentSent"));
+            navigate("/downloads");
+          }, 2500);
+        } catch (error) {
+          console.error("Download failed:", error);
+          toast.error(t("download.toast.downloadFailed"));
+          setIsStartingDownload(false);
+        }
+        return;
+      }
     }
 
     // Special handling for GoFile when no direct URL is provided
@@ -213,7 +259,6 @@ export default function DownloadPage() {
     setIsStartingDownload(true);
 
     try {
-      const sanitizedGameName = sanitizeText(gameData.game);
       const isVrGame = gameData.category?.includes("Virtual Reality");
 
       await window.electron.downloadFile(
@@ -341,7 +386,7 @@ export default function DownloadPage() {
       try {
         const savedSettings = await window.electron.getSettings();
         if (savedSettings) {
-          setSettings(savedSettings);
+          updateSettings(savedSettings);
         }
       } catch (error) {
         console.error("Failed to load settings:", error);
@@ -396,14 +441,11 @@ export default function DownloadPage() {
   };
 
   const handleNextStep = () => {
-    if (guideStep < guideSteps.length) {
+    if (guideStep < guideSteps.length - 1) {
       setGuideStep(guideStep + 1);
     } else {
-      const newSettings = { ...settings, downloadHandler: true };
-      window.electron
-        .saveSettings(newSettings)
+      updateSettings({ downloadHandler: true })
         .then(() => {
-          setSettings(newSettings);
           setShowNewUserGuide(false);
           setGuideStep(0);
         })
@@ -831,50 +873,6 @@ export default function DownloadPage() {
                     </a>
                   </span>
                 )}
-                {gameData.category?.includes("Virtual Reality") && (
-                  <span className="flex items-center rounded bg-purple-500/10 px-2 py-0.5 text-sm text-foreground">
-                    <svg
-                      className="p-0.5 text-foreground"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M2 10C2 8.89543 2.89543 8 4 8H20C21.1046 8 22 8.89543 22 10V17C22 18.1046 21.1046 19 20 19H16.1324C15.4299 19 14.7788 18.6314 14.4174 18.029L12.8575 15.4292C12.4691 14.7818 11.5309 14.7818 11.1425 15.4292L9.58261 18.029C9.22116 18.6314 8.57014 19 7.86762 19H4C2.89543 19 2 18.1046 2 17V10Z"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <path
-                        d="M3.81253 6.7812C4.5544 5.6684 5.80332 5 7.14074 5H16.8593C18.1967 5 19.4456 5.6684 20.1875 6.7812L21 8H3L3.81253 6.7812Z"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                    <span className="ml-1text-foreground">
-                      &nbsp;{t("download.gameNeedsVR")}
-                    </span>
-                  </span>
-                )}
-              </div>
-
-              <div className="mb-2 mt-4 flex items-center gap-2">
-                {gameData.version && (
-                  <span className="flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-sm text-primary">
-                    {gameData.version}
-                    {timemachineSetting && (
-                      <History
-                        onClick={() => setShowTimemachineSelection(true)}
-                        className="h-4 w-4 cursor-pointer"
-                      />
-                    )}
-                  </span>
-                )}
                 {gameData.online && (
                   <TooltipProvider>
                     <Tooltip>
@@ -931,7 +929,45 @@ export default function DownloadPage() {
           <Separator className="my-1" />
 
           {/* Download Options Section */}
-          {selectedProvider === "gofile" ? (
+          {settings.gameSource === "fitgirl" && gameData.torrentLink ? (
+            <div className="mx-auto max-w-xl">
+              <div className="flex flex-col items-center space-y-8 py-2">
+                <div className="flex w-full items-center justify-between">
+                  <h2 className="flex items-center gap-2 text-xl font-semibold">
+                    <span className="flex items-center gap-1">
+                      FitGirl Repack
+                    </span>
+                  </h2>
+                </div>
+
+                <div className="w-full max-w-md space-y-4 text-center">
+                  <h3 className="text-2xl font-semibold">
+                    {t("download.downloadOptions.torrentInstructions.title")}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {t("download.downloadOptions.torrentInstructions.description")}
+                  </p>
+                </div>
+
+                <div className="w-full max-w-md">
+                  <Button
+                    onClick={() => handleDownload()}
+                    disabled={isStartingDownload || !gameData}
+                    className="h-12 w-full text-lg text-secondary"
+                  >
+                    {isStartingDownload ? (
+                      <>
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
+                        {t("download.sendingTorrent")}
+                      </>
+                    ) : (
+                      t("download.downloadOptions.downloadTorrent")
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : selectedProvider === "gofile" ? (
             <div className="mx-auto max-w-xl">
               <div className="flex flex-col items-center space-y-8 py-2">
                 <div className="flex w-full items-center justify-between">

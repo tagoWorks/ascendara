@@ -90,6 +90,7 @@ const Search = memo(() => {
   const gamesPerLoad = useWindowSize();
   const [apiMetadata, setApiMetadata] = useState(null);
   const { t } = useLanguage();
+  const isFitGirlSource = settings.gameSource === "fitgirl";
   const navigate = useNavigate();
 
   const isCacheValid = useCallback(() => {
@@ -483,9 +484,9 @@ const Search = memo(() => {
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="border-0 bg-background p-6">
+                <SheetContent className="border-0 bg-background p-6 text-foreground">
                   <SheetHeader>
-                    <SheetTitle className="text-foreground">
+                    <SheetTitle>
                       {t("search.filterOptions")}
                     </SheetTitle>
                   </SheetHeader>
@@ -494,7 +495,7 @@ const Search = memo(() => {
                       <div className="flex w-full items-center gap-2">
                         <Gift className="h-4 w-4 text-primary" />
                         <Label
-                          className={`cursor-pointer text-foreground ${showDLC ? "font-bold" : ""}`}
+                          className={`cursor-pointer text-foreground hover:text-foreground/90 ${showDLC ? "font-bold" : ""}`}
                           onClick={() => setShowDLC(prev => !prev)}
                         >
                           {t("search.showDLC")}
@@ -505,7 +506,7 @@ const Search = memo(() => {
                       <div className="flex w-full items-center gap-2">
                         <Gamepad2 className="h-4 w-4 text-primary" />
                         <Label
-                          className={`cursor-pointer text-foreground ${showOnline ? "font-bold" : ""}`}
+                          className={`cursor-pointer text-foreground hover:text-foreground/90 ${showOnline ? "font-bold" : ""}`}
                           onClick={() => setShowOnline(prev => !prev)}
                         >
                           {t("search.showOnline")}
@@ -514,7 +515,7 @@ const Search = memo(() => {
                     </div>
                     <Separator className="bg-border/50" />
                     <div className="space-y-4">
-                      <h4 className="text-sm font-medium text-foreground">
+                      <h4 className={isFitGirlSource ? "text-muted-foreground text-sm font-medium" : "text-sm font-medium text-foreground"}>
                         {t("search.sortBy")}
                       </h4>
                       <RadioGroup
@@ -523,26 +524,26 @@ const Search = memo(() => {
                         className="grid grid-cols-1 gap-2"
                       >
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="weight" id="weight" />
-                          <Label className="text-foreground" htmlFor="weight">{t("search.mostPopular")}</Label>
+                          <RadioGroupItem value="weight" id="weight" disabled={isFitGirlSource} />
+                          <Label className={`${isFitGirlSource ? 'text-muted-foreground' : 'text-foreground hover:text-foreground/90 cursor-pointer'}`} htmlFor="weight">{t("search.mostPopular")}</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="weight-asc" id="weight-asc" />
-                          <Label className="text-foreground" htmlFor="weight-asc">{t("search.leastPopular")}</Label>
+                          <RadioGroupItem value="weight-asc" id="weight-asc" disabled={isFitGirlSource} />
+                          <Label className={`${isFitGirlSource ? 'text-muted-foreground' : 'text-foreground hover:text-foreground/90 cursor-pointer'}`} htmlFor="weight-asc">{t("search.leastPopular")}</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="name" id="name" />
-                          <Label className="text-foreground" htmlFor="name">{t("search.alphabeticalAZ")}</Label>
+                          <RadioGroupItem value="name" id="name" disabled={isFitGirlSource} />
+                          <Label className={`${isFitGirlSource ? 'text-muted-foreground' : 'text-foreground hover:text-foreground/90 cursor-pointer'}`} htmlFor="name">{t("search.alphabeticalAZ")}</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="name-desc" id="name-desc" />
-                          <Label className="text-foreground" htmlFor="name-desc">{t("search.alphabeticalAZ")}</Label>
-                        </div>alphabeticalAZ
+                          <RadioGroupItem value="name-desc" id="name-desc" disabled={isFitGirlSource} />
+                          <Label className={`${isFitGirlSource ? 'text-muted-foreground' : 'text-foreground hover:text-foreground/90 cursor-pointer'}`} htmlFor="name-desc">{t("search.alphabeticalZA")}</Label>
+                        </div>
                       </RadioGroup>
                     </div>
                     <Separator className="bg-border/50" />
                     <div className="space-y-4">
-                      <h4 className="text-sm font-medium text-foreground">
+                      <h4 className={isFitGirlSource ? "text-muted-foreground text-sm font-medium" : "text-sm font-medium text-foreground"}>
                         {t("search.categories")}
                       </h4>
                       <CategoryFilter

@@ -9,7 +9,7 @@ import { useImageLoader } from "@/hooks/useImageLoader";
 import { Badge } from "./ui/badge";
 import { Globe, Gift, ImageOff } from "lucide-react";
 
-const HomeGameCard = memo(({ game }) => {
+const HomeGameCard = memo(({ game, small }) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -90,37 +90,39 @@ const HomeGameCard = memo(({ game }) => {
               <div
                 className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent transition-opacity duration-300 ${
                   isHovered ? "opacity-100" : "opacity-80"
-                }`}
+                } ${small ? "!opacity-0" : ""}`}
               >
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <div className="mb-2 flex items-center gap-2">
-                    {isDLC && (
-                      <Badge
-                        variant="outline"
-                        className="border-primary/50 bg-black/50 text-white hover:bg-black/70"
-                      >
-                        <Gift className="mr-1 h-3 w-3 text-primary" />
-                        {t("download.allDlc")}
-                      </Badge>
-                    )}
-                    {isOnline && (
-                      <Badge
-                        variant="outline"
-                        className="border-primary/50 bg-black/50 text-white hover:bg-black/70"
-                      >
-                        <Globe className="mr-1 h-3 w-3 text-primary" />
-                        {t("download.online")}
-                      </Badge>
-                    )}
+                {!small && (
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      {isDLC && (
+                        <Badge
+                          variant="outline"
+                          className="border-primary/50 bg-black/50 text-white hover:bg-black/70"
+                        >
+                          <Gift className="mr-1 h-3 w-3 text-primary" />
+                          {t("download.allDlc")}
+                        </Badge>
+                      )}
+                      {isOnline && (
+                        <Badge
+                          variant="outline"
+                          className="border-primary/50 bg-black/50 text-white hover:bg-black/70"
+                        >
+                          <Globe className="mr-1 h-3 w-3 text-primary" />
+                          {t("download.online")}
+                        </Badge>
+                      )}
+                    </div>
+                    <h3
+                      className={`line-clamp-2 text-lg font-semibold text-white transition-transform duration-300 ${
+                        isHovered ? "translate-x-2" : "translate-x-0"
+                      }`}
+                    >
+                      {sanitizeText(game.title || game.game)}
+                    </h3>
                   </div>
-                  <h3
-                    className={`line-clamp-2 text-lg font-semibold text-white transition-transform duration-300 ${
-                      isHovered ? "translate-x-2" : "translate-x-0"
-                    }`}
-                  >
-                    {sanitizeText(game.title || game.game)}
-                  </h3>
-                </div>
+                )}
               </div>
             </div>
           )}

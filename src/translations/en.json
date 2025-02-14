@@ -11,6 +11,7 @@
       "installingUpdate": "Installing Update"
     },
     "outdated": "OUTDATED",
+    "experiment": "EXPERIMENTAL BUILD",
     "torrentWarning": "TORRENTING IS ENABLED - USE VPN",
     "qbittorrent": {
       "notAccessible": "qBittorrent WebUI is not accessible",
@@ -18,7 +19,9 @@
       "checking": "Checking qBittorrent status...",
       "active": "qBittorrent WebUI Active ({{version}})",
       "inactive": "qBittorrent WebUI Inactive",
-      "inactiveWithError": "qBittorrent WebUI Inactive - {{error}}"
+      "inactiveWithError": "qBittorrent WebUI Inactive - {{error}}",
+      "configRequired": "Check qBittorrent Configuration",
+      "configInstructions": "Please set your qBittorrent WebUI credentials to username 'admin' and password 'adminadmin' to enable torrent functionality."
     },
     "platform": {
       "warning": {
@@ -101,6 +104,7 @@
       "downloadOptions": "Download Options",
       "downloadSource": "Download Source",
       "downloading": "Downloading",
+      "downloadTorrent": "Download Torrent",
       "getExtension": "Don't have the extension? Get it for Chrome or Firefox",
       "gofileInstructions": {
         "action": "Simply click on Download Now to start downloading this game.",
@@ -127,6 +131,10 @@
       "selectProvider": "Select a download provider",
       "selectProviderPrompt": "Please select a download provider to see the instructions.",
       "startingDownload": "Starting download...",
+      "torrentInstructions": {
+        "title": "Download via Torrent",
+        "description": "Click the button below to download the torrent file. Make sure you have a torrent client installed and a VPN enabled for safe downloading."
+      },
       "waitingForBrowser": "Waiting for your browser to send the download..."
     },
     "gameNeedsEmulator": "This requires an emulator to run.",
@@ -167,6 +175,7 @@
     "shareGame": "Share Ascendara Game Link",
     "size": "Size",
     "submitReport": "Submit Report",
+    "sendingTorrent": "Sending Torrent...",
     "submitting": "Submitting...",
     "switchProvider": "Switch Provider",
     "timemachine": {
@@ -184,6 +193,7 @@
     "toast": {
       "downloadFailed": "Failed to start download",
       "downloadStarted": "Download started successfully",
+      "torrentSent": "Torrent sent. Ascendara may hang for a moment while it processes the request.",
       "invalidLink": "Please enter a valid download link",
       "invalidProtocolUrl": "Sent URL is invalid. Please try again",
       "noGameData": "No game data was passed down",
@@ -200,6 +210,8 @@
     },
     "activeDownload": "active download",
     "activeDownloads": "Active Downloads",
+    "waiting": "Waiting for Peers",
+    "waitingDescription": "qBittorrent is looking for peers to connect to download pieces of the torrent file from other users and upload to them in turn. Others may be able to see what you're downloading and/or determine your public IP address.",
     "alreadyReported": "Already Reported",
     "contentTypeError": "Received content type error from downloader. Download link most likely expired",
     "downloadError": "Download Error",
@@ -236,7 +248,8 @@
     "onlineGames": "Online Games",
     "popularCategories": "Popular Categories",
     "recentGames": "Recent Games",
-    "topGames": "Top Games"
+    "topGames": "Top Games",
+    "randomGames": "Random Games"
   },
   "library": {
     "addGame": "Add Game",
@@ -343,11 +356,12 @@
     "configure": "Configure your app preferences",
     "customThreadCount": "Custom Thread Count",
     "reloadRequired": "Reload Required",
-    "sourceChangeReload": "You need to reload Ascendara after changing the game source.",
+    "sourceChangeReload": "You need to reload Ascendara after changing the game source. All cached data will be cleared when you switch sources.",
     "reload": "Reload Now",
     "customThreadCountDesc": "Higher values may improve download speed but require more CPU power and memory. Maximum: 32 threads",
     "darkThemes": "Dark Themes",
     "downloadLocation": "Download Location",
+    "checkConfig": "Check Configuration",
     "downloadLocationWarning": "Ascendara cannot write files to the chosen directory. Change was not saved.",
     "downloadThreads": "Download Performance",
     "downloadThreadsPresets": {
@@ -368,7 +382,7 @@
       "translatingDialogDesc": "Ascendara is translating the selected language. This may take a few minutes, you can leave this but do not close Ascendara."
     },
     "fitgirlRepacks": "Fitgirl Repacks",
-    "fitgirlRepacksDescription": "Access Fitgirl's highly compressed game repacks. Significantly smaller downloads with the same quality, perfect for limited bandwidth.",
+    "fitgirlRepacksDescription": "Access Fitgirl's over 5500 games all on Ascendara. Games are sourced through the Hydralibrary and matched with an image using the IGDB. There are no categories or weights supported for these games, they will seem completely random.",
     "gameSources": "Indexed Game Source",
     "gameSourcesDescription": "Ascendara primarily uses SteamRip as its trusted source for games",
     "general": "General",
@@ -389,7 +403,7 @@
     "reinstallSuccess": "Dependencies reinstalled successfully",
     "comingSoon": "Coming Soon",
     "torrentOnAscendara": "Torrent on Ascendara",
-    "torrentDescription": "Enable advanced torrent functionality through qBittorrent for supported games. This feature requires qBittorrent to be installed and is recommended for experienced users only.",
+    "torrentDescription": "Enable Ascendara's torrent functionality. This feature requires qBittorrent to be installed and is recommended for experienced users only.",
     "torrentSupport": "Fitgirl Support",
     "torrentSupportDescription": "Fitgirl and Torrent support are in development and are expected to be released soon.",
     "torrentWarning": "Using torrent functionality may be restricted in some regions. Please ensure you comply with local laws and regulations. Configure additional settings through qBittorrent.",
@@ -404,7 +418,7 @@
     "sourceActive": "Active",
     "sourceInactive": "Inactive",
     "sourceRequiresTorrent": "Requires torrent support",
-    "steamripDescription": "SteamRip is the primary source for Ascendara, providing a secure and reliable collection of games with regular updates. Advanced users can enable optional torrent functionality.",
+    "steamripDescription": "SteamRip is the primary source for Ascendara, providing a secure and reliable collection of games with regular updates.",
     "switchSource": "Switch to this source",
     "currentSource": "Current Source",
     "theme": "Theme",

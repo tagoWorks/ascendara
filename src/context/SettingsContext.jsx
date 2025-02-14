@@ -7,12 +7,15 @@ export function SettingsProvider({ children }) {
     downloadDirectory: "",
     showOldDownloadLinks: false,
     seeInappropriateContent: false,
+    downloadHandler: false,
+    torrentEnabled: false,
+    gameSource: "steamrip",
     autoCreateShortcuts: true,
     sendAnalytics: true,
-    gameSource: "steamrip",
     autoUpdate: true,
     language: "en",
     theme: "purple",
+    threadCount: 4,
     sideScrollBar: false,
   });
 
@@ -49,25 +52,25 @@ export function SettingsProvider({ children }) {
     try {
       const success = await window.electron.updateSetting(key, value);
       if (success) {
-        setSettingsState(prev => ({
-          ...prev,
+        setSettingsState(prevSettings => ({
+          ...prevSettings,
           [key]: value
         }));
         return true;
       }
       return false;
     } catch (error) {
-      console.error(`Error updating setting ${key}:`, error);
+      console.error("Error updating setting:", error);
       return false;
     }
   };
 
   const updateSettings = async (newSettings) => {
     try {
-      const success = await window.electron.updateSettings(newSettings);
+      const success = await window.electron.saveSettings(newSettings);
       if (success) {
-        setSettingsState(prev => ({
-          ...prev,
+        setSettingsState(prevSettings => ({
+          ...prevSettings,
           ...newSettings
         }));
         return true;

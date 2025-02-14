@@ -263,6 +263,7 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
   const { downloadingData } = game;
   const isDownloading = downloadingData?.downloading;
   const isExtracting = downloadingData?.extracting;
+  const isWaiting = downloadingData?.waiting;
   const isUpdating = downloadingData?.updating;
   const hasError = downloadingData?.error;
 
@@ -518,7 +519,7 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
           </div>
         ) : (
           <>
-            {isDownloading && (
+            {isDownloading && !isWaiting && (
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-muted-foreground">
@@ -561,6 +562,22 @@ const DownloadCard = ({ game, onStop, onRetry, onOpenFolder, isStopping }) => {
                     {isExtracting
                       ? t("downloads.extractingDescription")
                       : t("downloads.updatingDescription")}
+                  </span>
+                </div>
+              </div>
+            )}
+            {isWaiting && (
+              <div className="mt-2 space-y-2">
+                <div className="relative overflow-hidden rounded-full">
+                  <Progress value={undefined} className="bg-muted/30" />
+                </div>
+                <div className="mt-1 flex flex-col items-center justify-center text-sm text-muted-foreground">
+                  <span className="flex items-center gap-2 text-lg font-semibold">
+                    <Loader className="h-4 w-4 animate-spin" />
+                    {t("downloads.waiting")}
+                  </span>
+                  <span className="text-xs text-center max-w-[70%] mx-auto">
+                    {t("downloads.waitingDescription")}
                   </span>
                 </div>
               </div>
