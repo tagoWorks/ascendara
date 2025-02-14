@@ -24,7 +24,6 @@
  *
  **/
 
-let isDev = false;
 
 const {
   app,

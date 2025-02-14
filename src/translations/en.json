@@ -132,6 +132,7 @@
       "selectProviderPrompt": "Please select a download provider to see the instructions.",
       "startingDownload": "Starting download...",
       "torrentInstructions": {
+        "noTorrent": "qBittorrent WebUI cannot be accessed. Check settings for more information.",
         "description": "Click the button below to download the torrent file. Make sure you have a torrent client installed and a VPN enabled for safe downloading.",
         "title": "Download via Torrent"
       },

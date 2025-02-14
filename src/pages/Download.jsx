@@ -43,9 +43,11 @@ import {
   TriangleAlert,
   History,
   Zap,
+  AlertTriangle,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import checkQbittorrentStatus from "@/services/qbittorrentCheckService";
 import { toast } from "sonner";
 import TimemachineDialog from "@/components/TimemachineDialog";
 
@@ -149,6 +151,7 @@ export default function DownloadPage() {
   const [showNoDownloadPath, setShowNoDownloadPath] = useState(false);
   const [cachedImage, setCachedImage] = useState(null);
   const [isValidLink, setIsValidLink] = useState(true);
+  const [torrentRunning, setIsTorrentRunning] = useState(false);
   const [showCopySuccess, setShowCopySuccess] = useState(false);
   const [showShareCopySuccess, setShowShareCopySuccess] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
@@ -290,6 +293,16 @@ export default function DownloadPage() {
     }
   }
 
+  useEffect(() => {
+    const checkQbittorrent = async () => {
+      if (settings.torrentEnabled) {
+        const status = await checkQbittorrentStatus();
+        setIsTorrentRunning(status.active);
+      }
+    };
+    checkQbittorrent();
+  }, [t, settings.torrentEnabled]);
+
   // Protocol URL listener effect
   useEffect(() => {
     if (!useAscendara) return;
@@ -381,19 +394,78 @@ export default function DownloadPage() {
   }, []);
 
   useEffect(() => {
-    // Load initial settings
-    const loadSettings = async () => {
-      try {
-        const savedSettings = await window.electron.getSettings();
-        if (savedSettings) {
-          updateSettings(savedSettings);
+    setTimemachineSetting(settings.showOldDownloadLinks);
+  }, [settings.showOldDownloadLinks]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const loadCachedImage = async () => {
+      const image = await imageCacheService.getImage(gameData.imgID);
+      setCachedImage(image);
+    };
+    loadCachedImage();
+    checkDownloadPath();
+  }, [gameData, navigate]);
+
+  useEffect(() => {
+    const savedPreference = localStorage.getItem("useAscendara");
+    if (savedPreference !== null) {
+      setUseAscendara(JSON.parse(savedPreference));
+    }
+  }, []);
+
+  const checkDownloadPath = async () => {
+    try {
+      if (!settings.downloadDirectory) {
+        setShowNoDownloadPath(true);
+      }
+    } catch (error) {
+      console.error("Error getting settings:", error);
+    }
+  };
+  const handleInputChange = e => {
+    const newLink = e.target.value;
+    setInputLink(newLink);
+
+    if (newLink.trim() === "") {
+      setIsValidLink(true);
+      return;
+    }
+
+    // Try to detect provider from URL if none selected
+    if (!selectedProvider) {
+      for (const provider of VERIFIED_PROVIDERS) {
+        if (isValidURL(newLink, provider)) {
+          setSelectedProvider(provider);
+          setIsValidLink(true);
+          return;
         }
-      } catch (error) {
-        console.error("Failed to load settings:", error);
+      }
+    }
+
+    setIsValidLink(isValidURL(newLink, selectedProvider));
+  };
+
+  useEffect(() => {
+    // Disable scrolling on the body
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      // Re-enable scrolling when the component unmounts
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = event => {
+      if (event.key === "Escape") {
+        navigate("/search");
       }
     };
-    loadSettings();
-  }, []);
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
 
   const guideSteps = [
     {
@@ -460,127 +532,7 @@ export default function DownloadPage() {
     setGuideStep(0);
   };
 
-  useEffect(() => {
-    const getShowOldDownloadLinksSetting = async () => {
-      const settings = await window.electron.getSettings();
-      setTimemachineSetting(settings.showOldDownloadLinks);
-    };
-    getShowOldDownloadLinksSetting();
-  }, []);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    const loadCachedImage = async () => {
-      const image = await imageCacheService.getImage(gameData.imgID);
-      setCachedImage(image);
-    };
-    loadCachedImage();
-    checkDownloadPath();
-  }, [gameData, navigate]);
-
-  useEffect(() => {
-    const savedPreference = localStorage.getItem("useAscendara");
-    if (savedPreference !== null) {
-      setUseAscendara(JSON.parse(savedPreference));
-    }
-  }, []);
-
-  const checkDownloadPath = async () => {
-    try {
-      const settings = await window.electron.getSettings();
-      if (!settings.downloadDirectory) {
-        setShowNoDownloadPath(true);
-      }
-    } catch (error) {
-      console.error("Error getting settings:", error);
-    }
-  };
-  const handleInputChange = e => {
-    const newLink = e.target.value;
-    setInputLink(newLink);
-
-    if (newLink.trim() === "") {
-      setIsValidLink(true);
-      return;
-    }
-
-    // Try to detect provider from URL if none selected
-    if (!selectedProvider) {
-      for (const provider of VERIFIED_PROVIDERS) {
-        if (isValidURL(newLink, provider)) {
-          setSelectedProvider(provider);
-          setIsValidLink(true);
-          return;
-        }
-      }
-    }
-
-    setIsValidLink(isValidURL(newLink, selectedProvider));
-  };
-
-  useEffect(() => {
-    // Disable scrolling on the body
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      // Re-enable scrolling when the component unmounts
-      document.body.style.overflow = "auto";
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleKeyDown = event => {
-      if (event.key === "Escape") {
-        navigate("/search");
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [navigate]);
-
-  useEffect(() => {
-    if (gameData) {
-      console.log("Game Data:", gameData);
-
-      const downloadLinks = gameData.download_links || {};
-      if (Object.keys(downloadLinks).length === 0) {
-        console.log("No download providers available for:", gameData.game);
-        return; // No providers available
-      }
-
-      // Log each provider and its links for debugging
-      Object.entries(downloadLinks).forEach(([provider, links]) => {
-        console.log(`Provider ${provider}:`, links);
-      });
-
-      const availableProviders = Object.entries(downloadLinks)
-        .filter(([_, links]) => {
-          if (!Array.isArray(links)) return false;
-          if (links.length === 0) return false;
-          return links.some(link => typeof link === "string" && link.length > 0);
-        })
-        .map(([provider]) => provider);
-
-      console.log("Filtered Available Providers:", availableProviders);
-
-      if (!selectedProvider) {
-        if (availableProviders.includes("gofile")) {
-          setSelectedProvider("gofile");
-        } else if (availableProviders.includes("buzzheavier")) {
-          setSelectedProvider("buzzheavier");
-        } else {
-          const verifiedProvider = availableProviders.find(provider =>
-            VERIFIED_PROVIDERS.includes(provider)
-          );
-          setSelectedProvider(verifiedProvider || availableProviders[0]);
-        }
-      }
-    }
-  }, [gameData, selectedProvider]);
-
   const checkIfNewUser = async () => {
-    const settings = await window.electron.getSettings();
     if (!settings.downloadDirectory) {
       return true;
     }
@@ -762,97 +714,99 @@ export default function DownloadPage() {
             <div className="flex flex-col">
               <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">{gameData.game}</h1>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button className="fixed right-8" variant="outline" size="sm">
-                      {t("download.reportBroken")}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <form
-                      onSubmit={e => {
-                        e.preventDefault();
-                        handleSubmitReport();
-                      }}
-                    >
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="text-2xl font-bold text-foreground">
-                          {t("download.reportBroken")}: {gameData.game}
-                        </AlertDialogTitle>
-                        <AlertDialogDescription className="space-y-4">
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium">
-                              {t("download.reportReason")}
-                            </label>
-                            <Select value={reportReason} onValueChange={setReportReason}>
-                              <SelectTrigger>
-                                <SelectValue
-                                  placeholder={t("download.reportReasons.placeholder")}
-                                />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="gamedetails">
-                                  {t("download.reportReasons.gameDetails")}
-                                </SelectItem>
-                                <SelectItem value="filesnotdownloading">
-                                  {t("download.reportReasons.filesNotDownloading")}
-                                </SelectItem>
-                                <SelectItem value="notagame">
-                                  {t("download.reportReasons.notAGame")}
-                                </SelectItem>
-                                <SelectItem value="linksnotworking">
-                                  {t("download.reportReasons.linksNotWorking")}
-                                </SelectItem>
-                                <SelectItem value="image-error">
-                                  {t("download.reportReasons.imageError")}
-                                </SelectItem>
-                                <SelectItem value="image-bad">
-                                  {t("download.reportReasons.imageBad")}
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium">
-                              {t("download.reportDescription")}
-                            </label>
-                            <Textarea
-                              placeholder={t("download.reportDescription")}
-                              value={reportDetails}
-                              onChange={e => setReportDetails(e.target.value)}
-                              className="min-h-[100px]"
-                            />
-                          </div>
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
+                {settings.gameSource == "fitigrl" && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button className="fixed right-8" variant="outline" size="sm">
+                        {t("download.reportBroken")}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <form
+                        onSubmit={e => {
+                          e.preventDefault();
+                          handleSubmitReport();
+                        }}
+                      >
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-2xl font-bold text-foreground">
+                            {t("download.reportBroken")}: {gameData.game} 
+                          </AlertDialogTitle>
+                          <AlertDialogDescription className="space-y-4">
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium">
+                                {t("download.reportReason")}
+                              </label>
+                              <Select value={reportReason} onValueChange={setReportReason}>
+                                <SelectTrigger>
+                                  <SelectValue
+                                    placeholder={t("download.reportReasons.placeholder")}
+                                  />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="gamedetails">
+                                    {t("download.reportReasons.gameDetails")}
+                                  </SelectItem>
+                                  <SelectItem value="filesnotdownloading">
+                                    {t("download.reportReasons.filesNotDownloading")}
+                                  </SelectItem>
+                                  <SelectItem value="notagame">
+                                    {t("download.reportReasons.notAGame")}
+                                  </SelectItem>
+                                  <SelectItem value="linksnotworking">
+                                    {t("download.reportReasons.linksNotWorking")}
+                                  </SelectItem>
+                                  <SelectItem value="image-error">
+                                    {t("download.reportReasons.imageError")}
+                                  </SelectItem>
+                                  <SelectItem value="image-bad">
+                                    {t("download.reportReasons.imageBad")}
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium">
+                                {t("download.reportDescription")}
+                              </label>
+                              <Textarea
+                                placeholder={t("download.reportDescription")}
+                                value={reportDetails}
+                                onChange={e => setReportDetails(e.target.value)}
+                                className="min-h-[100px]"
+                              />
+                            </div>
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
 
-                      <AlertDialogFooter className="mt-4 gap-2">
-                        <AlertDialogCancel
-                          onClick={() => {
-                            setReportReason("");
-                            setReportDetails("");
-                          }}
-                        >
-                          {t("common.cancel")}
-                        </AlertDialogCancel>
-                        <Button
-                          type="submit"
-                          className="text-secondary"
-                          disabled={isReporting}
-                        >
-                          {isReporting ? (
-                            <>
-                              <Loader className="mr-2 h-4 w-4 animate-spin" />
-                              {t("download.submitting")}
-                            </>
-                          ) : (
-                            t("download.submitReport")
-                          )}
-                        </Button>
-                      </AlertDialogFooter>
-                    </form>
-                  </AlertDialogContent>
-                </AlertDialog>
+                        <AlertDialogFooter className="mt-4 gap-2">
+                          <AlertDialogCancel
+                            onClick={() => {
+                              setReportReason("");
+                              setReportDetails("");
+                            }}
+                          >
+                            {t("common.cancel")}
+                          </AlertDialogCancel>
+                          <Button
+                            type="submit"
+                            className="text-secondary"
+                            disabled={isReporting}
+                          >
+                            {isReporting ? (
+                              <>
+                                <Loader className="mr-2 h-4 w-4 animate-spin" />
+                                {t("download.submitting")}
+                              </>
+                            ) : (
+                              t("download.submitReport")
+                            )}
+                          </Button>
+                        </AlertDialogFooter>
+                      </form>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </div>
 
               <div className="mb-2 flex items-center gap-2">
@@ -929,7 +883,7 @@ export default function DownloadPage() {
                 <div className="flex w-full items-center justify-between">
                   <h2 className="flex items-center gap-2 text-xl font-semibold">
                     <span className="flex items-center gap-1">
-                      FitGirl Repack
+                      Fitgirl Repacks
                     </span>
                   </h2>
                 </div>
@@ -943,10 +897,17 @@ export default function DownloadPage() {
                   </p>
                 </div>
 
+                {!torrentRunning && (
+                  <p className="text-muted-foreground">
+                    <AlertTriangle className="h-4 w-4 inline-block mr-2" />
+                    {t("download.downloadOptions.torrentInstructions.noTorrent")}
+                  </p>
+                )}
+
                 <div className="w-full max-w-md">
                   <Button
                     onClick={() => handleDownload()}
-                    disabled={isStartingDownload || !gameData}
+                    disabled={isStartingDownload || !gameData || !torrentRunning}
                     className="h-12 w-full text-lg text-secondary"
                   >
                     {isStartingDownload ? (
@@ -1326,28 +1287,30 @@ export default function DownloadPage() {
           )}
         </div>
       </div>
-
-      <TooltipProvider>
-        <Tooltip open={showShareCopySuccess}>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              onClick={handleShareLink}
-              className="fixed bottom-20 right-4 z-50 flex items-center gap-2"
-            >
-              {showShareCopySuccess ? (
-                <CheckIcon className="h-4 w-4" />
-              ) : (
-                <CopyIcon className="h-4 w-4" />
-              )}
-              {t("download.shareGame")}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent className="text-secondary" side="left">
-            <p>{t("download.linkCopied")}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      
+      {settings.gameSource !== "fitgirl" && (
+        <TooltipProvider>
+          <Tooltip open={showShareCopySuccess}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                onClick={handleShareLink}
+                className="fixed bottom-20 right-4 z-50 flex items-center gap-2"
+              >
+                {showShareCopySuccess ? (
+                  <CheckIcon className="h-4 w-4" />
+                ) : (
+                  <CopyIcon className="h-4 w-4" />
+                )}
+                {t("download.shareGame")}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="text-secondary" side="left">
+              <p>{t("download.linkCopied")}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
 
       {gameData && (
         <TimemachineDialog
