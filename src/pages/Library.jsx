@@ -886,18 +886,16 @@ const InstalledGameCard = ({
             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
               <div className="w-full max-w-[200px] space-y-2 px-4">
                 <div className="relative overflow-hidden">
-                  <Progress value={undefined} />
-                  <div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/30 to-transparent"
-                    style={{
-                      animation: "shimmer 2s linear infinite",
-                      transform: "translateX(-100%)",
-                      maskImage:
-                        "linear-gradient(to right, transparent 20%, black 50%, transparent 80%)",
-                      WebkitMaskImage:
-                        "linear-gradient(to right, transparent 20%, black 50%, transparent 80%)",
-                    }}
-                  />
+                  <Progress value={undefined} className="bg-muted/30" />
+                    <div
+                      className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-primary/20 to-transparent"
+                      style={{
+                        animation: "shimmer 3s infinite ease-in-out",
+                        backgroundSize: "200% 100%",
+                        WebkitAnimation: "shimmer 3s infinite ease-in-out",
+                        WebkitBackgroundSize: "200% 100%",
+                      }}
+                    />
                 </div>
                 <div className="text-center text-sm font-medium text-white">
                   <span className="flex items-center justify-center gap-2">

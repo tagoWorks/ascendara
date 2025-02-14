@@ -50,7 +50,7 @@ let isLatest = true;
 let updateDownloaded = false;
 let notificationShown = false;
 let updateDownloadInProgress = false;
-let experiment = true;
+let experiment = false;
 let isWindows = os.platform().startsWith("win");
 let rpc;
 let config;
@@ -724,208 +724,92 @@ ipcMain.handle(
     console.log(
       `Downloading file: ${link}, game: ${game}, online: ${online}, dlc: ${dlc}, isVr: ${isVr}, version: ${version}, size: ${size}`
     );
-    const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
+    
     try {
-      const data = fs.readFileSync(filePath, "utf8");
+      // Get download directory from settings
+      const data = await fs.promises.readFile(
+        path.join(app.getPath("userData"), "ascendarasettings.json"),
+        "utf8"
+      );
       const settings = JSON.parse(data);
+      
       if (!settings.downloadDirectory) {
         console.error("Download directory not set");
         return;
       }
-      const gamesDirectory = settings.downloadDirectory;
-      const sanitizedGameName = sanitizeDirectoryName(game);
-      const gameDirectory = path.join(gamesDirectory, sanitizedGameName);
 
-      if (!fs.existsSync(gameDirectory)) {
-        fs.mkdirSync(gameDirectory, { recursive: true });
-      }
+      // Create game directory
+      const gameDirectory = path.join(settings.downloadDirectory, sanitizeDirectoryName(game));
+      await fs.promises.mkdir(gameDirectory, { recursive: true });
 
-      let imageLink;
-      if (settings.gameSource === "fitgirl") {
-        imageLink = `https://api.ascendara.app/v2/fitgirl/image/${imgID}`;
-      } else {
-        imageLink = `https://api.ascendara.app/v2/image/${imgID}`;
-      }
-      axios({
+      // Download game header image
+      const imageLink = settings.gameSource === "fitgirl" 
+        ? `https://api.ascendara.app/v2/fitgirl/image/${imgID}`
+        : `https://api.ascendara.app/v2/image/${imgID}`;
+
+      const response = await axios({
         url: imageLink,
         method: "GET",
         responseType: "arraybuffer",
-      })
-        .then(response => {
-          const imageBuffer = Buffer.from(response.data);
-          const mimeType = response.headers["content-type"];
-          const extension = getExtensionFromMimeType(mimeType);
-          const downloadPath = path.join(gameDirectory, `header.ascendara${extension}`);
-          const writer = fs.createWriteStream(downloadPath);
+      });
 
-          writer.write(imageBuffer);
-          writer.end();
+      // Save the image
+      const imageBuffer = Buffer.from(response.data);
+      const mimeType = response.headers["content-type"];
+      const extension = getExtensionFromMimeType(mimeType);
+      await fs.promises.writeFile(
+        path.join(gameDirectory, `header.ascendara${extension}`),
+        imageBuffer
+      );
 
-          writer.on("finish", () => {
-            console.log("Image downloaded successfully");
-            let executablePath;
-            let spawnCommand;
+      // Launch the appropriate Python script based on the link type and source
+      const executablePath = isDev
+        ? path.join(
+            settings.gameSource === "fitgirl"
+              ? "./binaries/AscendaraTorrentHandler/dist/AscendaraTorrentHandler.exe"
+              : link.includes("gofile.io")
+              ? "./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe"
+              : "./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe"
+          )
+        : path.join(
+            appDirectory,
+            settings.gameSource === "fitgirl"
+              ? "/resources/AscendaraTorrentHandler.exe"
+              : link.includes("gofile.io")
+              ? "/resources/AscendaraGofileHelper.exe"
+              : "/resources/AscendaraDownloader.exe"
+          );
 
-            if (link.includes("gofile.io")) {
-              if (isWindows) {
-                executablePath = isDev
-                  ? path.join(
-                      "./binaries/AscendaraDownloader/dist/AscendaraGofileHelper.exe"
-                    )
-                  : path.join(appDirectory, "/resources/AscendaraGofileHelper.exe");
-                spawnCommand = [
-                  "https://" + link,
-                  game,
-                  online,
-                  dlc,
-                  isVr,
-                  version,
-                  size,
-                  gamesDirectory,
-                ];
-              } else {
-                executablePath = "python3";
-                pythonScript = isDev
-                  ? path.join(
-                      "./binaries/AscendaraDownloader/src/AscendaraGofileHelper.py"
-                    )
-                  : path.join(appDirectory, "/resources/AscendaraGofileHelper.py");
-                spawnCommand = [
-                  pythonScript,
-                  "https://" + link,
-                  game,
-                  online,
-                  dlc,
-                  isVr,
-                  version,
-                  size,
-                  gamesDirectory,
-                ];
-              }
+      const spawnCommand = settings.gameSource === "fitgirl"
+        ? [link, game, online, dlc, version, size, settings.downloadDirectory]
+        : [
+            link.includes("gofile.io") ? "https://" + link : link,
+            game,
+            online,
+            dlc,
+            isVr,
+            version,
+            size,
+            settings.downloadDirectory,
+          ];
 
-              // Spawn the process with different configurations based on platform
-              const spawnOptions = isWindows
-                ? {
-                    detached: true,
-                    stdio: "ignore",
-                    cwd: process.cwd(),
-                  }
-                : {
-                    stdio: ["pipe", "pipe", "pipe"],
-                    cwd: process.cwd(),
-                  };
+      const downloadProcess = spawn(executablePath, spawnCommand, {
+        detached: true,
+        stdio: "ignore",
+        windowsHide: false,
+      });
 
-              const childProcess = spawn(executablePath, spawnCommand, spawnOptions);
+      downloadProcess.on('error', (err) => {
+        console.error(`Failed to start download process: ${err}`);
+        event.sender.send('download-error', { game, error: err.message });
+      });
 
-              if (isWindows) {
-                childProcess.unref();
-              } else {
-                // Handle stdout and stderr for non-Windows platforms
-                childProcess.stdout.on("data", data => {
-                  console.log(`Python stdout: ${data}`);
-                });
+      downloadProcesses.set(game, downloadProcess);
+      downloadProcess.unref();
 
-                childProcess.stderr.on("data", data => {
-                  console.error(`Python stderr: ${data}`);
-                });
-
-                childProcess.on("close", code => {
-                  console.log(`Python process exited with code ${code}`);
-                });
-              }
-
-              childProcess.on("error", err => {
-                console.error("Failed to start subprocess:", err);
-              });
-            } else {
-              if (settings.gameSource === "fitgirl") {
-                if (isWindows) {
-                  executablePath = isDev
-                    ? path.join(
-                        "./binaries/AscendaraTorrentHandler/dist/AscendaraTorrentHandler.exe"
-                      )
-                    : path.join(appDirectory, "/resources/AscendaraTorrentHandler.exe");
-                  spawnCommand = [
-                    link,
-                    game,
-                    online,
-                    dlc,
-                    version,
-                    size,
-                    gamesDirectory,
-                  ];
-                } else {
-                  executablePath = "python3";
-                  pythonScript = isDev
-                    ? path.join(
-                        "./binaries/AscendaraTorrentHandler/src/AscendaraTorrentHandler.py"
-                      )
-                    : path.join(appDirectory, "/resources/AscendaraTorrentHandler.py");
-                  spawnCommand = [
-                    pythonScript,
-                    link,
-                    game,
-                    online,
-                    dlc,
-                    version,
-                    size,
-                    gamesDirectory,
-                  ];
-                }
-              } else {
-                if (isWindows) {
-                  executablePath = isDev
-                    ? path.join(
-                        "./binaries/AscendaraDownloader/dist/AscendaraDownloader.exe"
-                      )
-                    : path.join(appDirectory, "/resources/AscendaraDownloader.exe");
-                } else {
-                  executablePath = isDev
-                    ? "python3 ./binaries/AscendaraDownloader/src/debian/AscendaraDownloader.py"
-                    : path.join(appDirectory, "/resources/AscendaraDownloader.py");
-                }
-                spawnCommand = [
-                  link,
-                  game,
-                  online,
-                  dlc,
-                  isVr,
-                  version,
-                  size,
-                  gamesDirectory,
-                ];
-                console.log(spawnCommand);
-              }
-            }
-
-            spawn(executablePath, spawnCommand, {
-              detached: true,
-              stdio: "ignore",
-              windowsHide: false,
-            }).unref();
-
-            // Send download stats
-            axios
-              .post("https://api.ascendara.app/stats/download", {
-                game: game,
-              })
-              .then(response => {
-                console.log("Download counter incremented successfully");
-              })
-              .catch(error => {
-                console.error("Error incrementing download counter:", error);
-              });
-          });
-
-          writer.on("error", err => {
-            console.error("Error downloading the image:", err);
-          });
-        })
-        .catch(error => {
-          console.error("Error during image download request:", error);
-        });
     } catch (error) {
-      console.error("Error reading the settings file:", error);
+      console.error("Error in download-file handler:", error);
+      event.sender.send('download-error', { game, error: error.message });
     }
   }
 );
@@ -1755,7 +1639,7 @@ ipcMain.handle("get-games", async () => {
     const settings = JSON.parse(data);
     if (!settings.downloadDirectory) {
       console.error("Download directory not set");
-      return [];
+      return;
     }
     const downloadDirectory = settings.downloadDirectory;
     // Get all subdirectories in the download directory
