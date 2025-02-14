@@ -855,22 +855,16 @@ export default function DownloadPage() {
                 </AlertDialog>
               </div>
 
-              <div className="flex items-center gap-2">
-                {gameData.emulator && (
-                  <span className="flex items-center gap-1 rounded bg-yellow-500/10 px-2 py-0.5 text-sm text-yellow-500">
-                    <CircleSlash className="mr-1 h-4 w-4" />{" "}
-                    {t("download.gameNeedsEmulator")}&nbsp;
-                    <a
-                      onClick={() =>
-                        window.electron.openURL(
-                          "https://ascendara.app/docs/troubleshooting/emulators"
-                        )
-                      }
-                      className="cursor-pointer hover:underline"
-                    >
-                      {t("common.learnMore")}{" "}
-                      <ExternalLink className="mb-1 inline-block h-3 w-3" />
-                    </a>
+              <div className="mb-2 flex items-center gap-2">
+                {gameData.version && (
+                  <span className="flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-sm text-primary">
+                    {gameData.version}
+                    {timemachineSetting && (
+                      <History
+                        onClick={() => setShowTimemachineSelection(true)}
+                        className="h-4 w-4 cursor-pointer"
+                      />
+                    )}
                   </span>
                 )}
                 {gameData.online && (
