@@ -111,8 +111,19 @@ const Search = memo(() => {
     if (queryWords.length === 0) return false;
 
     return queryWords.every(queryWord => {
+      // Check for exact number matches first
+      if (/\d/.test(queryWord)) {
+        return text.includes(queryWord);
+      }
+
       const words = text.split(/\s+/);
       return words.some(word => {
+        // For words containing numbers, require exact substring match
+        if (/\d/.test(word)) {
+          return word.includes(queryWord);
+        }
+
+        // For regular words, use fuzzy matching
         if (word.includes(queryWord)) return true;
         let matches = 0;
         const uniqueChars = [...new Set(queryWord)];
