@@ -30,6 +30,7 @@ const MenuBar = () => {
   const [showTorrentWarning, setShowTorrentWarning] = useState(false);
   const [isLatest, setIsLatest] = useState(true);
   const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
+  const [leftSideActions, setLeftSideActions] = useState(false);
   const [isDev, setIsDev] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const mainContentRef = useRef(null);
@@ -41,6 +42,15 @@ const MenuBar = () => {
       setIsDev(isDevMode);
     };
     checkDevMode();
+  }, []);
+
+  // Check if isOnWindows
+  useEffect(() => {
+    const checkWindows = async () => {
+      const isWindows = await window.electron.isOnWindows();
+      setLeftSideActions(!isWindows);
+    };
+    checkWindows();
   }, []);
 
   useEffect(() => {
@@ -185,7 +195,23 @@ const MenuBar = () => {
       className="fixed z-50 flex h-10 w-full select-none items-center"
       style={{ WebkitAppRegion: "drag" }}
     >
-      <div className="ml-0.5 mt-2 flex h-full flex-1 items-center px-3">
+      {leftSideActions && (
+        <div className="window-controls ml-2 flex items-center">
+          <button
+            onClick={() => window.electron.closeWindow()}
+            className="rounded p-1 hover:bg-gray-200"
+          >
+            <div className="h-3 w-3 rounded-full bg-red-500 hover:bg-red-600" />
+          </button>
+          <button
+            onClick={() => window.electron.minimizeWindow()}
+            className="ml-1 rounded p-1 hover:bg-gray-200"
+          >
+            <div className="h-3 w-3 rounded-full bg-yellow-500 hover:bg-yellow-600" />
+          </button>
+        </div>
+      )}
+      <div className="mt-2 flex h-full flex-1 items-center px-3">
         <div className="flex items-center">
           {iconData && <img src={iconData} alt="Ascendara" className="mr-2 h-6 w-6" />}
           <span className="text-sm font-medium">Ascendara</span>
@@ -279,20 +305,22 @@ const MenuBar = () => {
           </div>
         )}
       </div>
-      <div className="window-controls mr-2 flex items-center">
-        <button
-          onClick={() => window.electron.minimizeWindow()}
-          className="rounded p-1 hover:bg-gray-200"
-        >
-          <Minus className="h-4 w-4" />
-        </button>
-        <button
-          onClick={() => window.electron.closeWindow()}
-          className="ml-1 rounded p-1 hover:bg-red-500 hover:text-white"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
+      {!leftSideActions && (
+        <div className="window-controls mr-2 flex items-center">
+          <button
+            onClick={() => window.electron.minimizeWindow()}
+            className="rounded p-1 hover:bg-gray-200"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => window.electron.closeWindow()}
+            className="ml-1 rounded p-1 hover:bg-red-500 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <AlertDialogContent className="max-w-md bg-background">
           <AlertDialogHeader>
