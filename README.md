@@ -219,6 +219,7 @@ Before building, ensure you have all required dependencies. [View full requireme
 ### Current Goals
 - [ ] Improved download management (pausing, resuming)
 - [ ] Fitgirl and torrenting support
+- [ ] Notification handling for desktop
 
 ### Future Goals
  > Want to suggest a feature you don't see here? [Contribute](https://ascendara.app/docs/getting-started/contributing) to Ascendara or [submit feedback](https://ascendara.app/feedback)!
