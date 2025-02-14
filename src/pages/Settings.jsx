@@ -30,7 +30,7 @@ import {
   Download,
   Scale,
   ClockAlert,
-  AlertTriangle,
+  FlaskConical,
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
@@ -215,7 +215,6 @@ function Settings() {
     };
     checkExperiment();
   }, []);
-
 
   // Check if we're on Windows
   useEffect(() => {
@@ -583,14 +582,14 @@ function Settings() {
       setShowTorrentWarning(true);
     } else {
       handleSettingChange("torrentEnabled", false);
-      window.dispatchEvent(new CustomEvent('torrentSettingChanged', { detail: false }));
+      window.dispatchEvent(new CustomEvent("torrentSettingChanged", { detail: false }));
     }
   };
 
   const handleEnableTorrent = () => {
     setShowTorrentWarning(false);
     handleSettingChange("torrentEnabled", true);
-    window.dispatchEvent(new CustomEvent('torrentSettingChanged', { detail: true }));
+    window.dispatchEvent(new CustomEvent("torrentSettingChanged", { detail: true }));
   };
 
   return (
@@ -600,7 +599,7 @@ function Settings() {
           <h1 className="text-3xl font-bold text-primary">{t("settings.title")}</h1>
           <Separator orientation="vertical" className="h-8" />
           <p className="text-muted-foreground">{t("settings.configure")}</p>
-          
+
           {isExperiment ? (
             <div className="group relative ml-auto flex items-center text-sm text-muted-foreground">
               <div className="px-2 font-medium">
@@ -860,9 +859,16 @@ function Settings() {
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-semibold">SteamRip</h3>
-                          <Badge variant={settings.gameSource === "steamrip" ? "success" : "secondary"} className="text-xs">
-                            {settings.gameSource === "steamrip" ? t("settings.currentSource") : t("settings.sourceInactive")}
+                          <h3 className="text-lg font-semibold">SteamRIP</h3>
+                          <Badge
+                            variant={
+                              settings.gameSource === "steamrip" ? "success" : "secondary"
+                            }
+                            className="text-xs"
+                          >
+                            {settings.gameSource === "steamrip"
+                              ? t("settings.currentSource")
+                              : t("settings.sourceInactive")}
                           </Badge>
                         </div>
                         <p className="max-w-[600px] text-sm text-muted-foreground">
@@ -919,14 +925,23 @@ function Settings() {
                 </div>
 
                 {settings.torrentEnabled && (
-                  <div className="mt-6 rounded-lg border bg-card animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="mt-6 rounded-lg border bg-card duration-300 animate-in fade-in slide-in-from-top-4">
                     <div className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <h3 className="text-lg font-semibold">Fitgirl Repacks</h3>
-                            <Badge variant={settings.gameSource === "fitgirl" ? "success" : "secondary"} className="text-xs">
-                              {settings.gameSource === "fitgirl" ? t("settings.currentSource") : t("settings.sourceInactive")}
+                            <Badge
+                              variant={
+                                settings.gameSource === "fitgirl"
+                                  ? "success"
+                                  : "secondary"
+                              }
+                              className="text-xs"
+                            >
+                              {settings.gameSource === "fitgirl"
+                                ? t("settings.currentSource")
+                                : t("settings.sourceInactive")}
                             </Badge>
                           </div>
                           <p className="max-w-[600px] text-sm text-muted-foreground">
@@ -996,21 +1011,32 @@ function Settings() {
                       onClick={() => setShowAdvanced(!showAdvanced)}
                       disabled={settings.torrentEnabled}
                     >
-                      {t("settings.advanced")} {showAdvanced ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+                      {t("settings.advanced")}{" "}
+                      {showAdvanced ? (
+                        <ChevronUp className="ml-2 h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
 
                 {/* Advanced Settings */}
                 {showAdvanced && (
-                  <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="space-y-6 duration-300 animate-in fade-in slide-in-from-top-4">
                     {/* Torrent Support */}
                     <div className="rounded-lg border bg-card">
                       <div className="p-6">
                         <div className="flex items-start justify-between">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <h3 className="text-lg font-semibold">{t("settings.torrentOnAscendara")}</h3>
+                              <h3 className="text-lg font-semibold">
+                                {t("settings.torrentOnAscendara")}
+                              </h3>
+                              <Badge variant="secondary" className="text-xs">
+                                <FlaskConical className="mr-1 h-4 w-4" />
+                                {t("settings.experimental")}
+                              </Badge>
                             </div>
                             <p className="max-w-[600px] text-sm text-muted-foreground">
                               {t("settings.torrentDescription")}
@@ -1023,13 +1049,24 @@ function Settings() {
                                   <Switch
                                     checked={settings.torrentEnabled}
                                     onCheckedChange={handleTorrentToggle}
-                                    disabled={settings.gameSource === "fitgirl"}
+                                    disabled={
+                                      settings.gameSource === "fitgirl" || !isOnWindows
+                                    }
                                   />
                                 </div>
                               </TooltipTrigger>
                               {settings.gameSource === "fitgirl" && (
                                 <TooltipContent>
-                                  <p>{t("settings.cannotDisableTorrent")}</p>
+                                  <p className="text-secondary">
+                                    {t("settings.cannotDisableTorrent")}
+                                  </p>
+                                </TooltipContent>
+                              )}
+                              {!isOnWindows && (
+                                <TooltipContent>
+                                  <p className="text-secondary">
+                                    {t("settings.onlyWindowsSupported")}
+                                  </p>
                                 </TooltipContent>
                               )}
                             </Tooltip>
@@ -1383,7 +1420,9 @@ function Settings() {
       <AlertDialog open={showTorrentWarning} onOpenChange={setShowTorrentWarning}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-bold text-foreground">{t("settings.torrentWarningDialog.title")}</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">
+              {t("settings.torrentWarningDialog.title")}
+            </AlertDialogTitle>
             <AlertDialogDescription className="space-y-4 text-muted-foreground">
               <p>{t("settings.torrentWarningDialog.description")}</p>
               <div className="mt-4 space-y-3 rounded-lg bg-muted p-4">
@@ -1403,8 +1442,10 @@ function Settings() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="text-primary">{t("settings.torrentWarningDialog.cancel")}</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogCancel className="text-primary">
+              {t("settings.torrentWarningDialog.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
               onClick={handleEnableTorrent}
               className="bg-red-500 hover:bg-red-600"
             >
@@ -1418,19 +1459,25 @@ function Settings() {
       <AlertDialog open={showReloadDialog} onOpenChange={setShowReloadDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-bold text-foreground">{t("settings.reloadRequired")}</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">
+              {t("settings.reloadRequired")}
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
               {t("settings.sourceChangeReload")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="text-primary" onClick={() => {
-              setShowReloadDialog(false);
-              setPendingSourceChange(null);
-            }}>
+            <AlertDialogCancel
+              className="text-primary"
+              onClick={() => {
+                setShowReloadDialog(false);
+                setPendingSourceChange(null);
+              }}
+            >
               {t("common.cancel")}
             </AlertDialogCancel>
-            <AlertDialogAction className="bg-primary hover:bg-primary/90"
+            <AlertDialogAction
+              className="bg-primary hover:bg-primary/90"
               onClick={() => {
                 setSettings(prev => ({ ...prev, gameSource: pendingSourceChange }));
                 const newSettings = { ...settings, gameSource: pendingSourceChange };
@@ -1460,7 +1507,7 @@ const QbittorrentStatus = () => {
       const result = await checkQbittorrentStatus();
       setStatus(result);
     } catch (error) {
-      console.error('Error checking qBittorrent status:', error);
+      console.error("Error checking qBittorrent status:", error);
       setStatus({ active: false, error: error.message });
     } finally {
       setChecking(false);
@@ -1474,36 +1521,35 @@ const QbittorrentStatus = () => {
   }, [checkStatus]);
 
   return (
-    <div className="flex items-center justify-between w-full">
+    <div className="flex w-full items-center justify-between">
       <div className="flex items-center gap-2">
         {checking ? (
           <>
             <Loader className="h-4 w-4 animate-spin" />
-            <span>{t('app.qbittorrent.checking')}</span>
+            <span>{t("app.qbittorrent.checking")}</span>
           </>
         ) : status.active ? (
           <>
             <Badge className="h-2 w-2 rounded-full bg-green-500" />
-            <span>{t('app.qbittorrent.active', { version: status.version })}</span>
+            <span>{t("app.qbittorrent.active", { version: status.version })}</span>
           </>
         ) : (
           <>
             <Badge className="h-2 w-2 rounded-full bg-red-500" />
             <span>
-              {status.error 
-                ? (
-                  <>
-                    {t('app.qbittorrent.inactiveWithError', { error: status.error })}
-                    <button 
-                      onClick={() => setShowConfigAlert(true)} 
-                      className="ml-2 underline"
-                    >
-                      {t('settings.checkConfig')}
-                    </button>
-                  </>
-                )
-                : t('app.qbittorrent.inactive')
-              }
+              {status.error ? (
+                <>
+                  {t("app.qbittorrent.inactiveWithError", { error: status.error })}
+                  <button
+                    onClick={() => setShowConfigAlert(true)}
+                    className="ml-2 underline"
+                  >
+                    {t("settings.checkConfig")}
+                  </button>
+                </>
+              ) : (
+                t("app.qbittorrent.inactive")
+              )}
             </span>
           </>
         )}
@@ -1515,18 +1561,22 @@ const QbittorrentStatus = () => {
         disabled={checking}
         className="h-8 w-8"
       >
-        <RefreshCw className={`h-4 w-4 ${checking ? 'animate-spin' : ''}`} />
+        <RefreshCw className={`h-4 w-4 ${checking ? "animate-spin" : ""}`} />
       </Button>
       <AlertDialog open={showConfigAlert} onOpenChange={setShowConfigAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('app.qbittorrent.configRequired')}</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">
+              {t("app.qbittorrent.configRequired")}
+            </AlertDialogTitle>
             <AlertDialogDescription className="space-y-4 text-muted-foreground">
-              {t('app.qbittorrent.configInstructions')}
+              {t("app.qbittorrent.configInstructions")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="text-primary">{t('common.ok')}</AlertDialogCancel>
+            <AlertDialogCancel className="text-primary">
+              {t("common.ok")}
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
