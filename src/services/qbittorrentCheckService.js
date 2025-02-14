@@ -49,7 +49,7 @@ const checkQbittorrentStatus = async () => {
         return { 
             active: false, 
             error: error.message.includes('Authentication failed')
-                ? 'Authentication failed - check qBittorrent credentials' 
+                ? 'Authentication failed' 
                 : 'qBittorrent WebUI not responding'
         };
     }

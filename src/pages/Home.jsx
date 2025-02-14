@@ -1,10 +1,12 @@
 import React, { useState, useEffect, memo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import HomeGameCard from "@/components/HomeGameCard";
 import RecentGameCard from "@/components/RecentGameCard";
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { useSettings } from "@/context/SettingsContext";
 import { Sword, Flame, Globe, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import gameService from "@/services/gameService";
 import Tour from "@/components/Tour";
@@ -27,6 +29,7 @@ const Home = memo(() => {
   const [popularCategories, setPopularCategories] = useState({});
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const { settings } = useSettings();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -173,12 +176,39 @@ const Home = memo(() => {
     // Then get popular categories, passing the used games set
     const popularCats = getPopularCategories(apiGames, usedGames);
 
-    // Update state
-    setTopGames(topSection);
-    setOnlineGames(onlineSection);
-    setActionGames(actionSection);
-    setPopularCategories(popularCats);
-  }, [apiGames]);
+    // Update state based on source
+    const source = settings?.gameSource || 'steamrip';
+    if (source === 'fitgirl') {
+      // For fitgirl, track used games to avoid duplicates
+      const usedGames = new Set([...recentGames.map(g => g.game)]);
+
+      // Get online games first
+      const onlineGamesSection = apiGames
+        .filter(game => game.online && !usedGames.has(game.game))
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 6);
+
+      // Add online games to used set
+      onlineGamesSection.forEach(game => usedGames.add(game.game));
+
+      // Then get random non-online games, excluding used ones
+      const randomGamesSection = apiGames
+        .filter(game => !game.online && !usedGames.has(game.game))
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 6);
+
+      setTopGames(randomGamesSection);
+      setOnlineGames(onlineGamesSection);
+      setActionGames([]);
+      setPopularCategories({});
+    } else {
+      // For steamrip, show all sections
+      setTopGames(topSection);
+      setOnlineGames(onlineSection);
+      setActionGames(actionSection);
+      setPopularCategories(popularCats);
+    }
+  }, [apiGames, settings?.gameSource, recentGames]);
 
   const getGameSections = games => {
     if (!Array.isArray(games)) return { topGames: [], onlineGames: [], actionGames: [] };
@@ -254,7 +284,7 @@ const Home = memo(() => {
     const popularCategories = [
       "Action",
       "Adventure",
-      "RPG",
+      "Survival",
       "Simulation",
       "Strategy",
       "Sports",
@@ -269,25 +299,6 @@ const Home = memo(() => {
 
     return categories;
   };
-
-  const handleImageIntersect = useCallback(
-    async imgID => {
-      if (!imgID || carouselImages[imgID]) return;
-
-      try {
-        const src = await imageCacheService.getImage(imgID);
-        if (src) {
-          setCarouselImages(prev => ({
-            ...prev,
-            [imgID]: src,
-          }));
-        }
-      } catch (error) {
-        console.error("Error loading carousel image:", error);
-      }
-    },
-    [carouselImages]
-  );
 
   const getRecentGames = async games => {
     const recentlyPlayed = recentGamesService.getRecentGames();
@@ -600,72 +611,76 @@ const Home = memo(() => {
             </section>
           )}
 
-          <section className="space-y-8">
-            <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-              <Sword className="h-6 w-6 text-primary" />
-              {t("home.topGames")}
-            </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {loading
-                ? Array(4)
-                    .fill(0)
-                    .map((_, i) => (
-                      <div key={i} className="animate-pulse">
-                        <AspectRatio ratio={16 / 9}>
-                          <Skeleton className="h-full w-full" />
-                        </AspectRatio>
-                      </div>
-                    ))
-                : topGames.map(game => <HomeGameCard key={game.game} game={game} />)}
-            </div>
-          </section>
+          {topGames.length > 0 && (
+            <section className="space-y-8">
+              <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+                <Sword className="h-6 w-6 text-primary" />
+                {settings?.gameSource === 'fitgirl' ? t("home.randomGames") : t("home.topGames")}
+              </h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {loading
+                  ? Array(4)
+                      .fill(0)
+                      .map((_, i) => (
+                        <div key={i} className="animate-pulse">
+                          <AspectRatio ratio={16 / 9}>
+                            <Skeleton className="h-full w-full" />
+                          </AspectRatio>
+                        </div>
+                      ))
+                  : topGames.map(game => <HomeGameCard key={game.game} game={game} />)}
+              </div>
+            </section>
+          )}
 
-          <section className="space-y-8">
-            <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-              <Globe className="h-6 w-6 text-primary" />
-              {t("home.onlineGames")}
-            </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {onlineGames.map(game => (
-                <HomeGameCard key={game.game} game={game} />
-              ))}
-            </div>
-          </section>
+          {onlineGames.length > 0 && (
+            <section className="space-y-8">
+              <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+                <Globe className="h-6 w-6 text-primary" />
+                {t("home.onlineGames")}
+              </h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {onlineGames.map(game => (
+                  <HomeGameCard key={game.game} game={game} />
+                ))}
+              </div>
+            </section>
+          )}
 
-          <section className="space-y-8">
-            <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-              <Flame className="h-6 w-6 text-primary" />
-              {t("home.actionGames")}
-            </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {actionGames.map(game => (
-                <HomeGameCard key={game.game} game={game} />
-              ))}
-            </div>
-          </section>
-
-          <section className="space-y-8">
-            <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-              <Flame className="h-6 w-6 text-primary" />
-              {t("home.popularCategories")}
-            </h2>
-            <div className="space-y-8">
-              {Object.keys(popularCategories).map((category, index) => (
-                <div key={category} className="space-y-4">
-                  <h3 className="text-xl font-semibold text-foreground">{category}</h3>
-                  <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    {popularCategories[category].map((game, index) => (
-                      <HomeGameCard key={`${category}-${game.id || index}`} game={game} />
-                    ))}
-                  </div>
+          {settings?.gameSource !== 'fitgirl' && (
+            <>
+              <section className="space-y-8">
+                <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+                  <Flame className="h-6 w-6 text-primary" />
+                  {t("home.actionGames")}
+                </h2>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {actionGames.map(game => (
+                    <HomeGameCard key={game.game} game={game} />
+                  ))}
                 </div>
-              ))}
-            </div>
-          </section>
+              </section>
 
-          <div className="py-8 text-center text-muted-foreground/50">
-            <p className="text-sm">{t("home.footerNote")}</p>
-          </div>
+              <section className="space-y-8">
+                <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+                  <Flame className="h-6 w-6 text-primary" />
+                  {t("home.popularCategories")}
+                </h2>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {Object.entries(popularCategories).map(([category, games]) => (
+                    <div key={category} className="space-y-4">
+                      <h3 className="text-lg font-semibold text-foreground">{category}</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        {games.map(game => (
+                          <HomeGameCard key={game.game} game={game} small />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </>
+          )}
         </div>
       </div>
     </div>

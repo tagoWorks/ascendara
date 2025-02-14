@@ -907,7 +907,7 @@ function Settings() {
                           <div className="flex items-center gap-2">
                             <h3 className="text-lg font-semibold">Fitgirl Repacks</h3>
                             <Badge variant={settings.gameSource === "fitgirl" ? "success" : "secondary"} className="text-xs">
-                              {settings.gameSource === "fitgirl" ? t("settings.currentSource") : t("settings.sourceInactive-", "Not Available Yet...")}
+                              {settings.gameSource === "fitgirl" ? t("settings.currentSource") : t("settings.sourceInactive")}
                             </Badge>
                           </div>
                           <p className="max-w-[600px] text-sm text-muted-foreground">
@@ -917,7 +917,6 @@ function Settings() {
                         {settings.gameSource !== "fitgirl" ? (
                           <Button
                             variant="outline"
-                            disabled
                             size="sm"
                             className="shrink-0"
                             onClick={() => handleSettingChange("gameSource", "fitgirl")}
@@ -1417,6 +1416,7 @@ function Settings() {
                 setSettings(prev => ({ ...prev, gameSource: pendingSourceChange }));
                 const newSettings = { ...settings, gameSource: pendingSourceChange };
                 window.electron.saveSettings(newSettings);
+                window.electron.clearCache();
                 window.electron.reload();
               }}
             >
@@ -1431,8 +1431,9 @@ function Settings() {
 
 const QbittorrentStatus = () => {
   const { t } = useLanguage();
-  const [status, setStatus] = useState({ active: false, version: null, error: null });
-  const [checking, setChecking] = useState(true);
+  const [checking, setChecking] = useState(false);
+  const [status, setStatus] = useState({ checking: true });
+  const [showConfigAlert, setShowConfigAlert] = useState(false);
 
   const checkStatus = useCallback(async () => {
     setChecking(true);
@@ -1471,7 +1472,17 @@ const QbittorrentStatus = () => {
             <Badge className="h-2 w-2 rounded-full bg-red-500" />
             <span>
               {status.error 
-                ? t('app.qbittorrent.inactiveWithError', { error: status.error })
+                ? (
+                  <>
+                    {t('app.qbittorrent.inactiveWithError', { error: status.error })}
+                    <button 
+                      onClick={() => setShowConfigAlert(true)} 
+                      className="ml-2 underline"
+                    >
+                      {t('settings.checkConfig')}
+                    </button>
+                  </>
+                )
                 : t('app.qbittorrent.inactive')
               }
             </span>
@@ -1487,6 +1498,19 @@ const QbittorrentStatus = () => {
       >
         <RefreshCw className={`h-4 w-4 ${checking ? 'animate-spin' : ''}`} />
       </Button>
+      <AlertDialog open={showConfigAlert} onOpenChange={setShowConfigAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">{t('app.qbittorrent.configRequired')}</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4 text-muted-foreground">
+              {t('app.qbittorrent.configInstructions')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-primary">{t('common.ok')}</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

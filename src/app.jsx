@@ -6,6 +6,7 @@ import PlatformWarningDialog from "@/components/PlatformWarningDialog";
 import UpdateOverlay from "@/components/UpdateOverlay";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
+import { SettingsProvider } from "@/context/SettingsContext";
 import { analytics } from "@/services/analyticsService";
 import gameService from "@/services/gameService";
 import { checkForUpdates } from "@/services/updateCheckingService";
@@ -736,14 +737,16 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <LanguageProvider>
-          <Router>
-            <ToasterWithTheme />
-            <ContextMenu />
-            <ScrollToTop />
-            <AnimatePresence mode="wait">
-              <AppRoutes />
-            </AnimatePresence>
-          </Router>
+          <SettingsProvider>
+            <Router>
+              <ToasterWithTheme />
+              <ContextMenu />
+              <ScrollToTop />
+              <AnimatePresence mode="wait">
+                <AppRoutes />
+              </AnimatePresence>
+            </Router>
+          </SettingsProvider>
         </LanguageProvider>
       </ThemeProvider>
     </ErrorBoundary>

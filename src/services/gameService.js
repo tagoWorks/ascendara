@@ -52,7 +52,7 @@ const gameService = {
           games: parsedGames,
           metadata: parsedMetadata,
           timestamp: parseInt(timestamp),
-          lastUpdated: localStorage.getItem(LAST_UPDATED_KEY),
+          lastUpdated: parsedMetadata.getDate,
         };
 
         return {
@@ -88,7 +88,16 @@ const gameService = {
   },
 
   async fetchDataFromAPI() {
-    const response = await fetch(`${API_URL}/json/games`);
+    // Get settings from electron
+    const settings = await window.electron.getSettings();
+    const source = settings?.gameSource || 'steamrip';
+    
+    let endpoint = `${API_URL}/json/games`;
+    if (source === 'fitgirl') {
+      endpoint = `${API_URL}/json/sources/fitgirl/games`;
+    }
+
+    const response = await fetch(endpoint);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -109,7 +118,7 @@ const gameService = {
         apiversion: data.metadata?.apiversion,
         games: data.games?.length,
         getDate: data.metadata?.getDate,
-        source: data.metadata?.source,
+        source: data.metadata?.source || source,
       },
     };
   },

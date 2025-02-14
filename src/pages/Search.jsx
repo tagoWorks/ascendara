@@ -12,6 +12,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/context/LanguageContext";
+import { useSettings } from "@/context/SettingsContext";
 import GameCard from "@/components/GameCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import {
@@ -54,11 +55,26 @@ const Search = memo(() => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [sortBy, setSortBy] = useState("weight");
-  const [sortOrder, setSortOrder] = useState("desc");
-  const [showDLC, setShowDLC] = useState(false);
-  const [showOnline, setShowOnline] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState(() => {
+    const saved = window.localStorage.getItem('selectedCategories');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [onlineFilter, setOnlineFilter] = useState(() => {
+    const saved = window.localStorage.getItem('onlineFilter');
+    return saved || "all";
+  });
+  const [selectedSort, setSelectedSort] = useState(() => {
+    const saved = window.localStorage.getItem('selectedSort');
+    return saved || "weight";
+  });
+  const [showDLC, setShowDLC] = useState(() => {
+    const saved = window.localStorage.getItem('showDLC');
+    return saved === 'true';
+  });
+  const [showOnline, setShowOnline] = useState(() => {
+    const saved = window.localStorage.getItem('showOnline');
+    return saved === 'true';
+  });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isIndexUpdating, setIsIndexUpdating] = useState(false);
   const gamesPerPage = useWindowSize();
@@ -210,59 +226,83 @@ const Search = memo(() => {
     return () => stopStatusCheck();
   }, []);
 
+  useEffect(() => {
+    window.localStorage.setItem('selectedCategories', JSON.stringify(selectedCategories));
+  }, [selectedCategories]);
+
+  useEffect(() => {
+    window.localStorage.setItem('onlineFilter', onlineFilter);
+  }, [onlineFilter]);
+
+  useEffect(() => {
+    window.localStorage.setItem('selectedSort', selectedSort);
+  }, [selectedSort]);
+
+  useEffect(() => {
+    window.localStorage.setItem('showDLC', showDLC);
+  }, [showDLC]);
+
+  useEffect(() => {
+    window.localStorage.setItem('showOnline', showOnline);
+  }, [showOnline]);
+
   const filteredGames = useMemo(() => {
-    let result = games;
+    if (!games) return [];
 
-    if (!settings.seeInappropriateContent) {
-      result = result.filter(game => !game.category?.includes("Nudity"));
-    }
+    let filtered = [...games];
 
+    // Apply search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        game => fuzzyMatch(game.game, query) || fuzzyMatch(game.description, query)
-      );
-    }
-
-    if (selectedCategories.length > 0) {
-      result = result.filter(game =>
-        selectedCategories.every(category => game.category?.includes(category))
-      );
-    }
-
-    if (showDLC) {
-      result = result.filter(game => game.dlc);
-    }
-
-    if (showOnline) {
-      result = result.filter(game => game.online);
-    }
-
-    // Only sort if we have a valid sort criteria
-    if (sortBy && sortOrder) {
-      const sortMultiplier = sortOrder === "asc" ? 1 : -1;
-      result = [...result].sort((a, b) => {
-        if (sortBy === "weight") {
-          return sortMultiplier * (parseInt(a.weight) - parseInt(b.weight));
-        }
-        if (sortBy === "name") {
-          return sortMultiplier * a.game.localeCompare(b.game);
-        }
-        return 0;
+      filtered = filtered.filter(game => {
+        const gameTitle = game.game.toLowerCase();
+        const gameDesc = (game.desc || "").toLowerCase();
+        return fuzzyMatch(gameTitle + " " + gameDesc, searchQuery);
       });
     }
 
-    return result;
-  }, [
-    games,
-    searchQuery,
-    selectedCategories,
-    sortBy,
-    sortOrder,
-    showDLC,
-    showOnline,
-    settings.seeInappropriateContent,
-  ]);
+    // Apply category filter
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(game =>
+        selectedCategories.every(category => 
+          game.category?.includes(category)
+        )
+      );
+    }
+
+    // Apply online filter
+    if (onlineFilter !== "all") {
+      filtered = filtered.filter(game => {
+        if (onlineFilter === "online") return game.online;
+        if (onlineFilter === "offline") return !game.online;
+        return true;
+      });
+    }
+
+    // Apply source filter
+    const source = settings?.gameSource || 'steamrip';
+    if (source === 'fitgirl') {
+      // For fitgirl, show all games without additional filtering
+      return filtered;
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (selectedSort) {
+        case "weight":
+          return parseInt(b.weight || 0) - parseInt(a.weight || 0);
+        case "weight-asc":
+          return parseInt(a.weight || 0) - parseInt(b.weight || 0);
+        case "name":
+          return a.game.localeCompare(b.game);
+        case "name-desc":
+          return b.game.localeCompare(a.game);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [games, searchQuery, selectedCategories, onlineFilter, selectedSort, settings?.gameSource]);
 
   useEffect(() => {
     setDisplayedGames(filteredGames.slice(0, gamesPerLoad));
@@ -478,50 +518,26 @@ const Search = memo(() => {
                         {t("search.sortBy")}
                       </h4>
                       <RadioGroup
-                        defaultValue={`${sortBy}-${sortOrder}`}
-                        onValueChange={value => {
-                          const [newSortBy, newSortOrder] = value.split("-");
-                          setSortBy(newSortBy);
-                          setSortOrder(newSortOrder);
-                        }}
-                        className="gap-4"
+                        value={selectedSort}
+                        onValueChange={setSelectedSort}
+                        className="grid grid-cols-1 gap-2"
                       >
-                        <div className="flex items-center space-x-3">
-                          <RadioGroupItem value="weight-desc" id="weight-desc" />
-                          <Label
-                            htmlFor="weight-desc"
-                            className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
-                          >
-                            {t("search.mostPopular")}
-                          </Label>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="weight" id="weight" />
+                          <Label className="text-foreground" htmlFor="weight">{t("search.mostPopular")}</Label>
                         </div>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
                           <RadioGroupItem value="weight-asc" id="weight-asc" />
-                          <Label
-                            htmlFor="weight-asc"
-                            className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
-                          >
-                            {t("search.leastPopular")}
-                          </Label>
+                          <Label className="text-foreground" htmlFor="weight-asc">{t("search.leastPopular")}</Label>
                         </div>
-                        <div className="flex items-center space-x-3">
-                          <RadioGroupItem value="name-asc" id="name-asc" />
-                          <Label
-                            htmlFor="name-asc"
-                            className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
-                          >
-                            {t("search.alphabeticalAZ")}
-                          </Label>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="name" id="name" />
+                          <Label className="text-foreground" htmlFor="name">{t("search.alphabeticalAZ")}</Label>
                         </div>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
                           <RadioGroupItem value="name-desc" id="name-desc" />
-                          <Label
-                            htmlFor="name-desc"
-                            className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
-                          >
-                            {t("search.alphabeticalZA")}
-                          </Label>
-                        </div>
+                          <Label className="text-foreground" htmlFor="name-desc">{t("search.alphabeticalAZ")}</Label>
+                        </div>alphabeticalAZ
                       </RadioGroup>
                     </div>
                     <Separator className="bg-border/50" />
