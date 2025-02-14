@@ -25,6 +25,7 @@
  **/
 
 let isDev = false;
+let appVersion = "7.9.2";
 
 const {
   app,
@@ -255,9 +256,9 @@ async function checkVersionAndUpdate() {
     const response = await axios.get("https://api.ascendara.app/");
     const latestVersion = response.data.appVer;
 
-    isLatest = latestVersion === __APP_VERSION__;
+    isLatest = latestVersion === appVersion;
     console.log(
-      `Version check: Current=${__APP_VERSION__}, Latest=${latestVersion}, Is Latest=${isLatest}`
+      `Version check: Current=${appVersion}, Latest=${latestVersion}, Is Latest=${isLatest}`
     );
     if (!isLatest) {
       const settings = await getSettings();
@@ -441,7 +442,7 @@ async function downloadUpdateInBackground() {
     // Custom headers for app identification
     const headers = {
       "X-Ascendara-Client": "app",
-      "X-Ascendara-Version": __APP_VERSION__,
+      "X-Ascendara-Version": appVersion,
     };
 
     const updateUrl = `https://lfs.ascendara.app/download?update`;
