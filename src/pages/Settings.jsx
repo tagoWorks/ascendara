@@ -672,6 +672,24 @@ function Settings() {
                       }
                     />
                   </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("settings.notifications")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("settings.notificationsDescription")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.notifications}
+                      onCheckedChange={() =>
+                        handleSettingChange(
+                          "notifications",
+                          !settings.notifications
+                        )
+                      }
+                    />
+                  </div>
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
@@ -1348,6 +1366,13 @@ function Settings() {
                         onClick={() => window.electron.openGameDirectory("local")}
                       >
                         Open Local Directory
+                      </Button>
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        onClick={() => window.electron.showTestNotification()}
+                      >
+                        Show Test Notification
                       </Button>
                     </div>
                     <div className="flex flex-col space-y-2">

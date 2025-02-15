@@ -121,6 +121,7 @@ class SettingsManager {
       downloadDirectory: "",
       showOldDownloadLinks: false,
       seeInappropriateContent: false,
+      notifications: true,
       downloadHandler: false,
       torrentEnabled: false,
       gameSource: "steamrip",
@@ -218,6 +219,57 @@ ipcMain.handle("reload", () => {
   app.relaunch();
   app.exit();
 })
+
+// Show test notification 
+ipcMain.handle("show-test-notification", async () => {
+  try {
+    // Read settings to get the theme
+    const settings = await fs.readJson(path.join(app.getPath("userData"), "ascendarasettings.json"));
+    const theme = settings.theme || "dark"; // Default to dark if not set
+    
+    let notificationHelperPath;
+    let args;
+
+    if (isWindows) {
+      notificationHelperPath = isDev
+        ? path.join(
+            "./binaries/AscendaraNotificationHelper/dist/AscendaraNotificationHelper.exe"
+          )
+        : path.join(appDirectory, "/resources/AscendaraNotificationHelper.exe");
+      args = [
+        "--theme", theme,
+        "--title", "Test Notification",
+        "--message", "This is a test notification from Ascendara!"
+      ];
+    } else {
+      // For non-Windows, use python3 directly
+      notificationHelperPath = "python3";
+      const scriptPath = isDev
+        ? "./binaries/AscendaraNotificationHelper/src/AscendaraNotificationHelper.py"
+        : path.join(appDirectory, "/resources/AscendaraNotificationHelper.py");
+      args = [
+        scriptPath,
+        "--theme", theme,
+        "--title", "Test Notification",
+        "--message", "This is a test notification from Ascendara!"
+      ];
+    }
+
+    // Use spawn instead of execFile and don't wait for it to complete
+    const process = spawn(notificationHelperPath, args, {
+      detached: true, // Run in background
+      stdio: 'ignore' // Don't pipe stdio
+    });
+    
+    // Unref the process so parent can exit independently
+    process.unref();
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error showing test notification:", error);
+    return { success: false, error: error.message };
+  }
+});
 
 // Save the settings JSON file
 ipcMain.handle("save-settings", async (event, options, directory) => {
