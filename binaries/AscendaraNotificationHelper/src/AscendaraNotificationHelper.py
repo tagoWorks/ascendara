@@ -41,240 +41,200 @@ def get_resource_path(relative_path):
         base_path = os.path.abspath("./src")
     return os.path.join(base_path, relative_path)
 
-# Define all available themes
-ThemeType = Literal["light", "dark", "blue", "purple", "emerald", "rose", "cyberpunk", "sunset", "forest", "midnight", "amber", "ocean"]
-
-# Theme color mappings based on tailwind config
+# Pre-compute theme colors as QColor objects
 THEME_COLORS = {
     "light": {
-        "bg": "255 255 255",      # --color-background
-        "fg": "15 23 42",         # --color-foreground
-        "border": "226 232 240"   # --color-border
+        "bg": QColor(255, 255, 255),      # --color-background
+        "fg": QColor(15, 23, 42),         # --color-foreground
+        "border": QColor(226, 232, 240),  # --color-border
     },
     "dark": {
-        "bg": "15 23 42",         # --color-background
-        "fg": "241 245 249",      # --color-foreground
-        "border": "51 65 85"      # --color-border
+        "bg": QColor(15, 23, 42),         # --color-background
+        "fg": QColor(241, 245, 249),      # --color-foreground
+        "border": QColor(51, 65, 85),      # --color-border
     },
     "blue": {
-        "bg": "30 41 59",         # --color-background
-        "fg": "241 245 249",      # --color-foreground
-        "border": "51 65 85"      # --color-border
+        "bg": QColor(30, 41, 59),         # --color-background
+        "fg": QColor(241, 245, 249),      # --color-foreground
+        "border": QColor(51, 65, 85),      # --color-border
     },
     "purple": {
-        "bg": "88 28 135",        # --color-background
-        "fg": "237 233 254",      # --color-foreground
-        "border": "147 51 234"    # --color-border
+        "bg": QColor(88, 28, 135),        # --color-background
+        "fg": QColor(237, 233, 254),      # --color-foreground
+        "border": QColor(147, 51, 234),    # --color-border
     },
     "emerald": {
-        "bg": "6 78 59",          # --color-background
-        "fg": "209 250 229",      # --color-foreground
-        "border": "16 185 129"    # --color-border
+        "bg": QColor(6, 78, 59),          # --color-background
+        "fg": QColor(209, 250, 229),      # --color-foreground
+        "border": QColor(16, 185, 129),    # --color-border
     },
     "rose": {
-        "bg": "159 18 57",        # --color-background
-        "fg": "255 228 230",      # --color-foreground
-        "border": "244 63 94"     # --color-border
+        "bg": QColor(159, 18, 57),        # --color-background
+        "fg": QColor(255, 228, 230),      # --color-foreground
+        "border": QColor(244, 63, 94),     # --color-border
     },
     "cyberpunk": {
-        "bg": "17 24 39",         # --color-background
-        "fg": "236 72 153",       # --color-foreground
-        "border": "244 114 182"   # --color-border
+        "bg": QColor(17, 24, 39),         # --color-background
+        "fg": QColor(236, 72, 153),       # --color-foreground
+        "border": QColor(244, 114, 182),   # --color-border
     },
     "sunset": {
-        "bg": "124 45 18",        # --color-background
-        "fg": "254 215 170",      # --color-foreground
-        "border": "251 146 60"    # --color-border
+        "bg": QColor(124, 45, 18),        # --color-background
+        "fg": QColor(254, 215, 170),      # --color-foreground
+        "border": QColor(251, 146, 60),    # --color-border
     },
     "forest": {
-        "bg": "20 83 45",         # --color-background
-        "fg": "187 247 208",      # --color-foreground
-        "border": "34 197 94"     # --color-border
+        "bg": QColor(20, 83, 45),         # --color-background
+        "fg": QColor(187, 247, 208),      # --color-foreground
+        "border": QColor(34, 197, 94),     # --color-border
     },
     "midnight": {
-        "bg": "30 41 59",         # --color-background
-        "fg": "241 245 249",      # --color-foreground
-        "border": "51 65 85"      # --color-border
+        "bg": QColor(30, 41, 59),         # --color-background
+        "fg": QColor(241, 245, 249),      # --color-foreground
+        "border": QColor(51, 65, 85),      # --color-border
     },
     "amber": {
-        "bg": "120 53 15",        # --color-background
-        "fg": "254 243 199",      # --color-foreground
-        "border": "245 158 11"    # --color-border
+        "bg": QColor(120, 53, 15),        # --color-background
+        "fg": QColor(254, 243, 199),      # --color-foreground
+        "border": QColor(245, 158, 11),    # --color-border
     },
     "ocean": {
-        "bg": "12 74 110",        # --color-background
-        "fg": "186 230 253",      # --color-foreground
-        "border": "14 165 233"    # --color-border
+        "bg": QColor(12, 74, 110),        # --color-background
+        "fg": QColor(186, 230, 253),      # --color-foreground
+        "border": QColor(14, 165, 233),    # --color-border
     }
 }
 
+# Cache for icon pixmap
+_icon_pixmap = None
+
 class NotificationWindow(QWidget):
-    def __init__(self, theme: ThemeType, title: str, message: str):
+    def __init__(self, theme: Literal["light", "dark", "blue", "purple", "emerald", "rose", "cyberpunk", "sunset", "forest", "midnight", "amber", "ocean"], title: str, message: str):
         super().__init__()
         logger.info(f"Initializing notification with theme: {theme}")
         
-        # Get theme colors
+        # Get pre-computed theme colors
         theme_colors = THEME_COLORS[theme]
-        self.bg_color = QColor(*[int(x) for x in theme_colors["bg"].split()])
-        self.fg_color = QColor(*[int(x) for x in theme_colors["fg"].split()])
-        self.border_color = QColor(*[int(x) for x in theme_colors["border"].split()])
+        self.bg_color = theme_colors["bg"]
+        self.fg_color = theme_colors["fg"]
+        self.border_color = theme_colors["border"]
         logger.debug(f"Theme colors loaded: bg={self.bg_color.name()}, fg={self.fg_color.name()}, border={self.border_color.name()}")
         
-        # Configure window
+        # Configure window (combine flags for single operation)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
-        # Set window size and position
-        self.window_width = 400
-        self.window_height = 150
+        # Set window size and position in one operation
         screen = QApplication.primaryScreen().geometry()
-        self.x_position = screen.width() - self.window_width - 24  # Consistent 24px margin from screen edge
-        self.y_position = screen.height() - self.window_height - 24  # Consistent 24px margin from screen edge
-        self.setGeometry(self.x_position, self.y_position, self.window_width, self.window_height)
-        logger.debug(f"Window positioned at: {self.x_position}, {self.y_position}")
+        self.setGeometry(
+            screen.width() - 424,  # 400 + 24px margin
+            screen.height() - 174, # 150 + 24px margin
+            400,
+            150
+        )
+        logger.debug(f"Window positioned at: {screen.width() - 424}, {screen.height() - 174}")
         
-        # Create layout
-        layout = QVBoxLayout()
-        layout.setContentsMargins(20, 16, 20, 16)  # More balanced margins
-        layout.setSpacing(8)  # Consistent spacing between elements
+        # Create and configure main layout
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 16, 20, 16)
+        layout.setSpacing(8)
         
-        # Create header layout with icon
-        header_layout = QHBoxLayout()
-        header_layout.setSpacing(12)  # Slightly increased spacing between icon and title
+        # Create header with icon and title
+        header = QWidget()
+        header_layout = QHBoxLayout(header)
+        header_layout.setSpacing(12)
+        header_layout.setContentsMargins(0, 0, 0, 0)
         
-        # App icon label
+        # Load icon (using cached version if available)
         icon_label = QLabel()
         icon_label.setFixedSize(24, 24)
-        
-        # Load and set the icon
-        icon_path = get_resource_path("ascendara.ico")
-        logger.debug(f"Attempting to load icon from: {icon_path}")
-        
-        if os.path.exists(icon_path):
-            logger.debug(f"Loading icon from: {icon_path}")
-            pixmap = QPixmap(icon_path)
-            if not pixmap.isNull():
-                # Scale the pixmap to fit the label while maintaining aspect ratio
-                scaled_pixmap = pixmap.scaled(
-                    24, 24,
-                    Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation
-                )
-                icon_label.setPixmap(scaled_pixmap)
-                # Set window icon too
-                self.setWindowIcon(QIcon(pixmap))
-                logger.debug("Successfully loaded and set icon")
-            else:
-                logger.error("Failed to load icon pixmap")
-                self._set_fallback_icon(icon_label)
-        else:
-            logger.warning(f"Icon not found at: {icon_path}, using fallback")
-            self._set_fallback_icon(icon_label)
-        
+        self._set_icon(icon_label)
         header_layout.addWidget(icon_label)
         
-        # Title label
+        # Add title
         title_label = QLabel(title)
-        title_label.setStyleSheet(f"""
-            QLabel {{
-                color: {self.fg_color.name()};
-                font-family: 'Segoe UI';
-                font-size: 16px;
-                font-weight: bold;
-            }}
-        """)
+        title_label.setStyleSheet(f"color: {self.fg_color.name()}; font-family: 'Segoe UI'; font-size: 16px; font-weight: bold;")
         header_layout.addWidget(title_label)
-        
-        # Add stretch to push close button to right
         header_layout.addStretch()
         
-        # Close button
+        # Add close button
         close_button = QPushButton("×")
         close_button.setFixedSize(24, 24)
-        close_button.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {self.border_color.name()};
-                color: {self.fg_color.name()};
-                border: none;
-                border-radius: 12px;
-                font-family: 'Segoe UI';
-                font-size: 16px;
-                font-weight: bold;
-                padding: 0;
-                padding-bottom: 4px;
-                line-height: 24px;
-                text-align: center;
-            }}
-            QPushButton:hover {{
-                background-color: {self.fg_color.name()};
-                color: {self.bg_color.name()};
-            }}
-        """)
+        close_button.setStyleSheet(
+            f"QPushButton {{ background-color: {self.border_color.name()}; color: {self.fg_color.name()}; "
+            f"border: none; border-radius: 12px; font-family: 'Segoe UI'; font-size: 16px; font-weight: bold; "
+            f"padding: 0; padding-bottom: 4px; line-height: 24px; text-align: center; }} "
+            f"QPushButton:hover {{ background-color: {self.fg_color.name()}; color: {self.bg_color.name()}; }}"
+        )
         close_button.clicked.connect(self.close_notification)
         header_layout.addWidget(close_button)
         
-        # Add header to main layout
-        layout.addLayout(header_layout)
+        layout.addWidget(header)
         
-        # Message label
+        # Add message
         message_label = QLabel(message)
         message_label.setWordWrap(True)
-        message_label.setStyleSheet(f"""
-            QLabel {{
-                color: {self.fg_color.name()};
-                font-family: 'Segoe UI';
-                font-size: 13px;
-            }}
-        """)
+        message_label.setStyleSheet(f"color: {self.fg_color.name()}; font-family: 'Segoe UI'; font-size: 13px;")
         layout.addWidget(message_label)
         
-        # Add stretch to push footer to bottom
         layout.addStretch()
         
-        # Create footer layout
-        footer_layout = QHBoxLayout()
+        # Add footer
+        footer = QWidget()
+        footer_layout = QHBoxLayout(footer)
+        footer_layout.setContentsMargins(0, 0, 0, 0)
         footer_layout.addStretch()
         
-        # Add Ascendara label
         ascendara_label = QLabel("Ascendara")
-        ascendara_label.setStyleSheet(f"""
-            QLabel {{
-                color: {self.border_color.name()};
-                font-family: 'Segoe UI';
-                font-size: 11px;
-                font-style: italic;
-            }}
-        """)
+        ascendara_label.setStyleSheet(f"color: {self.border_color.name()}; font-family: 'Segoe UI'; font-size: 11px; font-style: italic;")
         footer_layout.addWidget(ascendara_label)
         
-        # Add footer to main layout
-        layout.addLayout(footer_layout)
+        layout.addWidget(footer)
         
-        # Set layout
-        self.setLayout(layout)
-        
-        # Setup fade animations
+        # Setup and start fade animation
         self.opacity_effect = QGraphicsOpacityEffect(self)
         self.setGraphicsEffect(self.opacity_effect)
         self.opacity_effect.setOpacity(0)
         
-        # Start fade in animation
         self.fade_in_animation = QPropertyAnimation(self.opacity_effect, b"opacity")
-        self.fade_in_animation.setDuration(250)
+        self.fade_in_animation.setDuration(200)  # Reduced from 250ms
         self.fade_in_animation.setStartValue(0.0)
         self.fade_in_animation.setEndValue(1.0)
         self.fade_in_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
         self.fade_in_animation.start()
-        logger.debug("Started fade-in animation")
         
         # Schedule fade out
         QTimer.singleShot(4000, self.close_notification)
-        logger.debug("Scheduled fade-out")
         
         # Show window
         self.show()
         logger.debug("Window shown")
-    
+
+    def _set_icon(self, label):
+        global _icon_pixmap
+        if _icon_pixmap is None:
+            icon_path = get_resource_path("ascendara.ico")
+            if os.path.exists(icon_path):
+                pixmap = QPixmap(icon_path)
+                if not pixmap.isNull():
+                    _icon_pixmap = pixmap.scaled(
+                        24, 24,
+                        Qt.AspectRatioMode.KeepAspectRatio,
+                        Qt.TransformationMode.SmoothTransformation
+                    )
+                    logger.debug("Icon loaded and cached")
+                else:
+                    logger.error("Failed to load icon pixmap")
+                    self._set_fallback_icon(label)
+                    return
+            else:
+                logger.warning(f"Icon not found at: {icon_path}, using fallback")
+                self._set_fallback_icon(label)
+                return
+        
+        label.setPixmap(_icon_pixmap)
+        self.setWindowIcon(QIcon(_icon_pixmap))
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -290,14 +250,14 @@ class NotificationWindow(QWidget):
         # Draw border
         painter.setPen(self.border_color)
         painter.drawPath(path)
-    
+
     def close_notification(self):
         if hasattr(self, 'fade_out_animation'):
             return
             
         logger.info("Starting fade-out animation")
         self.fade_out_animation = QPropertyAnimation(self.opacity_effect, b"opacity")
-        self.fade_out_animation.setDuration(250)
+        self.fade_out_animation.setDuration(200)  # Reduced from 250ms
         self.fade_out_animation.setStartValue(1.0)
         self.fade_out_animation.setEndValue(0.0)
         self.fade_out_animation.setEasingCurve(QEasingCurve.Type.InCubic)
