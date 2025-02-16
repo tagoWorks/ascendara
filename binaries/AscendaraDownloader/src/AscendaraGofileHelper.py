@@ -19,30 +19,89 @@ import json
 import sys
 import time
 import shutil
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, gettempdir
 import requests
 import atexit
 from threading import Lock
 from hashlib import sha256
-from argparse import ArgumentParser, ArgumentTypeError
+from argparse import ArgumentParser, ArgumentTypeError, ArgumentError
 import patoolib
+import subprocess
+import logging
+from datetime import datetime
+
+# Set up logging to both console and temp file
+def setup_logging():
+    log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    
+    # Create temp log file with timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    temp_log_path = os.path.join(gettempdir(), f'ascendara_gofile_{timestamp}.log')
+    
+    # File handler for temp file
+    file_handler = logging.FileHandler(temp_log_path)
+    file_handler.setFormatter(log_formatter)
+    file_handler.setLevel(logging.DEBUG)
+    
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(log_formatter)
+    console_handler.setLevel(logging.INFO)
+    
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(console_handler)
+    
+    logging.info(f"Detailed logs will be saved to: {temp_log_path}")
+    return temp_log_path
+
+# Initialize logging
+temp_log_file = setup_logging()
 
 NEW_LINE = "\n" if sys.platform != "Windows" else "\r\n"
 IS_DEV = False  # Development mode flag
 
-def launch_crash_reporter(error_code, error_message):
+def _launch_crash_reporter_on_exit(error_code, error_message):
     try:
         crash_reporter_path = os.path.join('./AscendaraCrashReporter.exe')
         if os.path.exists(crash_reporter_path):
-            # Use subprocess.Popen for better process control
+            # Use subprocess.Popen with CREATE_NO_WINDOW flag to hide console
             subprocess.Popen(
                 [crash_reporter_path, "maindownloader", str(error_code), error_message],
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+                creationflags=subprocess.CREATE_NO_WINDOW
             )
         else:
             logging.error(f"Crash reporter not found at: {crash_reporter_path}")
     except Exception as e:
         logging.error(f"Failed to launch crash reporter: {e}")
+
+def launch_crash_reporter(error_code, error_message):
+    # Only register once
+    if not hasattr(launch_crash_reporter, "_registered"):
+        atexit.register(_launch_crash_reporter_on_exit, error_code, error_message)
+        launch_crash_reporter._registered = True
+
+def _launch_notification(theme, title, message):
+    try:
+        # Get the directory where the current executable is located
+        exe_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+        notification_helper_path = os.path.join(exe_dir, 'AscendaraNotificationHelper.exe')
+        logging.debug(f"Looking for notification helper at: {notification_helper_path}")
+        
+        if os.path.exists(notification_helper_path):
+            logging.debug(f"Launching notification helper with theme={theme}, title='{title}', message='{message}'")
+            # Use subprocess.Popen with CREATE_NO_WINDOW flag to hide console
+            subprocess.Popen(
+                [notification_helper_path, "--theme", theme, "--title", title, "--message", message],
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+            logging.debug("Notification helper process started successfully")
+        else:
+            logging.error(f"Notification helper not found at: {notification_helper_path}")
+    except Exception as e:
+        logging.error(f"Failed to launch notification helper: {e}")
 
 def safe_write_json(filepath, data):
     temp_dir = os.path.dirname(filepath)
@@ -489,41 +548,53 @@ def parse_boolean(value):
         raise ArgumentTypeError(f"Invalid boolean value: {value}")
 
 def main():
+    parser = ArgumentParser(description="Download files from Gofile, extract them, and manage game info.")
+    parser.add_argument("url", help="Gofile URL to download from")
+    parser.add_argument("game", help="Name of the game")
+    parser.add_argument("online", type=parse_boolean, help="Is the game online (true/false)?")
+    parser.add_argument("dlc", type=parse_boolean, help="Is DLC included (true/false)?")
+    parser.add_argument("isVr", type=parse_boolean, help="Is the game a VR game (true/false)?")
+    parser.add_argument("version", help="Version of the game")
+    parser.add_argument("size", help="Size of the file in (ex: 12 GB, 439 MB)")
+    parser.add_argument("download_dir", help="Directory to save the downloaded files")
+    parser.add_argument("--password", help="Password for protected content", default=None)
+    parser.add_argument("--withNotification", help="Theme name for notifications (e.g. light, dark, blue)", default=None)
+
     try:
-        if IS_DEV:
-            open_console()
-            
-        parser = ArgumentParser(description="Download files from Gofile, extract them, and manage game info.")
-        parser.add_argument("url", help="Gofile URL to download from")
-        parser.add_argument("game", help="Name of the game")
-        parser.add_argument("online", type=parse_boolean, help="Is the game online (true/false)?")
-        parser.add_argument("dlc", type=parse_boolean, help="Is DLC included (true/false)?")
-        parser.add_argument("isVr", type=parse_boolean, help="Is the game a VR game (true/false)?")
-        parser.add_argument("version", help="Version of the game")
-        parser.add_argument("size", help="Size of the file in (ex: 12 GB, 439 MB)")
-        parser.add_argument("download_dir", help="Directory to save the downloaded files")
-        parser.add_argument("--password", help="Password for protected content", default=None)
-
-        args = parser.parse_args()
-
-        try:
-            downloader = GofileDownloader(args.game, args.online, args.dlc, args.isVr, args.version, args.size, args.download_dir)
-            downloader.download_from_gofile(args.url, args.password)
-        except Exception as e:
-            handleerror(downloader.game_info, downloader.game_info_path, e)
-            print(f"An error occurred: {str(e)}")
-            if IS_DEV:
-                input("\nPress Enter to exit...")
+        if len(sys.argv) == 1:  # No arguments provided
+            error_msg = "No arguments provided. Please provide all required arguments."
+            logging.error(error_msg)
+            launch_crash_reporter(1, error_msg)
+            parser.print_help()
             sys.exit(1)
+            
+        args = parser.parse_args()
+        logging.info(f"Starting download process for game: {args.game}")
+        logging.debug(f"Arguments: url={args.url}, online={args.online}, dlc={args.dlc}, "
+                     f"isVr={args.isVr}, version={args.version}, size={args.size}, "
+                     f"download_dir={args.download_dir}, withNotification={args.withNotification}")
         
-        if IS_DEV:
-            input("\nPress Enter to exit...")
-
+        downloader = GofileDownloader(args.game, args.online, args.dlc, args.isVr, args.version, args.size, args.download_dir)
+        if args.withNotification:
+            _launch_notification(args.withNotification, "Download Started", f"Starting download for {args.game}")
+        downloader.download_from_gofile(args.url, args.password)
+        if args.withNotification:
+            _launch_notification(args.withNotification, "Download Complete", f"Successfully downloaded and extracted {args.game}")
+        
+        logging.info(f"Download process completed successfully for game: {args.game}")
+        logging.info(f"Detailed logs have been saved to: {temp_log_file}")
+        
+    except (ArgumentError, SystemExit) as e:
+        error_msg = "Invalid or missing arguments. Please provide all required arguments."
+        logging.error(f"{error_msg} Error: {str(e)}")
+        launch_crash_reporter(1, error_msg)
+        parser.print_help()
+        sys.exit(1)
     except Exception as e:
-        atexit.register(launch_crash_reporter, 1, str(e))
-        print(f"An error occurred: {str(e)}")
-        if IS_DEV:
-            input("\nPress Enter to exit...")
+        print(f"Error: {str(e)}")
+        logging.error(f"Error: {str(e)}")
+        launch_crash_reporter(1, str(e))
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

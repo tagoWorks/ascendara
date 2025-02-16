@@ -21,6 +21,8 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve
 from PyQt6.QtGui import QColor, QPainter, QPainterPath, QIcon, QPixmap
+import subprocess
+import atexit
 
 # Set up logging
 logging.basicConfig(
@@ -108,6 +110,26 @@ THEME_COLORS = {
 # Cache for icon pixmap
 _icon_pixmap = None
 
+def _launch_crash_reporter_on_exit(error_code, error_message):
+    try:
+        crash_reporter_path = os.path.join('./AscendaraCrashReporter.exe')
+        if os.path.exists(crash_reporter_path):
+            # Use subprocess.Popen with CREATE_NO_WINDOW flag to hide console
+            subprocess.Popen(
+                [crash_reporter_path, "notificationhelper", str(error_code), error_message],
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+        else:
+            logging.error(f"Crash reporter not found at: {crash_reporter_path}")
+    except Exception as e:
+        logging.error(f"Failed to launch crash reporter: {e}")
+
+def launch_crash_reporter(error_code, error_message):
+    """Register the crash reporter to launch on exit with the given error details"""
+    if not hasattr(launch_crash_reporter, "_registered"):
+        atexit.register(_launch_crash_reporter_on_exit, error_code, error_message)
+        launch_crash_reporter._registered = True
+
 class NotificationWindow(QWidget):
     def __init__(self, theme: Literal["light", "dark", "blue", "purple", "emerald", "rose", "cyberpunk", "sunset", "forest", "midnight", "amber", "ocean"], title: str, message: str):
         super().__init__()
@@ -127,43 +149,43 @@ class NotificationWindow(QWidget):
         # Set window size and position in one operation
         screen = QApplication.primaryScreen().geometry()
         self.setGeometry(
-            screen.width() - 424,  # 400 + 24px margin
-            screen.height() - 174, # 150 + 24px margin
-            400,
-            150
+            screen.width() - 474,  # Increased width + margin
+            screen.height() - 204, # Increased height + margin
+            450,  # Increased width
+            180   # Increased height
         )
-        logger.debug(f"Window positioned at: {screen.width() - 424}, {screen.height() - 174}")
+        logger.debug(f"Window positioned at: {screen.width() - 474}, {screen.height() - 204}")
         
         # Create and configure main layout
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 16, 20, 16)
-        layout.setSpacing(8)
+        layout.setContentsMargins(24, 20, 24, 20)  # Increased padding
+        layout.setSpacing(12)  # Increased spacing
         
         # Create header with icon and title
         header = QWidget()
         header_layout = QHBoxLayout(header)
-        header_layout.setSpacing(12)
+        header_layout.setSpacing(14)  # Increased spacing
         header_layout.setContentsMargins(0, 0, 0, 0)
         
         # Load icon (using cached version if available)
         icon_label = QLabel()
-        icon_label.setFixedSize(24, 24)
+        icon_label.setFixedSize(28, 28)  # Slightly larger icon
         self._set_icon(icon_label)
         header_layout.addWidget(icon_label)
         
         # Add title
         title_label = QLabel(title)
-        title_label.setStyleSheet(f"color: {self.fg_color.name()}; font-family: 'Segoe UI'; font-size: 16px; font-weight: bold;")
+        title_label.setStyleSheet(f"color: {self.fg_color.name()}; font-family: 'Segoe UI'; font-size: 18px; font-weight: bold;")  # Larger title
         header_layout.addWidget(title_label)
         header_layout.addStretch()
         
         # Add close button
         close_button = QPushButton("×")
-        close_button.setFixedSize(24, 24)
+        close_button.setFixedSize(28, 28)  # Larger close button
         close_button.setStyleSheet(
             f"QPushButton {{ background-color: {self.border_color.name()}; color: {self.fg_color.name()}; "
-            f"border: none; border-radius: 12px; font-family: 'Segoe UI'; font-size: 16px; font-weight: bold; "
-            f"padding: 0; padding-bottom: 4px; line-height: 24px; text-align: center; }} "
+            f"border: none; border-radius: 14px; font-family: 'Segoe UI'; font-size: 18px; font-weight: bold; "
+            f"padding: 0; padding-bottom: 4px; line-height: 28px; text-align: center; }} "
             f"QPushButton:hover {{ background-color: {self.fg_color.name()}; color: {self.bg_color.name()}; }}"
         )
         close_button.clicked.connect(self.close_notification)
@@ -174,7 +196,7 @@ class NotificationWindow(QWidget):
         # Add message
         message_label = QLabel(message)
         message_label.setWordWrap(True)
-        message_label.setStyleSheet(f"color: {self.fg_color.name()}; font-family: 'Segoe UI'; font-size: 13px;")
+        message_label.setStyleSheet(f"color: {self.fg_color.name()}; font-family: 'Segoe UI'; font-size: 16px; line-height: 1.4;")  # Increased from 14px to 16px
         layout.addWidget(message_label)
         
         layout.addStretch()
@@ -186,7 +208,7 @@ class NotificationWindow(QWidget):
         footer_layout.addStretch()
         
         ascendara_label = QLabel("Ascendara")
-        ascendara_label.setStyleSheet(f"color: {self.border_color.name()}; font-family: 'Segoe UI'; font-size: 11px; font-style: italic;")
+        ascendara_label.setStyleSheet(f"color: {self.border_color.name()}; font-family: 'Segoe UI'; font-size: 12px; font-style: italic; letter-spacing: 0.5px;")  # Enhanced footer style
         footer_layout.addWidget(ascendara_label)
         
         layout.addWidget(footer)
@@ -218,7 +240,7 @@ class NotificationWindow(QWidget):
                 pixmap = QPixmap(icon_path)
                 if not pixmap.isNull():
                     _icon_pixmap = pixmap.scaled(
-                        24, 24,
+                        28, 28,
                         Qt.AspectRatioMode.KeepAspectRatio,
                         Qt.TransformationMode.SmoothTransformation
                     )
@@ -276,12 +298,12 @@ class NotificationWindow(QWidget):
             QLabel {{
                 background-color: {self.border_color.name()};
                 color: {self.fg_color.name()};
-                border-radius: 12px;
+                border-radius: 14px;
                 font-family: 'Segoe UI';
-                font-size: 14px;
+                font-size: 16px;
                 font-weight: bold;
                 text-align: center;
-                line-height: 24px;
+                line-height: 28px;
             }}
         """)
 
@@ -294,9 +316,12 @@ def main():
     
     logger.info(f"Starting notification helper with args: {args}")
     
-    app = QApplication(sys.argv)
-    window = NotificationWindow(args.theme, args.title, args.message)
-    sys.exit(app.exec())
+    try:
+        app = QApplication(sys.argv)
+        window = NotificationWindow(args.theme, args.title, args.message)
+        sys.exit(app.exec())
+    except Exception as e:
+        launch_crash_reporter(1, str(e))
 
 if __name__ == "__main__":
     main()

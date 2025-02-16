@@ -19,6 +19,9 @@ import argparse
 import requests
 from collections import deque
 from threading import Lock
+import subprocess
+import atexit
+from typing import Dict, Any
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -49,6 +52,26 @@ class RateLimiter:
 
 # Global rate limiter
 rate_limiter = RateLimiter(8)
+
+def _launch_crash_reporter_on_exit(error_code, error_message):
+    try:
+        crash_reporter_path = os.path.join('./AscendaraCrashReporter.exe')
+        if os.path.exists(crash_reporter_path):
+            # Use subprocess.Popen with CREATE_NO_WINDOW flag to hide console
+            subprocess.Popen(
+                [crash_reporter_path, "languagetranslation", str(error_code), error_message],
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+        else:
+            logging.error(f"Crash reporter not found at: {crash_reporter_path}")
+    except Exception as e:
+        logging.error(f"Failed to launch crash reporter: {e}")
+
+def launch_crash_reporter(error_code, error_message):
+    """Register the crash reporter to launch on exit with the given error details"""
+    if not hasattr(launch_crash_reporter, "_registered"):
+        atexit.register(_launch_crash_reporter_on_exit, error_code, error_message)
+        launch_crash_reporter._registered = True
 
 def get_window_tkk():
     """Get the TKK value from Google Translate"""
@@ -457,6 +480,7 @@ def main():
 
             except Exception as e:
                 logging.error(f"Failed to update specific keys: {e}")
+                launch_crash_reporter(1, str(e))
                 sys.exit(1)
 
         # Regular full translation flow
@@ -470,6 +494,7 @@ def main():
             en_translations = get_english_translations()
         except Exception as e:
             logging.error(f"Failed to fetch English translations: {e}")
+            launch_crash_reporter(1, str(e))
             sys.exit(1)
         
         # Count total strings
@@ -485,6 +510,7 @@ def main():
             translated = translate_dict(en_translations, args.lang, progress)
         except Exception as e:
             logging.error(f"Translation failed: {e}")
+            launch_crash_reporter(1, str(e))
             sys.exit(1)
         
         # Save translations
@@ -503,6 +529,7 @@ def main():
             save_translations(translated, output_path)
         except Exception as e:
             logging.error(f"Failed to save translations: {e}")
+            launch_crash_reporter(1, str(e))
             sys.exit(1)
             
         progress.set_phase("completed")
@@ -510,9 +537,11 @@ def main():
         
     except KeyboardInterrupt:
         logging.info("\nTranslation cancelled by user")
+        launch_crash_reporter(1, "User cancelled")
         sys.exit(1)
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
+        launch_crash_reporter(1, str(e))
         sys.exit(1)
 
 if __name__ == '__main__':

@@ -28,6 +28,9 @@ class AscendaraTool:
     MAIN_DOWNLOADER = "maindownloader"
     GAME_HANDLER = "gamehandler"
     TOP_LEVEL = "toplevel"
+    LANGUAGE_TRANSLATION = "languagetranslation"
+    TORRENT_HANDLER = "torrenthandler"
+    NOTIFICATION_HELPER = "notificationhelper"
     
     @staticmethod
     def get_tool_name(tool_id):
@@ -35,7 +38,10 @@ class AscendaraTool:
             AscendaraTool.GOFILE_HELPER: "Ascendara GoFile Helper",
             AscendaraTool.MAIN_DOWNLOADER: "Ascendara Downloader",
             AscendaraTool.GAME_HANDLER: "Ascendara Game Handler",
-            AscendaraTool.TOP_LEVEL: "Ascendara"
+            AscendaraTool.TOP_LEVEL: "Ascendara",
+            AscendaraTool.LANGUAGE_TRANSLATION: "Ascendara Language Translation",
+            AscendaraTool.TORRENT_HANDLER: "Ascendara Torrent Handler",
+            AscendaraTool.NOTIFICATION_HELPER: "Ascendara Notification Helper"
         }
         return tool_names.get(tool_id.lower(), "Unknown Ascendara Tool")
 
@@ -49,67 +55,109 @@ class ErrorCodes:
     
     # Game Handler specific errors (1100-1199)
     GAME_NOT_FOUND = 1100
-    GAME_LAUNCH_FAILED = 1101
-    GAME_PROCESS_ERROR = 1102
-    GAME_CONFIG_ERROR = 1103
+    GAME_LAUNCH_ERROR = 1101
+    GAME_CONFIG_ERROR = 1102
+    GAME_PROCESS_ERROR = 1103
     SETTINGS_ERROR = 1104
     DOWNLOAD_DIR_ERROR = 1105
     
-    # GoFile Helper specific errors (1200-1299)
-    GOFILE_API_ERROR = 1200
-    GOFILE_UPLOAD_ERROR = 1201
-    GOFILE_DOWNLOAD_ERROR = 1202
-    GOFILE_AUTH_ERROR = 1203
-    GOFILE_RATE_LIMIT = 1204
-    GOFILE_FILE_ERROR = 1205
+    # Language Translation specific errors (1200-1299)
+    TRANSLATION_API_ERROR = 1200
+    TRANSLATION_RATE_LIMIT = 1201
+    TRANSLATION_FILE_ERROR = 1202
     
-    # Main Downloader specific errors (1300-1399)
-    DOWNLOAD_INIT_ERROR = 1300
-    DOWNLOAD_PROGRESS_ERROR = 1301
-    DOWNLOAD_CANCEL_ERROR = 1302
-    DOWNLOAD_VERIFY_ERROR = 1303
-    DOWNLOAD_EXTRACT_ERROR = 1304
-    DOWNLOAD_CLEANUP_ERROR = 1305
-    SETTINGS_FILE_ERROR = 1306
-    GAMES_FILE_ERROR = 1307
-    HELPER_LAUNCH_ERROR = 1308
+    # GoFile Helper specific errors (1300-1399)
+    GOFILE_API_ERROR = 1300
+    GOFILE_UPLOAD_ERROR = 1301
+    GOFILE_DOWNLOAD_ERROR = 1302
+    GOFILE_AUTH_ERROR = 1303
+    GOFILE_RATE_LIMIT = 1304
+    GOFILE_FILE_ERROR = 1305
+    
+    # Main Downloader specific errors (1400-1499)
+    DOWNLOAD_INIT_ERROR = 1400
+    DOWNLOAD_PROGRESS_ERROR = 1401
+    DOWNLOAD_CANCEL_ERROR = 1402
+    DOWNLOAD_VERIFY_ERROR = 1403
+    DOWNLOAD_EXTRACT_ERROR = 1404
+    DOWNLOAD_CLEANUP_ERROR = 1405
+    SETTINGS_FILE_ERROR = 1406
+    GAMES_FILE_ERROR = 1407
+    HELPER_LAUNCH_ERROR = 1408
+
+    # Torrent Handler specific errors (1500-1599)
+    TORRENT_API_ERROR = 1500
+    TORRENT_ADD_ERROR = 1501
+    TORRENT_REMOVE_ERROR = 1502
+    TORRENT_STATUS_ERROR = 1503
+    TORRENT_CONFIG_ERROR = 1504
+    TORRENT_FILE_ERROR = 1505
+    TORRENT_INSTALL_ERROR = 1506
+
+    # Notification Helper specific errors (1600-1699)
+    NOTIFICATION_INIT_ERROR = 1600
+    NOTIFICATION_DISPLAY_ERROR = 1601
+    NOTIFICATION_THEME_ERROR = 1602
+    NOTIFICATION_RESOURCE_ERROR = 1603
+    NOTIFICATION_ANIMATION_ERROR = 1604
     
     @staticmethod
     def get_error_description(code):
         error_descriptions = {
             # General errors
             1000: "An unknown error occurred",
-            1001: "Required file could not be found",
-            1002: "Insufficient permissions to perform the operation",
-            1003: "Network connection error occurred",
-            1004: "Invalid or corrupted data encountered",
+            1001: "An unhandled exception occurred",
+            1002: "An unhandled rejection occurred",
+            1003: "A network error occurred",
+            1004: "Invalid data received",
             
             # Game Handler specific
-            1100: "Game executable not found",
+            1100: "Game not found",
             1101: "Failed to launch game",
-            1102: "Error managing game process",
-            1103: "Game configuration error",
+            1102: "Game configuration error",
+            1103: "Game process error",
             1104: "Settings file error",
             1105: "Download directory error",
             
+            # Language Translation specific
+            1200: "Language Translation API error occurred",
+            1201: "Language Translation rate limit exceeded",
+            1202: "Error processing file for Language Translation operation",
+            
             # GoFile Helper specific
-            1200: "GoFile API error occurred",
-            1201: "Failed to upload file to GoFile",
-            1202: "Failed to download file from GoFile",
-            1203: "GoFile authentication failed",
-            1204: "GoFile rate limit exceeded",
-            1205: "Error processing file for GoFile operation",
+            1300: "GoFile API error occurred",
+            1301: "Failed to upload file to GoFile",
+            1302: "Failed to download file from GoFile",
+            1303: "GoFile authentication failed",
+            1304: "GoFile rate limit exceeded",
+            1305: "Error processing file for GoFile operation",
             
             # Main Downloader specific
-            1300: "Failed to initialize download",
-            1301: "Error updating download progress",
-            1302: "Failed to cancel download",
-            1303: "Download verification failed",
-            1304: "Failed to extract downloaded files",
-            1305: "Error during cleanup",
-            1306: "Error reading or writing settings file",
-            1307: "Error reading or writing games file",
-            1308: "Failed to launch helper process"
+            1400: "Failed to initialize download",
+            1401: "Error updating download progress",
+            1402: "Failed to cancel download",
+            1403: "Download verification failed",
+            1404: "Failed to extract downloaded files",
+            1405: "Error during cleanup",
+            1406: "Error reading or writing settings file",
+            1407: "Error reading or writing games file",
+            1408: "Failed to launch helper process",
+
+            # Torrent Handler specific
+            1500: "Torrent API error occurred",
+            1501: "Failed to add torrent",
+            1502: "Failed to remove torrent",
+            1503: "Failed to get torrent status",
+            1504: "Torrent configuration error",
+            1505: "Error processing torrent file",
+            1506: "Failed to install torrent content",
+
+            # Notification Helper specific
+            1600: "Failed to initialize notification",
+            1601: "Failed to display notification",
+            1602: "Invalid or unsupported theme",
+            1603: "Failed to load notification resources",
+            1604: "Error during notification animation"
         }
         return error_descriptions.get(code, "Unrecognized error code")
 

@@ -15,34 +15,40 @@
 
 
 
-import json
 import os
-import subprocess
 import sys
 import time
-import psutil
+import json
 import logging
-import argparse
 import atexit
+import subprocess
 from pypresence import Presence
+import argparse
+import psutil
 import asyncio
 from datetime import datetime
 
 CLIENT_ID = '1277379302945718356'
 
-def launch_crash_reporter(error_code, error_message):
+def _launch_crash_reporter_on_exit(error_code, error_message):
     try:
         crash_reporter_path = os.path.join('./AscendaraCrashReporter.exe')
         if os.path.exists(crash_reporter_path):
-            # Use subprocess.Popen for better process control
+            # Use subprocess.Popen with CREATE_NO_WINDOW flag to hide console
             subprocess.Popen(
                 [crash_reporter_path, "maindownloader", str(error_code), error_message],
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+                creationflags=subprocess.CREATE_NO_WINDOW
             )
         else:
             logging.error(f"Crash reporter not found at: {crash_reporter_path}")
     except Exception as e:
         logging.error(f"Failed to launch crash reporter: {e}")
+
+def launch_crash_reporter(error_code, error_message):
+    """Register the crash reporter to launch on exit with the given error details"""
+    if not hasattr(launch_crash_reporter, "_registered"):
+        atexit.register(_launch_crash_reporter_on_exit, error_code, error_message)
+        launch_crash_reporter._registered = True
 
 def setup_discord_rpc():
     try:

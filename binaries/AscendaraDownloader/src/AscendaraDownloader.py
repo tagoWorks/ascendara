@@ -6,15 +6,9 @@
 # resume and verification. Read more about the Download Manager Tool here:
 # https://ascendara.app/docs/developer/downloader
 
-
-
-
-
-
-
-
-
-
+# ==============================================================================
+# Imports
+# ==============================================================================
 import os
 import json
 import ssl
@@ -26,21 +20,60 @@ import time
 import threading
 from queue import Queue
 from concurrent.futures import ThreadPoolExecutor
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, gettempdir
+from datetime import datetime
 import requests
 import patoolib
 from requests.adapters import HTTPAdapter
 from urllib3.poolmanager import PoolManager
 import argparse
 import logging
+import subprocess
 
+# ==============================================================================
+# Setup Logging
+# ==============================================================================
+def setup_logging():
+    log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    
+    # Create temp log file with timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    temp_log_path = os.path.join(gettempdir(), f'ascendara_downloader_{timestamp}.log')
+    
+    # File handler for temp file
+    file_handler = logging.FileHandler(temp_log_path)
+    file_handler.setFormatter(log_formatter)
+    file_handler.setLevel(logging.DEBUG)
+    
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(log_formatter)
+    console_handler.setLevel(logging.INFO)
+    
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(console_handler)
+    
+    logging.info(f"Detailed logs will be saved to: {temp_log_path}")
+    return temp_log_path
+
+# Initialize logging
+temp_log_file = setup_logging()
+
+# ==============================================================================
+# Launch Crash Reporter
+# ==============================================================================
 def _launch_crash_reporter_on_exit(error_code, error_message):
     try:
         crash_reporter_path = os.path.join('./AscendaraCrashReporter.exe')
         if os.path.exists(crash_reporter_path):
-            # Use cmd.exe with START to hide console
-            cmd = f'cmd.exe /c START /B "" "{crash_reporter_path}" maindownloader {error_code} "{error_message}"'
-            os.system(cmd)
+            # Use subprocess.Popen with CREATE_NO_WINDOW flag to hide console
+            subprocess.Popen(
+                [crash_reporter_path, "maindownloader", str(error_code), error_message],
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
         else:
             logging.error(f"Crash reporter not found at: {crash_reporter_path}")
     except Exception as e:
@@ -52,6 +85,32 @@ def launch_crash_reporter(error_code, error_message):
         atexit.register(_launch_crash_reporter_on_exit, error_code, error_message)
         launch_crash_reporter._registered = True
 
+# ==============================================================================
+# Launch Notification
+# ==============================================================================
+def _launch_notification(theme, title, message):
+    try:
+        # Get the directory where the current executable is located
+        exe_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+        notification_helper_path = os.path.join(exe_dir, 'AscendaraNotificationHelper.exe')
+        logging.debug(f"Looking for notification helper at: {notification_helper_path}")
+        
+        if os.path.exists(notification_helper_path):
+            logging.debug(f"Launching notification helper with theme={theme}, title='{title}', message='{message}'")
+            # Use subprocess.Popen with CREATE_NO_WINDOW flag to hide console
+            subprocess.Popen(
+                [notification_helper_path, "--theme", theme, "--title", title, "--message", message],
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+            logging.debug("Notification helper process started successfully")
+        else:
+            logging.error(f"Notification helper not found at: {notification_helper_path}")
+    except Exception as e:
+        logging.error(f"Failed to launch notification helper: {e}")
+
+# ==============================================================================
+# Resource Path
+# ==============================================================================
 def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
@@ -59,11 +118,17 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+# ==============================================================================
+# Sanitize Folder Name
+# ==============================================================================
 def sanitize_folder_name(name):
     valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
     sanitized_name = ''.join(c for c in name if c in valid_chars)
     return sanitized_name
 
+# ==============================================================================
+# Retry Folder
+# ==============================================================================
 def retryfolder(game, online, dlc, version, size, download_dir, newfolder):
     game_info_path = os.path.join(download_dir, f"{game}.ascendara.json")
     newfolder = sanitize_folder_name(newfolder)
@@ -105,6 +170,9 @@ def retryfolder(game, online, dlc, version, size, download_dir, newfolder):
     shutil.rmtree(tempdownloading, ignore_errors=True)
     safe_write_json(game_info_path, game_info)
 
+# ==============================================================================
+# Safe Write JSON
+# ==============================================================================
 def safe_write_json(filepath, data):
     temp_dir = os.path.dirname(filepath)
     temp_file_path = None
@@ -126,6 +194,9 @@ def safe_write_json(filepath, data):
         if temp_file_path and os.path.exists(temp_file_path):
             os.remove(temp_file_path)
 
+# ==============================================================================
+# Handle Error
+# ==============================================================================
 def handleerror(game_info, game_info_path, e):
     game_info['online'] = ""
     game_info['dlc'] = ""
@@ -138,6 +209,9 @@ def handleerror(game_info, game_info_path, e):
     }
     safe_write_json(game_info_path, game_info)
 
+# ==============================================================================
+# SSL Context Adapter
+# ==============================================================================
 class SSLContextAdapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
         context = ssl.create_default_context()
@@ -145,6 +219,9 @@ class SSLContextAdapter(HTTPAdapter):
         kwargs['ssl_context'] = context 
         return super().init_poolmanager(*args, **kwargs)
 
+# ==============================================================================
+# Download Chunk
+# ==============================================================================
 class DownloadChunk:
     def __init__(self, start, end, url):
         self.start = start
@@ -153,6 +230,9 @@ class DownloadChunk:
         self.data = b""
         self.downloaded = 0
 
+# ==============================================================================
+# Download Manager
+# ==============================================================================
 class DownloadManager:
     def __init__(self, url, total_size, num_threads=None):
         self.url = url
@@ -233,33 +313,42 @@ class DownloadManager:
                 # Wait before retrying with exponential backoff
                 time.sleep(2 ** retries)
 
-def download_file(link, game, online, dlc, isVr, version, size, download_dir):
-    game = sanitize_folder_name(game)
-    download_path = os.path.join(download_dir, game)
-    os.makedirs(download_path, exist_ok=True)
-    
-    game_info_path = os.path.join(download_path, f"{game}.ascendara.json")
+# ==============================================================================
+# Download File
+# ==============================================================================
+def download_file(link, game, online, dlc, isVr, version, size, download_dir, theme=None):
+    try:
+        logging.info(f"Starting download for game: {game}")
+        logging.debug(f"Download parameters: link={link}, online={online}, dlc={dlc}, "
+                     f"isVr={isVr}, version={version}, size={size}, "
+                     f"download_dir={download_dir}, theme={theme}")
 
-    game_info = {
-        "game": game,
-        "online": online,
-        "dlc": dlc,
-        "isVr": isVr,
-        "version": version if version else "",
-        "size": size,
-        "executable": os.path.join(download_path, f"{game}.exe"),
-        "isRunning": False,
-        "downloadingData": {
-            "downloading": False,
-            "extracting": False,
-            "updating": False,
-            "progressCompleted": "0.00",
-            "progressDownloadSpeeds": "0.00 KB/s",
-            "timeUntilComplete": "0s"
+        if theme:
+            _launch_notification(theme, "Download Started", f"Starting download for {game}")
+
+        # Create game info file
+        game_info = {
+            "game": game,
+            "online": online,
+            "dlc": dlc,
+            "isVr": isVr,
+            "version": version if version else "",
+            "size": size,
+            "executable": os.path.join(download_dir, f"{game}.exe"),
+            "isRunning": False,
+            "downloadingData": {
+                "downloading": False,
+                "extracting": False,
+                "updating": False,
+                "progressCompleted": "0.00",
+                "progressDownloadSpeeds": "0.00 KB/s",
+                "timeUntilComplete": "0s"
+            }
         }
-    }
+        game_info_path = os.path.join(download_dir, f"{game}.ascendara.json")
+        safe_write_json(game_info_path, game_info)
 
-    def download_with_requests():
+        # Download file
         session = requests.Session()
         session.mount('https://', SSLContextAdapter())
         
@@ -300,7 +389,7 @@ def download_file(link, game, online, dlc, isVr, version, size, download_dir):
                 if possible_ext in ['rar', 'zip']:
                     archive_ext = possible_ext
 
-            archive_file_path = os.path.join(download_path, f"{game}.{archive_ext}")
+            archive_file_path = os.path.join(download_dir, f"{game}.{archive_ext}")
             
             # Initialize download manager
             manager = DownloadManager(link, total_size)
@@ -375,49 +464,56 @@ def download_file(link, game, online, dlc, isVr, version, size, download_dir):
         finally:
             session.close()
 
-    safe_write_json(game_info_path, game_info)
-
-    try:
-        archive_file_path, archive_ext = download_with_requests()
-
+        # Extract archive
         try:
             if sys.platform == "win32":
                 from unrar import rarfile
                 if archive_ext == "rar":
                     with rarfile.RarFile(archive_file_path, 'r') as fs:
-                        fs.extractall(download_path)
+                        fs.extractall(download_dir)
                 elif archive_ext == "zip":
-                    shutil.unpack_archive(archive_file_path, download_path, format="zip")
+                    shutil.unpack_archive(archive_file_path, download_dir, format="zip")
             elif sys.platform == "darwin":
-                patoolib.extract_archive(archive_file_path, download_path)
+                patoolib.extract_archive(archive_file_path, download_dir)
 
             os.remove(archive_file_path)
             game_info["downloadingData"]["extracting"] = False
 
             # Clean up extracted files
-            for file in os.listdir(download_path):
+            for file in os.listdir(download_dir):
                 if file.endswith(".url") or file.endswith(".txt"):
-                    os.remove(os.path.join(download_path, file))
+                    os.remove(os.path.join(download_dir, file))
 
-            extracted_folder = os.path.join(download_path, game)
-            tempdownloading = os.path.join(download_path, f"temp-{os.urandom(6).hex()}")
+            extracted_folder = os.path.join(download_dir, game)
+            tempdownloading = os.path.join(download_dir, f"temp-{os.urandom(6).hex()}")
             if os.path.exists(extracted_folder):
                 shutil.copytree(extracted_folder, tempdownloading)
                 shutil.rmtree(extracted_folder)
-                shutil.copytree(tempdownloading, download_path, dirs_exist_ok=True)
+                shutil.copytree(tempdownloading, download_dir, dirs_exist_ok=True)
                 shutil.rmtree(tempdownloading, ignore_errors=True)
 
             del game_info["downloadingData"]
             safe_write_json(game_info_path, game_info)
 
-
         except Exception as e:
             handleerror(game_info, game_info_path, e)
             raise e
 
+        # Download completed successfully
+        if theme:
+            _launch_notification(theme, "Download Complete", f"Successfully downloaded {game}")
+        logging.info(f"Download completed successfully for game: {game}")
+        
     except Exception as e:
-        print(f"Failed to download or extract {game}. Error: {e}")
+        error_msg = f"Error downloading {game}: {str(e)}"
+        logging.error(error_msg)
+        if theme:
+            _launch_notification(theme, "Download Failed", f"Failed to download {game}: {str(e)}")
+        raise e
 
+# ==============================================================================
+# Parse Boolean
+# ==============================================================================
 def parse_boolean(value):
     """Helper function to parse boolean values from command-line arguments."""
     if value.lower() in ['true', '1', 'yes']:
@@ -427,6 +523,9 @@ def parse_boolean(value):
     else:
         raise argparse.ArgumentTypeError(f"Invalid boolean value: {value}")
 
+# ==============================================================================
+# Main
+# ==============================================================================
 def main():
     parser = argparse.ArgumentParser(description="Download and manage game files.")
     parser.add_argument("link", help="URL of the file to download")
@@ -437,23 +536,38 @@ def main():
     parser.add_argument("version", help="Version of the game")
     parser.add_argument("size", help="Size of the file (ex: 12 GB, 439 MB)")
     parser.add_argument("download_dir", help="Directory to save the downloaded files")
+    parser.add_argument("--withNotification", help="Theme name for notifications (e.g. light, dark, blue)", default=None)
 
     try:
         if len(sys.argv) == 1:  # No arguments provided
-            launch_crash_reporter(1, "No arguments provided. Please provide all required arguments.")
+            error_msg = "No arguments provided. Please provide all required arguments."
+            logging.error(error_msg)
+            launch_crash_reporter(1, error_msg)
             parser.print_help()
             sys.exit(1)
             
         args = parser.parse_args()
-        download_file(args.link, args.game, args.online, args.dlc, args.isVr, args.version, args.size, args.download_dir)
+        logging.info(f"Starting download process for game: {args.game}")
+        logging.debug(f"Arguments: link={args.link}, online={args.online}, dlc={args.dlc}, "
+                     f"isVr={args.isVr}, version={args.version}, size={args.size}, "
+                     f"download_dir={args.download_dir}, withNotification={args.withNotification}")
+        
+        download_file(args.link, args.game, args.online, args.dlc, args.isVr, args.version, 
+                     args.size, args.download_dir, args.withNotification)
+        
+        logging.info(f"Download process completed successfully for game: {args.game}")
+        logging.info(f"Detailed logs have been saved to: {temp_log_file}")
+        
     except (argparse.ArgumentError, SystemExit) as e:
         error_msg = "Invalid or missing arguments. Please provide all required arguments."
+        logging.error(f"{error_msg} Error: {str(e)}")
         launch_crash_reporter(1, error_msg)
         parser.print_help()
         sys.exit(1)
     except Exception as e:
-        print(f"Error: {str(e)}")
-        launch_crash_reporter(1, str(e))
+        error_msg = str(e)
+        logging.error(f"Error: {error_msg}")
+        launch_crash_reporter(1, error_msg)
         sys.exit(1)
 
 if __name__ == "__main__":
