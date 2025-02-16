@@ -148,18 +148,25 @@ class SettingsManager {
 
   loadSettings() {
     try {
-      if (!fs.existsSync(this.filePath)) {
-        // Create default settings file if it doesn't exist
-        fs.writeFileSync(this.filePath, JSON.stringify(this.defaultSettings, null, 2));
-        return this.defaultSettings;
+      let settings = {};
+      if (fs.existsSync(this.filePath)) {
+        settings = JSON.parse(fs.readFileSync(this.filePath, "utf8"));
       }
-      const data = fs.readFileSync(this.filePath, "utf8");
-      const settings = JSON.parse(data);
-      // Merge with default settings to ensure all fields exist
-      return { ...this.defaultSettings, ...settings };
+      // Ensure all default settings exist
+      const mergedSettings = { ...this.defaultSettings };
+      for (const [key, value] of Object.entries(settings)) {
+        if (key in this.defaultSettings) {
+          mergedSettings[key] = value;
+        }
+      }
+      // Save if any default settings were missing
+      if (JSON.stringify(settings) !== JSON.stringify(mergedSettings)) {
+        fs.writeFileSync(this.filePath, JSON.stringify(mergedSettings, null, 2));
+      }
+      return mergedSettings;
     } catch (error) {
-      console.error("Failed to load settings:", error);
-      return this.defaultSettings;
+      console.error("Error loading settings:", error);
+      return { ...this.defaultSettings };
     }
   }
 
