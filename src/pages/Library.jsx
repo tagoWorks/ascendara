@@ -713,7 +713,18 @@ const Library = () => {
               <AlertDialogFooter className="flex justify-end gap-2">
                 {isUninstalling ? (
                   <div className="w-full">
-                    <Progress className="w-full" value={undefined} />
+                    <div className="relative overflow-hidden">
+                      <Progress value={undefined} className="bg-muted/30" />
+                        <div
+                          className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-primary/20 to-transparent"
+                          style={{
+                            animation: "shimmer 3s infinite ease-in-out",
+                            backgroundSize: "200% 100%",
+                            WebkitAnimation: "shimmer 3s infinite ease-in-out",
+                            WebkitBackgroundSize: "200% 100%",
+                          }}
+                        />
+                    </div>
                     <p className="mt-2 text-center text-sm text-muted-foreground">
                       {t("library.uninstallingGame")}{" "}
                       {gameToDelete?.game || gameToDelete?.name}...
