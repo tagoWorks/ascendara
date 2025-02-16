@@ -134,6 +134,10 @@
         "to": "."
       },
       {
+        "from": "binaries/AscendaraNotificationHelper/dist/AscendaraNotificationHelper.exe",
+        "to": "."
+      },
+      {
         "from": "binaries/AscendaraGofileHelper/src/debian/AscendaraGofileHelper.py",
         "to": "."
       },
@@ -147,6 +151,10 @@
       },
       {
         "from": "binaries/AscendaraCrashReporter/src/debian/AscendaraCrashReporter.py",
+        "to": "."
+      },
+      {
+        "from": "binaries/AscendaraNotificationHelper/src/debian/AscendaraNotificationHelper.py",
         "to": "."
       },
       {
