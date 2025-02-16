@@ -50,7 +50,14 @@
       "updateReadyDesc": "Ascendara downloaded the update and is ready to install and restart now",
       "viewChangelog": "View Changelog"
     },
-    "torrentWarning": "TORRENTING IS ENABLED - USE VPN"
+    "torrentWarning": "TORRENTING IS ENABLED - USE VPN",
+    "brokenVersion": {
+      "title": "You're running a broken version",
+      "description": "This version of Ascendara contains known critical issues with its functionality, like downloads, updating, and other core functions.",
+      "development": "While using this version you may encounter issues or crashes. Please update Ascendara to the latest version from the website.",
+      "understand": "I Understand the Issues, Continue",
+      "update": "Update Now"
+    }
   },
   "common": {
     "cancel": "Cancel",
@@ -396,6 +403,8 @@
     "languageSettingsDescription": "Choose your preferred language for the UI",
     "lastUpdated": "Last Updated",
     "lightThemes": "Light Themes",
+    "notifications": "Desktop Notifications",
+    "notificationsDescription": "Send desktop notifications when downloads finish or fail",
     "manageDependencies": "Manage Dependencies",
     "matureContent": "Mature Content",
     "matureContentDescription": "Allow games with mature themes to appear in search results",
