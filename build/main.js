@@ -835,6 +835,7 @@ ipcMain.handle(
 
       const spawnCommand = settings.gameSource === "fitgirl"
         ? [link, game, online, dlc, version, size, settings.downloadDirectory]
+            .concat(settings.notifications ? [`--withNotification`, settings.theme] : [])
         : [
             link.includes("gofile.io") ? "https://" + link : link,
             game,
@@ -844,7 +845,7 @@ ipcMain.handle(
             version,
             size,
             settings.downloadDirectory,
-          ];
+          ].concat(settings.notifications ? [`--withNotification`, settings.theme] : []);
 
       const downloadProcess = spawn(executablePath, spawnCommand, {
         detached: true,
