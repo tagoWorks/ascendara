@@ -522,25 +522,48 @@ async function downloadUpdateInBackground() {
       fs.mkdirSync(tempDir);
     }
     const mainWindow = BrowserWindow.getAllWindows()[0];
-    const response = await axios({
-      url: updateUrl,
-      method: "GET",
-      responseType: "arraybuffer",
-      headers,
-      onDownloadProgress: progressEvent => {
-        const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-        mainWindow.webContents.send("update-download-progress", progress);
-      },
-    });
+    
+    // Create write stream for downloading
+    const writer = fs.createWriteStream(installerPath);
+    
+    try {
+      const response = await axios({
+        url: updateUrl,
+        method: "GET",
+        responseType: "stream",
+        headers: {
+          ...headers,
+          "Accept-Encoding": "gzip, deflate, br",
+          "Connection": "keep-alive",
+          "Cache-Control": "no-cache"
+        },
+        maxRedirects: 5,
+        timeout: 30000,
+        onDownloadProgress: progressEvent => {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          mainWindow.webContents.send("update-download-progress", progress);
+        },
+      });
 
-    fs.writeFileSync(installerPath, Buffer.from(response.data));
+      // Pipe the response data to file stream
+      response.data.pipe(writer);
+
+      await new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+      });
+    } catch (error) {
+      writer.end();
+      console.error('Download failed:', error);
+      throw error;
+    }
 
     updateDownloaded = true;
     updateDownloadInProgress = false;
 
     // Set downloadingUpdate to false in timestamp
     timestamp.downloadingUpdate = false;
-    fs.writeFileSync(timestampPath, JSON.stringify(timestamp, null, 2));
+    fs.writeFileSync(TIMESTAMP_FILE, JSON.stringify(timestamp, null, 2));
 
     // Notify that update is ready
     BrowserWindow.getAllWindows().forEach(window => {
