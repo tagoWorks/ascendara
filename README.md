@@ -218,14 +218,12 @@ Before building, ensure you have all required dependencies. [View full requireme
 
 ### Current Goals
 - [ ] Improved download management (pausing, resuming)
-- [ ] Fitgirl and torrenting support
-- [ ] Notification handling for desktop
+- [ ] Add semi-support for Linux, and macOS
+- [ ] Endpoint for known games that have weird installation paths, issues, etc.
 
 ### Future Goals
  > Want to suggest a feature you don't see here? [Contribute](https://ascendara.app/docs/getting-started/contributing) to Ascendara or [submit feedback](https://ascendara.app/feedback)!
 
-- [ ] Add semi-support for Linux, and macOS
-- [ ] Endpoint for known games that have weird installation paths, issues, etc.
 - [ ] Ascendara approved additional sources
 - [ ] Custom game sources
 - [ ] Debrid support for downloads
@@ -235,6 +233,8 @@ Before building, ensure you have all required dependencies. [View full requireme
 ### Completed Features
 - [x] Complete UI overhaul (V7)
 - [x] Legacy game version support (Ascendara Timemachine)
+- [x] Fitgirl and torrenting support
+- [x] Notification handling for desktop
 - [x] Automatic shortcut creation
 - [x] Enhanced search algorithms
 - [x] Theme customization
