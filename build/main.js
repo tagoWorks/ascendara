@@ -1073,62 +1073,6 @@ ipcMain.handle("retry-download", async (event, link, game, online, dlc, version)
   }
 });
 
-// Download game cover
-ipcMain.handle("download-game-cover", async (event, { imgID, gameName }) => {
-  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
-  try {
-    const data = fs.readFileSync(filePath, "utf8");
-    const settings = JSON.parse(data);
-    if (!settings.downloadDirectory) {
-      throw new Error("Download directory not set");
-    }
-
-    const gameDirectory = path.join(settings.downloadDirectory, gameName);
-    if (!fs.existsSync(gameDirectory)) {
-      fs.mkdirSync(gameDirectory, { recursive: true });
-    }
-
-    let imageUrl;
-      if (settings.gameSource === "fitgirl") {
-        imageUrl = `https://api.ascendara.app/v2/fitgirl/image/${imgID}`;
-      } else {
-        imageUrl = `https://api.ascendara.app/v2/image/${imgID}`;
-      }
-    const response = await axios({
-      url: imageUrl,
-      method: "GET",
-      responseType: "arraybuffer",
-    });
-
-    const imagePath = path.join(gameDirectory, "header.ascendara.jpg");
-    fs.writeFileSync(imagePath, Buffer.from(response.data));
-
-    // Update games.json with the new image path
-    const gamesJsonPath = path.join(settings.downloadDirectory, "games.json");
-    let gamesData = { games: [] };
-
-    try {
-      const existingData = fs.readFileSync(gamesJsonPath, "utf8");
-      gamesData = JSON.parse(existingData);
-    } catch (error) {
-      // File doesn't exist or is invalid, use default empty object
-    }
-
-    // Update the image path if the game exists
-    const gameIndex = gamesData.games.findIndex(g => g.game === gameName);
-    if (gameIndex >= 0) {
-      gamesData.games[gameIndex].imgPath = imagePath;
-      fs.writeFileSync(gamesJsonPath, JSON.stringify(gamesData, null, 2));
-    }
-
-    // Return the image as base64 for preview
-    return Buffer.from(response.data).toString("base64");
-  } catch (error) {
-    console.error("Error downloading game cover:", error);
-    throw error;
-  }
-});
-
 ipcMain.handle("is-new", () => {
   const filePath = TIMESTAMP_FILE;
   try {
@@ -2623,32 +2567,6 @@ ipcMain.on("settings-changed", () => {
 
 ipcMain.handle("is-update-downloaded", () => {
   return updateDownloaded;
-});
-
-ipcMain.handle("save-game-image", async (event, gameName, imageBase64) => {
-  const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
-  try {
-    const data = fs.readFileSync(filePath, "utf8");
-    const settings = JSON.parse(data);
-
-    if (!settings.downloadDirectory) {
-      console.error("Download directory not set");
-      return false;
-    }
-
-    const gameDirectory = path.join(settings.downloadDirectory, gameName);
-    if (!fs.existsSync(gameDirectory)) {
-      fs.mkdirSync(gameDirectory, { recursive: true });
-    }
-    const imagePath = path.join(gameDirectory, "header.ascendara.jpg");
-    const imageBuffer = Buffer.from(imageBase64, "base64");
-    fs.writeFileSync(imagePath, imageBuffer);
-
-    return true;
-  } catch (error) {
-    console.error("Error saving game image:", error);
-    return false;
-  }
 });
 
 ipcMain.handle("read-file", async (event, filePath) => {
