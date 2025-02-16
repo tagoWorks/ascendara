@@ -497,7 +497,7 @@ class GofileDownloader:
         # Clean up unwanted files
         for root, _, files in os.walk(self.download_dir):
             for file in files:
-                if file.endswith((".url", ".txt")):
+                if file.endswith((".url")):
                     file_path = os.path.join(root, file)
                     os.remove(file_path)
 
