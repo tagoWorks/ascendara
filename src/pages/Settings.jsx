@@ -53,6 +53,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useSettings } from "@/context/SettingsContext";
 
 const themes = [
   // Light themes
@@ -170,6 +171,7 @@ function createDebouncedFunction(func, wait) {
 function Settings() {
   const { theme, setTheme } = useTheme();
   const { language, changeLanguage, t } = useLanguage();
+  const { settings, setSettings } = useSettings();
   const navigate = useNavigate();
   const [isInitialized, setIsInitialized] = useState(false);
   const initialSettingsRef = useRef(null);
@@ -183,19 +185,6 @@ function Settings() {
   const [downloadPath, setDownloadPath] = useState("");
   const [canCreateFiles, setCanCreateFiles] = useState(true);
   const [isDownloaderRunning, setIsDownloaderRunning] = useState(false);
-  const [settings, setSettings] = useState({
-    downloadDirectory: "",
-    showOldDownloadLinks: false,
-    seeInappropriateContent: false,
-    autoCreateShortcuts: true,
-    sendAnalytics: true,
-    autoUpdate: true,
-    language: "en",
-    theme: "purple",
-    threadCount: 4,
-    sideScrollBar: localStorage.getItem("sideScrollBar") === "true" || false,
-    gameSource: "steamrip",
-  });
   const [showTorrentWarning, setShowTorrentWarning] = useState(false);
   const [showReloadDialog, setShowReloadDialog] = useState(false);
   const [pendingSourceChange, setPendingSourceChange] = useState(null);
@@ -259,9 +248,9 @@ function Settings() {
     checkDownloaderStatus();
 
     // Then check every second
-    const interval = setInterval(checkDownloaderStatus, 1000);
-
-    // Cleanup interval on unmount
+    const interval = setTimeout(() => {
+      checkDownloaderStatus();
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -311,7 +300,6 @@ function Settings() {
     }
 
     if (key === "sideScrollBar") {
-      localStorage.setItem("sideScrollBar", value);
       setSettings(prev => ({
         ...prev,
         [key]: value,
