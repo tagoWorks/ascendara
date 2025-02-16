@@ -237,6 +237,25 @@ ipcMain.handle("reload", () => {
   app.exit();
 })
 
+
+// Sanitize text to handle special characters
+function sanitizeText(text) {
+  if (!text) return "";
+
+  return text
+    .replace(/ŌĆÖ/g, "'")
+    .replace(/ŌĆō/g, "-")
+    .replace(/├Č/g, "ö")
+    .replace(/ŌĆ£/g, '"')
+    .replace(/ŌĆØ/g, '"')
+    .replace(/ŌĆ"/g, "...")
+    .replace(/ŌĆś/g, "'")
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\//g, "-")
+    .trim();
+}
+
 // Show test notification 
 ipcMain.handle("show-test-notification", async () => {
   try {
@@ -809,11 +828,6 @@ ipcMain.handle("can-create-files", async (event, directory) => {
   }
 });
 
-// Sanitize directory name to remove problematic characters
-function sanitizeDirectoryName(name) {
-  return name.replace(/[<>:"\/\\|?*']/g, "");
-}
-
 // Download the file
 ipcMain.handle(
   "download-file",
@@ -834,9 +848,9 @@ ipcMain.handle(
         console.error("Download directory not set");
         return;
       }
-
+      game = sanitizeText(game);
       // Create game directory
-      const gameDirectory = path.join(settings.downloadDirectory, sanitizeDirectoryName(game));
+      const gameDirectory = path.join(settings.downloadDirectory, game);
       await fs.promises.mkdir(gameDirectory, { recursive: true });
 
       // Download game header image
