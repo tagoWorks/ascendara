@@ -684,6 +684,26 @@ export default function DownloadPage() {
 
   console.log("Final Available Providers:", providers);
 
+  useEffect(() => {
+    if (gameData?.download_links) {
+      const availableProviders = Object.keys(gameData.download_links).filter(
+        provider => gameData.download_links[provider]?.length > 0
+      );
+      
+      if (availableProviders.includes("gofile")) {
+        setSelectedProvider("gofile");
+      } else if (availableProviders.includes("buzzheavier")) {
+        setSelectedProvider("buzzheavier");
+      } else if (availableProviders.length > 0) {
+        setSelectedProvider(availableProviders[0]);
+      } else {
+        setSelectedProvider("");
+      }
+    } else {
+      setSelectedProvider("");
+    }
+  }, [gameData]);
+
   if (gameData && gameData.game) {
     gameData.game = sanitizeGameName(gameData.game);
   }
