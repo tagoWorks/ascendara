@@ -127,6 +127,7 @@ contextBridge.exposeInMainWorld("electron", {
   updateLaunchCount: () => ipcRenderer.invoke("update-launch-count"),
   reload: () => ipcRenderer.invoke("reload"),
   getLaunchCount: () => ipcRenderer.invoke("get-launch-count"),
+  isBrokenVersion: () => ipcRenderer.invoke("is-broken-version"),
   isOnWindows: () => ipcRenderer.invoke("is-on-windows"),
   checkGameDependencies: () => ipcRenderer.invoke("check-game-dependencies"),
   showTestNotification: () => ipcRenderer.invoke("show-test-notification"),

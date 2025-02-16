@@ -52,6 +52,7 @@ let updateDownloaded = false;
 let notificationShown = false;
 let updateDownloadInProgress = false;
 let experiment = false;
+let isBrokenVersion = false;
 let isWindows = os.platform().startsWith("win");
 let rpc;
 let config;
@@ -94,6 +95,15 @@ rpc.login({ clientId }).catch(console.error);
 app.whenReady().then(() => {
   console.log("App ready, creating window");
   createWindow();
+  axios.get('https://api.ascendara.app/app/brokenversions')
+    .then(response => {
+      const brokenVersions = response.data;
+      isBrokenVersion = brokenVersions.includes(appVersion);
+      console.log(`Current version ${appVersion} is ${isBrokenVersion ? 'broken' : 'not broken'}`);
+    })
+    .catch(error => {
+      console.error('Error checking for broken versions:', error);
+    });
 
   // Check for protocol URL in argv
   const protocolUrl = process.argv.find(arg => {
@@ -585,6 +595,10 @@ ipcMain.handle("is-downloader-running", async () => {
     console.error("Error checking downloader status:", error);
     return false;
   }
+});
+
+ipcMain.handle("is-broken-version", () => {
+  return isBrokenVersion;
 });
 
 ipcMain.handle("delete-game-directory", async (event, game) => {

@@ -3,6 +3,8 @@ import Layout from "@/components/Layout";
 import MenuBar from "@/components/MenuBar";
 import SupportDialog from "@/components/SupportDialog";
 import PlatformWarningDialog from "@/components/PlatformWarningDialog";
+import BrokenVersionDialog from "@/components/BrokenVersionDialog";
+
 import UpdateOverlay from "@/components/UpdateOverlay";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
@@ -58,6 +60,7 @@ const AppRoutes = () => {
   const [iconData, setIconData] = useState("");
   const [showSupportDialog, setShowSupportDialog] = useState(false);
   const [showPlatformWarning, setShowPlatformWarning] = useState(false);
+  const [isBrokenVersion, setIsBrokenVersion] = useState(false);
   const location = useLocation();
   const hasChecked = useRef(false);
   const loadStartTime = useRef(Date.now());
@@ -319,6 +322,15 @@ const AppRoutes = () => {
     checkPlatform();
   }, []);
 
+  useEffect(() => {
+    const checkVersion = async () => {
+      const isBroken = await window.electron.isBrokenVersion();
+      console.log("Is broken version:", isBroken);
+      setIsBrokenVersion(isBroken);
+    };
+    checkVersion();
+  }, []);
+
   const handleInstallAndRestart = async () => {
     setIsInstalling(true);
     // Set isUpdating timestamp first
@@ -555,6 +567,9 @@ const AppRoutes = () => {
       {showSupportDialog && <SupportDialog onClose={() => setShowSupportDialog(false)} />}
       {showPlatformWarning && (
         <PlatformWarningDialog onClose={() => setShowPlatformWarning(false)} />
+      )}
+      {isBrokenVersion && (
+        <BrokenVersionDialog onClose={() => setIsBrokenVersion(false)} />
       )}
     </>
   );
