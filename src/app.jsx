@@ -675,12 +675,32 @@ function ToasterWithTheme() {
 
 function App() {
   const { t } = useTranslation();
+  
   useEffect(() => {
     const checkUpdates = async () => {
       const hasUpdate = await checkForUpdates();
     };
 
     checkUpdates();
+  }, []);
+
+  useEffect(() => {
+    const calculateStorageInfo = async () => {
+      try {
+        const downloadDir = await window.electron.getDownloadDirectory();
+        if (downloadDir) {
+          // Pre-fetch both drive space and directory size
+          await Promise.all([
+            window.electron.getDriveSpace(downloadDir),
+            window.electron.getInstalledGamesSize()
+          ]);
+        }
+      } catch (error) {
+        console.error('[App] Error calculating storage info:', error);
+      }
+    };
+
+    calculateStorageInfo();
   }, []);
 
   useEffect(() => {

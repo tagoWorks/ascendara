@@ -2560,16 +2560,55 @@ ipcMain.handle("clear-cache", async () => {
   }
 });
 
+let driveSpaceCache = {
+  freeSpace: 0,
+  totalSpace: 0,
+  lastCalculated: 0
+};
+
 ipcMain.handle("get-drive-space", async (event, directory) => {
   try {
-    const { available } = await disk.check(directory);
-    console.log(`Available space on ${directory}: ${available} bytes`);
-    return { freeSpace: available };
+    // Check if we have a recent cache (less than 30 seconds old)
+    const now = Date.now();
+    if (driveSpaceCache.lastCalculated > now - 30 * 1000) {
+      return { 
+        freeSpace: driveSpaceCache.freeSpace, 
+        totalSpace: driveSpaceCache.totalSpace 
+      };
+    }
+
+    const { available, total } = await disk.check(directory);
+    console.log(`Drive space for ${directory}: ${available}/${total} bytes`);
+    
+    // Update cache
+    driveSpaceCache = {
+      freeSpace: available,
+      totalSpace: total,
+      lastCalculated: now
+    };
+    
+    return { freeSpace: available, totalSpace: total };
   } catch (error) {
     console.error("Error getting drive space:", error);
-    return { freeSpace: 0 };
+    return { freeSpace: 0, totalSpace: 0 };
   }
 });
+
+// Function to pre-fetch drive space
+async function fetchDriveSpace(directory) {
+  try {
+    const { available, total } = await disk.check(directory);
+    driveSpaceCache = {
+      freeSpace: available,
+      totalSpace: total,
+      lastCalculated: Date.now()
+    };
+    return { freeSpace: available, totalSpace: total };
+  } catch (error) {
+    console.error("Error pre-fetching drive space:", error);
+    return { freeSpace: 0, totalSpace: 0 };
+  }
+}
 
 ipcMain.handle("get-platform", () => process.platform);
 
@@ -3351,5 +3390,77 @@ ipcMain.handle('qbittorrent:version', async () => {
       success: false, 
       error: error.response?.data || error.message 
     };
+  }
+});
+
+// Cache for directory sizes
+let dirSizeCache = {
+  size: 0,
+  lastCalculated: 0,
+  calculating: false
+};
+
+// Calculate directory size recursively
+async function calculateDirSize(dirPath) {
+  let totalSize = 0;
+  const files = await fs.promises.readdir(dirPath);
+
+  for (const file of files) {
+    const filePath = path.join(dirPath, file);
+    const stats = await fs.promises.stat(filePath);
+
+    if (stats.isDirectory()) {
+      totalSize += await calculateDirSize(filePath);
+    } else {
+      totalSize += stats.size;
+    }
+  }
+
+  return totalSize;
+}
+
+// Get total size of installed games from actual directory sizes
+ipcMain.handle("get-installed-games-size", async (event) => {
+  try {
+    const settings = settingsManager.getSettings();
+    const downloadDirectory = settings.downloadDirectory;
+    
+    if (!downloadDirectory || !fs.existsSync(downloadDirectory)) {
+      return { success: false, error: "Download directory not found" };
+    }
+
+    // If we're already calculating, return a special status
+    if (dirSizeCache.calculating) {
+      return { success: true, calculating: true };
+    }
+
+    // Check if we have a recent cache (less than 5 minutes old)
+    const now = Date.now();
+    if (dirSizeCache.lastCalculated > now - 5 * 60 * 1000) {
+      return { success: true, totalSize: dirSizeCache.size };
+    }
+
+    // Calculate new size
+    dirSizeCache.calculating = true;
+    event.sender.send('directory-size-status', { calculating: true });
+    
+    const totalSize = await calculateDirSize(downloadDirectory);
+    
+    // Update cache
+    dirSizeCache = {
+      size: totalSize,
+      lastCalculated: now,
+      calculating: false
+    };
+    
+    event.sender.send('directory-size-status', { calculating: false });
+    console.log(`Actual download directory size: ${totalSize} bytes`);
+    
+    return { success: true, totalSize };
+  } catch (error) {
+    dirSizeCache.calculating = false;
+    event.sender.send('directory-size-status', { calculating: false });
+    console.error("Error getting installed games size:", error);
+    return { success: false, error: error.message };
   }
 });

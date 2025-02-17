@@ -31,6 +31,8 @@ import {
   AlertTriangle,
   Heart,
   SquareLibrary,
+  Tag,
+  PackageOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -83,6 +85,8 @@ const Library = () => {
     const savedFavorites = localStorage.getItem("game-favorites");
     return savedFavorites ? JSON.parse(savedFavorites) : [];
   });
+  const [totalGamesSize, setTotalGamesSize] = useState(0);
+  const [isCalculatingSize, setIsCalculatingSize] = useState(false);
   const errorTimeoutRef = useRef(null);
   const { t } = useLanguage();
 
@@ -141,13 +145,66 @@ const Library = () => {
     try {
       const installPath = await window.electron.getDownloadDirectory();
       if (installPath) {
-        const { freeSpace } = await window.electron.getDriveSpace(installPath);
-        setStorageInfo({ freeSpace });
+        // Get cached drive space and directory size
+        const [driveSpace, gamesSize] = await Promise.all([
+          window.electron.getDriveSpace(installPath),
+          window.electron.getInstalledGamesSize()
+        ]);
+
+        setStorageInfo(driveSpace);
+        
+        if (gamesSize.success) {
+          if (gamesSize.calculating) {
+            setIsCalculatingSize(true);
+          } else {
+            setTotalGamesSize(gamesSize.totalSize);
+            setIsCalculatingSize(false);
+          }
+        }
       }
     } catch (error) {
       console.error("Error fetching storage info:", error);
     }
   };
+
+  useEffect(() => {
+    const fetchStorageInfo = async () => {
+      try {
+        const installPath = await window.electron.getDownloadDirectory();
+        if (installPath) {
+          // Get cached drive space and directory size
+          const [driveSpace, gamesSize] = await Promise.all([
+            window.electron.getDriveSpace(installPath),
+            window.electron.getInstalledGamesSize()
+          ]);
+
+          setStorageInfo(driveSpace);
+          
+          if (gamesSize.success) {
+            if (gamesSize.calculating) {
+              setIsCalculatingSize(true);
+            } else {
+              setTotalGamesSize(gamesSize.totalSize);
+              setIsCalculatingSize(false);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching storage info:", error);
+      }
+    };
+
+    // Set up directory size status listener
+    const cleanup = window.electron.onDirectorySizeStatus((status) => {
+      setIsCalculatingSize(status.calculating);
+      if (!status.calculating) {
+        fetchStorageInfo();
+      }
+    });
+
+    fetchStorageInfo();
+    return cleanup;
+  }, []);
 
   const loadGames = async () => {
     try {
@@ -525,6 +582,14 @@ const Library = () => {
                           </svg>{" "}
                           <span>{t("library.iconLegend.vrGame")}</span>
                         </div>
+                        <div className="flex items-center gap-2">
+                          <PackageOpen className="h-4 w-4" />{" "}
+                          <span>{t("library.iconLegend.size")}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Tag className="h-4 w-4" />{" "}
+                          <span>{t("library.iconLegend.version")}</span>
+                        </div>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -544,6 +609,7 @@ const Library = () => {
 
               {/* Right side: Storage Info and Settings */}
               <div className="flex items-start gap-4">
+                
                 {storageInfo && (
                   <div className="min-w-[250px] rounded-lg bg-secondary/10 p-3">
                     <div className="space-y-3">
@@ -569,6 +635,16 @@ const Library = () => {
                         )}
                       </div>
 
+                      <div className="mt-2 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <SquareLibrary className="h-4 w-4 text-primary" />
+                            <span className="text-sm text-muted-foreground">
+                              {t("library.gamesInLibrary")}
+                            </span>
+                          </div>
+                          <span className="text-sm font-medium">{games.length}</span>
+                        </div>
+                        
                       {/* Storage section */}
                       <div>
                         <div className="mb-1 flex items-center justify-between">
@@ -582,14 +658,58 @@ const Library = () => {
                             {formatBytes(storageInfo.freeSpace)}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <SquareLibrary className="h-4 w-4 text-primary" />
-                            <span className="text-sm text-muted-foreground">
-                              {t("library.gamesInLibrary")}
-                            </span>
-                          </div>
-                          <span className="text-sm font-medium">{games.length}</span>
+                        <div className="relative mb-2">
+                          {/* Ascendara Games Space */}
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div 
+                                  className="absolute left-0 top-0 h-2 rounded-l-full bg-primary cursor-help" 
+                                  style={{ 
+                                    width: `${(totalGamesSize / storageInfo.totalSpace) * 100}%`,
+                                    zIndex: 2 
+                                  }} 
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent className="text-secondary">
+                                {t("library.spaceTooltip.games", { 
+                                  size: formatBytes(totalGamesSize) 
+                                })}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          {/* Other Used Space */}
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div 
+                                  className="absolute left-0 top-0 h-2 rounded-r-full bg-muted cursor-help" 
+                                  style={{ 
+                                    width: `${((storageInfo.totalSpace - storageInfo.freeSpace) / storageInfo.totalSpace) * 100}%`,
+                                    zIndex: 1 
+                                  }} 
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent className="text-secondary">
+                                {t("library.spaceTooltip.other", { 
+                                  size: formatBytes(storageInfo.totalSpace - storageInfo.freeSpace - totalGamesSize) 
+                                })}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          {/* Background */}
+                          <div className="h-2 w-full rounded-full bg-muted/30" />
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>
+                            {t("library.gamesSpace")}: {
+                              isCalculatingSize ? 
+                              t("library.calculatingSize") : 
+                              formatBytes(totalGamesSize)
+                            }
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -769,7 +889,7 @@ const AddGameCard = React.forwardRef((props, ref) => {
       )}
       {...props}
     >
-      <CardContent className="flex h-full min-h-[280px] flex-col items-center justify-center p-6 text-muted-foreground group-hover:text-primary">
+      <CardContent className="flex h-full min-h-[240px] flex-col items-center justify-center p-6 text-muted-foreground group-hover:text-primary">
         <div className="rounded-full bg-muted p-6 group-hover:bg-primary/10">
           <Plus className="h-8 w-8" />
         </div>
@@ -1014,9 +1134,6 @@ const InstalledGameCard = ({
               />
             )}
           </div>
-          <p className="text-sm text-muted-foreground">
-            {game.version || t("library.noVersion")}
-          </p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -1025,6 +1142,21 @@ const InstalledGameCard = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {game.size && (
+            <DropdownMenuItem disabled>
+              <PackageOpen className="mr-2 h-4 w-4" />
+              {game.size}
+            </DropdownMenuItem>
+            )}
+            {game.version && (
+              <DropdownMenuItem disabled>
+                <Tag className="mr-2 h-4 w-4" />
+                {game.version}
+              </DropdownMenuItem>
+            )}
+            {(game.size || game.version) && (
+              <Separator className="my-2 bg-muted" />
+            )}
             <DropdownMenuItem onClick={onOpenDirectory}>
               <FolderOpen className="mr-2 h-4 w-4" />
               {t("library.openGameDirectory")}
@@ -1156,7 +1288,7 @@ const AddGameForm = ({ onSuccess }) => {
       formData.hasDLC,
       formData.version,
       formData.executable,
-      coverSearch.selectedCover?.imgID // Pass the selected cover's imgID
+      coverSearch.selectedCover?.imgID
     );
     onSuccess();
   };

@@ -59,6 +59,7 @@ contextBridge.exposeInMainWorld("electron", {
   deleteGame: game => ipcRenderer.invoke("delete-game", game),
   deleteGameDirectory: game => ipcRenderer.invoke("delete-game-directory", game),
   getInstalledGames: () => ipcRenderer.invoke("get-installed-games"),
+  getInstalledGamesSize: () => ipcRenderer.invoke("get-installed-games-size"),
 
   // Download Status
   onDownloadProgress: callback => {
@@ -83,13 +84,19 @@ contextBridge.exposeInMainWorld("electron", {
   canCreateFiles: directory => ipcRenderer.invoke("can-create-files", directory),
   openFileDialog: () => ipcRenderer.invoke("open-file-dialog"),
   getDownloadDirectory: () => ipcRenderer.invoke("get-download-directory"),
-  getDriveSpace: directory => ipcRenderer.invoke("get-drive-space", directory),
+  getDriveSpace: (path) => ipcRenderer.invoke("get-drive-space", path),
   getLocalCrackUsername: () => ipcRenderer.invoke("get-local-crack-username"),
   getLocalCrackDirectory: () => ipcRenderer.invoke("get-local-crack-directory"),
   setLocalCrackUsername: username =>
     ipcRenderer.invoke("set-local-crack-username", username),
   setLocalCrackDirectory: directory =>
     ipcRenderer.invoke("set-local-crack-directory", directory),
+  onDirectorySizeStatus: callback => {
+    ipcRenderer.on('directory-size-status', (_, status) => callback(status));
+    return () => {
+      ipcRenderer.removeListener('directory-size-status', callback);
+    };
+  },
 
   // Download and Installation
   installDependencies: () => ipcRenderer.invoke("install-dependencies"),
