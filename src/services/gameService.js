@@ -97,30 +97,85 @@ const gameService = {
       endpoint = `${API_URL}/json/sources/fitgirl/games`;
     }
 
-    const response = await fetch(endpoint);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
+    try {
+      const response = await fetch(endpoint);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
 
-    // Sanitize game titles
-    if (data.games) {
-      data.games = data.games.map(game => ({
-        ...game,
-        name: sanitizeText(game.name),
-        game: sanitizeText(game.game),
-      }));
-    }
+      // Sanitize game titles
+      if (data.games) {
+        data.games = data.games.map(game => ({
+          ...game,
+          name: sanitizeText(game.name),
+          game: sanitizeText(game.game),
+        }));
+      }
 
-    return {
-      games: data.games,
-      metadata: {
-        apiversion: data.metadata?.apiversion,
-        games: data.games?.length,
-        getDate: data.metadata?.getDate,
-        source: data.metadata?.source || source,
-      },
-    };
+      return {
+        games: data.games,
+        metadata: {
+          apiversion: data.metadata?.apiversion,
+          games: data.games?.length,
+          getDate: data.metadata?.getDate,
+          source: data.metadata?.source || source,
+          imagesAvailable: true
+        },
+      };
+    } catch (error) {
+      console.warn('Primary API failed, trying backup CDN:', error);
+      const backupEndpoint = 'https://cdn.ascendara.app/files/data.json';
+      
+      try {
+        const response = await fetch(backupEndpoint, {
+          mode: 'no-cors',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        // When using no-cors, we can't access the response directly
+        // We need to handle it differently
+        if (!response.ok && response.type !== 'opaque') {
+          throw new Error(`Backup CDN failed! status: ${response.status}`);
+        }
+
+        // Since no-cors might give us an opaque response,
+        // we'll need to handle potential parsing errors
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          console.error('Failed to parse CDN response:', parseError);
+          throw new Error('Unable to parse backup data source');
+        }
+
+        // Sanitize game titles
+        if (data.games) {
+          data.games = data.games.map(game => ({
+            ...game,
+            name: sanitizeText(game.name),
+            game: sanitizeText(game.game),
+          }));
+        }
+
+        return {
+          games: data.games,
+          metadata: {
+            apiversion: data.metadata?.apiversion,
+            games: data.games?.length,
+            getDate: data.metadata?.getDate,
+            source: data.metadata?.source || source,
+            imagesAvailable: false // Images won't be available when using CDN
+          },
+        };
+      } catch (cdnError) {
+        console.error('Both API and CDN failed:', cdnError);
+        // Re-throw the error to be handled by the caller
+        throw new Error('Failed to fetch game data from both primary and backup sources');
+      }
+    }
   },
 
   async updateCache(data) {
