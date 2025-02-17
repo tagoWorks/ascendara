@@ -240,6 +240,7 @@ const Library = () => {
           dlc: game.dlc,
           isVr: game.isVr,
           executable: game.executable,
+          playTime: game.playTime,
           isCustom: true,
           custom: true,
         })),
