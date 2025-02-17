@@ -26,9 +26,7 @@ contextBridge.exposeInMainWorld("electron", {
     saveGameImage: (gameName, imageBase64) =>
       ipcRenderer.invoke("save-game-image", gameName, imageBase64),
     readFile: path => ipcRenderer.invoke("read-file", path),
-    writeFile: (path, content) => ipcRenderer.invoke("write-file", path, content),
-    downloadGameCover: (imgID, gameName) =>
-      ipcRenderer.invoke("download-game-cover", { imgID, gameName }),
+    writeFile: (path, content) => ipcRenderer.invoke("write-file", path, content)
   },
 
   // Settings and Configuration
