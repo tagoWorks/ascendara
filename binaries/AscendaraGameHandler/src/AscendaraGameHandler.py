@@ -36,7 +36,7 @@ def _launch_crash_reporter_on_exit(error_code, error_message):
         if os.path.exists(crash_reporter_path):
             # Use subprocess.Popen with CREATE_NO_WINDOW flag to hide console
             subprocess.Popen(
-                [crash_reporter_path, "maindownloader", str(error_code), error_message],
+                [crash_reporter_path, "gamehandler", str(error_code), error_message],
                 creationflags=subprocess.CREATE_NO_WINDOW
             )
         else:
@@ -89,6 +89,24 @@ def is_process_running(exe_path):
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
     return False
+
+def update_play_time(json_file_path):
+    """Update the playTime field in the game's JSON file"""
+    try:
+        with open(json_file_path, "r") as f:
+            data = json.load(f)
+        
+        # Initialize playTime if it doesn't exist
+        if "playTime" not in data:
+            data["playTime"] = 0
+        
+        # Increment playTime by 1 second
+        data["playTime"] += 1
+        
+        with open(json_file_path, "w") as f:
+            json.dump(data, f, indent=4)
+    except Exception as e:
+        logging.error(f"Failed to update play time: {e}")
 
 def execute(game_path, is_custom_game, is_shortcut=False):
     rpc = None
@@ -174,43 +192,50 @@ def execute(game_path, is_custom_game, is_shortcut=False):
         except Exception as e:
             logging.error(f"Error updating game json: {e}")
 
-    # Run the game process separately from the executable process
-    if os.name == 'nt':  # Windows
-        process = subprocess.Popen(exe_path, creationflags=subprocess.DETACHED_PROCESS)
-    else:  # Unix/Linux
-        process = subprocess.Popen(exe_path, start_new_session=True)
+    # Launch the game
+    try:
+        if os.path.dirname(exe_path):
+            os.chdir(os.path.dirname(exe_path))
+        
+        process = subprocess.Popen(exe_path)
+        start_time = time.time()
+        last_update = start_time
+        last_play_time = 0
 
-    running = True
-    while running:
-        if process.poll() is not None:
-            running = False
-            # Update settings.json
+        # Monitor the game process and update play time
+        while process.poll() is None:
+            current_time = time.time()
+            # Calculate elapsed seconds since last update
+            elapsed = int(current_time - last_update)
+            if elapsed >= 1 and json_file_path and not is_custom_game:
+                last_play_time = elapsed
+                update_play_time(json_file_path)
+                last_update = current_time
+            time.sleep(0.1)  # Small sleep to prevent high CPU usage
+
+        process.wait()
+        return_code = process.returncode
+
+        # Ensure we don't update play time after the game has closed
+        if json_file_path and not is_custom_game:
             try:
-                with open(settings_file, 'r') as f:
-                    settings_data = json.load(f)
-                if 'runningGames' in settings_data:
-                    if game_name in settings_data['runningGames']:
-                        del settings_data['runningGames'][game_name]
-                with open(settings_file, 'w') as f:
-                    json.dump(settings_data, f, indent=4)
+                with open(json_file_path, "r") as f:
+                    data = json.load(f)
+                # Remove the last update if it was too close to game closure
+                if last_play_time < 1:
+                    data["playTime"] = max(0, data["playTime"] - 1)
+                data["isRunning"] = False
+                with open(json_file_path, "w") as f:
+                    json.dump(data, f, indent=4)
             except Exception as e:
-                logging.error(f"Error updating settings.json on exit: {e}")
+                logging.error(f"Error updating game json on exit: {e}")
+        
+        if is_shortcut and rpc:
+            clear_discord_presence(rpc)
 
-            # Update game-specific json
-            if not is_custom_game:
-                try:
-                    with open(json_file_path, "r") as f:
-                        data = json.load(f)
-                    data["isRunning"] = False
-                    with open(json_file_path, "w") as f:
-                        json.dump(data, f, indent=4)
-                except Exception as e:
-                    logging.error(f"Error updating game json on exit: {e}")
-            
-            if is_shortcut and rpc:
-                clear_discord_presence(rpc)
-
-        time.sleep(1)  # Check more frequently
+    except Exception as e:
+        logging.error(f"Failed to execute game: {e}")
+        atexit.register(launch_crash_reporter, 1, str(e))
 
 if __name__ == "__main__":
     # The script is called with: [script] [game_path] [is_custom_game] [--shortcut]

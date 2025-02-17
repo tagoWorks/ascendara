@@ -1134,6 +1134,23 @@ const InstalledGameCard = ({
               />
             )}
           </div>
+          <p className="line-clamp-2 text-sm text-muted-foreground">
+            {game.playTime !== undefined ? (
+              <span className="font-medium md:text-xs">
+                {game.playTime < 60
+                  ? t("library.lessThanMinute")
+                  : game.playTime < 120
+                  ? `1 ${t("library.minute")}`
+                  : game.playTime < 3600
+                  ? `${Math.floor(game.playTime / 60)} ${t("library.minutes")}`
+                  : game.playTime < 7200
+                  ? `1 ${t("library.hour")}`
+                  : `${Math.floor(game.playTime / 3600)} ${t("library.hours")}`}
+              </span>
+            ) : (
+              <span className="font-medium md:text-xs">{t("library.neverPlayed")}</span>
+            )}
+          </p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
