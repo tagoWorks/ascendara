@@ -244,7 +244,7 @@ const AppRoutes = () => {
               description: t("app.toasts.justUpdatedDesc", { version: __APP_VERSION__ }),
               action: {
                 label: t("app.toasts.viewChangelog"),
-                onClick: () => window.electron.openURL("https://ascendara.app/changelog"),
+                onClick: () => window.electron.openURL("https://ascendara.app/changelog?individual"),
               },
               duration: 10000,
               id: "update-completed",

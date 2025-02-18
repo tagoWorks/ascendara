@@ -609,7 +609,7 @@ function Settings() {
                 </span>
               </div>
               <div
-                onClick={() => window.electron.openURL("https://ascendara.app/changelog")}
+                onClick={() => window.electron.openURL("https://ascendara.app/changelog?individual")}
                 className="cursor-pointer px-2 hover:underline"
               >
                 <span>v{__APP_VERSION__}</span>
