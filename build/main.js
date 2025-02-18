@@ -2250,6 +2250,9 @@ ipcMain.handle("play-game", async (event, game, isCustom = false) => {
         largeImageKey: "ascendara",
         largeImageText: "Ascendara",
       });
+
+      // Notify renderer that game has closed
+      event.sender.send("game-closed", { game });
     });
 
     return true;

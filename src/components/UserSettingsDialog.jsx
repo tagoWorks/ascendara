@@ -33,22 +33,12 @@ const UserSettingsDialog = () => {
       const savedUsername = await window.electron.getLocalCrackUsername();
       const savedDirectory = await window.electron.getLocalCrackDirectory();
 
-      // Try to get system username if no username is set
-      if (!savedUsername) {
-        try {
-          const systemUsername = await window.electron.getSystemUsername();
-          if (systemUsername) {
-            setUsername(systemUsername);
-            // Don't await this as we don't want to block the UI
-            window.electron.setLocalCrackUsername(systemUsername);
-          }
-        } catch (error) {
-          console.error("Error getting system username:", error);
-        }
-      } else {
+      if (savedUsername) {
         setUsername(savedUsername);
+      } else {
+        const systemUsername = "Guest";
+        setUsername(systemUsername);
       }
-
       if (savedDirectory) {
         setDirectory(savedDirectory);
         const canCreate = await window.electron.canCreateFiles(savedDirectory);
@@ -78,6 +68,9 @@ const UserSettingsDialog = () => {
         return;
       }
 
+      // Emit custom event when username is updated
+      window.dispatchEvent(new CustomEvent('usernameUpdated'));
+      
       toast.success(t("settings.userSettings.saveSuccess"));
       setIsOpen(false);
     } catch (error) {

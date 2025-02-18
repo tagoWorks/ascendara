@@ -103,6 +103,15 @@ const Library = () => {
   }, []);
 
   useEffect(() => {
+    const handleUsernameUpdate = () => {
+      fetchUsername();
+    };
+
+    window.addEventListener('usernameUpdated', handleUsernameUpdate);
+    return () => window.removeEventListener('usernameUpdated', handleUsernameUpdate);
+  }, []);
+
+  useEffect(() => {
     // Add keyframes to document
     const styleSheet = document.styleSheets[0];
     const keyframes = `
@@ -209,8 +218,8 @@ const Library = () => {
   const loadGames = async () => {
     try {
       // Get games from main process
-      const installedGames = await window.electron.ipcRenderer.invoke("get-games");
-      const customGames = await window.electron.ipcRenderer.invoke("get-custom-games");
+      const installedGames = await window.electron.getGames();
+      const customGames = await window.electron.getCustomGames();
 
       // Filter out games that are currently downloading
       const filteredInstalledGames = installedGames.filter(game => {
@@ -285,6 +294,9 @@ const Library = () => {
     // Set up event listeners
     window.electron.ipcRenderer.on("game-launch-error", handleGameLaunchError);
     window.electron.ipcRenderer.on("game-launch-success", handleGameLaunchSuccess);
+    window.electron.ipcRenderer.on("game-closed", () => {
+      loadGames(); // Reload games when a game closes
+    });
 
     return () => {
       // Clean up event listeners
@@ -296,9 +308,7 @@ const Library = () => {
         "game-launch-success",
         handleGameLaunchSuccess
       );
-      if (errorTimeoutRef.current) {
-        clearTimeout(errorTimeoutRef.current);
-      }
+      window.electron.ipcRenderer.removeListener("game-closed", loadGames);
     };
   }, []);
 
@@ -336,17 +346,14 @@ const Library = () => {
     const gameName = game.game || game.name;
 
     // Check if window.electron.isDev is true. Cannot run in developer mode
-    if (await window.electron.ipcRenderer.invoke("is-dev")) {
+    if (await window.electron.isDev()) {
       toast.error(t("library.cannotRunDev"));
       return;
     }
 
     try {
       // First check if game is already running
-      const isRunning = await window.electron.ipcRenderer.invoke(
-        "is-game-running",
-        gameName
-      );
+      const isRunning = await window.electron.isGameRunning(gameName);
       if (isRunning) {
         toast.error(t("library.alreadyRunning", { game: gameName }));
         return;
@@ -364,11 +371,10 @@ const Library = () => {
 
       console.log("Launching game: ", gameName);
       // Launch the game
-      await window.electron.ipcRenderer.invoke("play-game", gameName, game.isCustom);
+      await window.electron.playGame(gameName, game.isCustom);
 
       // Get and cache the game image before saving to recently played
-      const imageBase64 = await window.electron.ipcRenderer.invoke(
-        "get-game-image",
+      const imageBase64 = await window.electron.getGameImage(
         gameName
       );
       if (imageBase64) {
@@ -394,11 +400,11 @@ const Library = () => {
   const handleDeleteGame = async game => {
     try {
       if (game.isCustom) {
-        await window.electron.ipcRenderer.invoke("remove-game", game.game || game.name);
+        await window.electron.removeGame(game.game || game.name);
       } else {
         setIsUninstalling(true);
         setUninstallingGame(game.game || game.name);
-        await window.electron.ipcRenderer.invoke("delete-game", game.game || game.name);
+        await window.electron.deleteGame(game.game || game.name);
       }
       setGames(games.filter(g => (g.game || g.name) !== (game.game || game.name)));
       setGameToDelete(null);
@@ -414,8 +420,7 @@ const Library = () => {
 
   const handleOpenDirectory = async game => {
     try {
-      await window.electron.ipcRenderer.invoke(
-        "open-game-directory",
+      await window.electron.openGameDirectory(
         game.game || game.name,
         game.isCustom
       );
@@ -493,10 +498,9 @@ const Library = () => {
             className="bg-primary text-secondary"
             onClick={async () => {
               const exePath =
-                await window.electron.ipcRenderer.invoke("open-file-dialog");
+                await window.electron.ipcRenderer.openFileDialog();
               if (exePath) {
-                await window.electron.ipcRenderer.invoke(
-                  "modify-game-executable",
+                await window.electron.modifyGameExecutable(
                   errorGame,
                   exePath
                 );
@@ -927,10 +931,7 @@ const InstalledGameCard = ({
       if (game.executable && !game.isCustom) {
         try {
           const execPath = `${game.game}/${game.executable}`;
-          const exists = await window.electron.ipcRenderer.invoke(
-            "check-file-exists",
-            execPath
-          );
+          const exists = await window.electron.checkFileExists(execPath);
           setExecutableExists(exists);
         } catch (error) {
           console.error("Error checking executable:", error);
@@ -949,8 +950,7 @@ const InstalledGameCard = ({
     const checkGameStatus = async () => {
       try {
         if (!isMounted) return;
-        const running = await window.electron.ipcRenderer.invoke(
-          "is-game-running",
+        const running = await window.electron.isGameRunning(
           game.game || game.name
         );
         if (isMounted) {
@@ -980,8 +980,7 @@ const InstalledGameCard = ({
 
     const loadGameImage = async () => {
       try {
-        const imageBase64 = await window.electron.ipcRenderer.invoke(
-          "get-game-image",
+        const imageBase64 = await window.electron.getGameImage(
           game.game || game.name
         );
         if (imageBase64 && isMounted) {
@@ -1141,12 +1140,12 @@ const InstalledGameCard = ({
                 {game.playTime < 60
                   ? t("library.lessThanMinute")
                   : game.playTime < 120
-                  ? `1 ${t("library.minute")}`
+                  ? `1 ${t("library.minute")} ${t("library.ofPlaytime")}`
                   : game.playTime < 3600
-                  ? `${Math.floor(game.playTime / 60)} ${t("library.minutes")}`
+                  ? `${Math.floor(game.playTime / 60)} ${t("library.minutes")} ${t("library.ofPlaytime")}`
                   : game.playTime < 7200
-                  ? `1 ${t("library.hour")}`
-                  : `${Math.floor(game.playTime / 3600)} ${t("library.hours")}`}
+                  ? `1 ${t("library.hour")} ${t("library.ofPlaytime")}`
+                  : `${Math.floor(game.playTime / 3600)} ${t("library.hours")} ${t("library.ofPlaytime")}`}
               </span>
             ) : (
               <span className="font-medium md:text-xs">{t("library.neverPlayed")}</span>
@@ -1181,8 +1180,7 @@ const InstalledGameCard = ({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={async () => {
-                const success = await window.electron.ipcRenderer.invoke(
-                  "create-game-shortcut",
+                const success = await window.electron.createGameShortcut(
                   game
                 );
                 if (success) {
@@ -1199,10 +1197,9 @@ const InstalledGameCard = ({
               <DropdownMenuItem
                 onClick={async () => {
                   const exePath =
-                    await window.electron.ipcRenderer.invoke("open-file-dialog");
+                    await window.electron.openFileDialog();
                   if (exePath) {
-                    await window.electron.ipcRenderer.invoke(
-                      "modify-game-executable",
+                    await window.electron.modifyGameExecutable(
                       game.game || game.name,
                       exePath
                     );
@@ -1287,7 +1284,7 @@ const AddGameForm = ({ onSuccess }) => {
   };
 
   const handleChooseExecutable = async () => {
-    const file = await window.electron.ipcRenderer.invoke("open-file-dialog");
+    const file = await window.electron.openFileDialog();
     if (file) {
       setFormData(prev => ({
         ...prev,
@@ -1299,8 +1296,7 @@ const AddGameForm = ({ onSuccess }) => {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    await window.electron.ipcRenderer.invoke(
-      "save-custom-game",
+    await window.electron.saveCustomGame(
       formData.name,
       formData.isOnline,
       formData.hasDLC,
