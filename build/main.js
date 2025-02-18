@@ -142,6 +142,7 @@ class SettingsManager {
       theme: "purple",
       threadCount: 4,
       sideScrollBar: false,
+      crackDirectory: "",
     };
     this.settings = this.loadSettings();
   }
@@ -3028,10 +3029,6 @@ ipcMain.handle("get-local-crack-directory", () => {
     settings.crackDirectory = steamEmuPathGoldberg;
   }
 
-  if (!settings.crackUsernamePath) {
-    settings.crackUsernamePath = steamEmuPathGoldberg;
-  }
-
   try {
     fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
   } catch (error) {
@@ -3070,7 +3067,7 @@ ipcMain.handle("set-local-crack-directory", (event, directory) => {
 ipcMain.handle("get-local-crack-username", () => {
   const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   const settings = JSON.parse(fs.readFileSync(filePath, "utf8"));
-  const steamEmuPathGoldberg = settings.crackUsernamePath;
+  const steamEmuPathGoldberg = settings.crackDirectory;
 
   try {
     if (fs.existsSync(steamEmuPathGoldberg)) {
@@ -3090,7 +3087,7 @@ ipcMain.handle("set-local-crack-username", (event, username) => {
   const filePath = path.join(app.getPath("userData"), "ascendarasettings.json");
   try {
     const settings = JSON.parse(fs.readFileSync(filePath, "utf8"));
-    const steamEmuPathGoldberg = settings.crackUsernamePath;
+    const steamEmuPathGoldberg = settings.crackDirectory;
 
     if (!fs.existsSync(steamEmuPathGoldberg)) {
       fs.mkdirSync(steamEmuPathGoldberg, { recursive: true });

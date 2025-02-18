@@ -18,6 +18,7 @@ export function SettingsProvider({ children }) {
     theme: "purple",
     threadCount: 4,
     sideScrollBar: false,
+    crackDirectory: "",
   });
 
   const setSettings = useCallback(async (newSettings) => {

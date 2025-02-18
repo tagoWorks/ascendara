@@ -135,6 +135,7 @@ const Library = () => {
   const fetchUsername = async () => {
     try {
       const username = await window.electron.getLocalCrackUsername();
+      console.log("Fetched username: ", username);
       setUsername(username);
       return username;
     } catch (error) {
