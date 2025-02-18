@@ -730,7 +730,7 @@ ipcMain.handle("stop-download", async (event, game) => {
 
     while (attempts < maxAttempts) {
       try {
-        await deleteGameDirectory(game.game);
+        await deleteGameDirectory(game);
         return true;
       } catch (deleteError) {
         attempts++;
@@ -1855,32 +1855,25 @@ ipcMain.handle(
 
       // Download and save the cover image if imgID is provided
       if (imgID) {
-        const imageLink = `https://api.ascendara.app/v2/image/${imgID}`;
-        try {
-          const response = await axios({
-            url: imageLink,
-            method: "GET",
-            responseType: "arraybuffer",
-          });
-          const imageBuffer = Buffer.from(response.data);
-          const mimeType = response.headers["content-type"];
-          const extension = getExtensionFromMimeType(mimeType);
-          const downloadPath = path.join(gameDirectory, `header.ascendara${extension}`);
-          const writer = fs.createWriteStream(downloadPath);
+        const imageLink = settings.gameSource === "fitgirl" 
+          ? `https://api.ascendara.app/v2/fitgirl/image/${imgID}`
+          : `https://api.ascendara.app/v2/image/${imgID}`;
 
-          writer.write(imageBuffer);
-          writer.end();
+        const response = await axios({
+          url: imageLink,
+          method: "GET",
+          responseType: "arraybuffer",
+        });
 
-          writer.on("finish", () => {
-            console.log("Cover image downloaded successfully");
-          });
+        // Save the image
+        const imageBuffer = Buffer.from(response.data);
+        const mimeType = response.headers["content-type"];
+        const extension = getExtensionFromMimeType(mimeType);
+        await fs.promises.writeFile(
+          path.join(gameDirectory, `header.ascendara${extension}`),
+          imageBuffer
+        );
 
-          writer.on("error", err => {
-            console.error("Error downloading the image:", err);
-          });
-        } catch (error) {
-          console.error("Error downloading cover image:", error);
-        }
       }
 
       try {
