@@ -40,9 +40,6 @@ class LogWindow(ctk.CTkToplevel):
         self.minsize(600, 300)
         self.attributes('-alpha', 0.0)  # Start fully transparent
         
-        # Set window icon
-        icon_path = os.path.join(os.path.dirname(__file__), "ascendara.ico")
-        self.iconbitmap(icon_path)
         
         # Match main window theme
         self.configure(fg_color="#0f172a")
@@ -155,11 +152,7 @@ class AscendaraInstaller(ctk.CTk):
         # Additional window attributes to ensure native decorations are hidden
         if os.name == 'nt':  # Windows specific
             self.after(10, lambda: self.attributes('-toolwindow', True))  # Extra measure to hide taskbar icon
-        
-        # Set window icon
-        icon_path = os.path.join(os.path.dirname(__file__), "ascendara.ico")
-        self.iconbitmap(icon_path)
-        
+
         # Configure grid
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
