@@ -149,6 +149,8 @@ function ExtraLanguages() {
   const navigate = useNavigate();
   const [availableLanguages, setAvailableLanguages] = useState([]);
   const [selectedLangId, setSelectedLangId] = useState(null);
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   useEffect(() => {
     const loadLanguages = async () => {
       const languages = await getAvailableLanguages();
@@ -157,6 +159,13 @@ function ExtraLanguages() {
     loadLanguages();
   }, []);
 
+  useEffect(() => {
+    const getInstalledTools = async () => {
+      const tools = await window.electron.getInstalledTools();
+      setShowDownloadDialog(!tools.includes("translator"));
+    };
+    getInstalledTools();
+  }, []);
   // Subscribe to download progress updates
   useEffect(() => {
     const unsubscribe = onTranslationProgress(setDownloadProgress);
@@ -340,6 +349,44 @@ function ExtraLanguages() {
               }}
             >
               {t("welcome.continue")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={showDownloadDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">
+              {t("settings.extraLanguagesPanel.downloadTool")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              {t("settings.extraLanguagesPanel.downloadToolDesc")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => navigate(-1)} className="text-primary">
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-primary text-secondary"
+              onClick={async () => {
+                try {
+                  setIsDownloading(true);
+                  await window.electron.installTool("translator");
+                  setShowDownloadDialog(false);
+                  setHasTranslationTool(true);
+                } catch (error) {
+                  console.error("Failed to install translator tool:", error);
+                } finally {
+                  setIsDownloading(false);
+                }
+              }}
+              disabled={isDownloading}
+            >
+              {isDownloading ? t("common.downloading") : t("welcome.continue")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

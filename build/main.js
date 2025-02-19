@@ -53,6 +53,7 @@ let notificationShown = false;
 let updateDownloadInProgress = false;
 let experiment = false;
 let isBrokenVersion = false;
+let installedTools = [];
 let isWindows = os.platform().startsWith("win");
 let rpc;
 let config;
@@ -121,6 +122,95 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+});
+
+function checkInstalledTools() {
+  try {
+    if (!isDev) return;
+    const appDirectory = path.join(path.dirname(app.getPath("exe")));
+    const toolsDirectory = path.join(appDirectory, 'tools');
+    
+    if (fs.existsSync(TIMESTAMP_FILE)) {
+      const timestampData = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, 'utf8'));
+      installedTools = timestampData.installedTools || [];
+      console.log('Installed tools:', installedTools);
+
+      const missingTools = installedTools.filter(tool => !fs.existsSync(path.join(toolsDirectory, `${tool}.exe`)));
+
+      if (missingTools.length > 0) {
+        console.log('Missing tools:', missingTools);
+        missingTools.forEach(tool => {
+          console.log(`Redownloading ${tool}...`);
+          ipcMain.emit('install-tool', null, tool);
+        });
+      }
+    } else {
+      console.log('Timestamp file not found. No installed tools recorded.');
+    }
+  } catch (error) {
+    console.error('Error checking installed tools:', error);
+  }
+}
+
+checkInstalledTools();
+
+ipcMain.handle("get-installed-tools", async (event) => {
+  if (isWindows) {
+    return installedTools;
+  } else {
+    return ["translator", "torrent"];
+  }
+});
+
+ipcMain.handle("install-tool", async (event, tool) => {
+  console.log(`Installing ${tool}`);
+  const appDirectory = path.join(path.dirname(app.getPath("exe")));
+  const toolUrls = {
+    torrent: "https://cdn.ascendara.app/files/AscendaraTorrentHandler.exe",
+    translator: "https://cdn.ascendara.app/files/AscendaraLanguageTranslation.exe"
+  };
+
+  const exeName = toolUrls[tool].split('/').pop();
+  const toolPath = path.join(appDirectory, "resources", exeName);
+
+  try {
+    await electronDl.download(BrowserWindow.getFocusedWindow(), toolUrls[tool], {
+      directory: path.dirname(toolPath),
+      filename: exeName,
+      onProgress: (progress) => {
+        console.log(`Downloading ${tool}: ${Math.round(progress.percent * 100)}%`);
+      }
+    });
+
+    console.log(`${tool} downloaded successfully`);
+    
+    // Update installed tools list
+    installedTools.push(tool);
+    
+    // Read existing timestamp data
+    let existingData = {};
+    try {
+      if (fs.existsSync(TIMESTAMP_FILE)) {
+        existingData = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, 'utf8'));
+      }
+    } catch (error) {
+      console.error('Error reading timestamp file:', error);
+    }
+
+    // Merge new data with existing data
+    const timestampData = {
+      ...existingData,
+      installedTools
+    };
+    
+    fs.writeFileSync(TIMESTAMP_FILE, JSON.stringify(timestampData), 'utf8');
+
+    return { success: true, message: `${tool} installed successfully` };
+  } catch (error) {
+    console.error(`Error installing ${tool}:`, error);
+    return { success: false, message: `Failed to install ${tool}: ${error.message}` };
+  }
+  
 });
 
 // Settings Manager
@@ -2379,6 +2469,21 @@ ipcMain.handle("maximize-window", () => {
 ipcMain.handle("close-window", () => {
   const win = BrowserWindow.getFocusedWindow();
   if (win) win.close();
+});
+
+// Handle fullscreen toggle
+ipcMain.handle("toggle-fullscreen", () => {
+  const win = BrowserWindow.getFocusedWindow();
+  if (win) {
+    win.setFullScreen(!win.isFullScreen());
+    return win.isFullScreen();
+  }
+  return false;
+});
+
+ipcMain.handle("get-fullscreen-state", () => {
+  const win = BrowserWindow.getFocusedWindow();
+  return win ? win.isFullScreen() : false;
 });
 
 const ERROR_COUNTS_FILE = path.join(app.getPath("userData"), "error-counts.json");

@@ -127,14 +127,6 @@
         "to": "."
       },
       {
-        "from": "binaries/AscendaraLanguageTranslation/dist/AscendaraLanguageTranslation.exe",
-        "to": "."
-      },
-      {
-        "from": "binaries/AscendaraTorrentHandler/dist/AscendaraTorrentHandler.exe",
-        "to": "."
-      },
-      {
         "from": "binaries/AscendaraNotificationHelper/dist/AscendaraNotificationHelper.exe",
         "to": "."
       },

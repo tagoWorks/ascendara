@@ -186,6 +186,7 @@ function Settings() {
   const [canCreateFiles, setCanCreateFiles] = useState(true);
   const [isDownloaderRunning, setIsDownloaderRunning] = useState(false);
   const [showTorrentWarning, setShowTorrentWarning] = useState(false);
+  const [showNoTorrentDialog, setShowNoTorrentDialog] = useState(false);
   const [showReloadDialog, setShowReloadDialog] = useState(false);
   const [pendingSourceChange, setPendingSourceChange] = useState(null);
   const [dependencyStatus, setDependencyStatus] = useState(null);
@@ -193,6 +194,7 @@ function Settings() {
   const [isExperiment, setIsExperiment] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isDev, setIsDev] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Use a ref to track if this is the first mount
   const isFirstMount = useRef(true);
@@ -574,10 +576,16 @@ function Settings() {
     }
   };
 
-  const handleEnableTorrent = () => {
-    setShowTorrentWarning(false);
-    handleSettingChange("torrentEnabled", true);
-    window.dispatchEvent(new CustomEvent("torrentSettingChanged", { detail: true }));
+  const handleEnableTorrent = async () => {
+    const tools = await window.electron.getInstalledTools();
+    if (!tools.includes("torrent")) {
+      setShowTorrentWarning(false);
+      setShowNoTorrentDialog(true);
+    } else {
+      setShowTorrentWarning(false);
+      handleSettingChange("torrentEnabled", true);
+      window.dispatchEvent(new CustomEvent("torrentSettingChanged", { detail: true }));
+    }
   };
 
   return (
@@ -1463,6 +1471,46 @@ function Settings() {
               className="bg-red-500 hover:bg-red-600"
             >
               {t("settings.torrentWarningDialog.continue")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* No Torrent Tool Dialog */}
+      <AlertDialog open={showNoTorrentDialog} onOpenChange={setShowNoTorrentDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">
+              {t("settings.noTorrentTool")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              {t("settings.noTorrentToolDesc")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              className="text-primary"
+            >
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-primary text-secondary"
+              onClick={async () => {
+                try {
+                  setIsDownloading(true);
+                  await window.electron.installTool("torrent");
+                } catch (error) {
+                  console.error("Failed to install torrent tool:", error);
+                } finally {
+                  setIsDownloading(false);
+                  if (!error) {
+                    setShowNoTorrentDialog(false);
+                  }
+                }
+              }}
+              disabled={isDownloading}
+            >
+              {isDownloading ? t("common.downloading") : t("welcome.continue")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
