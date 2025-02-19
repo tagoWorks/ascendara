@@ -53,17 +53,31 @@ const Downloads = () => {
   const [stoppingDownloads, setStoppingDownloads] = useState(new Set());
   const [showFirstTimeAlert, setShowFirstTimeAlert] = useState(false);
   const MAX_HISTORY_POINTS = 20;
-  const [speedHistory, setSpeedHistory] = useState(
-    Array(MAX_HISTORY_POINTS).fill({ index: 0, speed: 0 }).map((_, i) => ({ 
+  const [speedHistory, setSpeedHistory] = useState(() => {
+    const savedHistory = localStorage.getItem('speedHistory');
+    return savedHistory ? JSON.parse(savedHistory) : Array(MAX_HISTORY_POINTS).fill({ index: 0, speed: 0 }).map((_, i) => ({ 
       index: i, 
       speed: 0 
-    }))
-  );
+    }));
+  });
   const { t } = useLanguage();
 
   const normalizeSpeed = (speed) => {
-    if (speed < 1) return speed * 1024; // Convert to KB/s
-    return speed;
+    const [value, unit] = speed.split(" ");
+    const num = parseFloat(value);
+    if (isNaN(num)) return 0;
+    
+    // Convert everything to MB/s
+    switch (unit) {
+      case "KB/s":
+        return num / 1024;
+      case "MB/s":
+        return num;
+      case "GB/s":
+        return num * 1024;
+      default:
+        return 0;
+    }
   };
 
   useEffect(() => {
@@ -97,36 +111,23 @@ const Downloads = () => {
               activeCount++;
               const speed = game.downloadingData.progressDownloadSpeeds;
               if (speed) {
-                const [value, unit] = speed.split(" ");
-                const num = parseFloat(value);
-                if (unit === "KB/s") {
-                  totalSpeedNum += num / 1024;
-                } else if (unit === "MB/s") {
-                  totalSpeedNum += num;
-                }
+                totalSpeedNum += normalizeSpeed(speed);
               }
             }
           });
 
           setActiveDownloads(activeCount);
-          const speedDisplay =
-            totalSpeedNum < 1
-              ? `${(totalSpeedNum * 1024).toFixed(2)} KB/s`
-              : `${totalSpeedNum.toFixed(2)} MB/s`;
-          setTotalSpeed(speedDisplay);
+          const formattedSpeed = `${totalSpeedNum.toFixed(2)} MB/s`;
+          setTotalSpeed(formattedSpeed);
 
-          // Update speed history with sliding window effect
-          setSpeedHistory(prev => {
-            const normalizedSpeed = normalizeSpeed(totalSpeedNum);
-            const newHistory = [...prev.slice(1), {
-              index: MAX_HISTORY_POINTS - 1,
-              speed: normalizedSpeed
+          // Update speed history
+          setSpeedHistory(prevHistory => {
+            const newHistory = [...prevHistory.slice(1), { 
+              index: prevHistory[prevHistory.length - 1].index + 1, 
+              speed: totalSpeedNum
             }];
-            // Update indices to maintain continuous sequence
-            return newHistory.map((point, idx) => ({
-              ...point,
-              index: idx
-            }));
+            localStorage.setItem('speedHistory', JSON.stringify(newHistory));
+            return newHistory;
           });
         }
       } catch (error) {
@@ -229,10 +230,19 @@ const Downloads = () => {
               </CardHeader>
               <CardContent className="h-[200px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={speedHistory}>
+                  <LineChart 
+                    data={speedHistory}
+                    margin={{ top: 5, right: 5, bottom: 5, left: 5 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="index" hide />
-                    <YAxis />
+                    <XAxis 
+                      dataKey="index" 
+                      hide 
+                    />
+                    <YAxis 
+                      domain={[0, 'auto']}
+                      tickFormatter={(value) => `${value.toFixed(1)}`}
+                    />
                     <Tooltip 
                       formatter={(value) => [
                         `${value.toFixed(2)} MB/s`,
