@@ -486,7 +486,19 @@ class AscendaraInstaller(ctk.CTk):
                 url = "https://lfs.ascendara.app/download"
                 download_path = tempfile.gettempdir() + "/AscendaraInstaller.exe"
                 
-                local_file = self.download_file(url, str(download_path))
+                try:
+                    local_file = self.download_file(url, str(download_path))
+                except (requests.exceptions.RequestException, Exception) as e:
+                    logging.error(f"Failed to download from primary server: {str(e)}")
+                    self.status_label.configure(text="Primary download failed. Opening GitHub releases...")
+                    
+                    # Open GitHub releases page in default browser
+                    github_url = "https://github.com/ascendara/Ascendara/releases/latest"
+                    subprocess.run(['start', github_url], shell=True)
+                    
+                    # Close installer after a delay
+                    self.after(2000, self.close)
+                    return
                 
                 if not os.path.exists(local_file) or os.path.getsize(local_file) == 0:
                     raise Exception("Download verification failed")
