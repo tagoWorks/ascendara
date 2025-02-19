@@ -8,7 +8,18 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
 } from "./ui/alert-dialog";
-import { AlertTriangle, WifiOff, Hammer, X, Minus, Download, Flag, FlaskConical } from "lucide-react";
+import { 
+  AlertTriangle, 
+  WifiOff, 
+  Hammer, 
+  X, 
+  Minus, 
+  Download, 
+  Flag, 
+  FlaskConical, 
+  Maximize, 
+  Minimize 
+} from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { checkForUpdates } from "@/services/updateCheckingService";
 import { exportToSvg } from "@/lib/exportToSvg";
@@ -34,6 +45,7 @@ const MenuBar = () => {
   const [leftSideActions, setLeftSideActions] = useState(false);
   const [isDev, setIsDev] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const mainContentRef = useRef(null);
 
   // Check for dev mode
@@ -174,6 +186,14 @@ const MenuBar = () => {
     mainContentRef.current = document.querySelector("main");
   }, []);
 
+  useEffect(() => {
+    const checkFullscreenState = async () => {
+      const state = await window.electron.getFullscreenState();
+      setIsFullscreen(state);
+    };
+    checkFullscreenState();
+  }, []);
+
   const handleStatusClick = () => {
     setIsDialogOpen(true);
   };
@@ -197,6 +217,11 @@ const MenuBar = () => {
         console.error("Failed to export SVG:", error);
       }
     }
+  };
+
+  const handleFullscreenToggle = async () => {
+    const newState = await window.electron.toggleFullscreen();
+    setIsFullscreen(newState);
   };
 
   return (
@@ -245,6 +270,7 @@ const MenuBar = () => {
           )}
         </div>
         
+         {/* Experiment mode */}
          {isExperiment && (
           <span className="ml-2 flex items-center gap-1 rounded border border-amber-500/20 bg-amber-500/10 px-1 py-0.5 text-[14px] text-amber-500">
             <FlaskConical className="h-3 w-3" />
@@ -325,18 +351,36 @@ const MenuBar = () => {
       </div>
       {!leftSideActions && (
         <div className="window-controls mr-2 flex items-center">
-          <button
-            onClick={() => window.electron.minimizeWindow()}
-            className="rounded p-1 hover:bg-gray-200"
-          >
-            <Minus className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => window.electron.closeWindow()}
-            className="ml-1 rounded p-1 hover:bg-red-500 hover:text-white"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              onClick={() => window.electron.minimizeWindow()}
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <button
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 relative"
+              onClick={handleFullscreenToggle}
+              title={isFullscreen ? t("exitFullscreen") : t("enterFullscreen")}
+            >
+              <Minimize 
+                className={`h-4 w-4 absolute transition-opacity ${
+                  isFullscreen ? 'opacity-100 bg-background' : 'opacity-0'
+                }`} 
+              />
+              <Maximize 
+                className={`h-4 w-4 transition-opacity ${
+                  isFullscreen ? 'opacity-0' : 'opacity-100'
+                }`}
+              />
+            </button>
+            <button
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              onClick={() => window.electron.closeWindow()}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

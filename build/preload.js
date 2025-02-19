@@ -134,6 +134,8 @@ contextBridge.exposeInMainWorld("electron", {
   getLaunchCount: () => ipcRenderer.invoke("get-launch-count"),
   isBrokenVersion: () => ipcRenderer.invoke("is-broken-version"),
   isOnWindows: () => ipcRenderer.invoke("is-on-windows"),
+  getFullscreenState: () => ipcRenderer.invoke("get-fullscreen-state"),
+  toggleFullscreen: () => ipcRenderer.invoke("toggle-fullscreen"),
   checkGameDependencies: () => ipcRenderer.invoke("check-game-dependencies"),
   showTestNotification: () => ipcRenderer.invoke("show-test-notification"),
   getPlatform: () => ipcRenderer.invoke("get-platform"),
