@@ -217,8 +217,8 @@ Before building, ensure you have all required dependencies. [View full requireme
 ## 🗺️ Development Roadmap
 
 ### Current Goals
-- [ ] Improved download management (pausing, resuming)
-- [ ] Add semi-support for Linux, and macOS
+- [ ] Game ratings and reliability system
+- [ ] Custom handling for Wallpaper Engine
 - [ ] Endpoint for known games that have weird installation paths, issues, etc.
 
 ### Future Goals
@@ -226,8 +226,10 @@ Before building, ensure you have all required dependencies. [View full requireme
 
 - [ ] Ascendara approved additional sources
 - [ ] Custom game sources
+- [ ] Add semi-support for Linux, and macOS
 - [ ] Debrid support for downloads
 - [ ] Retry Download & Extract functionality
+- [ ] Improved download management (pausing, resuming)
 - [ ] Enhanced antivirus operation checks
 
 ### Completed Features
