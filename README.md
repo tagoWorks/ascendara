@@ -218,8 +218,8 @@ Before building, ensure you have all required dependencies. [View full requireme
 
 ### Current Goals
 - [ ] Game ratings and reliability system
-- [ ] Custom handling for Wallpaper Engine
 - [ ] Endpoint for known games that have weird installation paths, issues, etc.
+
 
 ### Future Goals
  > Want to suggest a feature you don't see here? [Contribute](https://ascendara.app/docs/getting-started/contributing) to Ascendara or [submit feedback](https://ascendara.app/feedback)!
@@ -235,6 +235,7 @@ Before building, ensure you have all required dependencies. [View full requireme
 ### Completed Features
 - [x] Complete UI overhaul (V7)
 - [x] Legacy game version support (Ascendara Timemachine)
+- [x] Steam workshop downloading page
 - [x] Fitgirl and torrenting support
 - [x] Notification handling for desktop
 - [x] Automatic shortcut creation
