@@ -238,26 +238,6 @@ const Search = memo(() => {
     return () => stopStatusCheck();
   }, []);
 
-  useEffect(() => {
-    window.localStorage.setItem('selectedCategories', JSON.stringify(selectedCategories));
-  }, [selectedCategories]);
-
-  useEffect(() => {
-    window.localStorage.setItem('onlineFilter', onlineFilter);
-  }, [onlineFilter]);
-
-  useEffect(() => {
-    window.localStorage.setItem('selectedSort', selectedSort);
-  }, [selectedSort]);
-
-  useEffect(() => {
-    window.localStorage.setItem('showDLC', showDLC);
-  }, [showDLC]);
-
-  useEffect(() => {
-    window.localStorage.setItem('showOnline', showOnline);
-  }, [showOnline]);
-
   const filteredGames = useMemo(() => {
     if (!games) return [];
 
