@@ -128,7 +128,7 @@ function checkInstalledTools() {
   try {
     if (!isDev) return;
     const appDirectory = path.join(path.dirname(app.getPath("exe")));
-    const toolsDirectory = path.join(appDirectory, 'tools');
+    const toolsDirectory = path.join(appDirectory, 'resources');
     
     if (fs.existsSync(TIMESTAMP_FILE)) {
       const timestampData = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, 'utf8'));
@@ -177,9 +177,6 @@ async function installTool(tool) {
       method: 'get',
       url: toolUrls[tool],
       responseType: 'stream',
-      onDownloadProgress: (progressEvent) => {
-        const percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-      }
     });
 
     await new Promise((resolve, reject) => {
@@ -190,27 +187,6 @@ async function installTool(tool) {
     });
 
     console.log(`${tool} downloaded successfully`);
-    // Update installed tools list
-    installedTools.push(tool);
-    
-    // Read existing timestamp data
-    let existingData = {};
-    try {
-      if (fs.existsSync(TIMESTAMP_FILE)) {
-        existingData = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, 'utf8'));
-      }
-    } catch (error) {
-      console.error('Error reading timestamp file:', error);
-    }
-
-    // Merge new data with existing data
-    const timestampData = {
-      ...existingData,
-      installedTools
-    };
-    
-    fs.writeFileSync(TIMESTAMP_FILE, JSON.stringify(timestampData), 'utf8');
-
     return { success: true, message: `${tool} installed successfully` };
   } catch (error) {
     console.error(`Error installing ${tool}:`, error);
