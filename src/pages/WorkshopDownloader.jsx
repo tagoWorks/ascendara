@@ -8,6 +8,15 @@ import { Wallpaper, FolderOpen, ArrowRight, Settings2, Coffee, Link, Download, L
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const WorkshopDownloader = () => {
   const { theme } = useTheme();
@@ -20,6 +29,7 @@ const WorkshopDownloader = () => {
   const [isInstalling, setIsInstalling] = useState(false);
   const [downloadLogs, setDownloadLogs] = useState([]);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showFailureDialog, setShowFailureDialog] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -91,7 +101,7 @@ const WorkshopDownloader = () => {
           <Input
             value={wallpaperUrl}
             onChange={(e) => setWallpaperUrl(e.target.value)}
-            placeholder={t("workshopDownloader.linkPlaceholder")}
+            placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=XXXXXXXXXX"
             className="placeholder:text-xs"
           />
         </div>
@@ -109,7 +119,12 @@ const WorkshopDownloader = () => {
                   if (result.success) {
                     toast.success(t("workshopDownloader.downloadSuccess"));
                   } else {
-                    toast.error(result.message || t("workshopDownloader.downloadError"));
+                    // Check if the error message indicates a download failure
+                    if (result.message.includes("Workshop item download failed")) {
+                      setShowFailureDialog(true);
+                    } else {
+                      toast.error(result.message || t("workshopDownloader.downloadError"));
+                    }
                   }
                 } catch (error) {
                   toast.error(t("workshopDownloader.downloadError"));
@@ -163,6 +178,31 @@ const WorkshopDownloader = () => {
             </div>
           </motion.div>
         )}
+
+        {/* Download Failure Dialog */}
+        <AlertDialog open={showFailureDialog} onOpenChange={setShowFailureDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-2xl font-bold text-foreground">
+                {t("workshopDownloader.downloadFailure.title")}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-4">
+                <p>{t("workshopDownloader.downloadFailure.description")}</p>
+                <ul className="list-disc pl-6 space-y-1">
+                  {t("workshopDownloader.downloadFailure.reasons", { returnObjects: true }).map((reason, index) => (
+                    <li key={index}>{reason}</li>
+                  ))}
+                </ul>
+                <p>{t("workshopDownloader.downloadFailure.suggestion")}</p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction className="text-secondary" onClick={() => setShowFailureDialog(false)}>
+                {t("common.ok")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </motion.div>
     );
   };

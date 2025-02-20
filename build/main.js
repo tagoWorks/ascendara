@@ -141,7 +141,7 @@ function checkInstalledTools() {
         console.log('Missing tools:', missingTools);
         missingTools.forEach(tool => {
           console.log(`Redownloading ${tool}...`);
-          ipcMain.emit('install-tool', null, tool);
+          installTool(tool);
         });
       }
     } else {
@@ -155,12 +155,68 @@ function checkInstalledTools() {
 checkInstalledTools();
 
 ipcMain.handle("get-installed-tools", async (event) => {
-  if (isWindows) {
+  if (isWindows && !isDev) {
     return installedTools;
   } else {
     return ["translator", "torrent"];
   }
 });
+
+async function installTool(tool) {
+  console.log(`Installing ${tool}`);
+  const appDirectory = path.join(path.dirname(app.getPath("exe")));
+  const toolUrls = {
+    torrent: "https://cdn.ascendara.app/files/AscendaraTorrentHandler.exe",
+    translator: "https://cdn.ascendara.app/files/AscendaraLanguageTranslation.exe"
+  };
+
+  const exeName = toolUrls[tool].split('/').pop();
+  const toolPath = path.join(appDirectory, "resources", exeName);
+  try {
+    const response = await axios({
+      method: 'get',
+      url: toolUrls[tool],
+      responseType: 'stream',
+      onDownloadProgress: (progressEvent) => {
+        const percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+      }
+    });
+
+    await new Promise((resolve, reject) => {
+      const writer = fs.createWriteStream(toolPath);
+      response.data.pipe(writer);
+      writer.on('finish', resolve);
+      writer.on('error', reject);
+    });
+
+    console.log(`${tool} downloaded successfully`);
+    // Update installed tools list
+    installedTools.push(tool);
+    
+    // Read existing timestamp data
+    let existingData = {};
+    try {
+      if (fs.existsSync(TIMESTAMP_FILE)) {
+        existingData = JSON.parse(fs.readFileSync(TIMESTAMP_FILE, 'utf8'));
+      }
+    } catch (error) {
+      console.error('Error reading timestamp file:', error);
+    }
+
+    // Merge new data with existing data
+    const timestampData = {
+      ...existingData,
+      installedTools
+    };
+    
+    fs.writeFileSync(TIMESTAMP_FILE, JSON.stringify(timestampData), 'utf8');
+
+    return { success: true, message: `${tool} installed successfully` };
+  } catch (error) {
+    console.error(`Error installing ${tool}:`, error);
+    return { success: false, message: `Failed to install ${tool}: ${error.message}` };
+  }
+}
 
 ipcMain.handle("install-tool", async (event, tool) => {
   console.log(`Installing ${tool}`);
@@ -211,6 +267,7 @@ ipcMain.handle("install-tool", async (event, tool) => {
     return { success: false, message: `Failed to install ${tool}: ${error.message}` };
   }
 });
+
 // Check if steamCMD is installed from timestamp file
 ipcMain.handle("is-steamcmd-installed", async () => {
   try {
@@ -313,11 +370,18 @@ ipcMain.handle("download-item", async (event, url) => {
 
       let output = "";
       let errorOutput = "";
+      let hasDownloadFailure = false;
 
       steamProcess.stdout.on("data", (data) => {
         const text = data.toString();
         output += text;
         console.log("SteamCMD output:", text);
+        
+        // Check for download failure in the output
+        if (text.includes("ERROR! Download item") && text.includes("failed (Failure)")) {
+          hasDownloadFailure = true;
+        }
+        
         // Send log to renderer
         event.sender.send("download-progress", { type: "log", message: text });
       });
@@ -330,21 +394,37 @@ ipcMain.handle("download-item", async (event, url) => {
         event.sender.send("download-progress", { type: "error", message: text });
       });
 
-      steamProcess.on("close", (code) => {
-        if (code === 0) {
+      steamProcess.on("close", async (code) => {
+        if (code === 0 && !hasDownloadFailure) {
           event.sender.send("download-progress", { type: "success", message: "Download completed successfully" });
           resolve({ success: true, message: "Item downloaded successfully" });
         } else {
-          const errorMsg = `SteamCMD process exited with code ${code}. Error: ${errorOutput}`;
+          const errorMsg = hasDownloadFailure 
+            ? "Workshop item download failed. The item may be private, restricted, or unavailable."
+            : `SteamCMD process exited with code ${code}. Error: ${errorOutput}`;
+          
+          // Clean up the workshop item directory if it exists
+          try {
+            const workshopDir = path.join(steamCMDDir, "steamapps", "workshop", appId);
+            const itemDir = path.join(workshopDir, itemId);
+            
+            if (fs.existsSync(itemDir)) {
+              await fs.promises.rm(itemDir, { recursive: true, force: true });
+              console.log(`Cleaned up failed download directory: ${itemDir}`);
+            }
+          } catch (cleanupError) {
+            console.error("Error cleaning up workshop directory:", cleanupError);
+          }
+          
           event.sender.send("download-progress", { type: "error", message: errorMsg });
-          reject(new Error(errorMsg));
+          resolve({ success: false, message: errorMsg });
         }
       });
 
       steamProcess.on("error", (error) => {
         const errorMsg = `Failed to start SteamCMD: ${error.message}`;
         event.sender.send("download-progress", { type: "error", message: errorMsg });
-        reject(new Error(errorMsg));
+        resolve({ success: false, message: errorMsg });
       });
     });
   } catch (error) {
@@ -356,10 +436,10 @@ ipcMain.handle("download-item", async (event, url) => {
 // Fetch Steam Workshop item details
 async function fetchWorkshopItemDetails(itemId) {
   try {
-    const response = await fetch('https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/', {
-      method: 'POST',
+    const response = await fetch("https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        "Content-Type": "application/x-www-form-urlencoded",
       },
       body: `itemcount=1&publishedfileids[0]=${itemId}`,
     });
@@ -370,12 +450,12 @@ async function fetchWorkshopItemDetails(itemId) {
 
     const data = await response.json();
     if (!data.response?.publishedfiledetails?.[0]) {
-      throw new Error('Invalid response from Steam API');
+      throw new Error("Invalid response from Steam API");
     }
 
     return data.response.publishedfiledetails[0];
   } catch (error) {
-    console.error('Error fetching workshop item details:', error);
+    console.error("Error fetching workshop item details:", error);
     throw error;
   }
 }
