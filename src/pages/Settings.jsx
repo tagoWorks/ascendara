@@ -33,6 +33,7 @@ import {
   FlaskConical,
   ChevronUp,
   ChevronDown,
+  Package,
 } from "lucide-react";
 import gameService from "@/services/gameService";
 import { useNavigate } from "react-router-dom";
@@ -1249,6 +1250,46 @@ function Settings() {
                       </p>
                     </div>
                   )}
+                </div>
+              </div>
+            </Card>
+
+            {/* Workshop Downloader Card */}
+            <Card className="p-6">
+              <div className="mb-2 flex items-center gap-2">
+                <Package className="mb-2 h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold text-primary">
+                  {t("settings.ascendaraWorkshopDownloader")}
+                </h2>
+              </div>
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {t("settings.ascendaraWorkshopDownloaderDescription")}&nbsp;
+                    <a
+                      className="inline-flex cursor-pointer items-center text-xs text-primary hover:underline"
+                      onClick={() =>
+                        window.electron.openURL("https://ascendara.app/docs/features/overview#ascendara-workshop-downloader")
+                      }
+                    >
+                      {t("common.learnMore")}
+                      <ExternalLink className="ml-1 h-3 w-3" />
+                    </a>
+                  </p>
+                  <div className="flex items-center justify-between space-x-4">
+                    <div className="space-y-1">
+                      <Label className="text-sm font-medium">
+                        {t("settings.ascendaraWorkshopDownloaderEnable")}
+                      </Label>
+                    </div>
+                    <Switch
+                      checked={settings.viewWorkshopPage}
+                      disabled={!isOnWindows}
+                      onCheckedChange={() =>
+                        handleSettingChange("viewWorkshopPage", !settings.viewWorkshopPage)
+                      }
+                    />
+                  </div>
                 </div>
               </div>
             </Card>

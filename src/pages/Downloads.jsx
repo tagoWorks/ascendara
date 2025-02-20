@@ -41,8 +41,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
 const Downloads = () => {
   const [downloadingGames, setDownloadingGames] = useState([]);
   const [retryModalOpen, setRetryModalOpen] = useState(false);

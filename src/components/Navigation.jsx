@@ -2,11 +2,13 @@ import React, { useState, useEffect, memo, useCallback, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Home, Search, Library, Settings, Download, ChevronRight } from "lucide-react";
+import { useSettings } from "@/context/SettingsContext";
+import { Home, Search, Library, Settings, Download, ChevronRight, Package } from "lucide-react";
 
 const Navigation = memo(({ items }) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const { settings } = useSettings();
   const location = useLocation();
   const navigate = useNavigate();
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -72,39 +74,54 @@ const Navigation = memo(({ items }) => {
   );
 
   const navItems = useMemo(
-    () => [
-      {
-        path: "/",
-        label: t("common.home"),
-        icon: Home,
-        color: "from-blue-500 to-cyan-400",
-      },
-      {
-        path: "/search",
-        label: t("common.search"),
-        icon: Search,
-        color: "from-purple-500 to-pink-400",
-      },
-      {
-        path: "/library",
-        label: t("common.library"),
-        icon: Library,
-        color: "from-green-500 to-emerald-400",
-      },
-      {
-        path: "/downloads",
-        label: t("common.downloads"),
-        icon: Download,
-        color: "from-orange-500 to-amber-400",
-      },
-      {
+    () => {
+      const items = [
+        {
+          path: "/",
+          label: t("common.home"),
+          icon: Home,
+          color: "from-blue-500 to-cyan-400",
+        },
+        {
+          path: "/search",
+          label: t("common.search"),
+          icon: Search,
+          color: "from-purple-500 to-pink-400",
+        },
+        {
+          path: "/library",
+          label: t("common.library"),
+          icon: Library,
+          color: "from-green-500 to-emerald-400",
+        },
+        {
+          path: "/downloads",
+          label: t("common.downloads"),
+          icon: Download,
+          color: "from-orange-500 to-amber-400",
+        },
+      ];
+
+
+      items.push({
         path: "/settings",
         label: t("common.settings"),
         icon: Settings,
         color: "from-slate-500 to-gray-400",
-      },
-    ],
-    [t]
+      });
+
+      if (settings.viewWorkshopPage) {
+        items.push({
+          path: "/workshopdownloader",
+          label: t("common.workshopDownloader"),
+          icon: Package,
+          color: "from-rose-500 to-red-400",
+        });
+      }
+
+      return items;
+    },
+    [t, settings.viewWorkshopPage]
   );
 
   useEffect(() => {

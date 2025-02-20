@@ -30,6 +30,7 @@ import DownloadPage from "./pages/Download";
 import Downloads from "./pages/Downloads";
 import ExtraLanguages from "./pages/ExtraLanguages";
 import Home from "./pages/Home";
+import WorkshopDownloader from "./pages/WorkshopDownloader";
 import Library from "./pages/Library";
 import Search from "./pages/Search";
 import Settings from "./pages/Settings";
@@ -533,6 +534,14 @@ const AppRoutes = () => {
               element={
                 <AnimatePresence mode="wait">
                   <Settings key="settings" />
+                </AnimatePresence>
+              }
+            />
+            <Route
+              path="workshopdownloader"
+              element={
+                <AnimatePresence mode="wait">
+                  <WorkshopDownloader key="workshopdownloader" />
                 </AnimatePresence>
               }
             />

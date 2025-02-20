@@ -7,6 +7,7 @@ export function SettingsProvider({ children }) {
     downloadDirectory: "",
     showOldDownloadLinks: false,
     seeInappropriateContent: false,
+    viewWorkshopPage: false,
     notifications: true,
     downloadHandler: false,
     torrentEnabled: false,

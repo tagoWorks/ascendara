@@ -62,10 +62,14 @@ contextBridge.exposeInMainWorld("electron", {
   getInstalledGamesSize: () => ipcRenderer.invoke("get-installed-games-size"),
 
   // Download Status
-  onDownloadProgress: callback => {
-    const listener = (event, data) => callback(data);
-    ipcRenderer.on("download-progress", listener);
-    return () => ipcRenderer.removeListener("download-progress", listener);
+  onDownloadProgress: (callback) => {
+    ipcRenderer.on("download-progress", (event, data) => {
+      callback(data);
+    });
+    // Return a function to remove the listener
+    return () => {
+      ipcRenderer.removeListener("download-progress", callback);
+    };
   },
   onDownloadComplete: callback => {
     const listener = (event, data) => callback(data);
@@ -85,6 +89,8 @@ contextBridge.exposeInMainWorld("electron", {
   installTool: tool => ipcRenderer.invoke("install-tool", tool),
   canCreateFiles: directory => ipcRenderer.invoke("can-create-files", directory),
   openFileDialog: () => ipcRenderer.invoke("open-file-dialog"),
+  isSteamCMDInstalled: () => ipcRenderer.invoke("is-steamcmd-installed"),
+  installSteamCMD: () => ipcRenderer.invoke("install-steamcmd"),
   getDownloadDirectory: () => ipcRenderer.invoke("get-download-directory"),
   getDriveSpace: (path) => ipcRenderer.invoke("get-drive-space", path),
   getLocalCrackUsername: () => ipcRenderer.invoke("get-local-crack-username"),
@@ -103,6 +109,7 @@ contextBridge.exposeInMainWorld("electron", {
   // Download and Installation
   installDependencies: () => ipcRenderer.invoke("install-dependencies"),
   installPython: () => ipcRenderer.invoke("install-python"),
+  downloadItem: (url) => ipcRenderer.invoke("download-item", url),
   stopDownload: game => ipcRenderer.invoke("stop-download", game),
   retryDownload: (link, game, online, dlc, version) =>
     ipcRenderer.invoke("retry-download", link, game, online, dlc, version),
