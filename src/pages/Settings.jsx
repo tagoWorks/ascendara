@@ -594,8 +594,6 @@ function Settings() {
       <div className="container mx-auto max-w-7xl p-4 md:p-8">
         <div className="mb-6 flex items-center gap-4">
           <h1 className="text-3xl font-bold text-primary">{t("settings.title")}</h1>
-          <Separator orientation="vertical" className="h-8" />
-          <p className="text-muted-foreground">{t("settings.configure")}</p>
 
           {isExperiment ? (
             <div className="group relative ml-auto flex items-center text-sm text-muted-foreground">
