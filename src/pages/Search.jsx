@@ -281,7 +281,17 @@ const Search = memo(() => {
       );
     }
 
-    // Apply online filter
+    // Apply DLC and Online filters
+    if (showDLC || showOnline) {
+      filtered = filtered.filter(game => {
+        if (showDLC && showOnline) return game.dlc || game.online;
+        if (showDLC) return game.dlc;
+        if (showOnline) return game.online;
+        return true;
+      });
+    }
+
+    // Apply online filter from radio buttons
     if (onlineFilter !== "all") {
       filtered = filtered.filter(game => {
         if (onlineFilter === "online") return game.online;
@@ -314,7 +324,7 @@ const Search = memo(() => {
     });
 
     return filtered;
-  }, [games, searchQuery, selectedCategories, onlineFilter, selectedSort, settings?.gameSource]);
+  }, [games, searchQuery, selectedCategories, onlineFilter, selectedSort, settings?.gameSource, showDLC, showOnline]);
 
   useEffect(() => {
     setDisplayedGames(filteredGames.slice(0, gamesPerLoad));
