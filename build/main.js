@@ -394,6 +394,7 @@ class SettingsManager {
       torrentEnabled: false,
       gameSource: "steamrip",
       autoCreateShortcuts: true,
+      smoothTransitions: true,
       sendAnalytics: true,
       autoUpdate: true,
       language: "en",

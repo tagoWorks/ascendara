@@ -4,7 +4,7 @@ import MenuBar from "@/components/MenuBar";
 import SupportDialog from "@/components/SupportDialog";
 import PlatformWarningDialog from "@/components/PlatformWarningDialog";
 import BrokenVersionDialog from "@/components/BrokenVersionDialog";
-
+import PageTransition from "@/components/PageTransition";
 import UpdateOverlay from "@/components/UpdateOverlay";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
@@ -501,7 +501,9 @@ const AppRoutes = () => {
               index
               element={
                 <AnimatePresence mode="wait">
-                  <Home key="home" />
+                  <PageTransition key="home">
+                    <Home />
+                  </PageTransition>
                 </AnimatePresence>
               }
             />
@@ -509,7 +511,9 @@ const AppRoutes = () => {
               path="search"
               element={
                 <AnimatePresence mode="wait">
-                  <Search key="search" />
+                  <PageTransition key="search">
+                    <Search />
+                  </PageTransition>
                 </AnimatePresence>
               }
             />
@@ -517,7 +521,9 @@ const AppRoutes = () => {
               path="library"
               element={
                 <AnimatePresence mode="wait">
-                  <Library key="library" />
+                  <PageTransition key="library">
+                    <Library />
+                  </PageTransition>
                 </AnimatePresence>
               }
             />
@@ -525,7 +531,9 @@ const AppRoutes = () => {
               path="downloads"
               element={
                 <AnimatePresence mode="wait">
-                  <Downloads key="downloads" />
+                  <PageTransition key="downloads">
+                    <Downloads />
+                  </PageTransition>
                 </AnimatePresence>
               }
             />
@@ -533,7 +541,9 @@ const AppRoutes = () => {
               path="settings"
               element={
                 <AnimatePresence mode="wait">
-                  <Settings key="settings" />
+                  <PageTransition key="settings">
+                    <Settings />
+                  </PageTransition>
                 </AnimatePresence>
               }
             />
@@ -541,7 +551,9 @@ const AppRoutes = () => {
               path="workshopdownloader"
               element={
                 <AnimatePresence mode="wait">
-                  <WorkshopDownloader key="workshopdownloader" />
+                  <PageTransition key="workshopdownloader">
+                    <WorkshopDownloader />
+                  </PageTransition>
                 </AnimatePresence>
               }
             />
@@ -549,7 +561,9 @@ const AppRoutes = () => {
               path="dependencies"
               element={
                 <AnimatePresence mode="wait">
-                  <Dependencies key="dependencies" />
+                  <PageTransition key="dependencies">
+                    <Dependencies />
+                  </PageTransition>
                 </AnimatePresence>
               }
             />
@@ -557,7 +571,9 @@ const AppRoutes = () => {
               path="download"
               element={
                 <AnimatePresence mode="wait">
-                  <DownloadPage key="download" />
+                  <PageTransition key="download">
+                    <DownloadPage />
+                  </PageTransition>
                 </AnimatePresence>
               }
             />
@@ -565,7 +581,9 @@ const AppRoutes = () => {
               path="extralanguages"
               element={
                 <AnimatePresence mode="wait">
-                  <ExtraLanguages key="extralanguages" />
+                  <PageTransition key="extralanguages">
+                    <ExtraLanguages />
+                  </PageTransition>
                 </AnimatePresence>
               }
             />

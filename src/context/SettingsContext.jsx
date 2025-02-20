@@ -13,6 +13,7 @@ export function SettingsProvider({ children }) {
     torrentEnabled: false,
     gameSource: "steamrip",
     autoCreateShortcuts: true,
+    smoothTransitions: true,
     sendAnalytics: true,
     autoUpdate: true,
     language: "en",

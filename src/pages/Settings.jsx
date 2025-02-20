@@ -690,6 +690,21 @@ function Settings() {
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
+                      <Label>{t("settings.smoothTransitions")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("settings.smoothTransitionsDescription")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.smoothTransitions}
+                      onCheckedChange={() =>
+                        handleSettingChange("smoothTransitions", !settings.smoothTransitions)
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
                       <Label>{t("settings.sideScrollBar")}</Label>
                       <p className="text-sm text-muted-foreground">
                         {t("settings.sideScrollBarDescription")}
