@@ -829,7 +829,57 @@ export default function DownloadPage() {
                 )}
               </div>
 
-              <div className="mb-2 flex items-center gap-2">
+              <div className="flex items-center gap-2">
+                {gameData.emulator && (
+                  <span className="flex items-center gap-1 rounded bg-yellow-500/10 px-2 py-0.5 text-sm text-yellow-500">
+                    <CircleSlash className="mr-1 h-4 w-4" />{" "}
+                    {t("download.gameNeedsEmulator")}&nbsp;
+                    <a
+                      onClick={() =>
+                        window.electron.openURL(
+                          "https://ascendara.app/docs/troubleshooting/emulators"
+                        )
+                      }
+                      className="cursor-pointer hover:underline"
+                    >
+                      {t("common.learnMore")}{" "}
+                      <ExternalLink className="mb-1 inline-block h-3 w-3" />
+                    </a>
+                  </span>
+                )}
+                {gameData.category?.includes("Virtual Reality") && (
+                  <span className="flex items-center rounded bg-purple-500/10 px-2 py-0.5 text-sm text-foreground">
+                    <svg
+                      className="p-0.5 text-foreground"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M2 10C2 8.89543 2.89543 8 4 8H20C21.1046 8 22 8.89543 22 10V17C22 18.1046 21.1046 19 20 19H16.1324C15.4299 19 14.7788 18.6314 14.4174 18.029L12.8575 15.4292C12.4691 14.7818 11.5309 14.7818 11.1425 15.4292L9.58261 18.029C9.22116 18.6314 8.57014 19 7.86762 19H4C2.89543 19 2 18.1046 2 17V10Z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M3.81253 6.7812C4.5544 5.6684 5.80332 5 7.14074 5H16.8593C18.1967 5 19.4456 5.6684 20.1875 6.7812L21 8H3L3.81253 6.7812Z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                    <span className="ml-1text-foreground">
+                      &nbsp;{t("download.gameNeedsVR")}
+                    </span>
+                  </span>
+                )}
+              </div>
+
+              <div className="mb-2 mt-4 flex items-center gap-2">
                 {gameData.version && (
                   <span className="flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-sm text-primary">
                     {gameData.version}
