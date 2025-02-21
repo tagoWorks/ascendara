@@ -565,13 +565,13 @@ const Library = () => {
             {error}
           </div>
         )}
-        <div className="mb-8 flex flex-col gap-6">
-          <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col">
             <div className="flex flex-row items-start justify-between">
               {/* Left side: Title and Search */}
               <div className="flex-1">
-                <div className="mb-4 flex items-center">
-                  <h1 className="text-3xl font-bold tracking-tight text-primary">
+                <div className="mb-4 mt-6 flex items-center">
+                  <h1 className="text-4xl font-bold tracking-tight text-primary">
                     {t("library.pageTitle")}
                   </h1>
                   <TooltipProvider>
@@ -632,7 +632,7 @@ const Library = () => {
                   </TooltipProvider>
                 </div>
 
-                <div className="relative w-72">
+                <div className="relative mr-12">
                   <Input
                     type="text"
                     placeholder={t("library.searchLibrary")}
