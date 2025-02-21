@@ -323,7 +323,7 @@ const Downloads = () => {
             {t("downloads.retryDownloadDescription")}
           </AlertDialogDescription>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.ok")}</AlertDialogCancel>
+            <AlertDialogCancel className="text-secondary">{t("common.ok")}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
