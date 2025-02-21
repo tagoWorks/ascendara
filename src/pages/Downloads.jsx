@@ -317,25 +317,13 @@ const Downloads = () => {
       <AlertDialog open={retryModalOpen} onOpenChange={setRetryModalOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("downloads.retryDownload.title")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("downloads.retryDownload.message")}
-            </AlertDialogDescription>
+            <AlertDialogTitle className="text-2xl font-bold text-foreground">{t("downloads.retryDownload")}</AlertDialogTitle>
           </AlertDialogHeader>
-          <div className="flex flex-col gap-4">
-            <input
-              type="text"
-              value={retryLink}
-              onChange={(e) => setRetryLink(e.target.value)}
-              placeholder={t("downloads.retryDownload.placeholder")}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-            />
-          </div>
+          <AlertDialogDescription className="text-muted-foreground">
+            {t("downloads.retryDownloadDescription")}
+          </AlertDialogDescription>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("downloads.retryDownload.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRetryConfirm}>
-              {t("downloads.retryDownload.confirm")}
-            </AlertDialogAction>
+            <AlertDialogCancel>{t("common.ok")}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
