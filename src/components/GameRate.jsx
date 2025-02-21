@@ -90,7 +90,7 @@ const GameRate = ({ game, isOpen, onClose }) => {
           Authorization: `Bearer ${freshToken}`,
         },
         body: JSON.stringify({
-          gameName: game.game || game.name, // Use game.game if available, fallback to game.name
+          gameName: game.game,
           rating: rating,
           ...(comments.trim() && { comments: comments.trim() }), // Only include comments if non-empty
         }),
@@ -134,10 +134,10 @@ const GameRate = ({ game, isOpen, onClose }) => {
           <div className="flex items-center gap-4">
             <div>
               <AlertDialogTitle className="text-2xl font-bold text-foreground">
-                {t("library.rateGame.title", { game: game.name })}
+                {t("library.rateGame.title", { game: game.game })}
               </AlertDialogTitle>
               <AlertDialogDescription className="text-muted-foreground mt-1">
-                {t("library.rateGame.description", { game: game.name })}
+                {t("library.rateGame.description", { game: game.game })}
               </AlertDialogDescription>
             </div>
           </div>
@@ -199,7 +199,7 @@ const GameRate = ({ game, isOpen, onClose }) => {
               id="comments"
               value={comments}
               onChange={(e) => setComments(e.target.value)}
-              placeholder={t("library.rateGame.commentsPlaceholder")}
+              placeholder={t("library.rateGame.commentPlaceholder")}
               className="min-h-[100px] resize-none text-foreground" 
             />
           </div>
