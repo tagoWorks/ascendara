@@ -182,16 +182,9 @@ const Downloads = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      {/* Page Title */}
-      <div className="flex items-center gap-4 mt-4">
-        <h1 className="text-3xl font-bold text-primary tracking-tight">
-          {t("downloads.activeDownloads")}
-        </h1>
-      </div>
-
+    <div className="container mx-auto">
       {downloadingGames.length === 0 ? (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] max-w-md mx-auto text-center">
+        <div className="flex flex-col items-center justify-center min-h-[85vh] max-w-md mx-auto text-center">
           <div className="space-y-6">
             <div className="p-6 rounded-full bg-primary/5 w-fit mx-auto">
               <Coffee className="w-12 h-12 text-primary" />
@@ -204,9 +197,12 @@ const Downloads = () => {
         </div>
       ) : (
         /* Main Content Grid */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-24">
           {/* Downloads Section - Takes up 2 columns on large screens */}
           <div className="lg:col-span-2 space-y-4">
+          <h1 className="text-3xl font-bold text-primary">
+            {t("downloads.activeDownloads")}
+          </h1>
             {downloadingGames.map((game) => (
               <DownloadCard
                 key={game.id}
