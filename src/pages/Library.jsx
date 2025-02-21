@@ -450,7 +450,7 @@ const Library = () => {
   const handleDeleteGame = async game => {
     try {
       if (game.isCustom) {
-        await window.electron.removeGame(game.game || game.name);
+        await window.electron.removeCustomGame(game.game || game.name);
       } else {
         setIsUninstalling(true);
         setUninstallingGame(game.game || game.name);
@@ -517,16 +517,6 @@ const Library = () => {
     setShowErrorDialog(false);
     setErrorGame(null);
     setErrorMessage("");
-  };
-
-  const handleRateGame = async (game, rating) => {
-    try {
-      await window.electron.rateGame(game.game || game.name, rating);
-      toast.success(t("library.gameRated"));
-    } catch (error) {
-      console.error("Error rating game:", error);
-      toast.error(t("library.ratingError"));
-    }
   };
 
   if (loading) {
@@ -1350,7 +1340,7 @@ const AddGameForm = ({ onSuccess }) => {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    await window.electron.saveCustomGame(
+    await window.electron.addGame(
       formData.name,
       formData.isOnline,
       formData.hasDLC,
