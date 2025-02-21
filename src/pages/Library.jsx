@@ -585,6 +585,8 @@ const Library = () => {
                         side="bottom"
                         className="space-y-2 p-4 text-secondary"
                       >
+                        <p className="font-semibold">{t("library.iconLegend.header")}</p>
+                        <Separator />
                         <div className="flex items-center gap-2">
                           <Gamepad2 className="h-4 w-4" />{" "}
                           <span>{t("library.iconLegend.onlineFix")}</span>
