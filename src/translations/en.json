@@ -592,7 +592,7 @@
     "downloadFailure": {
       "title": "Download Failed",
       "description": "The workshop item download failed. This could be due to:",
-      "reasons": "['The item may be private or restricted', 'SteamCMD connection issues', 'Insufficient disk space', 'Invalid workshop item URL']",
+      "reasons": ["The item may be private or restricted", "SteamCMD connection issues", "Insufficient disk space", "Invalid workshop item URL"],
       "suggestion": "Please verify the item is public and try again. If the issue persists, try restarting Ascendara."
     }
   },
