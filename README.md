@@ -236,7 +236,7 @@ Before building, ensure you have all required dependencies. [View full requireme
 - [x] Complete UI overhaul (V7)
 - [x] Legacy game version support (Ascendara Timemachine)
 - [x] Steam workshop downloading page
-- [x] Fitgirl and torrenting support
+- [x] FitGirl and torrenting support
 - [x] Notification handling for desktop
 - [x] Automatic shortcut creation
 - [x] Enhanced search algorithms

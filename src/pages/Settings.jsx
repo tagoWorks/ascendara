@@ -958,7 +958,7 @@ function Settings() {
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-semibold">Fitgirl Repacks</h3>
+                            <h3 className="text-lg font-semibold">FitGirl Repacks</h3>
                             <Badge
                               variant={
                                 settings.gameSource === "fitgirl"

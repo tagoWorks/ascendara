@@ -953,7 +953,7 @@ export default function DownloadPage() {
                 <div className="flex w-full items-center justify-between">
                   <h2 className="flex items-center gap-2 text-xl font-semibold">
                     <span className="flex items-center gap-1">
-                      Fitgirl Repacks
+                      FitGirl Repacks
                     </span>
                   </h2>
                 </div>
