@@ -771,7 +771,7 @@ const Library = () => {
                   <AlertDialogTitle className="text-2xl font-bold text-foreground">
                     {t("library.addGame")}
                   </AlertDialogTitle>
-                  <AlertDialogDescription className="text-muted-foreground">
+                  <AlertDialogDescription className="text-muted-foreground text-xs">
                     {t("library.addGameDescription2")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -1356,9 +1356,6 @@ const AddGameForm = ({ onSuccess }) => {
     <div className="space-y-6">
       <div className="space-y-4">
         <div>
-          <h4 className="mb-2 text-sm font-medium text-foreground">
-            {t("library.gameExecutable")}
-          </h4>
           <Button
             type="button"
             variant="outline"
@@ -1445,7 +1442,7 @@ const AddGameForm = ({ onSuccess }) => {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="relative flex-grow">
-              <SearchIcon className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
+              <SearchIcon className="absolute left-2 top-1/2 h-4 w-4 -translate-y-5 transform text-muted-foreground" />
               <Input
                 id="coverSearch"
                 value={coverSearch.query}
@@ -1454,6 +1451,7 @@ const AddGameForm = ({ onSuccess }) => {
                 placeholder={t("library.searchGameCover")}
                 minLength={minSearchLength}
               />
+              <p className="text-xs mt-2 text-muted-foreground">{t("library.searchGameCoverNotice")}</p>
             </div>
           </div>
 
