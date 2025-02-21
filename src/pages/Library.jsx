@@ -97,7 +97,7 @@ const ErrorDialog = ({ open, onClose, errorGame, errorMessage, t }) => (
           className="bg-primary text-secondary"
           onClick={async () => {
             const exePath =
-              await window.electron.ipcRenderer.openFileDialog();
+              await window.electron.openFileDialog();
             if (exePath) {
               await window.electron.modifyGameExecutable(
                 errorGame,
