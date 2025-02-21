@@ -390,20 +390,25 @@ class AscendaraInstaller(ctk.CTk):
             self.after(16, self.update_progress_smoothly)
 
     def download_file(self, url, local_filename):
-        """
-        Downloads and installs the application with progress tracking
-        
-        Implements a robust download process with proper connection handling,
-        progress monitoring, and error management.
-        """
+        """Downloads a file with progress tracking and optimized performance"""
         try:
-            logging.info(f"Starting download from URL: {url}")
             session = requests.Session()
             session.headers.update({
                 'Accept-Encoding': 'gzip, deflate',
-                'Connection': 'keep-alive'
+                'Connection': 'keep-alive',
+                'User-Agent': 'Ascendara-Installer'
             })
             
+            # Configure retry strategy
+            retry_strategy = requests.adapters.Retry(
+                total=3,
+                backoff_factor=0.5,
+                status_forcelist=[500, 502, 503, 504]
+            )
+            adapter = requests.adapters.HTTPAdapter(max_retries=retry_strategy)
+            session.mount("http://", adapter)
+            session.mount("https://", adapter)
+
             with session.get(url, stream=True, timeout=30) as r:
                 if r.status_code != 200:
                     logging.error(f"Server response: {r.text}")
@@ -429,7 +434,8 @@ class AscendaraInstaller(ctk.CTk):
                         downloaded = 0
                         download_started = False
                         
-                        for chunk in r.iter_content(chunk_size=8*1024*1024):
+                        # Use a larger chunk size for faster downloads
+                        for chunk in r.iter_content(chunk_size=8*1024*1024):  # 8MB chunks
                             if chunk:
                                 if not download_started:
                                     download_started = True
@@ -447,7 +453,6 @@ class AscendaraInstaller(ctk.CTk):
                                     self.target_progress = optimized_percent / 100
                 
                 # Finalize installation
-                self.target_progress = 1.0
                 time.sleep(0.1)
                 self.is_downloading = False
                 self.progress_bar.set(1.0)
@@ -470,6 +475,23 @@ class AscendaraInstaller(ctk.CTk):
                 pass
             raise e
 
+    def get_latest_github_release(self):
+        """Gets the latest release download URL from GitHub API"""
+        try:
+            api_url = "https://api.github.com/repos/ascendara/Ascendara/releases/latest"
+            response = requests.get(api_url, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            
+            for asset in data['assets']:
+                if asset['name'].lower().endswith('.exe'):
+                    return asset['browser_download_url']
+            
+            raise Exception("No installer found in latest release")
+        except Exception as e:
+            logging.error(f"Failed to get latest release: {str(e)}")
+            raise
+
     def start_installation(self):
         self.progress_bar.set(0)
         self.status_label.configure(text="Installing... 0%")
@@ -483,15 +505,17 @@ class AscendaraInstaller(ctk.CTk):
                     local_file = self.download_file(url, str(download_path))
                 except (requests.exceptions.RequestException, Exception) as e:
                     logging.error(f"Failed to download from primary server: {str(e)}")
-                    self.status_label.configure(text="Primary download failed. Opening GitHub releases...")
+                    self.status_label.configure(text="Primary download failed. Trying GitHub releases...")
                     
-                    # Open GitHub releases page in default browser
-                    github_url = "https://github.com/ascendara/Ascendara/releases/latest"
-                    subprocess.run(['start', github_url], shell=True)
-                    
-                    # Close installer after a delay
-                    self.after(2000, self.close)
-                    return
+                    try:
+                        # Get download URL from GitHub releases
+                        github_url = self.get_latest_github_release()
+                        local_file = self.download_file(github_url, str(download_path))
+                    except Exception as e:
+                        logging.error(f"Failed to download from GitHub: {str(e)}")
+                        self.status_label.configure(text="Download failed. Please try again later.")
+                        self.after(2000, self.close)
+                        return
                 
                 if not os.path.exists(local_file) or os.path.getsize(local_file) == 0:
                     raise Exception("Download verification failed")
