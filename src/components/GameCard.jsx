@@ -3,6 +3,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download, Gift, Gamepad2, Zap, Loader } from "lucide-react";
+import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -124,6 +125,25 @@ const GameCard = memo(function GameCard({ game, compact }) {
             <h3 className="line-clamp-1 text-lg font-semibold text-foreground">
               {sanitizeText(game.game)}
             </h3>
+            {game.rating && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center cursor-help">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#FFD700" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fill="#000" fontSize="10" fontWeight="bold">
+                        {Math.round(game.rating)}
+                      </text>
+                    </svg>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="text-secondary font-semibold max-w-[250px]">
+                  <p>{t("gameCard.ratingTooltip")}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            )}
           </div>
           <div className="mb-2 flex flex-wrap gap-1">
             {categories.map((cat, index) => (
