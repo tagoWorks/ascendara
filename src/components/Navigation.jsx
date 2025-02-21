@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useSettings } from "@/context/SettingsContext";
-import { Home, Search, Library, Settings, Download, ChevronRight, Package } from "lucide-react";
+import { Home, Search, Library, Settings2, Download, ChevronRight, Package } from "lucide-react";
 
 const Navigation = memo(({ items }) => {
   const { theme } = useTheme();
@@ -105,8 +105,8 @@ const Navigation = memo(({ items }) => {
 
       items.push({
         path: "/settings",
-        label: t("common.settings"),
-        icon: Settings,
+        label: t("common.preferences"),
+        icon: Settings2,
         color: "from-slate-500 to-gray-400",
       });
 
