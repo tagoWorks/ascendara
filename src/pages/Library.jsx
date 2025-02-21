@@ -47,6 +47,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import recentGamesService from "@/services/recentGamesService";
+import GameRate from "@/components/GameRate";
 import {
   TooltipProvider,
   Tooltip,
@@ -67,10 +68,14 @@ const Library = () => {
   const [selectedGame, setSelectedGame] = useState(null);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [ratingGame, setRatingGame] = useState(null);
+  const [showRateDialog, setShowRateDialog] = useState(false);
   const [isUninstalling, setIsUninstalling] = useState(false);
   const [showVrWarning, setShowVrWarning] = useState(false);
   const [uninstallingGame, setUninstallingGame] = useState(null);
   const [launchingGame, setLaunchingGame] = useState(null);
+  const [lastLaunchedGame, setLastLaunchedGame] = useState(null);
+  const lastLaunchedGameRef = useRef(null);
   const [isOnWindows, setIsOnWindows] = useState(true);
   const [coverSearchQuery, setCoverSearchQuery] = useState("");
   const [coverSearchResults, setCoverSearchResults] = useState([]);
@@ -122,6 +127,10 @@ const Library = () => {
     `;
     styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
   }, []);
+
+  useEffect(() => {
+    lastLaunchedGameRef.current = lastLaunchedGame;
+  }, [lastLaunchedGame]);
 
   const toggleFavorite = gameName => {
     setFavorites(prev => {
@@ -212,9 +221,59 @@ const Library = () => {
       }
     });
 
+    // Initial fetch
     fetchStorageInfo();
+
     return cleanup;
+  }, []); // Only run once on mount, cleanup on unmount
+
+  useEffect(() => {
+    fetchUsername();
   }, []);
+
+  // Keep track of whether we've initialized
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Initialize once on mount
+  useEffect(() => {
+    const init = async () => {
+      await loadGames();
+      setIsInitialized(true);
+    };
+    init();
+  }, []); // Empty deps - only run once on mount
+
+  // Set up event listeners
+  useEffect(() => {
+    if (!isInitialized) return; // Don't set up listeners until initialized
+
+    const handleGameClosed = async () => {
+      const lastGame = lastLaunchedGameRef.current;
+      console.log("Game closed - last launched game:", lastGame);
+      
+      if (lastGame) {
+        // Get fresh game data
+        const freshGames = await window.electron.getGames();
+        const gameData = freshGames.find(g => (g.game || g.name) === (lastGame.game || lastGame.name));
+        
+        if (gameData && gameData.launchCount === 1) {
+          setRatingGame(lastGame);
+          setShowRateDialog(true);
+        }
+        setLastLaunchedGame(null);
+      }
+    };
+
+    window.electron.ipcRenderer.on("game-launch-error", handleGameLaunchError);
+    window.electron.ipcRenderer.on("game-launch-success", handleGameLaunchSuccess);
+    window.electron.ipcRenderer.on("game-closed", handleGameClosed);
+
+    return () => {
+      window.electron.ipcRenderer.removeListener("game-launch-error", handleGameLaunchError);
+      window.electron.ipcRenderer.removeListener("game-launch-success", handleGameLaunchSuccess);
+      window.electron.ipcRenderer.removeListener("game-closed", handleGameClosed);
+    };
+  }, [isInitialized, setRatingGame, setShowRateDialog]); // Add required dependencies
 
   const loadGames = async () => {
     try {
@@ -282,66 +341,8 @@ const Library = () => {
 
   const handleGameLaunchSuccess = (_, { game }) => {
     setLaunchingGame(null);
+    // Keep lastLaunchedGame set so we can use it when the game closes
   };
-
-  useEffect(() => {
-    fetchStorageInfo();
-    fetchUsername();
-  }, [games]);
-
-  useEffect(() => {
-    loadGames();
-
-    // Set up event listeners
-    window.electron.ipcRenderer.on("game-launch-error", handleGameLaunchError);
-    window.electron.ipcRenderer.on("game-launch-success", handleGameLaunchSuccess);
-    window.electron.ipcRenderer.on("game-closed", () => {
-      loadGames(); // Reload games when a game closes
-    });
-
-    return () => {
-      // Clean up event listeners
-      window.electron.ipcRenderer.removeListener(
-        "game-launch-error",
-        handleGameLaunchError
-      );
-      window.electron.ipcRenderer.removeListener(
-        "game-launch-success",
-        handleGameLaunchSuccess
-      );
-      window.electron.ipcRenderer.removeListener("game-closed", loadGames);
-    };
-  }, []);
-
-  // Load games on component mount
-  useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      searchGameCovers(coverSearchQuery);
-    }, 300);
-
-    return () => clearTimeout(debounceTimer);
-  }, [coverSearchQuery]);
-
-  // Filter games based on search query
-  const filteredGames = games
-    .slice()
-    .sort((a, b) => {
-      const aName = a.game || a.name;
-      const bName = b.game || b.name;
-      const aFavorite = favorites.includes(aName);
-      const bFavorite = favorites.includes(bName);
-
-      // If both are favorites or both are not favorites, sort alphabetically
-      if (aFavorite === bFavorite) {
-        return aName.localeCompare(bName);
-      }
-      // If a is favorite and b is not, a comes first
-      return aFavorite ? -1 : 1;
-    })
-    .filter(game => {
-      const searchLower = searchQuery.toLowerCase();
-      return (game.game || game.name).toLowerCase().includes(searchLower);
-    });
 
   const handlePlayGame = async (game, forcePlay = false) => {
     const gameName = game.game || game.name;
@@ -369,6 +370,7 @@ const Library = () => {
 
       // Set launching state here after all checks pass
       setLaunchingGame(gameName);
+      setLastLaunchedGame(game);
 
       console.log("Launching game: ", gameName);
       // Launch the game
@@ -456,6 +458,14 @@ const Library = () => {
     }
   };
 
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      searchGameCovers(coverSearchQuery);
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [coverSearchQuery, searchGameCovers]); // Add searchGameCovers dependency
+
   const handleCloseErrorDialog = () => {
     setShowErrorDialog(false);
     setErrorGame(null);
@@ -525,6 +535,27 @@ const Library = () => {
       </div>
     );
   }
+
+  // Filter games based on search query
+  const filteredGames = games
+    .slice()
+    .sort((a, b) => {
+      const aName = a.game || a.name;
+      const bName = b.game || b.name;
+      const aFavorite = favorites.includes(aName);
+      const bFavorite = favorites.includes(bName);
+
+      // If both are favorites or both are not favorites, sort alphabetically
+      if (aFavorite === bFavorite) {
+        return aName.localeCompare(bName);
+      }
+      // If a is favorite and b is not, a comes first
+      return aFavorite ? -1 : 1;
+    })
+    .filter(game => {
+      const searchLower = searchQuery.toLowerCase();
+      return (game.game || game.name).toLowerCase().includes(searchLower);
+    });
 
   return (
     <div className="min-h-screen bg-background">
@@ -773,6 +804,17 @@ const Library = () => {
           </div>
 
           <ErrorDialog />
+
+          {ratingGame && (
+            <GameRate
+              game={ratingGame}
+              isOpen={showRateDialog}
+              onClose={() => {
+                setShowRateDialog(false);
+                setRatingGame(null);
+              }}
+            />
+          )}
 
           {/* VR Warning Dialog */}
           <AlertDialog

@@ -128,11 +128,9 @@ def execute(game_path, is_custom_game, is_shortcut=False):
         game_dir, exe_name = os.path.split(game_path)
         exe_path = os.path.join(game_dir, exe_name)
         
-        # Try the current directory first
         game_name = os.path.basename(game_dir)
         json_file_path = os.path.join(game_dir, f"{game_name}.ascendara.json")
         
-        # If not found, try one level up (for versioned games)
         if not os.path.exists(json_file_path):
             parent_dir = os.path.dirname(game_dir)
             parent_name = os.path.basename(parent_dir)
@@ -169,28 +167,38 @@ def execute(game_path, is_custom_game, is_shortcut=False):
             logging.error(error)
         return
 
-    # Update running status in both files before launching
+    def update_launch_count(file_path, increment=True):
+        try:
+            with open(file_path, "r") as f:
+                data = json.load(f)
+            if "launchCount" not in data:
+                data["launchCount"] = 0
+            data["launchCount"] += 1 if increment else -1
+            data["launchCount"] = max(0, data["launchCount"])
+            with open(file_path, "w") as f:
+                json.dump(data, f, indent=4)
+        except Exception as e:
+            logging.error(f"Error updating launch count: {e}")
+
     if not is_custom_game:
-        try:
-            with open(json_file_path, "r") as f:
-                game_data = json.load(f)
-            game_data["isRunning"] = True
-            with open(json_file_path, "w") as f:
-                json.dump(game_data, f, indent=4)
-        except Exception as e:
-            logging.error(f"Error updating game json: {e}")
+        update_launch_count(json_file_path)
+        with open(json_file_path, "r") as f:
+            game_data = json.load(f)
+        game_data["isRunning"] = True
+        with open(json_file_path, "w") as f:
+            json.dump(game_data, f, indent=4)
     else:
-        try:
-            with open(games_json_path, "r") as f:
-                games_data = json.load(f)
-            for game in games_data["games"]:
-                if game["executable"] == exe_path:
-                    game["isRunning"] = True
-                    break
-            with open(games_json_path, "w") as f:
-                json.dump(games_data, f, indent=4)
-        except Exception as e:
-            logging.error(f"Error updating games.json: {e}")
+        with open(games_json_path, "r") as f:
+            games_data = json.load(f)
+        for game in games_data["games"]:
+            if game["executable"] == exe_path:
+                if "launchCount" not in game:
+                    game["launchCount"] = 0
+                game["launchCount"] += 1
+                game["isRunning"] = True
+                break
+        with open(games_json_path, "w") as f:
+            json.dump(games_data, f, indent=4)
 
     try:
         with open(settings_file, "r") as f:
@@ -203,7 +211,6 @@ def execute(game_path, is_custom_game, is_shortcut=False):
     except Exception as e:
         logging.error(f"Error updating settings.json: {e}")
 
-    # Launch the game
     try:
         if os.path.dirname(exe_path):
             os.chdir(os.path.dirname(exe_path))
@@ -213,10 +220,8 @@ def execute(game_path, is_custom_game, is_shortcut=False):
         last_update = start_time
         last_play_time = 0
 
-        # Monitor the game process and update play time
         while process.poll() is None:
             current_time = time.time()
-            # Calculate elapsed seconds since last update
             elapsed = int(current_time - last_update)
             if elapsed >= 1:
                 last_play_time = elapsed
@@ -225,13 +230,11 @@ def execute(game_path, is_custom_game, is_shortcut=False):
                 elif json_file_path:
                     update_play_time(json_file_path, False)
                 last_update = current_time
-            time.sleep(0.1)  # Small sleep to prevent high CPU usage
+            time.sleep(0.1)
 
         process.wait()
         return_code = process.returncode
 
-        # Clean up and handle final state
-        # First update settings.json
         try:
             with open(settings_file, 'r') as f:
                 settings_data = json.load(f)
@@ -243,57 +246,48 @@ def execute(game_path, is_custom_game, is_shortcut=False):
         except Exception as e:
             logging.error(f"Error updating settings.json on exit: {e}")
 
-        # Then update game-specific files
         if is_custom_game and games_json_path:
-            try:
-                with open(games_json_path, "r") as f:
-                    data = json.load(f)
-                for game in data["games"]:
-                    if game["executable"] == exe_path:
-                        if last_play_time < 1 and "playTime" in game:
-                            game["playTime"] = max(0, game["playTime"] - 1)
-                        game["isRunning"] = False
-                        break
-                with open(games_json_path, "w") as f:
-                    json.dump(data, f, indent=4)
-            except Exception as e:
-                logging.error(f"Error updating games.json on exit: {e}")
+            with open(games_json_path, "r") as f:
+                data = json.load(f)
+            for game in data["games"]:
+                if game["executable"] == exe_path:
+                    if last_play_time < 1 and "playTime" in game:
+                        game["playTime"] = max(0, game["playTime"] - 1)
+                    game["isRunning"] = False
+                    break
+            with open(games_json_path, "w") as f:
+                json.dump(data, f, indent=4)
         elif json_file_path:
-            try:
-                with open(json_file_path, "r") as f:
-                    data = json.load(f)
-                if last_play_time < 1:
-                    data["playTime"] = max(0, data["playTime"] - 1)
-                data["isRunning"] = False
-                with open(json_file_path, "w") as f:
-                    json.dump(data, f, indent=4)
-            except Exception as e:
-                logging.error(f"Error updating game json on exit: {e}")
+            with open(json_file_path, "r") as f:
+                data = json.load(f)
+            if last_play_time < 1:
+                data["playTime"] = max(0, data["playTime"] - 1)
+            data["isRunning"] = False
+            with open(json_file_path, "w") as f:
+                json.dump(data, f, indent=4)
 
         if is_shortcut and rpc:
             clear_discord_presence(rpc)
 
     except Exception as e:
-        # Make sure to set isRunning to false even if the game crashes
-        try:
-            if is_custom_game and games_json_path:
-                with open(games_json_path, "r") as f:
-                    data = json.load(f)
-                for game in data["games"]:
-                    if game["executable"] == exe_path:
-                        game["isRunning"] = False
-                        break
-                with open(games_json_path, "w") as f:
-                    json.dump(data, f, indent=4)
-            elif json_file_path:
-                with open(json_file_path, "r") as f:
-                    data = json.load(f)
-                data["isRunning"] = False
-                with open(json_file_path, "w") as f:
-                    json.dump(data, f, indent=4)
-        except Exception as cleanup_error:
-            logging.error(f"Error cleaning up isRunning status after crash: {cleanup_error}")
-            
+        if is_custom_game and games_json_path:
+            update_launch_count(games_json_path, False)
+            with open(games_json_path, "r") as f:
+                data = json.load(f)
+            for game in data["games"]:
+                if game["executable"] == exe_path:
+                    game["isRunning"] = False
+                    break
+            with open(games_json_path, "w") as f:
+                json.dump(data, f, indent=4)
+        elif json_file_path:
+            update_launch_count(json_file_path, False)
+            with open(json_file_path, "r") as f:
+                data = json.load(f)
+            data["isRunning"] = False
+            with open(json_file_path, "w") as f:
+                json.dump(data, f, indent=4)
+        
         logging.error(f"Failed to execute game: {e}")
         atexit.register(launch_crash_reporter, 1, str(e))
 
