@@ -60,7 +60,78 @@ import fs from "fs";
 import { toast } from "sonner";
 import UserSettingsDialog from "@/components/UserSettingsDialog";
 
+const ErrorDialog = ({ open, onClose, errorGame, errorMessage, t }) => (
+  <AlertDialog open={open} onOpenChange={onClose}>
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle className="text-2xl font-bold text-foreground">
+          {t("library.launchError")}
+        </AlertDialogTitle>
+        <AlertDialogDescription className="space-y-4 text-muted-foreground">
+          {t("library.launchErrorMessage", { game: errorGame })}&nbsp;
+          <span
+            onClick={() => {
+              window.electron.openURL(
+                "https://ascendara.app/docs/troubleshooting/common-issues#executable-not-found-launch-error"
+              );
+            }}
+            className="cursor-pointer hover:underline"
+          >
+            {t("common.learnMore")}{" "}
+            <ExternalLink className="mb-1 inline-block h-3 w-3" />
+          </span>
+          <br />
+          <br />
+          {errorMessage}
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter className="flex gap-2">
+        <Button
+          variant="outline"
+          className="text-primary"
+          onClick={onClose}
+        >
+          {t("common.cancel")}
+        </Button>
+        <Button
+          className="bg-primary text-secondary"
+          onClick={async () => {
+            const exePath =
+              await window.electron.ipcRenderer.openFileDialog();
+            if (exePath) {
+              await window.electron.modifyGameExecutable(
+                errorGame,
+                exePath
+              );
+            }
+            onClose();
+          }}
+        >
+          {t("library.changeExecutable")}
+        </Button>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+);
+
 const Library = () => {
+  // Error handling at component level
+  const showError = (game, error) => {
+    setErrorGame(game);
+    setErrorMessage(error);
+    setShowErrorDialog(true);
+    setLaunchingGame(null);
+  };
+
+  const handleGameLaunchError = (_, { game, error }) => {
+    showError(game, error);
+  };
+
+  const handleGameLaunchSuccess = async (_, game) => {
+    setLaunchingGame(null);
+    // Keep lastLaunchedGame set so we can use it when the game closes
+  };
+
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAddGameOpen, setIsAddGameOpen] = useState(false);
@@ -324,34 +395,10 @@ const Library = () => {
     }
   };
 
-  const handleGameLaunchError = (_, { game, error }) => {
-    // Clear any existing error timeout
-    if (errorTimeoutRef.current) {
-      clearTimeout(errorTimeoutRef.current);
-    }
-
-    // Set a timeout to show the error dialog to debounce multiple events
-    errorTimeoutRef.current = setTimeout(() => {
-      setErrorGame(game);
-      setErrorMessage(error);
-      setShowErrorDialog(true);
-      setLaunchingGame(null);
-    }, 100);
-  };
-
-  const handleGameLaunchSuccess = (_, { game }) => {
-    setLaunchingGame(null);
-    // Keep lastLaunchedGame set so we can use it when the game closes
-  };
-
   const handlePlayGame = async (game, forcePlay = false) => {
     const gameName = game.game || game.name;
 
-    // Check if window.electron.isDev is true. Cannot run in developer mode
-    if (await window.electron.isDev()) {
-      toast.error(t("library.cannotRunDev"));
-      return;
-    }
+
 
     try {
       // First check if game is already running
@@ -472,59 +519,15 @@ const Library = () => {
     setErrorMessage("");
   };
 
-  const ErrorDialog = () => (
-    <AlertDialog open={showErrorDialog} onOpenChange={handleCloseErrorDialog}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle className="text-2xl font-bold text-foreground">
-            {t("library.launchError")}
-          </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-4 text-muted-foreground">
-            <p>
-              {t("library.launchErrorMessage", { game: errorGame })}&nbsp;
-              <span
-                onClick={() => {
-                  window.electron.openURL(
-                    "https://ascendara.app/docs/troubleshooting/common-issues#executable-not-found-launch-error"
-                  );
-                }}
-                className="cursor-pointer hover:underline"
-              >
-                {t("common.learnMore")}{" "}
-                <ExternalLink className="mb-1 inline-block h-3 w-3" />
-              </span>
-            </p>
-            <p>{errorMessage}</p>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="flex gap-2">
-          <Button
-            variant="outline"
-            className="text-primary"
-            onClick={handleCloseErrorDialog}
-          >
-            {t("common.cancel")}
-          </Button>
-          <Button
-            className="bg-primary text-secondary"
-            onClick={async () => {
-              const exePath =
-                await window.electron.ipcRenderer.openFileDialog();
-              if (exePath) {
-                await window.electron.modifyGameExecutable(
-                  errorGame,
-                  exePath
-                );
-              }
-              handleCloseErrorDialog();
-            }}
-          >
-            {t("library.changeExecutable")}
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
+  const handleRateGame = async (game, rating) => {
+    try {
+      await window.electron.rateGame(game.game || game.name, rating);
+      toast.success(t("library.gameRated"));
+    } catch (error) {
+      console.error("Error rating game:", error);
+      toast.error(t("library.ratingError"));
+    }
+  };
 
   if (loading) {
     return (
@@ -805,7 +808,13 @@ const Library = () => {
             ))}
           </div>
 
-          <ErrorDialog />
+          <ErrorDialog
+            open={showErrorDialog}
+            onClose={handleCloseErrorDialog}
+            errorGame={errorGame}
+            errorMessage={errorMessage}
+            t={t}
+          />
 
           {ratingGame && (
             <GameRate
