@@ -100,11 +100,15 @@
     "reporting": "Reporting...",
     "retry": "Try Again",
     "search": "Search",
-    "settings": "Settings"
+    "preferences": "Preferences",
+    "submit": "Submit",
+    "submitting": "Submitting..."
   },
   "download": {
     "allDlc": "ALL-DLCs",
     "allDlcTooltip": "Includes all downloadable content (DLC) available for this game",
+    "gameNeedsEmulator": "This requires an emulator to run.",
+    "gameNeedsVR": "This game may require a virtual reality headset to run.",
     "dmcaNotice": "DMCA Notice: Ascendara uses outsourced links and files and does not host anything on its own servers.",
     "downloadInstructions": "Download Instructions",
     "downloadOptions": {
@@ -249,7 +253,8 @@
     "online": "ONLINE",
     "showLess": "Show Less",
     "size": "Size",
-    "version": "Version"
+    "version": "Version",
+    "ratingTooltip": "This is an average rating from others who have downloaded and played this game on Ascendara."
   },
   "home": {
     "actionGames": "Action Games",
@@ -262,7 +267,7 @@
   "library": {
     "addGame": "Add Game",
     "addGameDescription1": "Add your own game to your library.",
-    "addGameDescription2": "Add a game to your library to easily launch it from Ascendara. No files will be modified when adding a game.",
+    "addGameDescription2": "Add a game to your  Ascendara library to easily launch it and track play time. No files will be modified when adding a game.",
     "alreadyRunning": "{{game}} is already running",
     "availableSpace": "Available Space",
     "calculatingSize": "Calculating...",
@@ -280,12 +285,12 @@
     "createShortcut": "Create Desktop Shortcut",
     "enterMoreChars": "Image results will appear here as you type",
     "executableNotFound": "Game executable not found",
-    "gameExecutable": "Game Executable",
     "gameName": "Game Name",
     "gamesSpace": "Installed Games",
     "gamesInLibrary": "Total Games",
     "hasOnlineFix": "Has Online Fix",
     "iconLegend": {
+      "header": "Library Icon Legend",
       "allDlcs": "All DLCs Included",
       "onlineFix": "Game Has Online-Fix",
       "vrGame": "Virtual Reality Game",
@@ -304,11 +309,28 @@
     },
     "pageTitle": "Your Library",
     "play": "Play",
+    "rateGame": {
+      "title": "Rate {{game}}",
+      "description": "Share your experience with {{game}}. Your rating helps other players discover great games.",
+      "ratingLabel": "Your Rating",
+      "excellent": "Excellent",
+      "veryGood": "Very Good",
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor",
+      "missingRating": "Rating Required",
+      "missingRatingDesc": "Please select a rating before submitting",
+      "success": "Rating Submitted",
+      "successDesc": "Thank you for rating {{game}}!",
+      "error": "Failed to Submit Rating",
+      "errorDesc": "Unable to submit your rating. Please try again later."
+    },
     "removeGame": "Remove Game",
     "removeGameFromLibrary": "Remove from Library",
     "removeGameFromLibraryWarning": "Removing this game from your library will only remove it from your Ascendara library. It will not uninstall the game. Are you sure you want to remove this game?",
     "running": "Running",
     "searchGameCover": "Search Ascendara for an image cover",
+    "searchGameCoverNotice": "Covers will be searched from the current indexed SteamRIP source.",
     "searchLibrary": "Search library...",
     "shortcutCreated": "Shortcut created",
     "shortcutError": "Error creating shortcut. Maybe the executable path doesn't exist?",
@@ -411,7 +433,7 @@
     },
     "noTorrentTool": "Download the Torrent Handler",
     "noTorrentToolDesc": "You need to have the Ascendara Torrent Handler installed in order to use the torrent feature on Ascendara. Click Continue to download the tool automatically.",
-    "fitgirlRepacksDescription": "Access Fitgirl's over 5500 games all on Ascendara. Games are sourced through the Hydralibrary and matched with an image using the IGDB. There are no categories or weights supported for these games, they will seem completely random.",
+    "fitgirlRepacksDescription": "Access FitGirl's over 5500 games all on Ascendara. Games are sourced through the Hydralibrary and matched with an image using the IGDB. There are no categories or weights supported for these games, they will seem completely random.",
     "gameSources": "Indexed Game Source",
     "gameSourcesDescription": "Ascendara primarily uses SteamRIP as its trusted source for games",
     "general": "General",
@@ -449,7 +471,7 @@
     "switchSource": "Switch to this source",
     "theme": "Theme",
     "timeMachineDisabledFitgirl": "Ascendara Timemachine is not available when using FitGirl Repacks as the game source.",
-    "title": "Configure Ascendara",
+    "title": "Ascendara Preferences",
     "torrentDescription": "Enable Ascendara's torrent functionality. This feature requires qBittorrent to be installed and is recommended for experienced users only.",
     "torrentOnAscendara": "Torrent on Ascendara",
     "torrentWarningDialog": {
@@ -527,13 +549,18 @@
     "installSuccess": "Installation Complete!",
     "installError": "Installation failed. Please try again.",
     "mainTitle": "Download Workshop Items",
-    "mainDescription": "Add links to items you'd like to download. Ascendara will add them to your Steam workshop directory automatically.",
+    "mainDescription": "Paste workshop item links here to download them. Ascendara will add them to a directory for you to manage yourself.",
     "goToWorkshop": "Visit the Steam Workshop",
-    "linkPlaceholder": "https://steamcommunity.com/sharedfiles/filedetails/?id=XXXXXXXXXX",
     "downloadLink": "Send Link to SteamCMD",
     "downloading": "Downloading...",
     "downloadProgress": "Download Progress",
-    "waitingForLogs": "Waiting for download to start..."
+    "waitingForLogs": "Waiting for download to start...",
+    "downloadFailure": {
+      "title": "Download Failed",
+      "description": "The workshop item download failed. This could be due to:",
+      "reasons": "['The item may be private or restricted', 'SteamCMD connection issues', 'Insufficient disk space', 'Invalid workshop item URL']",
+      "suggestion": "Please verify the item is public and try again. If the issue persists, try restarting Ascendara."
+    }
   },
   "welcome": {
     "allRequiredDependenciesHaveBeenInstalledDesc": "All required dependencies have been successfully installed. Welcome to Ascendara.",
