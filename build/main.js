@@ -3185,19 +3185,19 @@ function handleProtocolUrl(url) {
   const cleanUrl = url.trim();
   if (!cleanUrl.startsWith("ascendara://")) return;
 
-  // Get the main window
-  const mainWindow = BrowserWindow.getAllWindows()[0];
+  // Get all windows and find Ascendara window
+  const existingWindow = BrowserWindow.getAllWindows().find(win => win);
 
   // If no window exists, store URL and create window
-  if (!mainWindow) {
+  if (!existingWindow) {
     pendingUrls.add(cleanUrl);
     createWindow();
     return;
   }
 
   // Show and focus window
-  if (mainWindow.isMinimized()) mainWindow.restore();
-  mainWindow.focus();
+  if (existingWindow.isMinimized()) existingWindow.restore();
+  existingWindow.focus();
 
   try {
     // Set flag to prevent window hiding
@@ -3216,7 +3216,7 @@ function handleProtocolUrl(url) {
           const imageId = cleanUrl.split("?").pop().replace("/", "");
           if (imageId) {
             console.log("Sending game URL to renderer with imageId:", imageId);
-            mainWindow.webContents.send("protocol-game-url", { imageId });
+            existingWindow.webContents.send("protocol-game-url", { imageId });
           }
         } catch (error) {
           console.error("Error parsing game URL:", error);
@@ -3224,7 +3224,7 @@ function handleProtocolUrl(url) {
       } else {
         // Handle existing download protocol
         console.log("Sending download URL to renderer:", cleanUrl);
-        mainWindow.webContents.send("protocol-download-url", cleanUrl);
+        existingWindow.webContents.send("protocol-download-url", cleanUrl);
       }
     }
 
